@@ -4,6 +4,12 @@
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists.
 
+The intended design-to-code flow is:
+
+`request -> graph-guided architecture context -> ArchitectureContextPacket -> BehaviorModel -> PseudocodePacket -> TestStrategyPacket -> ImplementationReport -> TestImplementationReport -> VerificationReport -> JudgeReport -> FinalReport`
+
+In this model, `my-dev-kit` is used during context acquisition and `my-dev-kit-orchestrator` manages the downstream workflow after the synthesized ArchitectureContextPacket is saved.
+
 ## Feature
 
 Use `feature` for new behavior or intentional behavior changes.
@@ -134,3 +140,14 @@ Stage order:
 - `prompt <stage>` requires prior stage artifacts to exist.
 - The implementation and test-implementation stages are meant to consume the same design context rather than reinterpret the request independently.
 - `v0.1.0` does not execute a coding agent or `my-dev-kit` automatically.
+
+## Practical architecture-context flow
+
+For an architecture-context stage, a task-specific coding-agent prompt can combine both tools in a bounded sequence:
+
+1. run `my-dev-kit` retrieval commands to gather project context
+2. write `reports/architecture-context-retrieval-report.txt`
+3. write `artifacts/architecture-context-packet.txt`
+4. continue the orchestrator workflow with the synthesized architecture context
+
+This is intentionally prompt-driven rather than rigid. ChatGPT can tailor the architecture-context prompt to the project, change request, and available retrieval evidence without changing the orchestrator command surface.

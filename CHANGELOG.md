@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+- clarified the graph-guided architecture context design
+- documented the retrieval evidence report and ArchitectureContextPacket synthesis
+- clarified the relationship between `my-dev-kit` and `my-dev-kit-orchestrator`
+
 ## v0.1.0
 
 Initial release of `my-dev-kit-orchestrator`.

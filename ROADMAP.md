@@ -13,7 +13,18 @@ Implemented:
 - plain-text artifacts and simple artifact-presence stage tracking
 - manual coding-agent handoff through prompts and saved artifacts
 
-## Possible next steps after v0.1.0
+The released shell supports the architecture-context stage as a normal workflow stage, but it does not automatically run retrieval tools or expose supporting retrieval reports through dedicated CLI behavior.
+
+## Planned for v0.2.0
+
+These items are planned improvements, not current features:
+
+- graph-guided architecture context prompt improvements
+- retrieval evidence report guidance for `reports/architecture-context-retrieval-report.txt`
+- ArchitectureContextPacket synthesis guidance for `artifacts/architecture-context-packet.txt`
+- optional status visibility for supporting reports
+
+## Possible next steps after v0.2.0 planning
 
 These are future directions, not current features:
 

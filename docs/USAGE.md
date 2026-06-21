@@ -103,6 +103,34 @@ Example artifact path:
 .my-dev-kit-orchestrator/runs/<run-id>/artifacts/request-brief.txt
 ```
 
+## Example: graph-guided architecture context
+
+The architecture-context stage can be handled as a task-specific prompt that uses both tools in one flow.
+
+Typical command sequence:
+
+```bash
+npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
+npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task term>" --limit 20 --json
+npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<node-id>" --depth 1 --json
+npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<node-id>" --depth 2 --direction both --json
+npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start --mode feature "<request>"
+my-dev-kit-orchestrator prompt architecture-context
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator prompt
+```
+
+In that flow, the coding agent should:
+
+- use `my-dev-kit` to gather retrieval evidence relevant to the requested change
+- save the supporting retrieval report to `.my-dev-kit-orchestrator/runs/<run-id>/reports/architecture-context-retrieval-report.txt`
+- save the synthesized architecture context to `.my-dev-kit-orchestrator/runs/<run-id>/artifacts/architecture-context-packet.txt`
+- continue the orchestrator workflow from the next stage
+
+The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
+
 ## Check run status
 
 Show the most recent run:
