@@ -182,6 +182,5 @@ npm run lint
 - [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
 - [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
-- [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)
 - [CHANGELOG.md](CHANGELOG.md)
 - [ROADMAP.md](ROADMAP.md)
