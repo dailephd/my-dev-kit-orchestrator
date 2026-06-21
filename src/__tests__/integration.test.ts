@@ -1,5 +1,5 @@
 /**
- * Integration tests for the v0.1.0 init → start → prompt → artifact → next-prompt workflow.
+ * Integration tests for the init → start → prompt → artifact → next-prompt workflow.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,7 +7,7 @@ import * as os from 'os';
 import { initWorkspace, workspaceExists, getWorkspaceRoot, getRunsDir } from '../workspace';
 import { createRun, loadRun, getMostRecentRun } from '../run';
 import { generateStagePrompt } from '../promptGenerator';
-import { getNextStage, isRunComplete, getArtifactStatuses } from '../stageDetector';
+import { getNextStage, isRunComplete, getArtifactStatuses, getSupportingReportStatuses } from '../stageDetector';
 import { getWorkflow } from '../workflows';
 import { VALID_MODES } from '../types';
 
@@ -349,6 +349,107 @@ describe('audit: v0.1.0 scope compliance', () => {
       expect(archPrompt).not.toContain('automatically executes');
     } finally {
       cleanup(tmp);
+    }
+  });
+
+  it('no generated prompt uses the word bridge', () => {
+    for (const mode of VALID_MODES) {
+      const tmp = makeTempDir();
+      try {
+        initWorkspace(tmp);
+        const meta = createRun({ request: `${mode} vocab compliance check`, mode, projectRoot: tmp });
+        for (const stage of meta.stages) {
+          const prompt = generateStagePrompt(meta, stage.name);
+          expect(prompt).not.toMatch(/\bbridge\b/i);
+        }
+      } finally {
+        cleanup(tmp);
+      }
+    }
+  });
+});
+
+// ─── v0.2.0: graph-guided architecture context integration ────────────────────
+
+describe('integration: v0.2.0 graph-guided architecture context', () => {
+  it('architecture-context prompt includes retrieval report output path', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'add user auth', mode: 'feature', projectRoot: tmp });
+      const archPrompt = generateStagePrompt(meta, 'architecture-context');
+      expect(archPrompt).toContain('reports/architecture-context-retrieval-report.txt');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('architecture-context prompt includes ArchitectureContextPacket output path', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      const archPrompt = generateStagePrompt(meta, 'architecture-context');
+      expect(archPrompt).toContain('artifacts/architecture-context-packet.txt');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('architecture-context prompt instructs synthesis of retrieval evidence', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      const archPrompt = generateStagePrompt(meta, 'architecture-context');
+      expect(archPrompt).toContain('Synthesize retrieval evidence');
+      expect(archPrompt).toContain('Do not dump raw retrieval output');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('after writing both outputs, supporting report shows as present', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      fs.writeFileSync(path.join(meta.runFolder, 'reports/architecture-context-retrieval-report.txt'), 'evidence', 'utf8');
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/architecture-context-packet.txt'), 'packet', 'utf8');
+      const reports = getSupportingReportStatuses(meta);
+      const archReport = reports.find((r) => r.stageName === 'architecture-context');
+      expect(archReport!.present).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('stage progression advances when ArchitectureContextPacket exists, regardless of retrieval report', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/request-brief.txt'), 'done', 'utf8');
+      // Write ArchitectureContextPacket but not retrieval report
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/architecture-context-packet.txt'), 'done', 'utf8');
+      const next = getNextStage(meta);
+      expect(next!.name).toBe('behavior-model');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('all five modes include architecture-context supporting report entry', () => {
+    for (const mode of VALID_MODES) {
+      const tmp = makeTempDir();
+      try {
+        initWorkspace(tmp);
+        const meta = createRun({ request: `${mode} supporting report check`, mode, projectRoot: tmp });
+        const reports = getSupportingReportStatuses(meta);
+        expect(reports.some((r) => r.stageName === 'architecture-context')).toBe(true);
+      } finally {
+        cleanup(tmp);
+      }
     }
   });
 });

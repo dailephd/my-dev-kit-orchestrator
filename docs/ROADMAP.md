@@ -13,18 +13,25 @@ Implemented:
 - plain-text artifacts and simple artifact-presence stage tracking
 - manual coding-agent handoff through prompts and saved artifacts
 
-The released shell supports the architecture-context stage as a normal workflow stage, but it does not automatically run retrieval tools or expose supporting retrieval reports through dedicated CLI behavior.
+## Implemented in v0.2.0
 
-## Planned for v0.2.0
+`v0.2.0` is the graph-guided architecture context release.
 
-These items are planned improvements, not current features:
+Implemented:
 
-- graph-guided architecture context prompt improvements
-- retrieval evidence report guidance for `reports/architecture-context-retrieval-report.txt`
-- ArchitectureContextPacket synthesis guidance for `artifacts/architecture-context-packet.txt`
-- optional status visibility for supporting reports
+- updated architecture-context stage prompt with full graph-guided retrieval sequence
+- explicit guidance for the 8-step context acquisition flow (index, search, lookup, slice, symbol source, line-range fallback, semantic artifacts, whole-file fallback)
+- retrieval evidence report template included in the generated prompt
+- explicit output paths for both stage outputs in the generated prompt:
+  - `reports/architecture-context-retrieval-report.txt` (supporting retrieval evidence)
+  - `artifacts/architecture-context-packet.txt` (required downstream artifact)
+- synthesis instruction: retrieval output must be synthesized, not dumped
+- fallback guidance for when `my-dev-kit` is unavailable
+- supporting report visibility in `status` output
+- `getSupportingReportStatuses` function for checking known supporting report presence
+- stage progression remains based on required artifacts only; supporting reports are visible but not stage gates
 
-## Possible next steps after v0.2.0 planning
+## Possible next steps
 
 These are future directions, not current features:
 
@@ -38,9 +45,9 @@ These are future directions, not current features:
 - optional CI-friendly verification summaries
 - optional LLM-provider integration
 
-## Not planned for the first release
+## Non-goals
 
-`v0.1.0` intentionally does not try to become:
+`my-dev-kit-orchestrator` intentionally does not try to become:
 
 - a general autonomous multi-agent runtime
 - a security-validation framework
