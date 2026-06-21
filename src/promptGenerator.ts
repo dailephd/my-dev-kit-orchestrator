@@ -78,15 +78,44 @@ Inputs:
 - project root: ${ctx.projectRoot}
 
 Task:
-Produce ${ctx.runFolder}/artifacts/architecture-context-packet.txt (artifact: ArchitectureContextPacket).
+Retrieve bounded project context and synthesize it into the required workflow artifact.
 
-Inspect the current project architecture to ground the workflow before design decisions are made.
+Produce two output files:
+1. Supporting retrieval report: ${ctx.runFolder}/reports/architecture-context-retrieval-report.txt
+2. Required workflow artifact: ${ctx.runFolder}/artifacts/architecture-context-packet.txt (artifact: ArchitectureContextPacket)
 
-When my-dev-kit is available:
-- Use focused graph-guided retrieval before broad file reading.
-- Run: npx @dailephd/my-dev-kit <command> to retrieve relevant files, symbols, and context.
-- Prefer targeted symbol lookup and slice retrieval over whole-file reads.
-- If a full-file read is necessary, state why targeted retrieval was insufficient.
+Later workflow stages consume ArchitectureContextPacket.
+Do not dump raw retrieval output directly into ArchitectureContextPacket.
+Synthesize retrieval evidence into the artifact before writing it.
+
+Graph-guided context acquisition sequence (when my-dev-kit is available):
+
+Step 1 — Index or refresh the target repository:
+  npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
+
+Step 2 — Search for task-specific candidate nodes:
+  npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task-specific term>" --limit 20 --json
+  Run multiple queries for different aspects of the request.
+
+Step 3 — Look up selected nodes and their relationships:
+  npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<selected-node-id>" --depth 1 --json
+
+Step 4 — Slice around the strongest relevant node:
+  npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --out .my-dev-kit/<task-name>-slice.json --json
+
+Step 5 — Retrieve exact symbol source (preferred):
+  npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
+  or:
+  npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --symbol "<symbol-name>" --max-lines 160 --format numbered
+
+Step 6 — Use line-range retrieval only as fallback when symbol retrieval is insufficient:
+  npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines <cap> --format numbered
+
+Step 7 — Inspect semantic artifacts, tests, docs, or data-model artifacts only when relevant to the task.
+
+Step 8 — Avoid whole-file reading unless bounded retrieval is insufficient. If a whole file must be read, state why.
+
+If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols. Document what was inspected, why, and what bounded context was gathered.
 
 The ArchitectureContextPacket must identify:
 - relevant files
@@ -105,18 +134,87 @@ The ArchitectureContextPacket must identify:
 Required output artifact: ArchitectureContextPacket
 Output file: ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
+Supporting report output file: ${ctx.runFolder}/reports/architecture-context-retrieval-report.txt
+
 Stop conditions:
 - do not redesign the feature
 - do not write pseudocode
 - do not implement code
-- do not write tests
+- do not write test files
+- do not claim implementation or test implementation work in this stage
 
 Return format:
-Produce the artifact as a plain-text file using the template:
+
+Write the supporting retrieval report using this template:
+
+  Retrieval evidence report
+
+  Index artifacts used:
+  - Index directory:
+  - Refreshed or reused:
+  - manifest.json status:
+  - Semantic artifacts available:
+
+  Search queries run:
+  - Query:
+    Reason:
+
+  Candidate nodes selected:
+  - Node ID:
+    Reason:
+
+  Lookup commands run:
+  - Node ID:
+    Useful relationships found:
+
+  Graph slices created:
+  - Focus node:
+  - Depth:
+  - Direction:
+  - Output path:
+  - Reason:
+
+  Source symbols retrieved:
+  - Symbol node ID:
+  - File path:
+  - Reason:
+
+  Line-range fallback retrieval used:
+  - File path or none:
+  - Lines:
+  - Reason:
+
+  Full files read beyond retrieved source:
+  - File path or none:
+  - Reason:
+  - Missing context provided:
+
+  Semantic artifacts inspected:
+  - Artifact or command:
+  - Reason:
+
+  Context gaps or uncertainty:
+  - Gap:
+    Impact:
+
+Then write ArchitectureContextPacket using this template:
+
   Artifact: ArchitectureContextPacket
   Workflow mode: ...
   Project root: ...
-  Retrieval method: ...
+
+  Retrieval evidence used:
+  - Retrieval report: ${ctx.runFolder}/reports/architecture-context-retrieval-report.txt
+  - Index directory:
+  - Graph slice files:
+  - Source excerpts:
+  - Semantic artifacts:
+
+  Retrieval method:
+  - my-dev-kit used: yes | no
+  - graph-guided retrieval used: yes | no
+  - manual inspection used: yes | no
+
   Relevant files: ...
   Relevant symbols: ...
   Relevant components / modules / commands / routes / services / boundaries: ...
