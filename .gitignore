@@ -13,6 +13,8 @@ pnpm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+AGENTS.md
+CLAUDE.md
 agents.txt
 claude.txt
 docs/*.txt
