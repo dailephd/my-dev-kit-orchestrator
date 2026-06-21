@@ -21,6 +21,12 @@ The important folder for stage advancement is:
 .my-dev-kit-orchestrator/runs/<run-id>/artifacts/
 ```
 
+The main supporting report for graph-guided architecture context is:
+
+```text
+.my-dev-kit-orchestrator/runs/<run-id>/reports/architecture-context-retrieval-report.txt
+```
+
 ## How stage advancement works
 
 For the selected workflow, the CLI checks stage order from first to last.
@@ -31,6 +37,8 @@ Rule used in `v0.1.0`:
 - if all expected artifact files exist, the run is treated as complete
 
 That means the workflow advances when the artifact file exists at the expected path.
+
+The release still uses file-existence checks, but the content expectations for architecture-context work should remain explicit so later stages receive a usable synthesized design input.
 
 ## Core feature-mode artifact files
 
@@ -120,6 +128,51 @@ Prompt files are generated alongside them:
 
 - Artifacts are plain text.
 - The CLI does not validate artifact contents against JSON schemas.
+- `reports/architecture-context-retrieval-report.txt` is supporting evidence for context acquisition.
+- `artifacts/architecture-context-packet.txt` is the required downstream workflow artifact.
+- later stages should consume the ArchitectureContextPacket rather than raw `my-dev-kit` output
 - The pseudocode packet is the shared design source for implementation and test implementation.
 - The test strategy packet is the source for test implementation.
 - Verification and final report artifacts should contain command evidence and unresolved risks, but `v0.1.0` does not enforce that automatically.
+
+## Recommended architecture-context retrieval report template
+
+Recommended sections for `reports/architecture-context-retrieval-report.txt`:
+
+- task summary
+- index artifacts used
+- whether the index was refreshed or reused
+- manifest status
+- search queries run
+- candidate nodes selected
+- lookup commands run
+- graph slices created
+- source symbols retrieved
+- line-range fallback retrieval used
+- full files read beyond retrieved source
+- semantic artifacts inspected
+- context gaps or uncertainty
+
+This report is supporting retrieval evidence. It explains how the architecture context was gathered.
+
+## Recommended ArchitectureContextPacket template
+
+Recommended sections for `artifacts/architecture-context-packet.txt`:
+
+- request summary
+- relevant files
+- relevant symbols
+- relevant components, modules, commands, routes, services, or boundaries
+- relevant tests
+- relevant docs
+- state owners
+- data owners
+- upstream dependencies
+- downstream consumers
+- existing patterns to preserve
+- likely files or modules involved
+- context gaps or uncertainty
+- selection rationale
+- expected next stage
+
+The ArchitectureContextPacket should synthesize retrieval evidence into a bounded design input for later stages. It should not be a raw dump of search or graph output.

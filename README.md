@@ -17,6 +17,18 @@ Version `0.1.0` provides:
 
 The CLI owns workflow order and prompt generation. Each run advances as the expected artifact files appear on disk.
 
+## How it works with my-dev-kit
+
+`my-dev-kit` and `my-dev-kit-orchestrator` have different responsibilities.
+
+- `my-dev-kit` retrieves bounded project context through graph-guided architecture context workflows such as indexing, search, lookup, slice generation, source retrieval, and optional semantic inspection
+- `my-dev-kit-orchestrator` organizes the staged design-to-code workflow after context acquisition
+- the coding agent records retrieval evidence in `reports/architecture-context-retrieval-report.txt`
+- the coding agent synthesizes that evidence into `artifacts/architecture-context-packet.txt`
+- downstream stages consume the ArchitectureContextPacket rather than raw retrieval output
+
+See [ARCHITECTURE.md](ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.md), and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the detailed design.
+
 ## Non-goals for v0.1.0
 
 Version `0.1.0` does not include:
