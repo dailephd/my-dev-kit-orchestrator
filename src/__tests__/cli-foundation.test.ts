@@ -67,6 +67,11 @@ describe('CLI program', () => {
     const names = program.commands.map((c) => c.name()).sort();
     expect(names).toEqual(['init', 'list', 'prompt', 'start', 'status']);
   });
+
+  it('describes the staged workflow including test implementation', () => {
+    const program = createProgram();
+    expect(program.description()).toContain('test implementation');
+  });
 });
 
 describe('mode validation', () => {
