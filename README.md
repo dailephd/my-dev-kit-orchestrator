@@ -178,6 +178,7 @@ npm run lint
 
 ## Documentation
 
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/USAGE.md](docs/USAGE.md)
 - [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
 - [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
