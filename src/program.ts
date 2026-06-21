@@ -13,8 +13,9 @@ export function createProgram(): Command {
     .description(
       'CLI-first workflow tool for design-first software development with coding agents.\n\n' +
       'Guides coding agents through a staged design-to-code workflow:\n' +
-      '  request → architecture context → behavior model → pseudocode\n' +
-      '  → test strategy → implementation → verification → judge → final report'
+      '  request -> architecture context -> behavior model -> pseudocode\n' +
+      '  -> test strategy -> implementation -> test implementation\n' +
+      '  -> verification -> judge -> final report'
     )
     .version('0.1.0');
 
