@@ -27,7 +27,7 @@ The CLI owns workflow order and prompt generation. Each run advances as the expe
 - the coding agent synthesizes that evidence into `artifacts/architecture-context-packet.txt`
 - downstream stages consume the ArchitectureContextPacket rather than raw retrieval output
 
-See [ARCHITECTURE.md](ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.md), and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the detailed design.
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.md), and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the detailed design.
 
 ## Non-goals for v0.1.0
 
@@ -190,10 +190,10 @@ npm run lint
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/USAGE.md](docs/USAGE.md)
 - [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
 - [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - [CHANGELOG.md](CHANGELOG.md)
-- [ROADMAP.md](ROADMAP.md)
+- [ROADMAP.md](docs/ROADMAP.md)
