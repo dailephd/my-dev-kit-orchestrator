@@ -1,0 +1,808 @@
+BEHAVIOR_DERIVED_TEST_DESIGN.txt
+
+Project name:
+my-dev-kit-orchestrator
+
+Document purpose:
+This document defines the behavior-derived test design method used by my-dev-kit-orchestrator.
+
+The purpose of behavior-derived test design is to help a coding agent design comprehensive tests from the behavior model of the current software change.
+
+The test-design stage should not begin by immediately listing individual test cases or editing test files.
+
+The test-design stage should first construct a behavior model, then derive test responsibilities from that model.
+
+Core sequence:
+
+behavior model
+→ state variables
+→ events
+→ derived values
+→ invariants
+→ boundaries and partitions
+→ external contracts
+→ state transitions
+→ failure modes
+→ test matrix
+→ test level assignment
+→ verification commands
+
+The output of this stage is the TestStrategyPacket.
+
+
+1. Core principle
+
+Tests should be derived from behavior.
+
+A coding agent should not treat testing as a checklist added after implementation.
+
+Instead, the agent should ask:
+
+- What behavior must the software guarantee?
+- What state controls that behavior?
+- What events can change that state?
+- What values are derived from other values?
+- What must always remain true?
+- What boundaries define the valid and invalid state space?
+- What external data or system contracts can fail?
+- What transitions must be preserved?
+- What evidence would prove the behavior works?
+
+The TestStrategyPacket should show how each proposed test traces back to a behavior, invariant, transition, derived value, boundary, external contract, or relevant failure mode.
+
+
+2. Role in the workflow
+
+Behavior-derived test design happens after:
+
+- RequestBrief
+- ArchitectureContextPacket
+- BehaviorModel
+- PseudocodePacket
+
+It happens before:
+
+- test implementation
+- verification
+- judge
+
+The test strategy should consume the BehaviorModel and PseudocodePacket as binding context.
+
+The testing agent should not independently reinterpret the feature. It should use the same design context that the implementation agent uses.
+
+The important relationship is:
+
+BehaviorModel
+= defines intended behavior
+
+PseudocodePacket
+= defines implementation-neutral design contract
+
+TestStrategyPacket
+= defines what must be tested to prove that behavior and pseudocode are protected
+
+
+3. Required inputs
+
+The behavior-derived test design stage should use:
+
+1. RequestBrief
+   To understand the requested change, constraints, non-goals, and success criteria.
+
+2. ArchitectureContextPacket
+   To understand current project structure, existing tests, relevant components, modules, routes, services, commands, helpers, state owners, and data boundaries.
+
+3. BehaviorModel
+   To understand intended behavior, states, events, derived values, invariants, boundaries, contracts, and transitions.
+
+4. PseudocodePacket
+   To understand the implementation-neutral design contract that code and tests must both follow.
+
+Optional inputs:
+- ImplementationReport, if implementation has already happened
+- Existing test files, if available
+- Project test conventions
+- Current verification commands
+
+
+4. Required output
+
+The stage produces:
+
+TestStrategyPacket
+
+The TestStrategyPacket should include:
+
+- behaviors to protect
+- state variables to verify
+- events to test
+- derived values to verify
+- invariants to protect
+- boundaries and partitions to cover
+- external contracts to validate
+- state transitions to test
+- relevant failure modes
+- test matrix
+- test level assignment
+- verification commands
+- coverage gaps
+- risks not covered and why
+
+
+5. What this stage must not do
+
+This stage must not:
+- write production code
+- edit implementation files
+- write test files unless the workflow explicitly combines strategy and implementation for a small task
+- skip directly to a loose test list
+- create tests that do not trace to behavior
+- invent requirements not present in the RequestBrief, ArchitectureContextPacket, BehaviorModel, or PseudocodePacket
+- force irrelevant categories onto a feature
+- treat end-to-end tests as the default answer
+- claim coverage without explaining what behavior the tests protect
+
+
+6. Behavior-first test design algorithm
+
+The agent should follow this algorithm.
+
+Step 1:
+Identify the parent behavior or workflow.
+
+The agent should identify the highest meaningful behavior being changed or protected.
+
+This may be:
+- a user workflow
+- a page or screen behavior
+- a component behavior
+- a service behavior
+- an API behavior
+- a CLI command behavior
+- a data-processing behavior
+- a storage behavior
+- a generated artifact behavior
+
+The parent behavior is the starting point for test design.
+
+The agent should define:
+- what initiates the behavior
+- what output or state change proves the behavior occurred
+- what user-visible or externally observable guarantee must hold
+- what internal support behavior is required
+
+
+Step 2:
+Decompose the behavior into participating layers.
+
+The agent should identify the layers, modules, components, helpers, boundaries, or services that cooperate to produce the behavior.
+
+The decomposition should identify:
+- parent workflow or coordinator
+- child components or submodules
+- state owners
+- derived-value owners
+- adapters or normalizers
+- external boundaries
+- storage or persistence boundaries
+- rendering or output boundaries
+- verification points
+
+The goal is not to over-document the whole project.
+The goal is to locate where behavior is controlled and where tests should be placed.
+
+
+Step 3:
+Identify state variables.
+
+The agent should list the state variables that influence the behavior.
+
+State variables may include:
+- input values
+- selected values
+- active values
+- current view or mode
+- loaded data
+- filtered data
+- sorted data
+- cached data
+- persisted values
+- request status
+- error status
+- validation status
+- permission status
+- configuration values
+- file paths
+- output paths
+- command options
+- backend response fields
+
+For each state variable, the agent should record:
+- owner
+- source
+- type or shape if known
+- valid values
+- invalid values
+- default value
+- whether it can change during the workflow
+- which downstream behavior depends on it
+
+
+Step 4:
+Identify events.
+
+The agent should list the events that can change state or trigger behavior.
+
+Events may include:
+- user interaction
+- navigation
+- form submission
+- data fetch
+- API response
+- command execution
+- file read
+- file write
+- parser result
+- storage load
+- storage save
+- timeout
+- cancellation
+- retry
+- validation failure
+- dependency response
+- configuration change
+
+For each event, the agent should record:
+- source of event
+- state before event
+- state after event
+- derived values that must be recomputed
+- output that must change
+- output that must not change
+
+
+Step 5:
+Identify derived values.
+
+A derived value is any value computed from other values.
+
+The agent should identify:
+- derived value name
+- input variables
+- rule or formula
+- owner
+- valid output range or shape
+- when it must be recomputed
+- what depends on it
+- what happens if inputs are invalid, missing, stale, or inconsistent
+
+Derived values are major sources of test responsibilities because mistakes often occur at boundaries, recomputation points, or stale-state transitions.
+
+
+Step 6:
+Identify invariants.
+
+An invariant is a condition that must remain true whenever the feature is in a valid state.
+
+The agent should identify invariants from:
+- BehaviorModel
+- PseudocodePacket
+- architecture constraints
+- existing project contracts
+- safety requirements
+- user-visible guarantees
+- data consistency rules
+
+For each invariant, the agent should record:
+- invariant statement
+- state variables involved
+- event or transition that may threaten it
+- layer responsible for preserving it
+- test responsibility required to protect it
+
+
+Step 7:
+Identify boundaries and partitions.
+
+The agent should partition the input and state space.
+
+For each important input, state variable, collection, derived value, or external contract, identify relevant partitions.
+
+Common partitions include:
+- empty
+- single item
+- multiple items
+- minimum valid value
+- maximum valid value
+- just below a threshold
+- at a threshold
+- just above a threshold
+- missing value
+- null or undefined value where applicable
+- malformed value
+- duplicate value
+- inconsistent value
+- stale value
+- large value
+- partial data
+- invalid type
+- invalid format
+
+The agent should only include partitions relevant to the current behavior and current architecture.
+
+The goal is not to mechanically include every possible category.
+The goal is to identify the state space that can affect correctness.
+
+
+Step 8:
+Identify external contracts.
+
+External contracts are boundaries where the system receives data or behavior it does not fully control.
+
+External contracts may include:
+- API request shape
+- API response shape
+- CLI arguments
+- environment variables
+- file contents
+- file paths
+- database rows
+- generated artifacts
+- local storage
+- session storage
+- URL parameters
+- third-party library outputs
+- network responses
+- process exit codes
+- configuration files
+
+For each external contract, the agent should identify:
+- expected valid contract
+- missing required fields
+- missing optional fields
+- malformed fields
+- extra fields
+- partial data
+- empty data
+- large data
+- inconsistent data
+- contract drift risk
+- validation or normalization responsibility
+- test responsibility
+
+
+Step 9:
+Build a state-transition matrix.
+
+For interactive, asynchronous, stateful, or multi-step behavior, the agent should construct a state-transition matrix.
+
+The matrix should include:
+
+- current state
+- event
+- expected next state
+- derived values that must update
+- output expected
+- invariant protected
+- test level
+- risk if untested
+
+The goal is to make behavior over time explicit.
+
+Many bugs occur not because a single state is wrong, but because the system fails to move correctly from one state to another.
+
+
+Step 10:
+Identify relevant failure modes.
+
+Failure modes should be derived from the current behavior and architecture.
+
+Failure-mode categories may include:
+- input
+- state
+- contract
+- parser
+- storage
+- async
+- rendering
+- data volume
+- configuration
+- environment
+- permission
+- filesystem
+- command execution
+
+For each relevant failure mode, the agent should record:
+- failure mode
+- trigger
+- affected layer
+- expected handling
+- test responsibility
+- whether it must be prevented, recovered from, surfaced, logged, retried, ignored safely, or allowed to fail fast
+
+The workflow should not require every category for every feature.
+Only relevant failure modes should become test responsibilities.
+
+
+Step 11:
+Create the test matrix.
+
+The TestStrategyPacket should include a traceable test matrix.
+
+Each test responsibility should include:
+
+- test responsibility ID
+- behavior or invariant protected
+- setup
+- event or trigger
+- expected result
+- boundary or partition covered
+- external contract covered if applicable
+- failure mode covered if applicable
+- test level
+- likely test location
+- verification command
+- notes or risks
+
+Each test responsibility should trace back to at least one of:
+- behavior
+- invariant
+- state transition
+- derived value
+- boundary
+- external contract
+- failure mode
+
+A test responsibility that cannot be traced should be removed or rewritten.
+
+
+Step 12:
+Assign test levels.
+
+The agent should assign each test to the narrowest useful level.
+
+Use unit tests for:
+- pure derived values
+- validators
+- parsers
+- normalizers
+- reducers
+- serializers
+- path builders
+- isolated helper logic
+- deterministic state derivation
+
+Use component tests for:
+- props to rendering
+- user event to local state
+- parent-child state coordination
+- empty states
+- error states
+- loading states
+- derived UI state
+- local interaction behavior
+
+Use integration tests for:
+- client to API boundary
+- route to service boundary
+- service to adapter boundary
+- parser to data model boundary
+- storage to reload behavior
+- CLI args to command pipeline
+- artifact generation pipeline
+- cross-module behavior
+
+Use end-to-end tests for:
+- critical user-visible workflows
+- browser navigation across screens
+- full submit, save, export, import, or recovery flows
+- behavior that cannot be proven reliably at lower levels
+- high-risk regressions that require realistic runtime wiring
+
+The test level should be justified by the behavior being proven.
+
+
+Step 13:
+Identify existing tests and gaps.
+
+The agent should inspect or summarize relevant existing tests from the ArchitectureContextPacket.
+
+The TestStrategyPacket should identify:
+- existing tests that already protect behavior
+- existing tests that need updates
+- new tests required
+- redundant tests that are not needed
+- behavior gaps
+- verification gaps
+- risks not covered
+
+The agent should avoid adding tests that duplicate existing coverage unless the existing coverage is weak or indirect.
+
+
+Step 14:
+Define verification commands.
+
+The TestStrategyPacket should define the commands needed to verify the tests.
+
+The command list should be grounded in the project’s actual tooling and architecture context.
+
+Possible command categories:
+- targeted unit tests
+- targeted component tests
+- targeted integration tests
+- relevant end-to-end tests
+- typecheck
+- lint
+- build
+- smoke checks
+
+The strategy should distinguish:
+- required commands
+- recommended commands
+- optional broader checks
+- commands not run and why, if known later
+
+
+7. TestStrategyPacket structure
+
+The TestStrategyPacket should use this structure.
+
+Artifact:
+TestStrategyPacket
+
+Workflow mode:
+
+Inputs used:
+- RequestBrief:
+- ArchitectureContextPacket:
+- BehaviorModel:
+- PseudocodePacket:
+
+Behavior under test:
+
+Parent behavior or workflow:
+
+Participating layers:
+
+State variables:
+
+Events:
+
+Derived values:
+
+Invariants:
+
+Boundaries and partitions:
+
+External contracts:
+
+State-transition matrix:
+
+Relevant failure modes:
+
+Existing tests:
+
+Test matrix:
+For each test responsibility:
+- test responsibility ID:
+- traces to:
+- setup:
+- event or trigger:
+- expected result:
+- boundary or partition covered:
+- external contract covered:
+- failure mode covered:
+- test level:
+- likely test location:
+- verification command:
+- notes:
+
+Test level summary:
+- unit:
+- component:
+- integration:
+- end-to-end:
+
+Required verification commands:
+
+Coverage gaps:
+
+Risks not covered and why:
+
+Status:
+
+
+8. Traceability requirements
+
+Every proposed test responsibility should trace back to the behavior model or pseudocode packet.
+
+Trace categories:
+- behavior
+- invariant
+- state transition
+- derived value
+- boundary
+- external contract
+- failure mode
+
+The trace does not need to be complicated.
+A short reference is enough.
+
+A test responsibility with no trace is not part of the strategy.
+
+The traceability rule prevents test generation from becoming disconnected from the design.
+
+
+9. Completeness criteria
+
+A TestStrategyPacket is complete when:
+- it identifies the behavior under test
+- it identifies controlling state
+- it identifies events that change behavior
+- it identifies important derived values
+- it identifies invariants
+- it identifies relevant boundaries and partitions
+- it identifies relevant external contracts
+- it includes state transitions when behavior is stateful
+- it includes relevant failure modes
+- it maps test responsibilities to test levels
+- it states verification commands
+- it identifies uncovered risks
+
+A TestStrategyPacket is incomplete when:
+- it only lists generic test names
+- it does not use the BehaviorModel
+- it does not use the PseudocodePacket
+- it skips state variables
+- it skips events for stateful behavior
+- it skips derived values
+- it skips invariants
+- it ignores external contracts
+- it does not assign test levels
+- it does not state what remains uncovered
+
+
+10. Prompt guidance for this stage
+
+The generated prompt for this stage should be bounded.
+
+It should not include the entire workflow architecture.
+
+It should include:
+- current stage name
+- required input artifacts
+- task for this stage
+- required output artifact
+- stop conditions
+
+A good stage prompt should say:
+
+Stage:
+Behavior-derived test strategy
+
+Use:
+- request-brief.txt
+- architecture-context-packet.txt
+- behavior-model.txt
+- pseudocode-packet.txt
+
+Task:
+Produce test-strategy-packet.txt by deriving test responsibilities from the BehaviorModel and PseudocodePacket.
+
+The strategy must identify:
+- behavior under test
+- state variables
+- events
+- derived values
+- invariants
+- boundaries and partitions
+- external contracts
+- state transitions when relevant
+- relevant failure modes
+- test matrix
+- test level assignment
+- verification commands
+- uncovered risks
+
+Stop conditions:
+- do not write test files in this stage
+- do not write production code
+- do not invent behavior not supported by prior artifacts
+- do not include test responsibilities that cannot be traced to behavior, invariant, transition, derived value, boundary, contract, or failure mode
+
+
+11. Relationship to implementation
+
+The TestStrategyPacket should be created before test implementation.
+
+The test implementation stage should consume:
+- BehaviorModel
+- PseudocodePacket
+- TestStrategyPacket
+- ImplementationReport if available
+
+The test implementation agent should not design the strategy from scratch.
+
+If the testing agent finds that the strategy is incomplete or impossible to implement, it should report the issue and route back to the test strategy stage or the relevant upstream artifact.
+
+
+12. Relationship to judge
+
+The judge should use the TestStrategyPacket to evaluate whether testing is sufficient.
+
+The judge should check:
+- whether implemented tests map to the strategy
+- whether required behaviors are covered
+- whether important invariants are covered
+- whether relevant boundaries are covered
+- whether state transitions are covered
+- whether external contracts are covered
+- whether verification commands were run
+- whether uncovered risks were honestly stated
+
+The judge should not approve the run simply because some tests exist.
+
+Tests are sufficient only if they protect the behavior defined by the workflow artifacts.
+
+
+13. Avoiding over-testing and mechanical coverage
+
+The behavior-derived test design stage should be comprehensive but not mechanical.
+
+The agent should not produce unnecessary tests just because a category exists.
+
+The agent should include a test responsibility when:
+- it protects a behavior or invariant
+- it verifies a meaningful derived value
+- it covers a realistic boundary
+- it protects a state transition
+- it validates an external contract
+- it guards against a relevant failure mode
+- it prevents a high-risk regression
+
+The agent may omit a test responsibility when:
+- the behavior is already covered directly by an existing test
+- the category is irrelevant to the feature
+- the test would duplicate stronger coverage
+- the behavior is better verified at another level
+- the cost is too high relative to risk
+- the risk is documented as uncovered
+
+The TestStrategyPacket should explain important omissions.
+
+
+14. Interaction with workflow modes
+
+Feature mode:
+The test strategy verifies newly designed behavior from the BehaviorModel and PseudocodePacket.
+
+Repair mode:
+The test strategy focuses on preventing the observed divergence from recurring and then adds related behavior coverage as needed.
+
+Test mode:
+The test strategy may reconstruct behavior first if no BehaviorModel exists.
+
+Refactor mode:
+The test strategy focuses on compatibility and behavior preservation.
+
+Harden mode:
+The test strategy focuses on assumptions, failure modes, guards, recovery behavior, and resilience.
+
+
+15. Success criteria
+
+The behavior-derived test design method succeeds when:
+- tests are derived from current behavior, not guessed independently
+- test responsibilities trace to design artifacts
+- the testing agent and coding agent share the same design source
+- important state transitions are tested
+- important derived values are tested
+- important invariants are protected
+- important boundaries are covered
+- external contracts are validated where relevant
+- test levels are chosen deliberately
+- verification commands are explicit
+- remaining risks are visible
+
+The goal is not to maximize the number of tests.
+The goal is to produce tests that prove the intended behavior and protect the system against realistic ways that behavior can break.

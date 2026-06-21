@@ -1,0 +1,1907 @@
+ARTIFACT_CONTRACTS.txt
+
+Project name:
+my-dev-kit-orchestrator
+
+Document purpose:
+This document defines the artifact contracts used by my-dev-kit-orchestrator.
+
+Artifacts are the handoff mechanism between workflow stages.
+
+The CLI should not rely on one giant prompt or on the coding agent remembering everything from previous stages. Each stage produces a named artifact. Later stages consume those artifacts as binding context.
+
+The artifacts do not need to be strict JSON schemas in v0.1.0. Text files are acceptable. The important requirement is that each artifact has a clear purpose, expected content, and role in the workflow.
+
+v0.1.0 should prioritize useful, readable, inspectable text artifacts over complex schema validation.
+
+
+1. Core artifact principle
+
+Artifacts are the source of continuity between stages.
+
+The workflow should follow this handoff chain:
+
+RequestBrief
+→ ArchitectureContextPacket
+→ BehaviorModel
+→ PseudocodePacket
+→ TestStrategyPacket
+→ ImplementationReport
+→ TestImplementationReport
+→ VerificationReport
+→ JudgeReport
+→ FinalReport
+
+Each artifact should answer:
+
+- What stage produced this?
+- What prior artifacts were used?
+- What decision or understanding does this artifact preserve?
+- What later stages depend on this artifact?
+- What is still uncertain or unresolved?
+
+Artifacts should be compact enough to be reused in prompts, but complete enough to avoid reinterpreting the task from scratch.
+
+
+2. Artifact storage
+
+Default run folder:
+
+.my-dev-kit-orchestrator/runs/<run-id>/
+
+Recommended artifact folder:
+
+.my-dev-kit-orchestrator/runs/<run-id>/artifacts/
+
+Recommended core artifact files:
+
+artifacts/
+  request-brief.txt
+  architecture-context-packet.txt
+  behavior-model.txt
+  pseudocode-packet.txt
+  test-strategy-packet.txt
+  implementation-report.txt
+  test-implementation-report.txt
+  verification-report.txt
+  judge-report.txt
+  final-report.txt
+
+Mode-specific artifacts may also be stored in the same artifacts folder.
+
+Examples of mode-specific artifact filenames:
+
+artifacts/
+  observed-behavior-report.txt
+  behavior-trace.txt
+  divergence-report.txt
+  correction-design.txt
+  regression-test-strategy.txt
+  test-target-brief.txt
+  behavior-reconstruction.txt
+  pseudocode-summary.txt
+  refactor-brief.txt
+  existing-behavior-map.txt
+  preserved-invariant-list.txt
+  compatibility-test-strategy.txt
+  hardening-brief.txt
+  assumption-report.txt
+  failure-mode-matrix.txt
+  guard-pseudocode-packet.txt
+  resilience-test-strategy.txt
+
+The CLI can use simple file-existence checks to determine whether a stage artifact is present.
+
+
+3. Artifact format for v0.1.0
+
+v0.1.0 artifacts should be plain text.
+
+Preferred structure:
+
+Artifact:
+<artifact name>
+
+Workflow mode:
+<feature | repair | test | refactor | harden>
+
+Stage:
+<stage name>
+
+Inputs used:
+- <prior artifact or source>
+- <prior artifact or source>
+
+Summary:
+<short summary>
+
+Content:
+<sectioned artifact body>
+
+Open questions:
+- <uncertainty or missing information>
+
+Downstream use:
+<how later stages should use this artifact>
+
+Status:
+<complete | incomplete | blocked>
+
+Plain text keeps the project simple and makes artifacts easy to paste into coding-agent prompts.
+
+Later versions may add optional JSON schemas, but v0.1.0 should not require them.
+
+
+4. Core artifacts
+
+4.1. RequestBrief
+
+Produced by:
+Request brief stage
+
+Used by:
+- Architecture context stage
+- Behavior model stage
+- Final report stage
+
+Purpose:
+Convert the raw user request into a compact software-change brief.
+
+The RequestBrief defines what the user is asking for before project context, behavior design, pseudocode, or implementation begins.
+
+Required content:
+- original request
+- workflow mode
+- requested change
+- target project or repository if known
+- target workflow, component, module, command, or behavior if known
+- user-visible or externally observable behavior
+- constraints
+- non-goals
+- success criteria
+- ambiguity or missing information
+- expected next stage
+
+Should not contain:
+- implementation code
+- test files
+- detailed pseudocode
+- speculative architecture changes
+- broad unrelated project analysis
+
+Completion criteria:
+The RequestBrief is complete when a later stage can understand what kind of software change is being requested and what success means.
+
+Template:
+
+Artifact:
+RequestBrief
+
+Workflow mode:
+
+Original request:
+
+Requested change:
+
+Target area:
+
+User-visible or external behavior:
+
+Constraints:
+
+Non-goals:
+
+Success criteria:
+
+Ambiguity or missing information:
+
+Expected next stage:
+
+Status:
+
+
+4.2. ArchitectureContextPacket
+
+Produced by:
+Architecture context stage
+
+Used by:
+- Behavior model stage
+- Pseudocode packet stage
+- Test strategy stage
+- Implementation stage
+- Judge stage
+
+Purpose:
+Ground the workflow in the current project architecture before design or implementation decisions are made.
+
+The ArchitectureContextPacket should be created through focused inspection, preferably using my-dev-kit and graph-guided retrieval when available.
+
+Required content:
+- project root
+- retrieval method used
+- relevant files
+- relevant symbols
+- relevant components, modules, commands, routes, services, or data boundaries
+- relevant tests
+- relevant docs
+- state owners
+- data owners
+- upstream dependencies
+- downstream consumers
+- existing patterns to preserve
+- likely files or modules involved
+- context gaps
+- reasons each major file or symbol was selected
+
+Should not contain:
+- implementation changes
+- final behavior design
+- test strategy
+- speculative rewrites
+- broad unrelated file listings
+
+Completion criteria:
+The ArchitectureContextPacket is complete when the next stage can design behavior using current project evidence instead of guessing.
+
+Template:
+
+Artifact:
+ArchitectureContextPacket
+
+Workflow mode:
+
+Project root:
+
+Retrieval method:
+- my-dev-kit used:
+- graph-guided retrieval used:
+- manual inspection used:
+
+Relevant files:
+
+Relevant symbols:
+
+Relevant components, modules, commands, routes, services, or boundaries:
+
+Relevant tests:
+
+Relevant docs:
+
+State owners:
+
+Data owners:
+
+Upstream dependencies:
+
+Downstream consumers:
+
+Existing patterns to preserve:
+
+Likely files or modules involved:
+
+Context gaps or uncertainty:
+
+Selection rationale:
+
+Expected next stage:
+
+Status:
+
+
+4.3. BehaviorModel
+
+Produced by:
+Behavior model stage
+
+Used by:
+- Pseudocode packet stage
+- Test strategy stage
+- Implementation stage
+- Test implementation stage
+- Judge stage
+- Repair mode behavior tracing
+
+Purpose:
+Define intended behavior before pseudocode, implementation, or test writing.
+
+The BehaviorModel explains what the software should do, what state controls that behavior, what events can change that state, and what invariants must hold.
+
+Required content:
+- behavior summary
+- externally visible behavior
+- internal behavior required to support it
+- state variables
+- inputs
+- events
+- derived values
+- invariants
+- valid states
+- invalid states
+- boundaries and partitions
+- empty states
+- error states
+- loading or pending states when relevant
+- external contracts
+- state transitions
+- behavior to preserve
+- behavior intentionally changed
+- unresolved design questions
+
+Should not contain:
+- production code
+- test files
+- implementation-specific code structure unless required by current architecture
+- concrete scenario templates unrelated to the current request
+
+Completion criteria:
+The BehaviorModel is complete when the PseudocodePacket and TestStrategyPacket can both be derived from it.
+
+Template:
+
+Artifact:
+BehaviorModel
+
+Workflow mode:
+
+Inputs used:
+- RequestBrief:
+- ArchitectureContextPacket:
+
+Behavior summary:
+
+Externally visible behavior:
+
+Internal supporting behavior:
+
+State variables:
+
+Inputs:
+
+Events:
+
+Derived values:
+
+Invariants:
+
+Valid states:
+
+Invalid states:
+
+Boundaries and partitions:
+
+Empty states:
+
+Error states:
+
+Loading or pending states:
+
+External contracts:
+
+State transitions:
+
+Behavior to preserve:
+
+Behavior intentionally changed:
+
+Unresolved design questions:
+
+Downstream use:
+This artifact is binding input for the PseudocodePacket and TestStrategyPacket.
+
+Status:
+
+
+4.4. PseudocodePacket
+
+Produced by:
+Pseudocode packet stage
+
+Used by:
+- Test strategy stage
+- Implementation stage
+- Test implementation stage
+- Judge stage
+- Repair mode behavior tracing
+
+Purpose:
+Convert the BehaviorModel into implementation-neutral pseudocode.
+
+The PseudocodePacket is the central shared design contract for implementation and testing.
+
+Both the coding agent and testing agent should use this artifact as the shared source of truth.
+
+Required content:
+- behavior references
+- data flow
+- state flow
+- state transitions
+- derived-value rules
+- validation rules
+- empty-state handling
+- error-state handling
+- external contract handling
+- component, module, service, route, command, or helper contracts as relevant
+- acceptance criteria
+- likely files or modules to modify
+- implementation constraints
+- assumptions that remain valid
+- assumptions that must be removed or guarded
+- unresolved implementation questions
+
+Should not contain:
+- production code
+- full implementation patches
+- test files
+- unrelated architecture changes
+- unnecessary implementation details not justified by ArchitectureContextPacket
+
+Completion criteria:
+The PseudocodePacket is complete when the implementation stage can implement from it and the test strategy stage can derive verification responsibilities from it.
+
+Template:
+
+Artifact:
+PseudocodePacket
+
+Workflow mode:
+
+Inputs used:
+- RequestBrief:
+- ArchitectureContextPacket:
+- BehaviorModel:
+
+Behavior references:
+
+Data flow:
+
+State flow:
+
+State transitions:
+
+Derived-value rules:
+
+Validation rules:
+
+Empty-state handling:
+
+Error-state handling:
+
+External contract handling:
+
+Component, module, service, route, command, or helper contracts:
+
+Acceptance criteria:
+
+Likely files or modules to modify:
+
+Implementation constraints:
+
+Assumptions preserved:
+
+Assumptions removed or guarded:
+
+Unresolved implementation questions:
+
+Downstream use:
+This artifact is binding input for implementation, test strategy, test implementation, verification, and judge stages.
+
+Status:
+
+
+4.5. TestStrategyPacket
+
+Produced by:
+Behavior-derived test strategy stage
+
+Used by:
+- Test implementation stage
+- Verification stage
+- Judge stage
+- Final report stage
+
+Purpose:
+Define tests from the BehaviorModel and PseudocodePacket before test files are written.
+
+The TestStrategyPacket should not be a loose list of test ideas. It should map behavior to test responsibilities.
+
+Required content:
+- behaviors to protect
+- state variables to verify
+- events to test
+- derived values to verify
+- invariants to protect
+- boundaries and partitions to cover
+- external contracts to validate
+- state transitions to test
+- relevant failure modes
+- test matrix
+- test level assignment
+- required verification commands
+- coverage gaps
+- risks not covered and why
+
+Each proposed test should trace to at least one of:
+- behavior
+- invariant
+- state transition
+- derived value
+- boundary
+- external contract
+- failure mode
+
+Test levels:
+- unit
+- component
+- integration
+- end-to-end
+
+Should not contain:
+- full test file implementation unless the workflow explicitly combines strategy and implementation
+- production code changes
+- unrelated test expansion
+- copied test cases that do not trace to behavior
+
+Completion criteria:
+The TestStrategyPacket is complete when a testing agent can implement tests without independently reinterpreting the feature.
+
+Template:
+
+Artifact:
+TestStrategyPacket
+
+Workflow mode:
+
+Inputs used:
+- RequestBrief:
+- ArchitectureContextPacket:
+- BehaviorModel:
+- PseudocodePacket:
+
+Behaviors to protect:
+
+State variables to verify:
+
+Events to test:
+
+Derived values to verify:
+
+Invariants to protect:
+
+Boundaries and partitions to cover:
+
+External contracts to validate:
+
+State transitions to test:
+
+Relevant failure modes:
+
+Test matrix:
+For each test responsibility:
+- test responsibility ID:
+- traces to:
+- setup:
+- action or trigger:
+- expected result:
+- test level:
+- required files or likely test location:
+- notes:
+
+Required verification commands:
+
+Coverage gaps:
+
+Risks not covered and why:
+
+Downstream use:
+This artifact is binding input for test implementation and judge stages.
+
+Status:
+
+
+4.6. ImplementationReport
+
+Produced by:
+Implementation stage
+
+Used by:
+- Test implementation stage
+- Verification stage
+- Judge stage
+- Final report stage
+
+Purpose:
+Describe what the coding agent changed and how the implementation maps back to the PseudocodePacket.
+
+Required content:
+- files changed
+- files read
+- behavior implemented
+- pseudocode sections implemented
+- assumptions preserved
+- assumptions removed or guarded
+- deviations from PseudocodePacket
+- reason for each deviation
+- blockers encountered
+- unresolved risks
+- tests that should be run
+- notes for the test implementation stage
+
+Should not contain:
+- unsupported claims that tests passed
+- unrelated cleanup
+- changes outside requested scope without explanation
+- vague implementation summaries without file references
+
+Completion criteria:
+The ImplementationReport is complete when the judge can compare the code changes against the PseudocodePacket and understand any deviations.
+
+Template:
+
+Artifact:
+ImplementationReport
+
+Workflow mode:
+
+Inputs used:
+- ArchitectureContextPacket:
+- BehaviorModel:
+- PseudocodePacket:
+
+Files read:
+
+Files changed:
+
+Behavior implemented:
+
+Pseudocode sections implemented:
+
+Assumptions preserved:
+
+Assumptions removed or guarded:
+
+Deviations from PseudocodePacket:
+
+Reason for each deviation:
+
+Blockers encountered:
+
+Unresolved risks:
+
+Tests that should be run:
+
+Notes for test implementation stage:
+
+Status:
+
+
+4.7. TestImplementationReport
+
+Produced by:
+Test implementation stage
+
+Used by:
+- Verification stage
+- Judge stage
+- Final report stage
+
+Purpose:
+Describe tests added or updated and how they map back to the TestStrategyPacket.
+
+Required content:
+- test files changed
+- tests added
+- tests updated
+- behaviors covered
+- invariants covered
+- state transitions covered
+- derived values covered
+- boundaries covered
+- external contracts covered
+- failure modes covered
+- TestStrategyPacket items not implemented
+- reason for each missing test
+- verification commands to run
+
+Should not contain:
+- unrelated test rewrites
+- tests that do not trace to behavior
+- unsupported claims that tests passed
+- production behavior changes unless explicitly reported as a blocker or required correction
+
+Completion criteria:
+The TestImplementationReport is complete when the verification stage knows what commands to run and the judge can compare tests against the TestStrategyPacket.
+
+Template:
+
+Artifact:
+TestImplementationReport
+
+Workflow mode:
+
+Inputs used:
+- BehaviorModel:
+- PseudocodePacket:
+- TestStrategyPacket:
+- ImplementationReport if available:
+
+Test files changed:
+
+Tests added:
+
+Tests updated:
+
+Behaviors covered:
+
+Invariants covered:
+
+State transitions covered:
+
+Derived values covered:
+
+Boundaries covered:
+
+External contracts covered:
+
+Failure modes covered:
+
+TestStrategyPacket items not implemented:
+
+Reason for each missing test:
+
+Verification commands to run:
+
+Status:
+
+
+4.8. VerificationReport
+
+Produced by:
+Verification stage
+
+Used by:
+- Judge stage
+- Final report stage
+
+Purpose:
+Record command evidence.
+
+The VerificationReport separates actual verification evidence from claims.
+
+Required content:
+- commands run
+- command working directories
+- exit codes
+- pass/fail status
+- output summary
+- failed tests
+- skipped checks
+- reason for skipped checks
+- environment notes if relevant
+- remaining verification gaps
+
+Should not contain:
+- claims that checks passed without command evidence
+- hidden failures
+- omitted failed commands
+- vague statements like “all good” without command details
+
+Completion criteria:
+The VerificationReport is complete when the judge can determine what was actually verified and what remains unverified.
+
+Template:
+
+Artifact:
+VerificationReport
+
+Workflow mode:
+
+Inputs used:
+- TestStrategyPacket:
+- ImplementationReport:
+- TestImplementationReport:
+
+Commands run:
+
+Command results:
+For each command:
+- command:
+- working directory:
+- exit code:
+- status:
+- output summary:
+- failure summary if any:
+
+Skipped checks:
+
+Reason for skipped checks:
+
+Environment notes:
+
+Remaining verification gaps:
+
+Status:
+
+
+4.9. JudgeReport
+
+Produced by:
+Judge stage
+
+Used by:
+- Final report stage
+- workflow routing if the run needs correction
+
+Purpose:
+Review implementation, tests, and verification against the earlier artifacts.
+
+The JudgeReport determines whether the run can be considered successful.
+
+Required content:
+- artifacts reviewed
+- implementation vs PseudocodePacket assessment
+- tests vs TestStrategyPacket assessment
+- behavior coverage assessment
+- architecture alignment assessment
+- scope assessment
+- verification evidence assessment
+- risks and gaps
+- verdict
+- recommended next stage if not PASS
+
+Possible verdicts:
+- PASS
+- DESIGN_INCOMPLETE
+- PSEUDOCODE_INCOMPLETE
+- IMPLEMENTATION_MISMATCH
+- TEST_COVERAGE_INCOMPLETE
+- ARCHITECTURE_MISMATCH
+- NEED_CONTEXT
+- SCOPE_VIOLATION
+- NEED_VERIFICATION
+- BLOCKED
+
+Should not contain:
+- new implementation patches
+- unsupported pass verdict
+- vague approval without checking artifacts
+- hidden or minimized verification gaps
+
+Completion criteria:
+The JudgeReport is complete when it gives a clear verdict and, if needed, identifies the stage that should be revisited.
+
+Template:
+
+Artifact:
+JudgeReport
+
+Workflow mode:
+
+Artifacts reviewed:
+
+Implementation vs PseudocodePacket:
+
+Tests vs TestStrategyPacket:
+
+Behavior coverage:
+
+Architecture alignment:
+
+Scope control:
+
+Verification evidence:
+
+Risks and gaps:
+
+Verdict:
+
+Recommended next stage if not PASS:
+
+Status:
+
+
+4.10. FinalReport
+
+Produced by:
+Final report stage
+
+Used by:
+- user review
+- project history
+- future workflow continuation
+
+Purpose:
+Summarize the run in a clear user-facing form.
+
+Required content:
+- original request
+- workflow mode
+- run ID
+- stages completed
+- behavior designed
+- architecture context used
+- pseudocode summary
+- tests designed
+- implementation summary
+- tests added or updated
+- verification summary
+- judge verdict
+- unresolved risks
+- follow-up recommendations if needed
+
+Should not contain:
+- exaggerated success claims
+- omitted failures
+- hidden uncertainty
+- excessive internal process details not useful to the user
+
+Completion criteria:
+The FinalReport is complete when a user can understand what was done, what was verified, and what remains uncertain.
+
+Template:
+
+Artifact:
+FinalReport
+
+Workflow mode:
+
+Run ID:
+
+Original request:
+
+Stages completed:
+
+Behavior designed:
+
+Architecture context used:
+
+Pseudocode summary:
+
+Tests designed:
+
+Implementation summary:
+
+Tests added or updated:
+
+Verification summary:
+
+Judge verdict:
+
+Unresolved risks:
+
+Follow-up recommendations:
+
+Status:
+
+
+5. Mode-specific artifacts
+
+Some workflow modes need specialized artifacts.
+
+These artifacts should still follow the same principles:
+- clear purpose
+- explicit inputs
+- bounded content
+- downstream use
+- status
+
+
+5.1. ObservedBehaviorReport
+
+Used in:
+repair mode
+
+Produced by:
+Observed behavior stage
+
+Purpose:
+Capture the wrong or unexpected behavior without jumping directly to code-level causes.
+
+Required content:
+- observed behavior
+- expected behavior if known
+- user action or system event that triggered it
+- visible output or runtime symptom
+- affected workflow or area
+- frequency if known
+- evidence available
+- uncertainty
+
+Downstream use:
+Used by BehaviorTrace and DivergenceReport.
+
+Template:
+
+Artifact:
+ObservedBehaviorReport
+
+Observed behavior:
+
+Expected behavior:
+
+Triggering action or event:
+
+Visible output or runtime symptom:
+
+Affected workflow or area:
+
+Frequency or reproducibility:
+
+Evidence available:
+
+Uncertainty:
+
+Status:
+
+
+5.2. BehaviorTrace
+
+Used in:
+repair mode
+
+Produced by:
+Behavior/design lookup stage
+
+Purpose:
+Connect observed behavior to the intended behavior model or pseudocode path.
+
+Required content:
+- observed behavior reference
+- matched behavior artifact if available
+- matched behavior rule
+- matched pseudocode section if available
+- expected data flow
+- expected state flow
+- expected output
+- missing design artifact if no match is found
+
+Downstream use:
+Used by DivergenceReport to compare expected behavior with actual behavior.
+
+Template:
+
+Artifact:
+BehaviorTrace
+
+Observed behavior reference:
+
+Matched behavior artifact:
+
+Matched behavior rule:
+
+Matched pseudocode section:
+
+Expected data flow:
+
+Expected state flow:
+
+Expected output:
+
+Missing design artifact if applicable:
+
+Status:
+
+
+5.3. DivergenceReport
+
+Used in:
+repair mode
+
+Produced by:
+Runtime-vs-design divergence stage
+
+Purpose:
+Identify the first point where actual behavior diverges from intended behavior.
+
+Required content:
+- expected path
+- actual path
+- first divergence point
+- affected layer
+- evidence
+- likely correction category
+
+Correction categories may include:
+- behavior design update
+- pseudocode update
+- implementation correction
+- test correction
+- external contract correction
+- runtime state ordering correction
+- artifact update
+
+Template:
+
+Artifact:
+DivergenceReport
+
+Expected path:
+
+Actual path:
+
+First divergence point:
+
+Affected layer:
+
+Evidence:
+
+Correction category:
+
+Uncertainty:
+
+Status:
+
+
+5.4. CorrectionDesign
+
+Used in:
+repair mode
+
+Produced by:
+Correction design stage
+
+Purpose:
+Define how the system should be corrected before implementation.
+
+Required content:
+- correction goal
+- artifact to update if any
+- code behavior to change
+- tests to add or update
+- acceptance criteria
+- risks
+
+Template:
+
+Artifact:
+CorrectionDesign
+
+Correction goal:
+
+Artifact updates needed:
+
+Code behavior to change:
+
+Tests to add or update:
+
+Acceptance criteria:
+
+Risks:
+
+Status:
+
+
+5.5. RegressionTestStrategy
+
+Used in:
+repair mode
+
+Produced by:
+Regression-focused test strategy stage
+
+Purpose:
+Define tests that prove the observed divergence cannot recur.
+
+Required content:
+- divergence being protected against
+- behavior or pseudocode rule being protected
+- regression test responsibilities
+- related boundary or transition coverage
+- verification commands
+
+Template:
+
+Artifact:
+RegressionTestStrategy
+
+Divergence protected against:
+
+Behavior or pseudocode rule protected:
+
+Regression test responsibilities:
+
+Related boundary or transition coverage:
+
+Verification commands:
+
+Status:
+
+
+5.6. TestTargetBrief
+
+Used in:
+test mode
+
+Produced by:
+Test target stage
+
+Purpose:
+Define the target of a test-design or test-implementation run.
+
+Required content:
+- test target
+- target behavior or workflow
+- whether code changes are allowed
+- desired test depth
+- constraints
+- success criteria
+
+Template:
+
+Artifact:
+TestTargetBrief
+
+Test target:
+
+Target behavior or workflow:
+
+Code changes allowed:
+
+Desired test depth:
+
+Constraints:
+
+Success criteria:
+
+Status:
+
+
+5.7. BehaviorReconstruction
+
+Used in:
+test mode
+
+Produced by:
+Behavior reconstruction stage
+
+Purpose:
+Reconstruct behavior for an existing feature when no BehaviorModel exists yet.
+
+Required content:
+- observed existing behavior
+- current architecture evidence
+- state variables
+- events
+- derived values
+- invariants
+- external contracts
+- uncertainty
+
+Template:
+
+Artifact:
+BehaviorReconstruction
+
+Observed existing behavior:
+
+Current architecture evidence:
+
+State variables:
+
+Events:
+
+Derived values:
+
+Invariants:
+
+External contracts:
+
+Uncertainty:
+
+Status:
+
+
+5.8. PseudocodeSummary
+
+Used in:
+test mode
+
+Produced by:
+Pseudocode lookup or summary stage
+
+Purpose:
+Summarize existing implementation behavior in pseudocode form when no PseudocodePacket exists yet.
+
+Required content:
+- implementation-neutral behavior summary
+- data flow
+- state flow
+- derived values
+- validation rules
+- error or empty state handling
+- uncertainty
+
+Template:
+
+Artifact:
+PseudocodeSummary
+
+Implementation-neutral behavior summary:
+
+Data flow:
+
+State flow:
+
+Derived values:
+
+Validation rules:
+
+Error or empty state handling:
+
+Uncertainty:
+
+Status:
+
+
+5.9. RefactorBrief
+
+Used in:
+refactor mode
+
+Produced by:
+Refactor brief stage
+
+Purpose:
+Define the intended code-structure change and behavior-preservation requirement.
+
+Required content:
+- refactor goal
+- behavior that must remain unchanged
+- target area
+- constraints
+- non-goals
+- success criteria
+
+Template:
+
+Artifact:
+RefactorBrief
+
+Refactor goal:
+
+Behavior that must remain unchanged:
+
+Target area:
+
+Constraints:
+
+Non-goals:
+
+Success criteria:
+
+Status:
+
+
+5.10. ExistingBehaviorMap
+
+Used in:
+refactor mode
+
+Produced by:
+Existing behavior map stage
+
+Purpose:
+Map the behavior that must remain stable during refactor.
+
+Required content:
+- current behaviors
+- state variables
+- events
+- derived values
+- invariants
+- external contracts
+- existing tests
+- behavior gaps
+
+Template:
+
+Artifact:
+ExistingBehaviorMap
+
+Current behaviors:
+
+State variables:
+
+Events:
+
+Derived values:
+
+Invariants:
+
+External contracts:
+
+Existing tests:
+
+Behavior gaps:
+
+Status:
+
+
+5.11. PreservedInvariantList
+
+Used in:
+refactor mode
+
+Produced by:
+Preserved invariants stage
+
+Purpose:
+Define what must remain true after the refactor.
+
+Required content:
+- invariants to preserve
+- affected code areas
+- tests that protect each invariant
+- missing tests
+
+Template:
+
+Artifact:
+PreservedInvariantList
+
+Invariants to preserve:
+
+Affected code areas:
+
+Tests protecting each invariant:
+
+Missing tests:
+
+Status:
+
+
+5.12. CompatibilityTestStrategy
+
+Used in:
+refactor mode
+
+Produced by:
+Compatibility test strategy stage
+
+Purpose:
+Define tests that prove the refactor preserved behavior.
+
+Required content:
+- preserved behavior
+- compatibility test responsibilities
+- existing tests to run
+- new tests needed
+- verification commands
+
+Template:
+
+Artifact:
+CompatibilityTestStrategy
+
+Preserved behavior:
+
+Compatibility test responsibilities:
+
+Existing tests to run:
+
+New tests needed:
+
+Verification commands:
+
+Status:
+
+
+5.13. HardeningBrief
+
+Used in:
+harden mode
+
+Produced by:
+Hardening brief stage
+
+Purpose:
+Define what robustness or failure-handling improvement is requested.
+
+Required content:
+- hardening goal
+- target behavior or boundary
+- current risk
+- constraints
+- success criteria
+
+Template:
+
+Artifact:
+HardeningBrief
+
+Hardening goal:
+
+Target behavior or boundary:
+
+Current risk:
+
+Constraints:
+
+Success criteria:
+
+Status:
+
+
+5.14. AssumptionReport
+
+Used in:
+harden mode
+
+Produced by:
+Assumption analysis stage
+
+Purpose:
+Identify assumptions currently made by the code or design.
+
+Required content:
+- assumption
+- source of assumption
+- where it is used
+- what breaks if false
+- whether to preserve, remove, validate, or guard it
+- required follow-up
+
+Template:
+
+Artifact:
+AssumptionReport
+
+Assumptions:
+For each assumption:
+- assumption:
+- source:
+- used by:
+- what breaks if false:
+- decision:
+- required follow-up:
+
+Status:
+
+
+5.15. FailureModeMatrix
+
+Used in:
+harden mode
+
+Produced by:
+Failure-mode analysis stage
+
+Purpose:
+Classify realistic ways the behavior can fail and decide how each should be handled.
+
+Required content:
+- failure mode
+- category
+- trigger
+- affected layer
+- current behavior
+- desired behavior
+- handling strategy
+- required code change
+- required test
+- priority
+
+Failure handling strategies may include:
+- prevent
+- recover
+- surface to user
+- log
+- retry
+- ignore safely
+- fail fast
+
+Template:
+
+Artifact:
+FailureModeMatrix
+
+Failure modes:
+For each failure mode:
+- failure mode:
+- category:
+- trigger:
+- affected layer:
+- current behavior:
+- desired behavior:
+- handling strategy:
+- required code change:
+- required test:
+- priority:
+
+Status:
+
+
+5.16. GuardPseudocodePacket
+
+Used in:
+harden mode
+
+Produced by:
+Guard/error-state pseudocode stage
+
+Purpose:
+Define pseudocode for validation, guards, recovery paths, and error or empty states.
+
+Required content:
+- assumptions being guarded
+- failure modes handled
+- validation rules
+- guard rules
+- recovery behavior
+- error-state behavior
+- acceptance criteria
+
+Template:
+
+Artifact:
+GuardPseudocodePacket
+
+Assumptions guarded:
+
+Failure modes handled:
+
+Validation rules:
+
+Guard rules:
+
+Recovery behavior:
+
+Error-state behavior:
+
+Acceptance criteria:
+
+Status:
+
+
+5.17. ResilienceTestStrategy
+
+Used in:
+harden mode
+
+Produced by:
+Resilience test strategy stage
+
+Purpose:
+Define tests that verify hardening behavior.
+
+Required content:
+- assumptions tested
+- failure modes tested
+- validation tests
+- guard tests
+- recovery tests
+- error-state tests
+- verification commands
+- remaining risks
+
+Template:
+
+Artifact:
+ResilienceTestStrategy
+
+Assumptions tested:
+
+Failure modes tested:
+
+Validation tests:
+
+Guard tests:
+
+Recovery tests:
+
+Error-state tests:
+
+Verification commands:
+
+Remaining risks:
+
+Status:
+
+
+6. Artifact completeness rules
+
+An artifact is complete when:
+- it states its inputs
+- it fulfills the purpose of its stage
+- it is specific to the current request and project context
+- it identifies uncertainty honestly
+- it enables the next stage to proceed without redoing the previous stage
+
+An artifact is incomplete when:
+- it only restates the user request
+- it skips required reasoning for the stage
+- it contains unrelated content
+- it makes unsupported claims
+- it hides uncertainty
+- it jumps ahead into later-stage work
+- it is too vague to guide the next stage
+
+The CLI does not need to judge completeness automatically in v0.1.0.
+The judge prompt should evaluate completeness when necessary.
+
+
+7. Artifact dependency rules
+
+Core dependencies:
+
+RequestBrief depends on:
+- original user request
+
+ArchitectureContextPacket depends on:
+- RequestBrief
+- current project inspection
+- my-dev-kit retrieval when available
+
+BehaviorModel depends on:
+- RequestBrief
+- ArchitectureContextPacket
+
+PseudocodePacket depends on:
+- BehaviorModel
+- ArchitectureContextPacket
+
+TestStrategyPacket depends on:
+- BehaviorModel
+- PseudocodePacket
+- ArchitectureContextPacket
+
+ImplementationReport depends on:
+- ArchitectureContextPacket
+- BehaviorModel
+- PseudocodePacket
+
+TestImplementationReport depends on:
+- TestStrategyPacket
+- BehaviorModel
+- PseudocodePacket
+- ImplementationReport when available
+
+VerificationReport depends on:
+- TestStrategyPacket
+- ImplementationReport
+- TestImplementationReport
+
+JudgeReport depends on:
+- all relevant prior artifacts
+
+FinalReport depends on:
+- JudgeReport
+- VerificationReport
+- ImplementationReport
+- TestImplementationReport
+- major design artifacts
+
+
+8. Scope and authority of artifacts
+
+RequestBrief authority:
+Defines what the user asked for and what counts as success.
+
+ArchitectureContextPacket authority:
+Defines what project context was inspected and what architecture should be respected.
+
+BehaviorModel authority:
+Defines intended behavior.
+
+PseudocodePacket authority:
+Defines the implementation-neutral design contract.
+
+TestStrategyPacket authority:
+Defines what tests should protect.
+
+ImplementationReport authority:
+Defines what code actually changed.
+
+TestImplementationReport authority:
+Defines what tests actually changed.
+
+VerificationReport authority:
+Defines what was actually run.
+
+JudgeReport authority:
+Defines whether the run satisfied the design and verification requirements.
+
+FinalReport authority:
+Communicates the outcome to the user.
+
+
+9. Updating artifacts
+
+Artifacts may need to be updated if later stages reveal a contradiction.
+
+Rules:
+- Do not silently contradict an earlier artifact.
+- If implementation reveals the PseudocodePacket is impossible or wrong, return to the pseudocode stage.
+- If tests reveal the BehaviorModel is incomplete, return to the behavior model stage.
+- If the project context was insufficient, return to the architecture context stage.
+- If verification fails, update the relevant report and route to the appropriate prior stage.
+- If scope changes, update RequestBrief or stop and ask for a new run depending on severity.
+
+The workflow should preserve previous versions or note the correction in the updated artifact.
+
+v0.1.0 can handle this manually through JudgeReport recommendations.
+
+
+10. Artifact naming conventions
+
+Use lowercase kebab-case filenames.
+
+Examples:
+request-brief.txt
+architecture-context-packet.txt
+behavior-model.txt
+pseudocode-packet.txt
+test-strategy-packet.txt
+implementation-report.txt
+test-implementation-report.txt
+verification-report.txt
+judge-report.txt
+final-report.txt
+
+Prompt files should also use lowercase kebab-case:
+
+01-request-brief.prompt.txt
+02-architecture-context.prompt.txt
+03-behavior-model.prompt.txt
+04-pseudocode-packet.prompt.txt
+05-test-strategy.prompt.txt
+06-implementation.prompt.txt
+07-test-implementation.prompt.txt
+08-verification.prompt.txt
+09-judge.prompt.txt
+10-final-report.prompt.txt
+
+The artifact file and prompt file names should make the workflow order obvious.
+
+
+11. Artifact use in generated prompts
+
+A generated stage prompt should not include all previous artifacts in full unless required.
+
+Preferred prompt input behavior:
+- include the current stage name
+- list required artifacts by filename
+- include compact summaries if available
+- instruct the coding agent to read the full artifacts from the run folder if needed
+- include only prior artifacts required for the current stage
+
+For example:
+The pseudocode stage should use:
+- request-brief.txt
+- architecture-context-packet.txt
+- behavior-model.txt
+
+It should not need:
+- implementation-report.txt
+- verification-report.txt
+- final-report.txt
+
+The implementation stage should use:
+- request-brief.txt
+- architecture-context-packet.txt
+- behavior-model.txt
+- pseudocode-packet.txt
+
+The test implementation stage should use:
+- behavior-model.txt
+- pseudocode-packet.txt
+- test-strategy-packet.txt
+- implementation-report.txt if code has already changed
+
+This keeps prompts small and focused.
+
+
+12. v0.1.0 artifact success criteria
+
+The artifact system is successful if:
+
+- each workflow stage produces a named text artifact
+- the next stage can consume the artifact without redoing prior work
+- implementation and test implementation share the same PseudocodePacket
+- test strategy is derived from BehaviorModel and PseudocodePacket
+- verification evidence is separated from claims
+- judge can compare actual work against intended behavior
+- final report can summarize the full run honestly
+- the user can inspect and resume a run from files on disk
+
+The artifact system should make the workflow traceable without making the CLI complicated.

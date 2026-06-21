@@ -1,0 +1,968 @@
+cli_commands.txt
+
+Project name:
+my-dev-kit-orchestrator
+
+Primary CLI command:
+my-dev-kit-orchestrator
+
+Purpose:
+The CLI provides a small, explicit command surface for starting and continuing design-first software-development workflows.
+
+The CLI should not expose every internal workflow stage as a separate top-level command. The user should not have to manually operate many agents. The user should start a workflow, inspect workflow status, and print the next stage prompt.
+
+Core CLI principle:
+The workflow can be complex internally, but the command surface must stay simple.
+
+The CLI owns:
+- workflow mode selection
+- workflow stage order
+- run folder creation
+- prompt generation
+- artifact naming
+- stage status tracking
+- next-prompt selection
+
+The coding agent owns:
+- executing one bounded prompt at a time
+- producing the requested stage artifact
+- modifying code only during implementation stages
+- reporting evidence and blockers
+
+The user owns:
+- starting a run
+- pasting generated prompts into the coding agent
+- saving or pasting returned artifacts into the run folder when needed
+- continuing to the next prompt
+
+
+Command surface:
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start "<request>"
+my-dev-kit-orchestrator start --mode feature "<request>"
+my-dev-kit-orchestrator start --mode repair "<observed behavior>"
+my-dev-kit-orchestrator start --mode test "<test target>"
+my-dev-kit-orchestrator start --mode refactor "<refactor goal>"
+my-dev-kit-orchestrator start --mode harden "<hardening goal>"
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator prompt <stage>
+my-dev-kit-orchestrator list
+
+Optional flags:
+--root <path>
+--name <run-name>
+--run <run-id>
+--mode <mode>
+--output-dir <path>
+
+
+Default project workspace:
+.my-dev-kit-orchestrator/
+
+Default run directory:
+.my-dev-kit-orchestrator/runs/
+
+Each run should be inspectable and resumable.
+
+
+1. Command:
+my-dev-kit-orchestrator init
+
+Purpose:
+Initialize the my-dev-kit-orchestrator workspace inside the current project repository.
+
+Default behavior:
+Use the current working directory as the project root.
+
+Example:
+my-dev-kit-orchestrator init
+
+Optional explicit root:
+my-dev-kit-orchestrator init --root <project-root>
+
+Creates:
+.my-dev-kit-orchestrator/
+  config.json
+  runs/
+
+The config file may include:
+- project root
+- default run directory
+- preferred command runner
+- whether my-dev-kit is available
+- optional path to local my-dev-kit
+- default workflow mode
+- default prompt format
+
+This command invokes no development workflow.
+It only prepares the local repository for workflow runs.
+
+Expected output:
+Initialized my-dev-kit-orchestrator workspace.
+
+Workspace:
+.my-dev-kit-orchestrator/
+
+Next:
+my-dev-kit-orchestrator start "<software change request>"
+
+
+2. Command:
+my-dev-kit-orchestrator start "<request>"
+
+Purpose:
+Start a new workflow run.
+
+Default mode:
+feature
+
+Equivalent to:
+my-dev-kit-orchestrator start --mode feature "<request>"
+
+Example:
+my-dev-kit-orchestrator start "<software change request>"
+
+What it does:
+- creates a new run folder
+- records the original request
+- selects the workflow mode
+- generates stage prompts for that workflow
+- writes run metadata
+- marks the first actionable stage as next
+- does not run implementation automatically
+
+Default run folder:
+.my-dev-kit-orchestrator/runs/<timestamp>-<slug>/
+
+Run folder contents:
+00-request.txt
+run.json
+prompts/
+artifacts/
+reports/
+
+A simple v0.1.0 folder layout may be:
+.my-dev-kit-orchestrator/runs/<run-id>/
+  00-request.txt
+  run.json
+  prompts/
+    01-request-brief.prompt.txt
+    02-architecture-context.prompt.txt
+    03-behavior-model.prompt.txt
+    04-pseudocode-packet.prompt.txt
+    05-test-strategy.prompt.txt
+    06-implementation.prompt.txt
+    07-test-implementation.prompt.txt
+    08-verification.prompt.txt
+    09-judge.prompt.txt
+    10-final-report.prompt.txt
+  artifacts/
+  reports/
+
+Expected output:
+Created workflow run:
+.my-dev-kit-orchestrator/runs/<run-id>
+
+Mode:
+feature
+
+Next:
+my-dev-kit-orchestrator prompt
+
+
+3. Command:
+my-dev-kit-orchestrator start --mode feature "<request>"
+
+Purpose:
+Start a design-first feature implementation workflow.
+
+Use this mode for:
+- adding a new feature
+- extending existing behavior
+- changing user-visible behavior intentionally
+- adding a new workflow to an application
+- adding a new CLI behavior
+- adding a new API behavior
+
+Workflow invoked:
+Feature workflow
+
+Feature workflow sequence:
+1. Request brief
+2. Architecture context
+3. Behavior model
+4. Pseudocode packet
+5. Behavior-derived test strategy
+6. Implementation
+7. Test implementation
+8. Verification
+9. Judge
+10. Final report
+
+Stage 1:
+Request brief
+
+Artifact produced:
+RequestBrief
+
+Purpose:
+Convert the raw request into a compact software-change brief.
+
+The stage prompt should ask the coding agent to identify:
+- requested change
+- user-visible behavior
+- target workflow or component
+- constraints
+- non-goals
+- success criteria
+- ambiguity or missing information
+
+Stop condition:
+Do not inspect code deeply.
+Do not write pseudocode.
+Do not write tests.
+Do not implement code.
+
+Stage 2:
+Architecture context
+
+Artifact produced:
+ArchitectureContextPacket
+
+Purpose:
+Ground the workflow in the current project before design decisions are made.
+
+This stage should invoke graph-guided retrieval when my-dev-kit is available.
+
+The stage prompt should instruct the coding agent to:
+- inspect the current architecture
+- retrieve relevant files, symbols, routes, modules, tests, and docs
+- identify state owners and data boundaries
+- identify upstream and downstream dependencies
+- identify existing patterns that should be followed
+- avoid broad whole-file reading unless targeted retrieval is insufficient
+
+Stop condition:
+Do not redesign the feature.
+Do not write pseudocode.
+Do not implement code.
+Do not write tests.
+
+Stage 3:
+Behavior model
+
+Artifact produced:
+BehaviorModel
+
+Purpose:
+Define intended behavior before pseudocode or implementation.
+
+The stage prompt should ask the coding agent to identify:
+- externally visible behavior
+- internal behavior required to support it
+- state variables
+- inputs
+- events
+- derived values
+- invariants
+- boundaries
+- empty states
+- error states
+- external contracts
+- state transitions
+
+Stop condition:
+Do not write production code.
+Do not write test files.
+Do not convert to implementation-specific code yet.
+
+Stage 4:
+Pseudocode packet
+
+Artifact produced:
+PseudocodePacket
+
+Purpose:
+Convert the behavior model into implementation-neutral pseudocode.
+
+This is the central shared context artifact for both implementation and testing.
+
+The stage prompt should ask the coding agent to define:
+- data flow
+- state flow
+- derived-value rules
+- validation rules
+- empty-state handling
+- error-state handling
+- component or module contracts
+- helper function contracts
+- acceptance criteria
+- likely files or modules to modify
+
+Stop condition:
+Do not write production code.
+Do not write test files.
+Do not change files.
+
+Stage 5:
+Behavior-derived test strategy
+
+Artifact produced:
+TestStrategyPacket
+
+Purpose:
+Design tests from the behavior model and pseudocode packet.
+
+The stage prompt should ask the coding agent to derive tests from:
+- behavior
+- state variables
+- events
+- derived values
+- invariants
+- boundaries
+- external contracts
+- state transitions
+- failure modes relevant to the current feature
+
+Each proposed test should trace back to a behavior, invariant, transition, derived value, boundary, contract, or failure mode.
+
+The stage prompt should assign tests to the narrowest useful level:
+- unit
+- component
+- integration
+- end-to-end
+
+Stop condition:
+Do not write test files yet unless the user explicitly asks for test implementation in the same stage.
+Do not implement feature code.
+
+Stage 6:
+Implementation
+
+Artifact produced:
+ImplementationReport
+
+Purpose:
+Implement the PseudocodePacket using the architecture context.
+
+The stage prompt should instruct the coding agent to:
+- read the required source files
+- modify only files justified by the PseudocodePacket and ArchitectureContextPacket
+- follow existing project patterns
+- avoid parallel architecture
+- preserve behavior not explicitly changed
+- report blockers instead of guessing
+- document any deviation from the PseudocodePacket
+
+Stop condition:
+Do not claim completion without implementation evidence.
+Do not write unrelated tests unless this workflow stage explicitly includes test implementation.
+
+Stage 7:
+Test implementation
+
+Artifact produced:
+TestImplementationReport
+
+Purpose:
+Write or update tests from the TestStrategyPacket.
+
+The stage prompt should instruct the coding agent to:
+- implement tests mapped to the TestStrategyPacket
+- preserve traceability from tests to behavior/invariants/contracts
+- prefer the narrowest useful test level
+- avoid shallow tests that do not protect behavior
+- report test coverage gaps
+
+Stop condition:
+Do not change feature behavior unless a test blocker reveals an implementation problem that must be reported.
+
+Stage 8:
+Verification
+
+Artifact produced:
+VerificationReport
+
+Purpose:
+Run the required commands and collect evidence.
+
+The stage prompt should instruct the coding agent to run appropriate commands such as:
+- targeted tests
+- integration tests
+- end-to-end tests when relevant
+- typecheck
+- lint
+- build
+- smoke checks when applicable
+
+The exact commands should come from the project and prior artifacts.
+
+Stop condition:
+Do not claim that checks passed unless the command output was actually produced.
+
+Stage 9:
+Judge
+
+Artifact produced:
+JudgeReport
+
+Purpose:
+Review implementation and tests against the design artifacts.
+
+The stage prompt should ask the coding agent or reviewer to check:
+- implementation matches the PseudocodePacket
+- tests match the TestStrategyPacket
+- behavior model is satisfied
+- scope stayed bounded
+- verification evidence exists
+- risks are reported honestly
+
+Possible verdicts:
+PASS
+DESIGN_INCOMPLETE
+PSEUDOCODE_INCOMPLETE
+IMPLEMENTATION_MISMATCH
+TEST_COVERAGE_INCOMPLETE
+ARCHITECTURE_MISMATCH
+NEED_CONTEXT
+SCOPE_VIOLATION
+NEED_VERIFICATION
+
+Stage 10:
+Final report
+
+Artifact produced:
+FinalReport
+
+Purpose:
+Summarize the completed workflow for the user.
+
+The report should include:
+- what was requested
+- what was designed
+- what was implemented
+- what tests were added or changed
+- what commands were run
+- what passed
+- what did not run
+- what risks remain
+
+
+4. Command:
+my-dev-kit-orchestrator start --mode repair "<observed behavior>"
+
+Purpose:
+Start a design-conformance repair workflow.
+
+Use this mode when:
+- observed behavior differs from intended behavior
+- frontend or runtime behavior contradicts a known design
+- code appears to violate an existing behavior model
+- tests are passing but user-visible behavior is wrong
+- a previous implementation needs correction
+
+This is not raw bug hunting.
+The workflow should first connect the observed behavior to the intended behavior model or pseudocode packet when available.
+
+Workflow invoked:
+Repair workflow
+
+Repair workflow sequence:
+1. Observed behavior report
+2. Architecture context
+3. Behavior/design lookup
+4. Runtime-vs-design divergence analysis
+5. Correction design
+6. Regression-focused test strategy
+7. Implementation
+8. Test implementation
+9. Verification
+10. Judge
+11. Final report
+
+Stage purpose:
+The repair workflow finds the first divergence between intended behavior and actual behavior.
+
+The divergence may be in:
+- behavior model
+- pseudocode
+- implementation
+- tests
+- frontend/backend contract
+- runtime state order
+- stale design artifact
+- user expectation not represented in the design
+
+Artifacts produced:
+ObservedBehaviorReport
+ArchitectureContextPacket
+BehaviorTrace
+DivergenceReport
+CorrectionDesign
+RegressionTestStrategy
+ImplementationReport
+TestImplementationReport
+VerificationReport
+JudgeReport
+FinalReport
+
+Important rule:
+Do not start by guessing which code line is wrong.
+Start by mapping the observed behavior to the intended behavior path.
+
+Expected repair-stage questions:
+- What behavior was observed?
+- What behavior was expected?
+- Which existing design artifact defines the expected behavior?
+- Which pseudocode step or behavior rule should have controlled it?
+- What actual runtime value or state transition diverged first?
+- Is the correction needed in design, pseudocode, implementation, tests, contract, or state ordering?
+
+Stop condition before implementation:
+Do not modify code until the divergence has been described and a correction design exists.
+
+
+5. Command:
+my-dev-kit-orchestrator start --mode test "<test target>"
+
+Purpose:
+Start a test-design or test-implementation workflow.
+
+Use this mode when:
+- tests are missing
+- tests are shallow
+- the user wants comprehensive tests for existing behavior
+- a workflow needs stronger coverage
+- a component needs behavior-derived test planning
+- implementation code should not necessarily change
+
+Workflow invoked:
+Test workflow
+
+Test workflow sequence:
+1. Test target brief
+2. Architecture context
+3. Behavior reconstruction
+4. Pseudocode lookup or pseudocode summary
+5. Behavior-derived test strategy
+6. Test implementation
+7. Verification
+8. Judge
+9. Final report
+
+Artifacts produced:
+TestTargetBrief
+ArchitectureContextPacket
+BehaviorModel or BehaviorReconstruction
+PseudocodePacket or PseudocodeSummary
+TestStrategyPacket
+TestImplementationReport
+VerificationReport
+JudgeReport
+FinalReport
+
+Important rule:
+The test workflow should derive tests from the behavior model.
+It should not begin by directly editing test files.
+
+The behavior-derived test strategy should identify:
+- parent behavior or workflow
+- participating components or modules
+- state variables
+- events
+- derived values
+- invariants
+- boundaries and partitions
+- external contracts
+- state transitions
+- appropriate test levels
+- uncovered risks
+
+Stop condition before test implementation:
+Do not write test files until the TestStrategyPacket exists, unless the user explicitly requested a smaller direct test patch.
+
+
+6. Command:
+my-dev-kit-orchestrator start --mode refactor "<refactor goal>"
+
+Purpose:
+Start a behavior-preserving refactor workflow.
+
+Use this mode when:
+- code structure should change
+- behavior should remain the same
+- logic should move to a helper/module
+- duplicate code should be consolidated
+- architecture should be cleaned up
+- boundaries should be improved without user-visible behavior changes
+
+Workflow invoked:
+Refactor workflow
+
+Refactor workflow sequence:
+1. Refactor brief
+2. Architecture context
+3. Existing behavior map
+4. Preserved invariants
+5. Compatibility test strategy
+6. Refactor pseudocode
+7. Implementation
+8. Test implementation or test update
+9. Verification
+10. Judge
+11. Final report
+
+Artifacts produced:
+RefactorBrief
+ArchitectureContextPacket
+ExistingBehaviorMap
+PreservedInvariantList
+CompatibilityTestStrategy
+RefactorPseudocodePacket
+ImplementationReport
+TestImplementationReport
+VerificationReport
+JudgeReport
+FinalReport
+
+Important rule:
+A refactor workflow must prove behavior preservation.
+
+The generated prompts should ask:
+- what behavior must remain unchanged
+- which invariants must be preserved
+- which tests currently protect the behavior
+- which tests need to be added before or during refactor
+- which files are allowed to change
+- how to detect accidental behavior changes
+
+Stop condition before implementation:
+Do not refactor code until preserved behavior and compatibility tests are identified.
+
+
+7. Command:
+my-dev-kit-orchestrator start --mode harden "<hardening goal>"
+
+Purpose:
+Start a robustness and failure-handling workflow.
+
+Use this mode when:
+- current behavior exists but needs stronger validation
+- inputs may be invalid or malformed
+- external contracts may drift
+- state may become stale
+- partial data must be handled
+- failure modes should be surfaced, recovered from, or rejected intentionally
+
+Workflow invoked:
+Hardening workflow
+
+Hardening workflow sequence:
+1. Hardening brief
+2. Architecture context
+3. Assumption analysis
+4. Failure-mode analysis
+5. Guard/error-state pseudocode
+6. Resilience test strategy
+7. Implementation
+8. Test implementation
+9. Verification
+10. Judge
+11. Final report
+
+Artifacts produced:
+HardeningBrief
+ArchitectureContextPacket
+AssumptionReport
+FailureModeMatrix
+GuardPseudocodePacket
+ResilienceTestStrategy
+ImplementationReport
+TestImplementationReport
+VerificationReport
+JudgeReport
+FinalReport
+
+The hardening workflow should classify relevant failure modes by categories such as:
+- input
+- state
+- contract
+- parser
+- storage
+- async
+- rendering
+- data volume
+- configuration
+- environment
+
+For each failure mode, the workflow should decide whether it should be:
+- prevented
+- recovered from
+- surfaced to the user
+- logged
+- retried
+- ignored safely
+- allowed to fail fast
+
+Stop condition before implementation:
+Do not add guards or error handling until the assumption and failure-mode artifacts exist.
+
+
+8. Command:
+my-dev-kit-orchestrator status
+
+Purpose:
+Show the current or selected workflow run.
+
+Default behavior:
+Show the most recent run.
+
+Example:
+my-dev-kit-orchestrator status
+
+Optional selected run:
+my-dev-kit-orchestrator status --run <run-id>
+
+Output should include:
+- run ID
+- mode
+- original request
+- run folder
+- current stage
+- available prompts
+- existing artifacts
+- missing artifacts
+- suggested next command
+
+Example output shape:
+Run:
+<run-id>
+
+Mode:
+feature
+
+Request:
+<request>
+
+Current stage:
+behavior-model
+
+Available prompts:
+- request-brief
+- architecture-context
+- behavior-model
+- pseudocode-packet
+- test-strategy
+- implementation
+- test-implementation
+- verification
+- judge
+- final-report
+
+Artifacts:
+- RequestBrief: present or missing
+- ArchitectureContextPacket: present or missing
+- BehaviorModel: present or missing
+- PseudocodePacket: present or missing
+- TestStrategyPacket: present or missing
+- ImplementationReport: present or missing
+- TestImplementationReport: present or missing
+- VerificationReport: present or missing
+- JudgeReport: present or missing
+- FinalReport: present or missing
+
+Next:
+my-dev-kit-orchestrator prompt
+
+This command invokes no workflow stage.
+It only inspects local run state.
+
+
+9. Command:
+my-dev-kit-orchestrator prompt
+
+Purpose:
+Print the next prompt for the active or selected run.
+
+Default behavior:
+Print the next prompt for the most recent run based on current run status.
+
+Example:
+my-dev-kit-orchestrator prompt
+
+Optional selected stage:
+my-dev-kit-orchestrator prompt request-brief
+my-dev-kit-orchestrator prompt architecture-context
+my-dev-kit-orchestrator prompt behavior-model
+my-dev-kit-orchestrator prompt pseudocode-packet
+my-dev-kit-orchestrator prompt test-strategy
+my-dev-kit-orchestrator prompt implementation
+my-dev-kit-orchestrator prompt test-implementation
+my-dev-kit-orchestrator prompt verification
+my-dev-kit-orchestrator prompt judge
+my-dev-kit-orchestrator prompt final-report
+
+Optional selected run:
+my-dev-kit-orchestrator prompt behavior-model --run <run-id>
+
+Purpose of this command:
+This is the bridge between the CLI and the coding agent.
+
+The user runs:
+my-dev-kit-orchestrator prompt
+
+Then pastes the generated prompt into the coding agent.
+
+Prompt output principle:
+The printed prompt should be stage-specific.
+It should not include the entire workflow.
+It should include only:
+- stage name
+- available inputs
+- task for this stage
+- required output artifact
+- stop conditions
+- compact references or summaries of required prior artifacts
+
+This command invokes no workflow stage by itself.
+It prints the prompt that the coding agent should execute.
+
+
+10. Command:
+my-dev-kit-orchestrator list
+
+Purpose:
+List previous workflow runs.
+
+Example:
+my-dev-kit-orchestrator list
+
+Optional filters:
+my-dev-kit-orchestrator list --mode feature
+my-dev-kit-orchestrator list --mode repair
+my-dev-kit-orchestrator list --mode test
+my-dev-kit-orchestrator list --mode refactor
+my-dev-kit-orchestrator list --mode harden
+
+Output should include:
+- run ID
+- mode
+- short request label
+- status
+- created time
+- current stage
+- run folder
+
+This command invokes no workflow stage.
+It only inspects local run history.
+
+
+11. Optional flags
+
+--root <path>
+Use a specific project root instead of the current working directory.
+
+Example:
+my-dev-kit-orchestrator start --root <project-root> "<request>"
+
+--name <run-name>
+Use a specific readable run name.
+
+Example:
+my-dev-kit-orchestrator start --name <short-name> "<request>"
+
+--mode <mode>
+Select workflow mode.
+
+Allowed values:
+feature
+repair
+test
+refactor
+harden
+
+--run <run-id>
+Select a specific workflow run for status or prompt commands.
+
+Example:
+my-dev-kit-orchestrator prompt judge --run <run-id>
+
+--output-dir <path>
+Use a custom run output directory.
+
+This should be optional and not required for normal use.
+
+
+12. Commands not included in v0.1.0
+
+The v0.1.0 command surface should not include many low-level commands.
+
+Do not include these yet:
+my-dev-kit-orchestrator agent run
+my-dev-kit-orchestrator workflow execute
+my-dev-kit-orchestrator schema validate
+my-dev-kit-orchestrator artifact inspect
+my-dev-kit-orchestrator graph build
+my-dev-kit-orchestrator trace link
+my-dev-kit-orchestrator judge run
+my-dev-kit-orchestrator repair derive
+my-dev-kit-orchestrator context search
+
+These may be useful later, but they make the first version feel too large.
+
+For v0.1.0, the core interaction should remain:
+my-dev-kit-orchestrator start "<request>"
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator status
+
+
+13. v0.1.0 command success criteria
+
+The CLI command design is successful if the user can:
+
+1. initialize a repo
+   my-dev-kit-orchestrator init
+
+2. start a design-first workflow
+   my-dev-kit-orchestrator start "<software change request>"
+
+3. print the next prompt
+   my-dev-kit-orchestrator prompt
+
+4. paste the prompt into a coding agent
+
+5. save or paste the resulting artifact into the run folder
+
+6. continue to the next stage
+   my-dev-kit-orchestrator prompt
+
+7. inspect progress
+   my-dev-kit-orchestrator status
+
+8. list previous runs
+   my-dev-kit-orchestrator list
+
+The CLI should keep the user moving through the workflow without requiring the user to remember the full workflow sequence.
+
+
+14. Core command philosophy
+
+The command surface should be explicit, memorable, and small.
+
+Do:
+- use the explicit name my-dev-kit-orchestrator
+- keep start, prompt, status, and list as the core commands
+- use --mode for workflow selection
+- keep workflow complexity inside generated prompts and artifacts
+- make runs resumable and inspectable
+
+Do not:
+- use unclear abbreviations
+- expose every internal stage as a top-level command
+- make users manually call many agent commands
+- generate one giant prompt
+- make the first version depend on full LLM automation
+- require complex setup for normal use
+
+The CLI should feel like a practical workflow launcher and prompt manager for design-first coding with agents.
