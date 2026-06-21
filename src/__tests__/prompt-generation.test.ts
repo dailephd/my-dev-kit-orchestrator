@@ -192,6 +192,100 @@ describe('generateStagePrompt — architecture-context my-dev-kit guidance', () 
   });
 });
 
+describe('generateStagePrompt — architecture-context v0.2.0 graph-guided context acquisition', () => {
+  it('architecture-context prompt includes full retrieval sequence steps', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('index');
+      expect(prompt).toContain('search');
+      expect(prompt).toContain('lookup');
+      expect(prompt).toContain('slice');
+    }
+  });
+
+  it('architecture-context prompt includes retrieval report output path', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('reports/architecture-context-retrieval-report.txt');
+    }
+  });
+
+  it('architecture-context prompt includes ArchitectureContextPacket output path', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('artifacts/architecture-context-packet.txt');
+    }
+  });
+
+  it('architecture-context prompt instructs synthesizing retrieval evidence, not dumping raw output', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('Synthesize retrieval evidence');
+      expect(prompt).toContain('Do not dump raw retrieval output');
+    }
+  });
+
+  it('architecture-context prompt does not include implementation task instructions', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).not.toContain('Implement the PseudocodePacket');
+      expect(prompt).not.toContain('ImplementationReport');
+    }
+  });
+
+  it('architecture-context prompt does not include test implementation task instructions', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).not.toContain('TestImplementationReport');
+      expect(prompt).not.toContain('test-implementation-report.txt');
+    }
+  });
+
+  it('architecture-context prompt does not use the word bridge', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).not.toMatch(/\bbridge\b/i);
+    }
+  });
+
+  it('architecture-context prompt includes the retrieval evidence report template', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('Retrieval evidence report');
+      expect(prompt).toContain('Search queries run');
+      expect(prompt).toContain('Candidate nodes selected');
+      expect(prompt).toContain('Graph slices created');
+    }
+  });
+
+  it('architecture-context prompt includes ArchitectureContextPacket template fields', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('Retrieval evidence used');
+      expect(prompt).toContain('Retrieval method');
+      expect(prompt).toContain('graph-guided retrieval used');
+      expect(prompt).toContain('my-dev-kit used');
+    }
+  });
+
+  it('architecture-context prompt mentions fallback for when my-dev-kit is unavailable', () => {
+    for (const mode of VALID_MODES) {
+      const meta = makeFakeRun(mode);
+      const prompt = generateStagePrompt(meta, 'architecture-context');
+      expect(prompt).toContain('my-dev-kit is unavailable');
+    }
+  });
+});
+
 describe('writeStagePrompts', () => {
   it('writes prompt files to disk for each stage', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-prompt-test-'));
