@@ -76,10 +76,10 @@ Important implementation files:
 - Keep run folders local and untracked.
 - When behavior changes, keep docs aligned with the real CLI output and stage definitions.
 
-## Contribution expectations
+## Verification expectations
 
-- Read the relevant instruction files before editing.
-- Verify behavior in source or tests before documenting it.
-- Keep changes bounded to the task.
-- Run the narrowest useful checks first, then broader ones when appropriate.
-- Report skipped checks and unresolved risks honestly.
+- Confirm user-facing documentation matches the shipped command behavior.
+- Verify changes with the narrowest relevant checks first, then broader ones when needed.
+- Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
+- Run `npm run lint` when changing TypeScript files.
+- Report skipped checks and unresolved risks clearly in release work.

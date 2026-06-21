@@ -13,17 +13,16 @@ Use this checklist before treating `v0.1.0` as release-ready.
 - `README.md` matches the shipped CLI behavior
 - `CHANGELOG.md` includes `v0.1.0`
 - `ROADMAP.md` separates `v0.1.0` from future work
-- `docs/usage.md` matches actual command usage
-- `docs/workflows.md` matches actual workflow definitions
-- `docs/artifacts.md` matches actual artifact filenames
-- `docs/development.md` matches actual local commands
-- `claude.txt` remains aligned with `agents.txt` and `v0.1.0` scope
+- `docs/USAGE.md` matches actual command usage
+- `docs/WORKFLOWS.md` matches actual workflow definitions
+- `docs/ARTIFACTS.md` matches actual artifact filenames
+- `docs/DEVELOPMENT.md` matches actual local commands
 
 ## Package and ignore rules
 
 - `package.json` name, version, and `bin` entry are correct
 - package contents do not accidentally include local run folders
-- `.gitignore` ignores `node_modules/`, `dist/`, `coverage/`, `.my-dev-kit-orchestrator/`, log files, local env files, and editor noise
+- `.gitignore` ignores `node_modules/`, `dist/`, `coverage/`, `.my-dev-kit-orchestrator/`, log files, local env files, editor noise, and local-only internal guidance files
 
 ## CLI smoke checks
 

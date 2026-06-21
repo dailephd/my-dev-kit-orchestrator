@@ -15,7 +15,7 @@ Version `0.1.0` provides:
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
-The CLI owns workflow order and prompt generation. The coding agent executes one stage at a time and writes the expected artifact for that stage.
+The CLI owns workflow order and prompt generation. Each run advances as the expected artifact files appear on disk.
 
 ## Non-goals for v0.1.0
 
@@ -29,7 +29,7 @@ Version `0.1.0` does not include:
 - design-map generation
 - extra low-level CLI commands beyond `init`, `start`, `status`, `prompt`, and `list`
 
-Architecture-context prompts may instruct the coding agent to use `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
+Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
 
 ## Command surface
 
@@ -81,7 +81,7 @@ Common flags:
    node dist/cli.js prompt
    ```
 
-5. Paste the prompt into a coding agent and save the returned artifact into the run folder.
+5. Paste the prompt into your coding tool of choice and save the returned artifact into the run folder.
 
 6. Continue stage by stage:
 
@@ -178,10 +178,10 @@ npm run lint
 
 ## Documentation
 
-- [docs/usage.md](docs/usage.md)
-- [docs/workflows.md](docs/workflows.md)
-- [docs/artifacts.md](docs/artifacts.md)
-- [docs/development.md](docs/development.md)
-- [docs/release-checklist.md](docs/release-checklist.md)
+- [docs/USAGE.md](docs/USAGE.md)
+- [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
+- [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+- [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)
 - [CHANGELOG.md](CHANGELOG.md)
 - [ROADMAP.md](ROADMAP.md)
