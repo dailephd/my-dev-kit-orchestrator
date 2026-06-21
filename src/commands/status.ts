@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
-import { getArtifactStatuses, getNextStage } from '../stageDetector';
+import { getArtifactStatuses, getNextStage, getSupportingReportStatuses } from '../stageDetector';
 
 export function makeStatusCommand(): Command {
   const cmd = new Command('status');
@@ -38,6 +38,7 @@ export function makeStatusCommand(): Command {
       const nextStage = getNextStage(meta);
       const presentArtifacts = statuses.filter((s) => s.present);
       const missingArtifacts = statuses.filter((s) => !s.present);
+      const supportingReports = getSupportingReportStatuses(meta);
 
       const lines: string[] = [
         `Run:`,
@@ -63,6 +64,11 @@ export function makeStatusCommand(): Command {
         ``,
         `Present artifacts: ${presentArtifacts.length}/${statuses.length}`,
         `Missing artifacts: ${missingArtifacts.length}`,
+        ``,
+        `Supporting reports:`,
+        ...(supportingReports.length > 0
+          ? supportingReports.map((r) => `  ${r.present ? '[present]' : '[missing]'} ${r.reportFile}`)
+          : [`  (none for this workflow mode)`]),
         ``,
       ];
 

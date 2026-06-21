@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { initWorkspace } from '../workspace';
 import { createRun, loadRun, listRunFolders, getMostRecentRun } from '../run';
-import { getArtifactStatuses, getNextStage, isRunComplete } from '../stageDetector';
+import { getArtifactStatuses, getNextStage, isRunComplete, getSupportingReportStatuses } from '../stageDetector';
 import { VALID_MODES } from '../types';
 
 function makeTempDir(): string {
@@ -215,6 +215,80 @@ describe('status output contains required fields', () => {
       expect(meta.currentStage).toBe('request-brief');
     } finally {
       cleanup(tmp);
+    }
+  });
+});
+
+describe('supporting report status', () => {
+  it('run creation creates the reports directory', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      expect(fs.existsSync(path.join(meta.runFolder, 'reports'))).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('architecture-context retrieval report is missing on fresh run', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      const reports = getSupportingReportStatuses(meta);
+      const archReport = reports.find((r) => r.reportFile === 'reports/architecture-context-retrieval-report.txt');
+      expect(archReport).toBeDefined();
+      expect(archReport!.present).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('architecture-context retrieval report shows present after file is written', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      const reportPath = path.join(meta.runFolder, 'reports/architecture-context-retrieval-report.txt');
+      fs.writeFileSync(reportPath, 'retrieval evidence', 'utf8');
+      const reports = getSupportingReportStatuses(meta);
+      const archReport = reports.find((r) => r.reportFile === 'reports/architecture-context-retrieval-report.txt');
+      expect(archReport!.present).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('missing retrieval report does not block progression when ArchitectureContextPacket exists', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      // Write ArchitectureContextPacket (required artifact) but not the retrieval report
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/request-brief.txt'), 'done', 'utf8');
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/architecture-context-packet.txt'), 'done', 'utf8');
+      // Stage progression advances to behavior-model, not blocked by missing retrieval report
+      const next = getNextStage(meta);
+      expect(next!.name).toBe('behavior-model');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('getSupportingReportStatuses returns architecture-context report for all five modes', () => {
+    for (const mode of VALID_MODES) {
+      const tmp = makeTempDir();
+      try {
+        initWorkspace(tmp);
+        const meta = createRun({ request: 'test', mode, projectRoot: tmp });
+        const reports = getSupportingReportStatuses(meta);
+        const archReport = reports.find((r) => r.stageName === 'architecture-context');
+        expect(archReport).toBeDefined();
+        expect(archReport!.reportFile).toBe('reports/architecture-context-retrieval-report.txt');
+      } finally {
+        cleanup(tmp);
+      }
     }
   });
 });

@@ -9,6 +9,27 @@ export interface ArtifactStatus {
   present: boolean;
 }
 
+export interface SupportingReportStatus {
+  stageName: string;
+  reportFile: string;
+  present: boolean;
+}
+
+const STAGE_SUPPORTING_REPORTS: Record<string, string> = {
+  'architecture-context': 'reports/architecture-context-retrieval-report.txt',
+};
+
+export function getSupportingReportStatuses(meta: RunMetadata): SupportingReportStatus[] {
+  const stageNames = new Set(meta.stages.map((s) => s.name));
+  return Object.entries(STAGE_SUPPORTING_REPORTS)
+    .filter(([stageName]) => stageNames.has(stageName))
+    .map(([stageName, reportFile]) => ({
+      stageName,
+      reportFile,
+      present: fs.existsSync(path.join(meta.runFolder, reportFile)),
+    }));
+}
+
 export function getArtifactStatuses(meta: RunMetadata): ArtifactStatus[] {
   return meta.stages.map((stage) => ({
     stageName: stage.name,
