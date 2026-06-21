@@ -154,6 +154,7 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 - current or next stage
 - available prompts
 - present and missing artifacts
+- supporting reports (for example, the architecture-context retrieval report)
 - suggested next command
 
 ## List runs

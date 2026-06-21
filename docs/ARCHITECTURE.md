@@ -4,6 +4,8 @@
 
 Version `0.1.0` focuses on workflow orchestration, prompt generation, and artifact handoff. It creates local workflow runs, writes stage-specific prompts, tracks expected artifacts, and prints the next prompt for the active stage. It does not execute an LLM directly.
 
+Version `0.2.0` extends the architecture-context stage prompt with full graph-guided retrieval guidance and adds supporting report visibility to the `status` command.
+
 ## Architecture overview
 
 The released architecture has four main responsibilities:
@@ -110,7 +112,7 @@ Instead of producing one large master prompt, the CLI generates one prompt per s
 
 This design helps enforce workflow gates. A prompt tells the coding agent what belongs in the current stage and what should wait for a later stage. That prevents early implementation, premature test claims, or mixed-stage outputs from becoming the default workflow behavior.
 
-For architecture-context work, the prompt can be tailored to the project and task. The prompt may instruct the coding agent to acquire context with `my-dev-kit`, record retrieval evidence, and synthesize the result into the ArchitectureContextPacket that later stages consume.
+For architecture-context work, the prompt guides the coding agent through graph-guided context acquisition with `my-dev-kit`. The prompt includes the full retrieval sequence (index, search, lookup, slice, symbol source retrieval), the retrieval evidence report template, and the ArchitectureContextPacket template. It instructs the coding agent to synthesize retrieval evidence into the artifact rather than dumping raw output. If `my-dev-kit` is unavailable, the prompt guides the coding agent to use focused manual inspection instead.
 
 ## Graph-guided architecture context
 
@@ -231,15 +233,13 @@ Those exclusions are intentional. The release is designed to keep workflow logic
 
 ## Future architecture direction
 
-Future versions may extend the architecture in a few areas:
+Possible future extensions:
 
 - stronger artifact validation
 - design-map generation
-- graph-guided architecture context prompt improvements
-- retrieval evidence report guidance surfaced more clearly in the workflow
-- ArchitectureContextPacket synthesis guidance surfaced more clearly in the workflow
 - deeper `my-dev-kit` integration
 - optional provider integrations
 - CI-friendly verification summaries
+- richer run status and judge-outcome routing
 
-These are possible directions, not implemented `v0.1.0` features.
+These are possible directions, not current features.

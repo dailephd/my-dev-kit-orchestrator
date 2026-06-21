@@ -4,9 +4,9 @@
 
 It is for teams or individual developers who want a coding agent to work through a bounded sequence of design, pseudocode, testing, implementation, and verification steps instead of jumping straight from a raw request to code.
 
-## v0.1.0 capabilities
+## Capabilities
 
-Version `0.1.0` provides:
+`v0.1.0` provided the workflow shell:
 
 - a small CLI command surface
 - five workflow modes: `feature`, `repair`, `test`, `refactor`, `harden`
@@ -14,6 +14,13 @@ Version `0.1.0` provides:
 - stage-specific prompt generation
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
+
+`v0.2.0` added graph-guided architecture context support:
+
+- architecture-context stage prompt now guides the coding agent through graph-guided context acquisition with `my-dev-kit`
+- generated prompt includes the full retrieval sequence, retrieval evidence report template, and ArchitectureContextPacket template
+- `status` command shows supporting report presence for the architecture-context stage
+- stage progression remains based on required artifact presence only
 
 The CLI owns workflow order and prompt generation. Each run advances as the expected artifact files appear on disk.
 
