@@ -3,6 +3,7 @@ import * as path from 'path';
 import { WorkflowMode } from './types';
 import { getWorkflow, StageDefinition } from './workflows';
 import { getRunsDir } from './workspace';
+import { writeStagePrompts } from './promptGenerator';
 
 export interface RunMetadata {
   runId: string;
@@ -92,10 +93,7 @@ export function createRun(options: {
     'utf8'
   );
 
-  for (const stage of stages) {
-    const promptPath = path.join(runFolder, stage.promptFile);
-    fs.writeFileSync(promptPath, `[placeholder] ${stage.name} prompt — run 'my-dev-kit-orchestrator prompt ${stage.name}' to view.\n`, 'utf8');
-  }
+  writeStagePrompts(meta);
 
   return meta;
 }
