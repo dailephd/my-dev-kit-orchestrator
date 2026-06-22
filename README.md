@@ -15,6 +15,15 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
+`v0.2.1` documents the planned extraction mode:
+
+- `--mode extraction` is a planned workflow for transferring a bounded feature, workflow, or subsystem from an existing source repository into a new or separate target repository
+- the source repository is used for inspection and evidence only; the target repository is where the extracted workflow is implemented, tested, verified, and reported
+- source and target `.my-dev-kit` index directories are kept separate
+- five extraction-specific artifacts gate the workflow before any implementation begins: `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, and `TargetArchitectureProposal`
+- the runtime implementation of `--mode extraction` will follow in a later version
+- see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the planned workflow and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for artifact contracts
+
 `v0.2.0` added graph-guided architecture context support:
 
 - architecture-context stage prompt now guides the coding agent through graph-guided context acquisition with `my-dev-kit`
@@ -116,6 +125,22 @@ If you link the package locally, you can use the installed command directly:
 npm link
 my-dev-kit-orchestrator --help
 ```
+
+## Planned modes (v0.2.1)
+
+### `extraction` (planned)
+
+Use for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
+
+Planned command shape:
+
+```text
+npx my-dev-kit-orchestrator start --mode extraction --source "<source-repo-root>" --target "<target-repo-root>" "<extraction request>"
+```
+
+The source repository is evidence for the porting analysis. The target repository is where the extracted workflow will be implemented. The orchestrator must not assume the target inherits the source architecture.
+
+`--mode extraction` is not implemented in the current release. See [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the planned workflow design.
 
 ## Supported modes
 
