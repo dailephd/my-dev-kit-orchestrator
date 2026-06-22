@@ -7,9 +7,9 @@ describe('CLI program', () => {
     expect(program.name()).toBe('my-dev-kit-orchestrator');
   });
 
-  it('has version 0.2.0', () => {
+  it('has version 0.2.1', () => {
     const program = createProgram();
-    expect(program.version()).toBe('0.2.0');
+    expect(program.version()).toBe('0.2.1');
   });
 
   it('registers init command', () => {
@@ -118,8 +118,12 @@ describe('mode validation', () => {
     expect(isValidMode('feat')).toBe(false);
   });
 
-  it('VALID_MODES contains exactly five modes', () => {
-    expect(VALID_MODES).toHaveLength(5);
+  it('VALID_MODES contains exactly six modes', () => {
+    expect(VALID_MODES).toHaveLength(6);
+  });
+
+  it('accepts extraction', () => {
+    expect(isValidMode('extraction')).toBe(true);
   });
 });
 
@@ -150,6 +154,20 @@ describe('start command options', () => {
     const startCmd = program.commands.find((c) => c.name() === 'start')!;
     const optionNames = startCmd.options.map((o) => o.long);
     expect(optionNames).toContain('--output-dir');
+  });
+
+  it('start command has --source option for extraction mode', () => {
+    const program = createProgram();
+    const startCmd = program.commands.find((c) => c.name() === 'start')!;
+    const optionNames = startCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--source');
+  });
+
+  it('start command has --target option for extraction mode', () => {
+    const program = createProgram();
+    const startCmd = program.commands.find((c) => c.name() === 'start')!;
+    const optionNames = startCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--target');
   });
 });
 

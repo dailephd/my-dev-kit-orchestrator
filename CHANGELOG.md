@@ -2,7 +2,35 @@
 
 ## Unreleased
 
-v0.2.1 runtime implementation in progress on `feature/v0.2.1-extraction-mode`.
+## v0.2.1 — Extraction Mode
+
+### Added
+
+- `--mode extraction` workflow mode for source-to-target behavior transfer
+- `--source <path>` and `--target <path>` options for extraction runs
+- extraction-specific 14-stage workflow order
+- extraction artifact gates:
+  - `SourceArchitectureContextPacket` at `artifacts/source-architecture-context-packet.txt`
+  - `SourceWorkflowMap` at `artifacts/source-workflow-map.txt`
+  - `SourceToTargetPortingMap` at `artifacts/source-to-target-porting-map.txt`
+  - `DoNotPortList` at `artifacts/do-not-port-list.txt` (dual artifact with `porting-map` stage)
+  - `GoldenBehaviorContract` at `artifacts/golden-behavior-contract.txt`
+  - `TargetArchitectureProposal` at `artifacts/target-architecture-proposal.txt`
+- source repository and target repository metadata stored in `run.json`
+- extraction-specific prompt generation for all 14 stages
+- source-architecture-context supporting report entry in `status`
+- source and target repository paths shown in `status` output
+- extraction run artifacts placed under target repository by default
+- documented guardrails against cloning source repository architecture
+
+### Notes
+
+- source repositories are treated as read-only evidence by default
+- target repositories are the implementation destination
+- `--create-target` remains future behavior and is not implemented
+- `--mode extraction` requires both `--source` and `--target`; errors clearly if either is missing
+
+**Not published to npm.** Tag will be created on release preparation.
 
 ## v0.2.1 — Documentation preparation
 

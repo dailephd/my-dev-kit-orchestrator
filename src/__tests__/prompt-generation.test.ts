@@ -172,9 +172,12 @@ describe('generateStagePrompt — no unrelated workflow modes', () => {
   });
 });
 
+// extraction mode uses source-architecture-context, not architecture-context
+const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction');
+
 describe('generateStagePrompt — architecture-context my-dev-kit guidance', () => {
   it('architecture-context prompt mentions my-dev-kit as prompt-driven guidance', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('my-dev-kit');
@@ -183,7 +186,7 @@ describe('generateStagePrompt — architecture-context my-dev-kit guidance', () 
   });
 
   it('architecture-context prompt does not claim automated my-dev-kit execution', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).not.toContain('automatically executes');
@@ -194,7 +197,7 @@ describe('generateStagePrompt — architecture-context my-dev-kit guidance', () 
 
 describe('generateStagePrompt — architecture-context v0.2.0 graph-guided context acquisition', () => {
   it('architecture-context prompt includes full retrieval sequence steps', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('index');
@@ -205,7 +208,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt includes retrieval report output path', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('reports/architecture-context-retrieval-report.txt');
@@ -213,7 +216,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt includes ArchitectureContextPacket output path', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('artifacts/architecture-context-packet.txt');
@@ -221,7 +224,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt instructs synthesizing retrieval evidence, not dumping raw output', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('Synthesize retrieval evidence');
@@ -230,7 +233,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt does not include implementation task instructions', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).not.toContain('Implement the PseudocodePacket');
@@ -239,7 +242,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt does not include test implementation task instructions', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).not.toContain('TestImplementationReport');
@@ -248,7 +251,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt does not use the word bridge', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).not.toMatch(/\bbridge\b/i);
@@ -256,7 +259,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt includes the retrieval evidence report template', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('Retrieval evidence report');
@@ -267,7 +270,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt includes ArchitectureContextPacket template fields', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('Retrieval evidence used');
@@ -278,7 +281,7 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
   });
 
   it('architecture-context prompt mentions fallback for when my-dev-kit is unavailable', () => {
-    for (const mode of VALID_MODES) {
+    for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
       expect(prompt).toContain('my-dev-kit is unavailable');

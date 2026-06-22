@@ -11,17 +11,22 @@ interface PromptContext {
   runFolder: string;
   stageNumber: number;
   totalStages: number;
+  sourceRepoRoot?: string;
+  targetRepoRoot?: string;
 }
 
 function header(ctx: PromptContext): string {
-  return [
+  const lines = [
     `Stage: ${ctx.stage}`,
     `Workflow mode: ${ctx.mode}`,
     `Run ID: ${ctx.runId}`,
     `Project root: ${ctx.projectRoot}`,
     `Run folder: ${ctx.runFolder}`,
-    '',
-  ].join('\n');
+  ];
+  if (ctx.sourceRepoRoot) lines.push(`Source repository: ${ctx.sourceRepoRoot}`);
+  if (ctx.targetRepoRoot) lines.push(`Target repository: ${ctx.targetRepoRoot}`);
+  lines.push('');
+  return lines.join('\n');
 }
 
 // ─── Core shared stages ───────────────────────────────────────────────────────
@@ -1280,6 +1285,1087 @@ Return format:
 `;
 }
 
+// ─── Extraction-mode-specific stages ─────────────────────────────────────────
+
+function extractionRequestBriefPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- original extraction request: ${ctx.runFolder}/00-request.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/request-brief.txt (artifact: ExtractionRequestBrief).
+
+Extraction guardrails:
+- The source repository is evidence, not destiny. Do not port code just because it exists.
+- Do not start by copying files from source to target.
+- Do not assume the source architecture is the desired target architecture.
+- Do not implement anything in the target repository in this stage.
+
+The ExtractionRequestBrief must define:
+- original request (verbatim from 00-request.txt)
+- source repository: ${sourceDir}
+- target repository: ${targetDir}
+- workflow or feature to extract
+- desired target scope (what should exist in the target when complete)
+- features explicitly excluded from the extraction
+- critical behaviors to preserve from the source workflow
+- expected deliverables
+- constraints
+- success criteria
+- ambiguity or missing information
+- expected next stage: source-architecture-context
+
+Required output artifact: ExtractionRequestBrief
+Output file: ${ctx.runFolder}/artifacts/request-brief.txt
+
+Stop conditions:
+- do not inspect source code deeply in this stage
+- do not write pseudocode
+- do not write tests
+- do not start implementing in this stage
+- do not port files
+
+Return format:
+Produce the artifact as a plain-text file using this template:
+  Artifact: ExtractionRequestBrief
+  Workflow mode: extraction
+  Original request: ...
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+  Workflow or feature to extract: ...
+  Desired target scope: ...
+  Excluded features: ...
+  Critical behaviors to preserve: ...
+  Expected deliverables: ...
+  Constraints: ...
+  Success criteria: ...
+  Ambiguity or missing information: ...
+  Expected next stage: source-architecture-context
+  Status: complete | incomplete | blocked
+`;
+}
+
+function sourceArchitectureContextPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- source repository: ${sourceDir}
+
+Task:
+Use my-dev-kit to inspect the source repository and produce a supporting retrieval report and source architecture context artifact.
+
+Produce two output files:
+1. Supporting retrieval report: ${ctx.runFolder}/reports/source-architecture-context-retrieval-report.txt
+2. Required workflow artifact: ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt (artifact: SourceArchitectureContextPacket)
+
+Extraction guardrails:
+- The source repository is evidence, not destiny. Do not port code just because it exists.
+- Do not start by reading whole source files.
+- Do not use target repository indexing to infer source behavior.
+- Do not modify the source repository.
+- Do not decide porting strategy in this stage.
+- Do not modify the target repository in this stage.
+- Source and target index directories must stay separate.
+
+Source repository inspection sequence (when my-dev-kit is available):
+
+Step 1 — Index the source repository into its own index directory:
+  npx @dailephd/my-dev-kit index --root ${sourceDir} --src src --out ${sourceDir}/.my-dev-kit --call-graph --json
+
+  Do not use ${targetDir}/.my-dev-kit to infer source behavior.
+
+Step 2 — Search for task-specific candidate nodes in the source repository:
+  npx @dailephd/my-dev-kit search --index ${sourceDir}/.my-dev-kit --query "<task-specific term>" --limit 20 --json
+  Run multiple queries for different aspects of the extraction request.
+
+Step 3 — Look up selected nodes and their relationships:
+  npx @dailephd/my-dev-kit lookup --index ${sourceDir}/.my-dev-kit --node "<selected-node-id>" --depth 1 --json
+
+Step 4 — Slice around the strongest relevant node:
+  npx @dailephd/my-dev-kit slice --index ${sourceDir}/.my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --json
+
+Step 5 — Retrieve exact symbol source (preferred):
+  npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
+
+Step 6 — Use line-range retrieval only as fallback when symbol retrieval is insufficient:
+  npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines 220 --format numbered
+
+Step 7 — Avoid reading whole source files unless bounded retrieval is insufficient. If a whole file must be read, state why.
+
+If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols in the source repository. Document what was inspected and why.
+
+The SourceArchitectureContextPacket must identify relevant source architecture context without deciding what to port.
+
+Required output artifact: SourceArchitectureContextPacket
+Output file: ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
+
+Supporting report output file: ${ctx.runFolder}/reports/source-architecture-context-retrieval-report.txt
+
+Stop conditions:
+- do not decide porting strategy in this stage
+- do not write pseudocode
+- do not start implementing in this stage
+- do not write test files
+- do not modify source or target repositories
+
+Return format:
+
+Write the supporting retrieval report using this template:
+
+  Source retrieval evidence report
+
+  Source repository: ${sourceDir}
+  Index directory: ${sourceDir}/.my-dev-kit
+
+  Refreshed or reused:
+  manifest.json status:
+  Semantic artifacts available:
+
+  Search queries run:
+  - Query:
+    Reason:
+
+  Candidate nodes selected:
+  - Node ID:
+    Reason:
+
+  Lookup commands run:
+  - Node ID:
+    Useful relationships found:
+
+  Graph slices created:
+  - Focus node:
+  - Depth:
+  - Direction:
+  - Reason:
+
+  Source symbols retrieved:
+  - Symbol node ID:
+  - File path:
+  - Reason:
+
+  Full files read beyond retrieved source:
+  - File path or none:
+  - Reason:
+
+  Context gaps or uncertainty:
+  - Gap:
+    Impact:
+
+Then write SourceArchitectureContextPacket using this template:
+
+  Artifact: SourceArchitectureContextPacket
+  Workflow mode: extraction
+  Source repository: ${sourceDir}
+
+  Relevant source files: ...
+  Relevant source symbols: ...
+  Relevant source components / modules / routes / services: ...
+  Source data contracts: ...
+  Source persistence dependencies: ...
+  Source external service dependencies: ...
+  Source state owners: ...
+  Source tests found: ...
+  Source patterns: ...
+  Context gaps or uncertainty: ...
+  Expected next stage: source-workflow-map
+  Status: complete | incomplete | blocked
+`;
+}
+
+function sourceWorkflowMapPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
+- source repository (read-only evidence): ${sourceDir}
+
+Task:
+Produce ${ctx.runFolder}/artifacts/source-workflow-map.txt (artifact: SourceWorkflowMap).
+
+This stage describes what exists in the source repository. It does not decide what to port.
+
+Extraction guardrails:
+- The source repository is evidence, not destiny. Do not port code just because it exists.
+- Do not decide porting strategy in this stage.
+- Do not start by copying files.
+- Do not modify the source repository.
+- Do not modify the target repository in this stage.
+- do not start implementing in this stage.
+
+Required sections for SourceWorkflowMap:
+- Source repo path
+- Workflow entry point
+- User-facing steps
+- Frontend components
+- Frontend state owners
+- API routes
+- Backend services
+- Data contracts
+- Persistence dependencies
+- External service dependencies
+- Tests found
+- Known behavior risks
+- Ambiguous or missing context
+
+Required output artifact: SourceWorkflowMap
+Output file: ${ctx.runFolder}/artifacts/source-workflow-map.txt
+
+Stop conditions:
+- do not include porting decisions
+- do not include implementation plans
+- do not include target architecture details
+- do not write pseudocode
+- do not implement code
+- do not write test files
+- completion criteria: all required sections are present; the map describes what exists in the source, not what should be built in the target
+
+Return format:
+Produce the artifact as a plain-text file using this template:
+
+  Artifact: SourceWorkflowMap
+  Workflow mode: extraction
+  Source repo path: ${sourceDir}
+  Workflow entry point: <entry point file or component>
+
+  User-facing steps:
+  1. <step>
+  2. <step>
+
+  Frontend components: <list>
+  Frontend state owners: <list>
+
+  API routes: <list>
+  Backend services: <list>
+  Data contracts: <list>
+
+  Persistence dependencies: <list>
+  External service dependencies: <list>
+
+  Tests found: <list>
+
+  Known behavior risks:
+  - <risk>
+
+  Ambiguous or missing context:
+  - <gap>
+
+  Status: complete | incomplete | blocked
+`;
+}
+
+function portingMapPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
+- ${ctx.runFolder}/artifacts/source-workflow-map.txt
+
+Task:
+Produce TWO output files:
+1. ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt (artifact: SourceToTargetPortingMap)
+2. ${ctx.runFolder}/artifacts/do-not-port-list.txt (artifact: DoNotPortList)
+
+Classify each source subsystem as: port as-is, port with refactor, rewrite cleanly, discard, or postpone.
+Explicitly list every source system that must not be ported.
+
+Extraction guardrails:
+- The source repository is evidence, not destiny. Do not port code just because it exists.
+- Do not create a second copy of the old architecture inside the target project.
+- Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly in scope.
+- Do not preserve old UI labels if they conflict with the new workflow.
+- do not start implementing in this stage.
+- Do not modify source or target repositories.
+
+SourceToTargetPortingMap required structure for each item:
+- Source behavior
+- Source files or symbols
+- Target behavior
+- Target module or component (planned target location in ${targetDir})
+- Decision: port as-is | port with refactor | rewrite cleanly | discard | postpone
+- Reason
+- Required tests
+- Risks
+
+DoNotPortList required sections:
+- Systems excluded from the target project
+- UI labels excluded from the target project
+- Backend routes excluded from the target project
+- Persistence layers excluded from the target project
+- Downstream workflows excluded from the target project
+- Reason each exclusion exists
+- Consequences if accidentally ported
+
+Completion criteria:
+- Every significant source subsystem has a documented decision in SourceToTargetPortingMap
+- Every discarded subsystem also appears in DoNotPortList
+- Both artifact files must be present before the next stage can proceed
+
+Required output artifact: SourceToTargetPortingMap
+Output file: ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+
+Required output artifact: DoNotPortList
+Output file: ${ctx.runFolder}/artifacts/do-not-port-list.txt
+
+Stop conditions:
+- do not include implementation code
+- do not start implementing
+- do not write test files
+- do not modify source or target repositories
+
+Return format:
+Produce both artifacts as plain-text files.
+
+SourceToTargetPortingMap template:
+
+  Artifact: SourceToTargetPortingMap
+  Workflow mode: extraction
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+
+  --- Item ---
+  Source behavior: <description>
+  Source files or symbols: <list>
+  Target behavior: <description>
+  Target module or component: <planned target location>
+  Decision: <port as-is | port with refactor | rewrite cleanly | discard | postpone>
+  Reason: <explanation>
+  Required tests: <list>
+  Risks: <list>
+
+  --- Item ---
+  ...
+
+  Status: complete | incomplete | blocked
+
+DoNotPortList template:
+
+  Artifact: DoNotPortList
+  Workflow mode: extraction
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+
+  Systems excluded from the target project:
+  - <system name>: <reason>
+
+  UI labels excluded:
+  - <label>: <reason for exclusion>
+
+  Backend routes excluded:
+  - <route>: <reason>
+
+  Persistence layers excluded:
+  - <persistence layer>: <reason>
+
+  Downstream workflows excluded:
+  - <workflow>: <reason>
+
+  Consequences if accidentally ported:
+  - <consequence>
+
+  Status: complete | incomplete | blocked
+`;
+}
+
+function goldenBehaviorContractPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-workflow-map.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- ${ctx.runFolder}/artifacts/do-not-port-list.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/golden-behavior-contract.txt (artifact: GoldenBehaviorContract).
+
+Define the exact behavior that the target implementation must satisfy.
+This is the primary source of truth for the target implementation and the judge stage.
+No production implementation should begin before this artifact exists.
+
+Extraction guardrails:
+- Do not include source implementation details as requirements.
+- Do not include source file paths or source architecture references as requirements.
+- Do not reference source architecture as the target design.
+- do not start implementing in this stage.
+- Do not modify source or target repositories in this stage.
+- The source repository is evidence. This artifact defines what must be true in the target, not what exists in the source.
+
+Required sections:
+- User-visible behavior
+- API behavior
+- State behavior
+- Sorting and ranking behavior
+- Pagination behavior
+- Selection behavior
+- Error and empty-state behavior
+- Edge cases
+- Non-negotiable regression tests
+- Acceptance criteria
+
+For fragile or complex workflows, define specific testable statements. Examples:
+- Search results must be ordered by relevance descending.
+- Page-size options must be 10, 30, 50, and 100.
+- Pagination must use Previous, numbered pages, ellipsis, last page, and Next.
+- Selection must be stored by stable item ID, not page index.
+- Select all current page must select only visible page items.
+- Deselect all current page must deselect only visible page items.
+- Automatic mode must use top N valid ranked results, not the first N visible rows.
+- Manual mode must use only user-selected items.
+- Changing page size must preserve valid selections.
+- Out-of-range pages must be clamped.
+
+Completion criteria:
+- Every user-visible behavior item is described precisely enough that a developer could implement it without reading the source repository.
+- Every non-negotiable regression test is listed.
+
+Required output artifact: GoldenBehaviorContract
+Output file: ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+
+Stop conditions:
+- do not write pseudocode
+- do not write test files
+- do not implement code
+- do not reference source architecture as the target design
+
+Return format:
+Produce the artifact as a plain-text file using this template:
+
+  Artifact: GoldenBehaviorContract
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+
+  User-visible behavior:
+  1. <behavior>
+  2. <behavior>
+
+  API behavior:
+  - <endpoint>: <contract>
+
+  State behavior:
+  - <state item>: <contract>
+
+  Sorting and ranking behavior:
+  - <rule>
+
+  Pagination behavior:
+  - <rule>
+
+  Selection behavior:
+  - <rule>
+
+  Error and empty-state behavior:
+  - <case>: <expected result>
+
+  Edge cases:
+  - <case>: <expected result>
+
+  Non-negotiable regression tests:
+  1. <test description>
+  2. <test description>
+
+  Acceptance criteria:
+  - <criterion>
+
+  Status: complete | incomplete | blocked
+`;
+}
+
+function targetArchitecturePrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- ${ctx.runFolder}/artifacts/do-not-port-list.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/target-architecture-proposal.txt (artifact: TargetArchitectureProposal).
+
+Describe the clean target architecture before implementation begins.
+
+Extraction guardrails:
+- Do not carry source implementation details forward without an explicit porting decision.
+- Do not include any architecture items from the DoNotPortList.
+- do not start implementing in this stage.
+- The proposal must be sufficient for implementation to begin without consulting the source repository again.
+- Every item must map back to the SourceToTargetPortingMap or be a new target-side concern.
+
+If the target repository already exists, use my-dev-kit to inspect it separately from the source repository:
+  npx @dailephd/my-dev-kit index --root ${targetDir} --src src --out ${targetDir}/.my-dev-kit --call-graph --json
+  npx @dailephd/my-dev-kit search --index ${targetDir}/.my-dev-kit --query "<task term>" --limit 20 --json
+
+Do not mix source (${sourceDir}/.my-dev-kit) and target (${targetDir}/.my-dev-kit) retrieval results.
+
+If the target repository does not exist yet, define the planned structure and contracts before any scaffolding begins.
+
+Required sections:
+- Target repo path
+- Target project purpose
+- Target workflow
+- Frontend components
+- Backend services
+- API routes
+- Shared contracts
+- State ownership
+- Persistence policy
+- External dependencies
+- Testing strategy overview
+- Source components reused
+- Source components rewritten
+- Source components discarded
+- Architecture guardrails
+
+Required output artifact: TargetArchitectureProposal
+Output file: ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+
+Stop conditions:
+- do not write production code
+- do not write test files
+- do not include items from DoNotPortList
+- do not reference source implementation without a porting decision
+
+Return format:
+Produce the artifact as a plain-text file using this template:
+
+  Artifact: TargetArchitectureProposal
+  Workflow mode: extraction
+  Target repo path: ${targetDir}
+  Target project purpose: <description>
+
+  Target workflow:
+  1. <step>
+  2. <step>
+
+  Frontend components: <list>
+  Backend services: <list>
+  API routes: <list>
+  Shared contracts: <list>
+
+  State ownership:
+  - <state>: owned by <component>
+
+  Persistence policy: <description>
+  External dependencies: <list>
+
+  Testing strategy overview: <description>
+
+  Source components reused: <list>
+  Source components rewritten: <list>
+  Source components discarded: <list>
+
+  Architecture guardrails:
+  - <guardrail>
+
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionBehaviorModelPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/behavior-model.txt (artifact: BehaviorModel).
+
+Use the GoldenBehaviorContract as the primary source of truth for the target behavior.
+Map behavior to the target system in ${targetDir}, not to the source architecture.
+
+Extraction guardrails:
+- Do not use source implementation details as the behavior definition.
+- Do not port behavior not listed in the SourceToTargetPortingMap or GoldenBehaviorContract.
+- do not start implementing in this stage.
+- Do not write test files.
+
+The BehaviorModel must define:
+- behavior summary (target system only)
+- externally visible behavior
+- internal supporting behavior
+- state variables
+- inputs
+- events
+- derived values
+- invariants
+- valid states
+- invalid states
+- boundaries and partitions
+- empty states
+- error states
+- loading or pending states when relevant
+- external contracts
+- state transitions
+- behavior from the GoldenBehaviorContract to preserve
+- behavior intentionally changed from source
+- unresolved design questions
+
+Required output artifact: BehaviorModel
+Output file: ${ctx.runFolder}/artifacts/behavior-model.txt
+
+Stop conditions:
+- do not write production code
+- do not write test files
+- do not produce source architecture in behavior descriptions
+
+Return format:
+Produce the artifact as a plain-text file following the BehaviorModel template.
+  Artifact: BehaviorModel
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+  Inputs used: ...
+  Behavior summary: ...
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionPseudocodePacketPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/pseudocode-packet.txt (artifact: PseudocodePacket).
+
+Convert the BehaviorModel into implementation-neutral pseudocode for the target system.
+Map to the target architecture in ${targetDir}, not to the source architecture.
+This is the shared design contract for both implementation and testing.
+
+Extraction guardrails:
+- Do not copy source implementation code into this artifact.
+- Do not reference source module paths as the target module paths.
+- Do not port patterns from the DoNotPortList.
+- do not start implementing in this stage.
+
+The PseudocodePacket must define:
+- behavior references (from GoldenBehaviorContract)
+- data flow
+- state flow
+- state transitions
+- derived-value rules
+- validation rules
+- empty-state handling
+- error-state handling
+- external contract handling
+- target component, module, service, route, command, or helper contracts
+- acceptance criteria
+- likely files or modules to create or modify in the target repository
+- implementation constraints
+- assumptions preserved
+- unresolved implementation questions
+
+Required output artifact: PseudocodePacket
+Output file: ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+
+Stop conditions:
+- do not write production code
+- do not write test files
+- do not modify source or target repositories
+
+Return format:
+Produce the artifact as a plain-text file following the PseudocodePacket template.
+  Artifact: PseudocodePacket
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+  Inputs used: ...
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionTestStrategyPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+- ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+
+Task:
+Produce ${ctx.runFolder}/artifacts/test-strategy-packet.txt (artifact: TestStrategyPacket).
+
+Derive test responsibilities from the GoldenBehaviorContract, BehaviorModel, and PseudocodePacket.
+All tests must target the target repository in ${targetDir}.
+Do not write test files in this stage.
+
+Extraction guardrails:
+- Do not test source repository behavior.
+- Do not write test files in this stage.
+- Do not start implementing code.
+
+The TestStrategyPacket must include:
+- contract tests (from GoldenBehaviorContract)
+- backend unit tests
+- frontend component tests
+- state behavior tests
+- integration tests
+- E2E tests for the full extracted workflow
+- regression tests for every non-negotiable item in the GoldenBehaviorContract
+- behavior under test
+- participating layers
+- state variables
+- events
+- derived values
+- invariants
+- boundaries and partitions
+- external contracts
+- relevant failure modes
+- test matrix
+- test level assignment (unit / component / integration / end-to-end)
+- required verification commands
+- coverage gaps
+
+Each test responsibility must trace to at least one of:
+- golden behavior contract item
+- behavior
+- invariant
+- state transition
+- derived value
+- boundary
+- external contract
+- failure mode
+
+Required output artifact: TestStrategyPacket
+Output file: ${ctx.runFolder}/artifacts/test-strategy-packet.txt
+
+Stop conditions:
+- do not write test files in this stage
+- do not write production code
+- do not invent behavior not in GoldenBehaviorContract or BehaviorModel
+
+Return format:
+Produce the artifact as a plain-text file following the TestStrategyPacket template.
+  Artifact: TestStrategyPacket
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+  Inputs used: ...
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionImplementationPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- ${ctx.runFolder}/artifacts/do-not-port-list.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+- ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+
+Task:
+Implement the extracted workflow in the target repository and produce ${ctx.runFolder}/artifacts/implementation-report.txt (artifact: ImplementationReport).
+
+Implement in ${targetDir} only. The source repository (${sourceDir}) is read-only evidence.
+Use the GoldenBehaviorContract as the implementation source of truth.
+Follow the TargetArchitectureProposal and PseudocodePacket.
+
+Extraction guardrails:
+- Implement only in the target repository (${targetDir}) unless source repository changes are explicitly permitted by the request brief.
+- Do not copy files directly from source to target.
+- Do not port systems listed in the DoNotPortList.
+- Do not import source repository modules into the target.
+- Do not assume source architecture is the required target architecture.
+- The GoldenBehaviorContract defines what must be true — not the source code.
+
+The ImplementationReport must include:
+- files read (source and target)
+- files created or changed (target only)
+- behavior implemented (must map to GoldenBehaviorContract items)
+- pseudocode sections implemented
+- porting decisions applied (from SourceToTargetPortingMap)
+- systems excluded (from DoNotPortList)
+- deviations from the PseudocodePacket and reason for each
+- source repository changes made, if any (normally: none)
+- blockers encountered
+- unresolved risks
+- tests that should be run
+- notes for the test implementation stage
+
+Required output artifact: ImplementationReport
+Output file: ${ctx.runFolder}/artifacts/implementation-report.txt
+
+Stop conditions:
+- do not port DoNotPortList systems
+- do not modify the source repository unless explicitly allowed by the request brief
+- do not claim verification success without command evidence
+- do not broaden scope without reporting a blocker
+
+Return format:
+Produce the artifact as a plain-text file following the ImplementationReport template.
+  Artifact: ImplementationReport
+  Workflow mode: extraction
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+  Inputs used: ...
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionTestImplementationPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+- ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+- ${ctx.runFolder}/artifacts/test-strategy-packet.txt
+- ${ctx.runFolder}/artifacts/implementation-report.txt (if available)
+
+Task:
+Add or update tests in the target repository and produce ${ctx.runFolder}/artifacts/test-implementation-report.txt (artifact: TestImplementationReport).
+
+All test work must happen in ${targetDir}.
+Prioritize non-negotiable regression tests from the GoldenBehaviorContract.
+Follow the TestStrategyPacket. Do not invent a separate test strategy.
+
+Extraction guardrails:
+- Add or update tests in the target repository only.
+- Do not add tests to the source repository.
+- Regression tests must cover every non-negotiable item in the GoldenBehaviorContract.
+- Do not claim tests passed unless command evidence is included.
+
+The TestImplementationReport must include:
+- test files changed (target repository only)
+- tests added
+- tests updated
+- GoldenBehaviorContract items covered
+- behaviors covered
+- invariants covered
+- state transitions covered
+- derived values covered
+- boundaries covered
+- external contracts covered
+- failure modes covered
+- TestStrategyPacket items not implemented
+- reason for each missing test
+- verification commands to run
+
+Required output artifact: TestImplementationReport
+Output file: ${ctx.runFolder}/artifacts/test-implementation-report.txt
+
+Stop conditions:
+- do not replace the TestStrategyPacket with a new unrelated strategy
+- do not change production behavior unless reporting a blocker
+- do not add tests to the source repository
+
+Return format:
+Produce the artifact as a plain-text file following the TestImplementationReport template.
+  Artifact: TestImplementationReport
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionVerificationPrompt(ctx: PromptContext): string {
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/test-strategy-packet.txt
+- ${ctx.runFolder}/artifacts/implementation-report.txt
+- ${ctx.runFolder}/artifacts/test-implementation-report.txt
+
+Task:
+Run validation commands in the target repository and produce ${ctx.runFolder}/artifacts/verification-report.txt (artifact: VerificationReport).
+
+Run target project validation commands in ${targetDir}.
+Do not validate the source repository unless explicitly requested by the request brief.
+
+Extraction guardrails:
+- Run all validation commands from inside the target repository.
+- Do not claim checks passed unless actual command output was produced.
+- Do not hide failed commands.
+
+The VerificationReport must include:
+- commands run and working directory for each (should be ${targetDir})
+- exit codes
+- pass/fail status
+- output summary
+- failed tests if any
+- GoldenBehaviorContract items verified by tests
+- skipped checks
+- reason for skipped checks
+- environment notes if relevant
+- remaining verification gaps
+
+Required output artifact: VerificationReport
+Output file: ${ctx.runFolder}/artifacts/verification-report.txt
+
+Stop conditions:
+- do not claim checks passed unless command output was produced
+- do not hide failed commands
+- do not validate source repository unless explicitly requested
+
+Return format:
+Produce the artifact as a plain-text file following the VerificationReport template.
+  Artifact: VerificationReport
+  Workflow mode: extraction
+  Target repository: ${targetDir}
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function extractionJudgePrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-workflow-map.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- ${ctx.runFolder}/artifacts/do-not-port-list.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+- ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+- ${ctx.runFolder}/artifacts/test-strategy-packet.txt
+- ${ctx.runFolder}/artifacts/implementation-report.txt
+- ${ctx.runFolder}/artifacts/test-implementation-report.txt
+- ${ctx.runFolder}/artifacts/verification-report.txt
+
+Task:
+Review the target implementation against all extraction artifacts and produce ${ctx.runFolder}/artifacts/judge-report.txt (artifact: JudgeReport).
+
+Do not mark the run as passed unless the target implementation satisfies the GoldenBehaviorContract.
+
+The JudgeReport must assess:
+- implementation vs GoldenBehaviorContract (primary gate)
+- implementation vs PseudocodePacket
+- implementation vs TargetArchitectureProposal
+- tests vs TestStrategyPacket
+- tests vs GoldenBehaviorContract non-negotiable regression tests
+- DoNotPortList compliance: no excluded systems were ported
+- SourceToTargetPortingMap decisions followed
+- source repository read-only compliance: was the source repository modified?
+- behavior coverage
+- verification evidence
+- scope control
+- risks and gaps
+
+Verdict must be one of:
+  PASS | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
+  TEST_COVERAGE_INCOMPLETE | ARCHITECTURE_MISMATCH | DO_NOT_PORT_VIOLATION |
+  GOLDEN_CONTRACT_NOT_SATISFIED | NEED_VERIFICATION | SCOPE_VIOLATION | BLOCKED
+
+Required output artifact: JudgeReport
+Output file: ${ctx.runFolder}/artifacts/judge-report.txt
+
+Source repository: ${sourceDir}
+Target repository: ${targetDir}
+
+Stop conditions:
+- do not rewrite code
+- do not approve without verification evidence
+- do not hide gaps in GoldenBehaviorContract coverage
+
+Return format:
+Produce the artifact as a plain-text file.
+  Artifact: JudgeReport
+  Workflow mode: extraction
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+  Verdict: ...
+  GoldenBehaviorContract satisfied: yes | no | partial
+  DoNotPortList compliant: yes | no
+  Source repository modified: yes | no
+  Recommended next stage if not PASS: ...
+  Status: complete
+`;
+}
+
+function extractionFinalReportPrompt(ctx: PromptContext): string {
+  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
+  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/request-brief.txt
+- ${ctx.runFolder}/artifacts/source-workflow-map.txt
+- ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- ${ctx.runFolder}/artifacts/do-not-port-list.txt
+- ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- ${ctx.runFolder}/artifacts/behavior-model.txt
+- ${ctx.runFolder}/artifacts/pseudocode-packet.txt
+- ${ctx.runFolder}/artifacts/test-strategy-packet.txt
+- ${ctx.runFolder}/artifacts/implementation-report.txt
+- ${ctx.runFolder}/artifacts/test-implementation-report.txt
+- ${ctx.runFolder}/artifacts/verification-report.txt
+- ${ctx.runFolder}/artifacts/judge-report.txt
+
+Task:
+Summarize the completed extraction workflow and produce ${ctx.runFolder}/artifacts/final-report.txt (artifact: FinalReport).
+
+The FinalReport must include:
+- Mode: extraction
+- Run ID: ${ctx.runId}
+- Original extraction request
+- Source repository: ${sourceDir}
+- Target repository: ${targetDir}
+- Final status (judge verdict)
+- Source workflow map: ${ctx.runFolder}/artifacts/source-workflow-map.txt
+- Source-to-target porting map: ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
+- Do-not-port list: ${ctx.runFolder}/artifacts/do-not-port-list.txt
+- Golden behavior contract: ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
+- Target architecture proposal: ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
+- Source components reused
+- Source components rewritten
+- Source components discarded
+- Files changed in target repository
+- Files changed in source repository (normally: none)
+- Tests added or updated
+- Verification commands and results
+- Judge result
+- Remaining risks
+- Recommended next extraction or implementation step
+
+Required output artifact: FinalReport
+Output file: ${ctx.runFolder}/artifacts/final-report.txt
+
+Stop conditions:
+- do not exaggerate success
+- do not omit failed or skipped verification
+- do not hide unresolved risks
+
+Return format:
+Produce the artifact as a plain-text file following the FinalReport template.
+  Artifact: FinalReport
+  Workflow mode: extraction
+  Run ID: ${ctx.runId}
+  Source repository: ${sourceDir}
+  Target repository: ${targetDir}
+  [all required sections]
+  Status: complete
+`;
+}
+
 // ─── Stage router ─────────────────────────────────────────────────────────────
 
 export function generateStagePrompt(meta: RunMetadata, stageName: string): string {
@@ -1296,21 +2382,26 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     runFolder: meta.runFolder,
     stageNumber: stageIndex + 1,
     totalStages: meta.stages.length,
+    sourceRepoRoot: meta.sourceRepoRoot,
+    targetRepoRoot: meta.targetRepoRoot,
   };
 
+  const isExtraction = meta.mode === 'extraction';
+
   switch (stageName) {
-    // shared
+    // shared — non-extraction
     case 'architecture-context': return architectureContextPrompt(ctx);
-    case 'behavior-model': return behaviorModelPrompt(ctx);
-    case 'pseudocode-packet': return pseudocodePacketPrompt(ctx);
-    case 'test-strategy': return testStrategyPrompt(ctx);
-    case 'implementation': return implementationPrompt(ctx);
-    case 'test-implementation': return testImplementationPrompt(ctx);
-    case 'verification': return verificationPrompt(ctx);
-    case 'judge': return judgePrompt(ctx);
-    case 'final-report': return finalReportPrompt(ctx);
+    case 'verification': return isExtraction ? extractionVerificationPrompt(ctx) : verificationPrompt(ctx);
+    case 'judge': return isExtraction ? extractionJudgePrompt(ctx) : judgePrompt(ctx);
+    case 'final-report': return isExtraction ? extractionFinalReportPrompt(ctx) : finalReportPrompt(ctx);
+    // shared stages with extraction-specific overrides
+    case 'behavior-model': return isExtraction ? extractionBehaviorModelPrompt(ctx) : behaviorModelPrompt(ctx);
+    case 'pseudocode-packet': return isExtraction ? extractionPseudocodePacketPrompt(ctx) : pseudocodePacketPrompt(ctx);
+    case 'test-strategy': return isExtraction ? extractionTestStrategyPrompt(ctx) : testStrategyPrompt(ctx);
+    case 'implementation': return isExtraction ? extractionImplementationPrompt(ctx) : implementationPrompt(ctx);
+    case 'test-implementation': return isExtraction ? extractionTestImplementationPrompt(ctx) : testImplementationPrompt(ctx);
     // feature
-    case 'request-brief': return requestBriefPrompt(ctx);
+    case 'request-brief': return isExtraction ? extractionRequestBriefPrompt(ctx) : requestBriefPrompt(ctx);
     // repair
     case 'observed-behavior-report': return observedBehaviorReportPrompt(ctx);
     case 'behavior-trace': return behaviorTracePrompt(ctx);
@@ -1333,6 +2424,12 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     case 'failure-mode-matrix': return failureModeMatrixPrompt(ctx);
     case 'guard-pseudocode-packet': return guardPseudocodePacketPrompt(ctx);
     case 'resilience-test-strategy': return resilienceTestStrategyPrompt(ctx);
+    // extraction-specific
+    case 'source-architecture-context': return sourceArchitectureContextPrompt(ctx);
+    case 'source-workflow-map': return sourceWorkflowMapPrompt(ctx);
+    case 'porting-map': return portingMapPrompt(ctx);
+    case 'golden-behavior-contract': return goldenBehaviorContractPrompt(ctx);
+    case 'target-architecture': return targetArchitecturePrompt(ctx);
     default:
       throw new Error(`No prompt generator for stage: "${stageName}"`);
   }

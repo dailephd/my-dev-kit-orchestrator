@@ -15,14 +15,15 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
-`v0.2.1` documents the planned extraction mode:
+`v0.2.1` adds extraction mode:
 
-- `--mode extraction` is a planned workflow for transferring a bounded feature, workflow, or subsystem from an existing source repository into a new or separate target repository
+- `--mode extraction` for transferring a bounded feature, workflow, or subsystem from an existing source repository into a new or separate target repository
+- `--source <path>` and `--target <path>` options required for extraction runs
 - the source repository is used for inspection and evidence only; the target repository is where the extracted workflow is implemented, tested, verified, and reported
 - source and target `.my-dev-kit` index directories are kept separate
-- five extraction-specific artifacts gate the workflow before any implementation begins: `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, and `TargetArchitectureProposal`
-- the runtime implementation of `--mode extraction` will follow in a later version
-- see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the planned workflow and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for artifact contracts
+- extraction-specific 14-stage workflow with artifact gates before implementation begins: `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, and `TargetArchitectureProposal`
+- run artifacts placed under the target repository by default
+- see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the full extraction workflow and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for artifact contracts
 
 `v0.2.0` added graph-guided architecture context support:
 
@@ -126,22 +127,6 @@ npm link
 my-dev-kit-orchestrator --help
 ```
 
-## Planned modes (v0.2.1)
-
-### `extraction` (planned)
-
-Use for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
-
-Planned command shape:
-
-```text
-npx my-dev-kit-orchestrator start --mode extraction --source "<source-repo-root>" --target "<target-repo-root>" "<extraction request>"
-```
-
-The source repository is evidence for the porting analysis. The target repository is where the extracted workflow will be implemented. The orchestrator must not assume the target inherits the source architecture.
-
-`--mode extraction` is not implemented in the current release. See [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the planned workflow design.
-
 ## Supported modes
 
 ### `feature`
@@ -178,6 +163,17 @@ Use for validation, guard, resilience, and failure-handling work.
 
 Stage order:
 `hardening-brief -> architecture-context -> assumption-report -> failure-mode-matrix -> guard-pseudocode-packet -> resilience-test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
+
+### `extraction`
+
+Use for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
+
+Requires `--source <path>` (source repo, read-only evidence) and `--target <path>` (target repo, implementation destination).
+
+Stage order:
+`request-brief -> source-architecture-context -> source-workflow-map -> porting-map -> golden-behavior-contract -> target-architecture -> behavior-model -> pseudocode-packet -> test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
+
+See [docs/WORKFLOWS.md](docs/WORKFLOWS.md) and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the full extraction workflow and artifact contracts.
 
 ## Run folder layout
 

@@ -133,13 +133,13 @@ Stage order:
 10. `judge`
 11. `final-report`
 
-## Extraction (planned)
+## Extraction
 
 Use `extraction` when you want to transfer a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
 
 This mode is not for normal feature implementation. It is for inspecting an existing source project, identifying the useful behavior, discarding unrelated architecture, preserving critical behavior, and implementing a cleaner version in the target project.
 
-**This workflow mode is planned for v0.2.1. It is not yet implemented in the current release.**
+**Implemented in v0.2.1.**
 
 ### Purpose
 
@@ -147,7 +147,7 @@ This mode is not for normal feature implementation. It is for inspecting an exis
 - target repository: where the extracted workflow is implemented, tested, verified, and reported
 - the orchestrator must not assume the target should inherit the full source architecture
 
-### Planned command shape
+### Command
 
 ```bash
 npx my-dev-kit-orchestrator start --mode extraction \
@@ -165,7 +165,7 @@ npx my-dev-kit-orchestrator start --mode extraction `
   "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
 ```
 
-### Planned stage order
+### Stage order
 
 1. `request-brief`
 2. `source-architecture-context`

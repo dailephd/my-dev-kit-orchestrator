@@ -439,8 +439,9 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
     }
   });
 
-  it('all five modes include architecture-context supporting report entry', () => {
-    for (const mode of VALID_MODES) {
+  it('non-extraction modes include architecture-context supporting report entry', () => {
+    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction');
+    for (const mode of nonExtractionModes) {
       const tmp = makeTempDir();
       try {
         initWorkspace(tmp);
@@ -450,6 +451,18 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
       } finally {
         cleanup(tmp);
       }
+    }
+  });
+
+  it('extraction mode includes source-architecture-context supporting report entry', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'extraction supporting report check', mode: 'extraction', projectRoot: tmp });
+      const reports = getSupportingReportStatuses(meta);
+      expect(reports.some((r) => r.stageName === 'source-architecture-context')).toBe(true);
+    } finally {
+      cleanup(tmp);
     }
   });
 });

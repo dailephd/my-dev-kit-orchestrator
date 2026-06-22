@@ -4,6 +4,7 @@ export interface StageDefinition {
   name: string;
   artifactFile: string;
   promptFile: string;
+  additionalArtifactFiles?: string[];
 }
 
 export interface WorkflowDefinition {
@@ -44,6 +45,16 @@ const ARTIFACT_MAP: Record<string, string> = {
   'failure-mode-matrix': 'artifacts/failure-mode-matrix.txt',
   'guard-pseudocode-packet': 'artifacts/guard-pseudocode-packet.txt',
   'resilience-test-strategy': 'artifacts/resilience-test-strategy.txt',
+  // extraction-specific
+  'source-architecture-context': 'artifacts/source-architecture-context-packet.txt',
+  'source-workflow-map': 'artifacts/source-workflow-map.txt',
+  'porting-map': 'artifacts/source-to-target-porting-map.txt',
+  'golden-behavior-contract': 'artifacts/golden-behavior-contract.txt',
+  'target-architecture': 'artifacts/target-architecture-proposal.txt',
+};
+
+const ADDITIONAL_ARTIFACT_MAP: Record<string, string[]> = {
+  'porting-map': ['artifacts/do-not-port-list.txt'],
 };
 
 function buildStages(stageNames: string[]): StageDefinition[] {
@@ -53,10 +64,12 @@ function buildStages(stageNames: string[]): StageDefinition[] {
     if (!artifactFile) {
       throw new Error(`No artifact mapping for stage: ${name}`);
     }
+    const additionalArtifactFiles = ADDITIONAL_ARTIFACT_MAP[name];
     return {
       name,
       artifactFile,
       promptFile: `prompts/${num}-${name}.prompt.txt`,
+      ...(additionalArtifactFiles ? { additionalArtifactFiles } : {}),
     };
   });
 }
@@ -128,12 +141,30 @@ const HARDEN_STAGES = buildStages([
   'final-report',
 ]);
 
+const EXTRACTION_STAGES = buildStages([
+  'request-brief',
+  'source-architecture-context',
+  'source-workflow-map',
+  'porting-map',
+  'golden-behavior-contract',
+  'target-architecture',
+  'behavior-model',
+  'pseudocode-packet',
+  'test-strategy',
+  'implementation',
+  'test-implementation',
+  'verification',
+  'judge',
+  'final-report',
+]);
+
 const WORKFLOW_DEFINITIONS: Record<WorkflowMode, WorkflowDefinition> = {
   feature: { mode: 'feature', stages: FEATURE_STAGES },
   repair: { mode: 'repair', stages: REPAIR_STAGES },
   test: { mode: 'test', stages: TEST_STAGES },
   refactor: { mode: 'refactor', stages: REFACTOR_STAGES },
   harden: { mode: 'harden', stages: HARDEN_STAGES },
+  extraction: { mode: 'extraction', stages: EXTRACTION_STAGES },
 };
 
 export function getWorkflow(mode: WorkflowMode): WorkflowDefinition {

@@ -17,6 +17,7 @@ export interface SupportingReportStatus {
 
 const STAGE_SUPPORTING_REPORTS: Record<string, string> = {
   'architecture-context': 'reports/architecture-context-retrieval-report.txt',
+  'source-architecture-context': 'reports/source-architecture-context-retrieval-report.txt',
 };
 
 export function getSupportingReportStatuses(meta: RunMetadata): SupportingReportStatus[] {
@@ -30,19 +31,38 @@ export function getSupportingReportStatuses(meta: RunMetadata): SupportingReport
     }));
 }
 
+function allArtifactsPresent(runFolder: string, stage: StageDefinition): boolean {
+  const primaryPresent = fs.existsSync(path.join(runFolder, stage.artifactFile));
+  if (!primaryPresent) return false;
+  if (!stage.additionalArtifactFiles) return true;
+  return stage.additionalArtifactFiles.every((f) => fs.existsSync(path.join(runFolder, f)));
+}
+
 export function getArtifactStatuses(meta: RunMetadata): ArtifactStatus[] {
-  return meta.stages.map((stage) => ({
-    stageName: stage.name,
-    artifactFile: stage.artifactFile,
-    present: fs.existsSync(path.join(meta.runFolder, stage.artifactFile)),
-  }));
+  const statuses: ArtifactStatus[] = [];
+  for (const stage of meta.stages) {
+    statuses.push({
+      stageName: stage.name,
+      artifactFile: stage.artifactFile,
+      present: fs.existsSync(path.join(meta.runFolder, stage.artifactFile)),
+    });
+    if (stage.additionalArtifactFiles) {
+      for (const additionalFile of stage.additionalArtifactFiles) {
+        statuses.push({
+          stageName: stage.name,
+          artifactFile: additionalFile,
+          present: fs.existsSync(path.join(meta.runFolder, additionalFile)),
+        });
+      }
+    }
+  }
+  return statuses;
 }
 
 export function getNextStage(meta: RunMetadata): StageDefinition | null {
-  const statuses = getArtifactStatuses(meta);
-  for (let i = 0; i < statuses.length; i++) {
-    if (!statuses[i].present) {
-      return meta.stages[i];
+  for (const stage of meta.stages) {
+    if (!allArtifactsPresent(meta.runFolder, stage)) {
+      return stage;
     }
   }
   return null;
@@ -58,9 +78,17 @@ export function getMissingPriorArtifacts(meta: RunMetadata, stageName: string): 
 
   const missing: string[] = [];
   for (let i = 0; i < stageIndex; i++) {
-    const artifactPath = path.join(meta.runFolder, meta.stages[i].artifactFile);
+    const stage = meta.stages[i];
+    const artifactPath = path.join(meta.runFolder, stage.artifactFile);
     if (!fs.existsSync(artifactPath)) {
-      missing.push(meta.stages[i].artifactFile);
+      missing.push(stage.artifactFile);
+    }
+    if (stage.additionalArtifactFiles) {
+      for (const additionalFile of stage.additionalArtifactFiles) {
+        if (!fs.existsSync(path.join(meta.runFolder, additionalFile))) {
+          missing.push(additionalFile);
+        }
+      }
     }
   }
   return missing;

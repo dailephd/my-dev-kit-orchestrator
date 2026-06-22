@@ -276,8 +276,9 @@ describe('supporting report status', () => {
     }
   });
 
-  it('getSupportingReportStatuses returns architecture-context report for all five modes', () => {
-    for (const mode of VALID_MODES) {
+  it('getSupportingReportStatuses returns architecture-context report for non-extraction modes', () => {
+    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction');
+    for (const mode of nonExtractionModes) {
       const tmp = makeTempDir();
       try {
         initWorkspace(tmp);
@@ -289,6 +290,20 @@ describe('supporting report status', () => {
       } finally {
         cleanup(tmp);
       }
+    }
+  });
+
+  it('getSupportingReportStatuses returns source-architecture-context report for extraction mode', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'test', mode: 'extraction', projectRoot: tmp });
+      const reports = getSupportingReportStatuses(meta);
+      const sourceReport = reports.find((r) => r.stageName === 'source-architecture-context');
+      expect(sourceReport).toBeDefined();
+      expect(sourceReport!.reportFile).toBe('reports/source-architecture-context-retrieval-report.txt');
+    } finally {
+      cleanup(tmp);
     }
   });
 });

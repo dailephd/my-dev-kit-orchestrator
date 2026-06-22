@@ -53,6 +53,8 @@ export function makeStatusCommand(): Command {
         `Run folder:`,
         `  ${meta.runFolder}`,
         ``,
+        ...(meta.sourceRepoRoot ? [`Source repository:`, `  ${meta.sourceRepoRoot}`, ``] : []),
+        ...(meta.targetRepoRoot ? [`Target repository:`, `  ${meta.targetRepoRoot}`, ``] : []),
         `Current / next stage:`,
         `  ${nextStage ? nextStage.name : '(complete)'}`,
         ``,
