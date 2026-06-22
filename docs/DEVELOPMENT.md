@@ -76,6 +76,26 @@ Important implementation files:
 - Keep run folders local and untracked.
 - When behavior changes, keep docs aligned with the real CLI output and stage definitions.
 
+## Future extraction mode implementation
+
+When the runtime implementation of `--mode extraction` is added, it will require:
+
+- add `extraction` to the workflow mode definitions in `src/workflows.ts` with the planned stage order
+- parse `--source` and `--target` flags in the `start` command
+- store source and target repository paths in run metadata (`run.json`)
+- generate extraction-specific prompts in `src/promptGenerator.ts` for each extraction stage
+- add extraction artifact contracts matching the documented paths in `docs/ARTIFACTS.md`
+- add status and progression behavior that handles the two-repo model
+- preserve source repository read-only behavior by default
+- add Jest tests for:
+  - `extraction` mode stage order
+  - `--source` and `--target` flag parsing
+  - extraction artifact path generation
+  - source/target run metadata storage
+  - extraction-specific prompt content
+
+Do not implement extraction runtime before those items are explicitly scoped. Do not use this documentation as a substitute for proper source-code review when the time comes.
+
 ## Verification expectations
 
 - Confirm user-facing documentation matches the shipped command behavior.

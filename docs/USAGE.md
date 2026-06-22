@@ -131,6 +131,75 @@ In that flow, the coding agent should:
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
 
+## Planned: extraction mode (v0.2.1)
+
+`--mode extraction` is planned for a future release. The examples below document the intended command shape for when the runtime implementation is available.
+
+### What extraction mode is for
+
+Extraction mode transfers a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
+
+- the source repository is evidence for the porting analysis; it is treated as read-only by default
+- the target repository is where the extracted workflow is implemented, tested, verified, and reported
+- the orchestrator must not assume the target should inherit the source architecture
+
+### Planned command shape
+
+```bash
+npx my-dev-kit-orchestrator start --mode extraction \
+  --source "<source-repo-root>" \
+  --target "<target-repo-root>" \
+  "<extraction request>"
+```
+
+### Windows example
+
+```powershell
+npx my-dev-kit-orchestrator start --mode extraction `
+  --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
+  --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
+  "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
+```
+
+### Source and target index separation
+
+Each repository uses its own `.my-dev-kit` index directory. The coding agent indexes the source repository separately from the target repository.
+
+Source repository index:
+
+```bash
+npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
+```
+
+Target repository index (if the target already has source to inspect):
+
+```bash
+npx @dailephd/my-dev-kit index --root <target-repo-root> --out <target-repo-root>/.my-dev-kit
+```
+
+Do not mix source and target retrieval results. Mixing them would undermine the porting analysis.
+
+### Planned extraction workflow loop
+
+When the runtime is available, the intended loop is:
+
+1. start the extraction run
+2. work through the extraction stages in order
+3. save each extraction artifact before moving to the next stage
+4. no implementation until all five pre-implementation artifacts are complete
+5. implement only in the target repository
+6. verify against the golden behavior contract in the judge stage
+
+### What `--create-target` would do (possible future behavior)
+
+A `--create-target` flag that initializes the target repository before the run is a possible future addition. It is not implemented in the current release. Do not assume this flag exists.
+
+### Note on implementation state
+
+The examples above document the intended command shape. They will not work until the runtime implementation of `--mode extraction` is available. See [docs/ROADMAP.md](ROADMAP.md) for the planned timeline.
+
+---
+
 ## Check run status
 
 Show the most recent run:

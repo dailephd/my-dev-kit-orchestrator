@@ -231,6 +231,88 @@ Version `0.1.0` does not include:
 
 Those exclusions are intentional. The release is designed to keep workflow logic clear, local, and easy to inspect.
 
+## Planned extraction mode architecture
+
+`--mode extraction` is a planned workflow mode for `v0.2.1` and later. This section documents the intended design.
+
+### Why extraction mode is different from feature mode
+
+`--mode feature` assumes one project. The coding agent inspects the current project, models behavior, writes pseudocode, and implements the change in the same repository.
+
+`--mode extraction` assumes two project roles. The coding agent inspects an existing source repository for evidence, decides what behavior to port and what to discard, and implements the extracted workflow in a separate target repository.
+
+The key constraint: the orchestrator must not assume that the target repository should inherit the full source architecture. The purpose is to extract desired behavior, not clone the old system.
+
+### Two-repo model
+
+In extraction mode, the user provides two repository paths:
+
+- `--source <source-repo-root>`: the existing project used for inspection and porting analysis. Treated as read-only evidence by default.
+- `--target <target-repo-root>`: the project where the extracted workflow will be implemented, tested, verified, and reported.
+
+All implementation work happens in the target repository. The source repository is used only for graph-guided workflow inspection and porting analysis.
+
+### Source repository as read-only evidence
+
+The source repository should not be modified during an extraction run unless the user explicitly overrides that restriction.
+
+Its role is to:
+
+- provide source context through graph-guided workflow inspection
+- supply evidence for the SourceWorkflowMap and SourceToTargetPortingMap
+- feed the GoldenBehaviorContract via behavior analysis
+
+The coding agent should index the source repository into its own `.my-dev-kit` directory and use retrieval results as evidence, not as a design template to copy.
+
+### Target repository as implementation destination
+
+The target repository is where all implementation, testing, verification, and reporting happens.
+
+The orchestrator run workspace lives under the target repository by default:
+
+```text
+<target-repo-root>/.my-dev-kit-orchestrator/runs/<run-id>/
+```
+
+If the target repository does not exist yet, the orchestrator requires the user to initialize it before starting an extraction run. Automatic target creation is not implemented in the current release.
+
+### Source and target index separation
+
+Source and target repositories each use their own `.my-dev-kit` index directory.
+
+```text
+<source-repo-root>/.my-dev-kit    ← source repo index
+<target-repo-root>/.my-dev-kit    ← target repo index
+```
+
+The coding agent must index the source repository separately from the target repository. Mixing source and target retrieval results would undermine the porting analysis.
+
+### Extraction artifacts as pre-implementation gates
+
+Five extraction-specific artifacts must be produced before any production implementation can begin in the target repository:
+
+1. `SourceWorkflowMap` — describes how the workflow currently works in the source repository
+2. `SourceToTargetPortingMap` — classifies each source subsystem as reusable, refactorable, rewritable, discardable, or postponed
+3. `DoNotPortList` — explicitly prevents accidental transfer of unrelated source architecture
+4. `GoldenBehaviorContract` — defines the exact behavior that must be preserved or reimplemented in the target repository
+5. `TargetArchitectureProposal` — describes the clean target architecture before implementation begins
+
+No production implementation should start before all five artifacts are complete.
+
+### Golden behavior contract as target behavior source of truth
+
+The GoldenBehaviorContract is the central gate in the extraction workflow. It defines the behavior the target implementation must satisfy, independently of how the source implementation achieved that behavior.
+
+The judge stage at the end of the extraction workflow compares the target implementation against the GoldenBehaviorContract, not against the source implementation directly.
+
+### Relationship to existing workflow architecture
+
+The extraction workflow adds a new mode alongside the existing five (`feature`, `repair`, `test`, `refactor`, `harden`). It does not replace any existing mode. The shared command surface (`init`, `start`, `status`, `prompt`, `list`) continues to apply.
+
+The runtime implementation of extraction mode will require additions to `src/workflows.ts`, `src/promptGenerator.ts`, and the `start` command to support `--source` and `--target` flags and to track two-repo run metadata. Those additions are planned for a future version.
+
+---
+
 ## Future architecture direction
 
 Possible future extensions:

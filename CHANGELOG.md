@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Added (v0.2.1 extraction mode documentation)
+
+- documented planned `--mode extraction` workflow for source-to-target behavior transfer
+- documented source repository and target repository roles
+- documented source-to-target porting model and do-not-port guardrails
+- documented extraction-specific stage order
+- documented extraction artifact contracts:
+  - `SourceWorkflowMap`
+  - `SourceToTargetPortingMap`
+  - `DoNotPortList`
+  - `GoldenBehaviorContract`
+  - `TargetArchitectureProposal`
+- documented source and target `.my-dev-kit` index separation
+- documented golden behavior contract as mandatory gate before pseudocode and test strategy
+- documented guardrails against cloning source repository architecture into the target project
+- added v0.2.1 planned extraction mode milestone to `docs/ROADMAP.md`
+- added extraction mode architecture section to `docs/ARCHITECTURE.md`
+- added extraction workflow to `docs/WORKFLOWS.md`
+- added extraction artifact contracts to `docs/ARTIFACTS.md`
+- added extraction mode examples to `docs/USAGE.md`
+- added `docs/RELEASE_CHECKLIST.md` with v0.2.1 verification items
+
 ### Added (v0.2.0 graph-guided architecture context)
 
 - `getSupportingReportStatuses` in `stageDetector.ts`: checks known supporting report presence per run
