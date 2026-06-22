@@ -52,6 +52,10 @@ function runCLI(
   };
 }
 
+function canonicalPath(filePath: string): string {
+  return path.normalize(fs.realpathSync.native(filePath));
+}
+
 // ─── OS-native absolute path tests (no CLI subprocess required) ───────────────
 
 describe('cross-platform: OS-native absolute paths', () => {
@@ -309,8 +313,8 @@ describeIfBuilt('cross-platform: CLI relative path normalization', () => {
       expect(path.isAbsolute(runMeta.targetRepoRoot)).toBe(true);
 
       // paths must point to the correct directories
-      expect(path.normalize(runMeta.sourceRepoRoot)).toBe(path.normalize(sourceDir));
-      expect(path.normalize(runMeta.targetRepoRoot)).toBe(path.normalize(targetDir));
+      expect(canonicalPath(runMeta.sourceRepoRoot)).toBe(canonicalPath(sourceDir));
+      expect(canonicalPath(runMeta.targetRepoRoot)).toBe(canonicalPath(targetDir));
     } finally {
       cleanup(parentDir);
     }
