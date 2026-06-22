@@ -23,6 +23,7 @@ It is for teams or individual developers who want a coding agent to work through
 - source and target `.my-dev-kit` index directories are kept separate
 - extraction-specific 14-stage workflow with artifact gates before implementation begins: `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, and `TargetArchitectureProposal`
 - run artifacts placed under the target repository by default
+- cross-platform support verified in the GitHub Actions OS matrix on Ubuntu, Windows, and macOS
 - see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the full extraction workflow and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for artifact contracts
 
 `v0.2.0` added graph-guided architecture context support:

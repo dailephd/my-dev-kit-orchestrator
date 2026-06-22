@@ -22,6 +22,15 @@
 - source and target repository paths shown in `status` output
 - extraction run artifacts placed under target repository by default
 - documented guardrails against cloning source repository architecture
+- relative `--source` and `--target` paths normalized to absolute run metadata
+
+### Cross-platform validation
+
+- GitHub Actions validation matrix added for `ubuntu-latest`, `windows-latest`, and `macos-latest`
+- typecheck, tests, build, lint, CLI smoke, and extraction CLI smoke covered in CI
+- extraction mode tested with OS-native temporary paths
+- extraction mode tested with paths containing spaces
+- macOS canonical temp-path alias handled in cross-platform tests
 
 ### Notes
 
@@ -56,7 +65,7 @@
 - added extraction mode examples to `docs/USAGE.md`
 - added `docs/RELEASE_CHECKLIST.md` with v0.2.1 verification items
 
-**Note:** Documentation-only entry. Runtime implementation tracked separately under Unreleased above.
+**Note:** Documentation-only preparation entry. Runtime implementation shipped in the `v0.2.1 — Extraction Mode` entry above.
 
 ## v0.2.0 — Graph-Guided Architecture Context
 

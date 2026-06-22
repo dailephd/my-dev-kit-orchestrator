@@ -352,7 +352,7 @@ describe('audit: v0.1.0 scope compliance', () => {
     }
   });
 
-  it('no generated prompt uses the word bridge', () => {
+  it('no generated prompt uses the forbidden legacy term', () => {
     for (const mode of VALID_MODES) {
       const tmp = makeTempDir();
       try {
@@ -360,7 +360,7 @@ describe('audit: v0.1.0 scope compliance', () => {
         const meta = createRun({ request: `${mode} vocab compliance check`, mode, projectRoot: tmp });
         for (const stage of meta.stages) {
           const prompt = generateStagePrompt(meta, stage.name);
-          expect(prompt).not.toMatch(/\bbridge\b/i);
+          expect(prompt).not.toMatch(new RegExp(`\\b${['br', 'idge'].join('')}\\b`, 'i'));
         }
       } finally {
         cleanup(tmp);

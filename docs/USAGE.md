@@ -181,7 +181,7 @@ Do not mix source and target retrieval results. Mixing them would undermine the 
 
 ### Extraction workflow loop
 
-When the runtime is available, the intended loop is:
+The current runtime loop is:
 
 1. start the extraction run
 2. work through the extraction stages in order

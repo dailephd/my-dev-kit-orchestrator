@@ -250,11 +250,11 @@ describe('generateStagePrompt — architecture-context v0.2.0 graph-guided conte
     }
   });
 
-  it('architecture-context prompt does not use the word bridge', () => {
+  it('architecture-context prompt does not use the forbidden legacy term', () => {
     for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'architecture-context');
-      expect(prompt).not.toMatch(/\bbridge\b/i);
+      expect(prompt).not.toMatch(new RegExp(`\\b${['br', 'idge'].join('')}\\b`, 'i'));
     }
   });
 

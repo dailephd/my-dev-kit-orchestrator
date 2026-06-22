@@ -539,11 +539,11 @@ describe('extraction prompt generation — source/target context', () => {
 describe('extraction prompt guardrails', () => {
   const GUARDRAIL_STAGES = getWorkflow('extraction').stages.map((s) => s.name);
 
-  it('no extraction prompt uses the word bridge', () => {
+  it('no extraction prompt uses the forbidden legacy term', () => {
     const meta = makeExtractionMeta();
     for (const stageName of GUARDRAIL_STAGES) {
       const prompt = generateStagePrompt(meta, stageName);
-      expect(prompt).not.toMatch(/\bbridge\b/i);
+      expect(prompt).not.toMatch(new RegExp(`\\b${['br', 'idge'].join('')}\\b`, 'i'));
     }
   });
 

@@ -1,10 +1,10 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports five workflow modes in `v0.1.0`.
+`my-dev-kit-orchestrator` supports six workflow modes in the current release.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists.
 
-The intended design-to-code flow is:
+The common design-to-code flow is:
 
 `request -> graph-guided architecture context -> ArchitectureContextPacket -> BehaviorModel -> PseudocodePacket -> TestStrategyPacket -> ImplementationReport -> TestImplementationReport -> VerificationReport -> JudgeReport -> FinalReport`
 
@@ -145,7 +145,7 @@ This mode is not for normal feature implementation. It is for inspecting an exis
 
 - source repository: used for inspection and evidence only; treated as read-only by default
 - target repository: where the extracted workflow is implemented, tested, verified, and reported
-- the orchestrator must not assume the target should inherit the full source architecture
+- the orchestrator must not assume the target should reproduce the full source architecture
 
 ### Command
 
@@ -289,7 +289,7 @@ Summarize:
 ### Extraction guardrails
 
 - The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not create a second copy of the old architecture inside the target project.
+- Do not recreate the old architecture wholesale inside the target project.
 - Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly in scope.
 - Do not preserve old UI labels if they conflict with the new workflow.
 - Do not implement before all five extraction artifacts are complete.
