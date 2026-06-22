@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-### Added (v0.2.1 extraction mode documentation)
+v0.2.1 runtime implementation in progress on `feature/v0.2.1-extraction-mode`.
+
+## v0.2.1 — Documentation preparation
+
+### Added
 
 - documented planned `--mode extraction` workflow for source-to-target behavior transfer
 - documented source repository and target repository roles
@@ -24,13 +28,17 @@
 - added extraction mode examples to `docs/USAGE.md`
 - added `docs/RELEASE_CHECKLIST.md` with v0.2.1 verification items
 
-### Added (v0.2.0 graph-guided architecture context)
+**Note:** Documentation-only entry. Runtime implementation tracked separately under Unreleased above.
+
+## v0.2.0 — Graph-Guided Architecture Context
+
+### Added
 
 - `getSupportingReportStatuses` in `stageDetector.ts`: checks known supporting report presence per run
 - `SupportingReportStatus` interface in `stageDetector.ts`
 - `status` command now shows a Supporting reports section with present/missing status for `reports/architecture-context-retrieval-report.txt`
 
-### Changed (v0.2.0 graph-guided architecture context)
+### Changed
 
 - architecture-context stage prompt updated with full 8-step graph-guided retrieval sequence
 - architecture-context prompt now specifies both output paths explicitly (retrieval report and ArchitectureContextPacket)
@@ -46,11 +54,13 @@
 - clarified the relationship between `my-dev-kit` and `my-dev-kit-orchestrator`
 - updated `docs/ROADMAP.md` to show v0.2.0 as implemented
 
-## v0.1.0
+**Note:** Tagged as `v0.2.0` in git. Not published to npm.
+
+## v0.1.0 — Workflow Shell
 
 Initial release of `my-dev-kit-orchestrator`.
 
-Included in `v0.1.0`:
+### Added
 
 - CLI commands: `init`, `start`, `status`, `prompt`, and `list`
 - workflow modes: `feature`, `repair`, `test`, `refactor`, and `harden`
@@ -62,7 +72,7 @@ Included in `v0.1.0`:
 - prompt retrieval for the next or selected stage via `prompt`
 - Jest test coverage for command behavior, workflow definitions, prompt generation, and run management
 
-Not included in `v0.1.0`:
+### Not included in v0.1.0
 
 - direct LLM execution
 - automatic `my-dev-kit` execution
