@@ -21,3 +21,5 @@ agents.txt
 claude.txt
 docs/*.txt
 reports/
+docs/RELEASE_CHECKLIST.md
+.claude/

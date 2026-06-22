@@ -44,11 +44,6 @@
 - paths-with-spaces coverage
 - macOS canonical path handling in cross-platform tests
 
-Not implemented in `v0.2.1`:
-
-- `--create-target`
-- artifact validation beyond file-existence tracking
-
 ## Planned milestones
 
 ### v0.3.0
