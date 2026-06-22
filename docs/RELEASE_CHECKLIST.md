@@ -61,12 +61,23 @@ rg -n "copy files|clone the old system|inherit the full source architecture" REA
 
 Expected: no matches, or matches only in warnings against those behaviors.
 
+### Cross-platform CI verification
+
+- [ ] GitHub Actions OS matrix passes on Windows, Ubuntu, and macOS
+- [ ] typecheck passes on all three OSes
+- [ ] `npm test` passes on all three OSes (339 tests minimum)
+- [ ] `npm run build` passes on all three OSes
+- [ ] `npm run lint` passes on all three OSes
+- [ ] extraction mode tested with paths containing spaces
+- [ ] extraction mode tested with relative `--source` and `--target` paths (normalized to absolute)
+- [ ] `npm pack --dry-run` remains clean (no forbidden files)
+
 ### Validation commands
 
 ```bash
 npx tsc --noEmit
-npm test
 npm run build
+npm test
 npm run lint
 ```
 

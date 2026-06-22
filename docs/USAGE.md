@@ -1,6 +1,6 @@
 # Usage
 
-This guide covers the practical `v0.1.0` CLI flow.
+This guide covers the CLI command surface and common workflows.
 
 ## Initialize a project workspace
 
