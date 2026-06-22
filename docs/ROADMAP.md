@@ -31,34 +31,35 @@ Implemented:
 - `getSupportingReportStatuses` function for checking known supporting report presence
 - stage progression remains based on required artifacts only; supporting reports are visible but not stage gates
 
-## Planned in v0.2.1 — Extraction Mode
+## Implemented in v0.2.1 — Extraction Mode
 
-`v0.2.1` documents the planned `--mode extraction` workflow for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
+`v0.2.1` implements `--mode extraction` for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
 
-Planned documentation in v0.2.1:
+Implemented:
 
-- `--mode extraction` command shape and source/target repository roles
-- extraction-specific stage order
-- extraction artifact contracts: SourceWorkflowMap, SourceToTargetPortingMap, DoNotPortList, GoldenBehaviorContract, TargetArchitectureProposal
-- source/target index separation
-- golden behavior contract as mandatory pre-implementation gate
-- guardrails against cloning the source repository architecture
+- `--mode extraction` workflow mode
+- `--source <path>` and `--target <path>` options for extraction runs
+- extraction-specific 14-stage workflow order
+- extraction artifact gates: `SourceArchitectureContextPacket`, `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, `TargetArchitectureProposal`
+- `porting-map` stage requires two artifacts: `source-to-target-porting-map.txt` and `do-not-port-list.txt`
+- source and target repository metadata stored in `run.json`
+- extraction-specific prompt generation for all 14 stages
+- extraction run artifacts placed under target repository by default
+- source/target repository paths shown in `status` output
+- source-architecture-context supporting report entry in `status`
+- guardrails against cloning source repository architecture embedded in generated prompts
 
-The runtime implementation of `--mode extraction` will follow in a later version when:
+Not yet implemented (possible future additions):
 
-- `start` accepts `--source` and `--target` flags
-- extraction workflow stages are added to the workflow definition layer
-- extraction-specific prompts are generated
-- source and target run metadata paths are tracked
-- status and progression behavior is updated for the two-repo model
+- `--create-target` flag for initializing target repository before the run
+- artifact validation beyond simple file-existence tracking for extraction artifacts
 
-See [docs/WORKFLOWS.md](WORKFLOWS.md) and [docs/ARTIFACTS.md](ARTIFACTS.md) for the planned extraction workflow and artifact contracts.
+See [docs/WORKFLOWS.md](WORKFLOWS.md) and [docs/ARTIFACTS.md](ARTIFACTS.md) for the full extraction workflow and artifact contracts.
 
 ## Possible next steps after v0.2.1
 
 These are future directions, not current features:
 
-- runtime implementation of `--mode extraction` (source and target flag parsing, extraction-specific prompt generation, two-repo run metadata, status updates)
 - artifact validation beyond simple file-existence tracking
 - richer run status and correction routing based on judge outcomes
 - deeper `my-dev-kit` integration for architecture-context retrieval

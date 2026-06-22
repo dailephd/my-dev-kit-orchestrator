@@ -76,25 +76,18 @@ Important implementation files:
 - Keep run folders local and untracked.
 - When behavior changes, keep docs aligned with the real CLI output and stage definitions.
 
-## Future extraction mode implementation
+## Extraction mode implementation (v0.2.1)
 
-When the runtime implementation of `--mode extraction` is added, it will require:
+`--mode extraction` is implemented in v0.2.1. Implementation files:
 
-- add `extraction` to the workflow mode definitions in `src/workflows.ts` with the planned stage order
-- parse `--source` and `--target` flags in the `start` command
-- store source and target repository paths in run metadata (`run.json`)
-- generate extraction-specific prompts in `src/promptGenerator.ts` for each extraction stage
-- add extraction artifact contracts matching the documented paths in `docs/ARTIFACTS.md`
-- add status and progression behavior that handles the two-repo model
-- preserve source repository read-only behavior by default
-- add Jest tests for:
-  - `extraction` mode stage order
-  - `--source` and `--target` flag parsing
-  - extraction artifact path generation
-  - source/target run metadata storage
-  - extraction-specific prompt content
-
-Do not implement extraction runtime before those items are explicitly scoped. Do not use this documentation as a substitute for proper source-code review when the time comes.
+- `src/types.ts`: `extraction` added to `VALID_MODES`
+- `src/workflows.ts`: `EXTRACTION_STAGES`, `ADDITIONAL_ARTIFACT_MAP` for the `porting-map` dual-artifact stage, and `extraction` entry in `WORKFLOW_DEFINITIONS`
+- `src/run.ts`: `sourceRepoRoot` and `targetRepoRoot` optional fields in `RunMetadata` and `createRun` options
+- `src/commands/start.ts`: `--source` and `--target` options; validation that both are required for extraction mode; `projectRoot` set to `targetRepoRoot` for extraction runs
+- `src/promptGenerator.ts`: `sourceRepoRoot` and `targetRepoRoot` in `PromptContext`; extraction-specific prompt functions for all 14 stages
+- `src/stageDetector.ts`: `allArtifactsPresent` helper checks primary and `additionalArtifactFiles`; `source-architecture-context` added to `STAGE_SUPPORTING_REPORTS`
+- `src/commands/status.ts`: source and target repository paths shown for extraction runs
+- `src/__tests__/extraction-mode.test.ts`: dedicated extraction mode test suite
 
 ## Verification expectations
 

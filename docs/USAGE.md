@@ -131,9 +131,9 @@ In that flow, the coding agent should:
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
 
-## Planned: extraction mode (v0.2.1)
+## Extraction mode (v0.2.1)
 
-`--mode extraction` is planned for a future release. The examples below document the intended command shape for when the runtime implementation is available.
+`--mode extraction` is available in v0.2.1.
 
 ### What extraction mode is for
 
@@ -143,7 +143,7 @@ Extraction mode transfers a bounded feature, workflow, subsystem, or behavior fr
 - the target repository is where the extracted workflow is implemented, tested, verified, and reported
 - the orchestrator must not assume the target should inherit the source architecture
 
-### Planned command shape
+### Command
 
 ```bash
 npx my-dev-kit-orchestrator start --mode extraction \
@@ -179,7 +179,7 @@ npx @dailephd/my-dev-kit index --root <target-repo-root> --out <target-repo-root
 
 Do not mix source and target retrieval results. Mixing them would undermine the porting analysis.
 
-### Planned extraction workflow loop
+### Extraction workflow loop
 
 When the runtime is available, the intended loop is:
 
@@ -193,10 +193,6 @@ When the runtime is available, the intended loop is:
 ### What `--create-target` would do (possible future behavior)
 
 A `--create-target` flag that initializes the target repository before the run is a possible future addition. It is not implemented in the current release. Do not assume this flag exists.
-
-### Note on implementation state
-
-The examples above document the intended command shape. They will not work until the runtime implementation of `--mode extraction` is available. See [docs/ROADMAP.md](ROADMAP.md) for the planned timeline.
 
 ---
 

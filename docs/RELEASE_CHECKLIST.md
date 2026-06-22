@@ -2,25 +2,34 @@
 
 ## v0.2.1 checklist
 
+### Runtime implementation verification
+
+- [ ] `start --mode extraction --source <path> --target <path> "<request>"` creates a run
+- [ ] extraction without `--source` fails with clear error message
+- [ ] extraction without `--target` fails with clear error message
+- [ ] non-extraction modes do not require `--source` or `--target`
+- [ ] source and target paths are stored in `run.json`
+- [ ] extraction run artifacts are created under target repo (`<target>/.my-dev-kit-orchestrator/runs/<run-id>/`)
+- [ ] `status` shows source and target repo paths for extraction runs
+- [ ] extraction mode stage order matches the 14-stage spec
+- [ ] `porting-map` stage requires both `source-to-target-porting-map.txt` and `do-not-port-list.txt`
+- [ ] `golden-behavior-contract` is required before `pseudocode-packet` can be the next stage
+- [ ] implementation cannot be the next stage until all 6 pre-implementation artifacts exist
+- [ ] all extraction prompt stages have required sections: Stage, Workflow mode, Task, Required output artifact, Output file, Stop conditions, Return format
+
 ### Documentation verification
 
-- [ ] verify docs do not claim `--mode extraction` runtime support unless source code proves it is implemented
 - [ ] verify extraction docs clearly distinguish source repository (evidence) from target repository (implementation destination)
 - [ ] verify source repository is documented as read-only evidence by default
 - [ ] verify target repository is documented as the implementation destination
-- [ ] verify all five extraction artifacts are documented with paths, required sections, and templates:
-  - [ ] `SourceWorkflowMap` at `artifacts/source-workflow-map.txt`
-  - [ ] `SourceToTargetPortingMap` at `artifacts/source-to-target-porting-map.txt`
-  - [ ] `DoNotPortList` at `artifacts/do-not-port-list.txt`
-  - [ ] `GoldenBehaviorContract` at `artifacts/golden-behavior-contract.txt`
-  - [ ] `TargetArchitectureProposal` at `artifacts/target-architecture-proposal.txt`
+- [ ] verify all extraction artifacts are documented with paths, required sections, and templates
 - [ ] verify `GoldenBehaviorContract` is documented as mandatory before pseudocode and test strategy
 - [ ] verify source and target `.my-dev-kit` artifact directories are documented as separate
 - [ ] verify docs do not recommend copying files directly from source to target
 - [ ] verify docs do not describe extraction mode as "cloning the source architecture"
 - [ ] verify docs do not use the word "bridge" in public-facing descriptions
-- [ ] verify ROADMAP.md marks v0.2.1 as planned (not implemented) for extraction mode runtime
-- [ ] verify CHANGELOG.md entry correctly lists documentation additions, not runtime implementation
+- [ ] verify ROADMAP.md marks v0.2.1 as implemented
+- [ ] verify CHANGELOG.md entry lists runtime implementation additions
 
 ### Forbidden wording check
 

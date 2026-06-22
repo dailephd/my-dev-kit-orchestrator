@@ -236,10 +236,49 @@ describe('invalid mode rejection', () => {
 });
 
 describe('getAllWorkflows', () => {
-  it('returns all five workflow modes', () => {
+  it('returns all six workflow modes', () => {
     const all = getAllWorkflows();
-    expect(all).toHaveLength(5);
+    expect(all).toHaveLength(6);
     const modes = all.map((wf) => wf.mode).sort();
-    expect(modes).toEqual(['feature', 'harden', 'refactor', 'repair', 'test']);
+    expect(modes).toEqual(['extraction', 'feature', 'harden', 'refactor', 'repair', 'test']);
+  });
+
+  it('extraction mode has correct stage sequence', () => {
+    const wf = getWorkflow('extraction');
+    const names = wf.stages.map((s) => s.name);
+    expect(names).toEqual([
+      'request-brief',
+      'source-architecture-context',
+      'source-workflow-map',
+      'porting-map',
+      'golden-behavior-contract',
+      'target-architecture',
+      'behavior-model',
+      'pseudocode-packet',
+      'test-strategy',
+      'implementation',
+      'test-implementation',
+      'verification',
+      'judge',
+      'final-report',
+    ]);
+  });
+
+  it('extraction mode porting-map stage has additionalArtifactFiles for do-not-port-list', () => {
+    const wf = getWorkflow('extraction');
+    const portingMapStage = wf.stages.find((s) => s.name === 'porting-map');
+    expect(portingMapStage).toBeDefined();
+    expect(portingMapStage!.additionalArtifactFiles).toEqual(['artifacts/do-not-port-list.txt']);
+  });
+
+  it('extraction mode artifact filenames match spec', () => {
+    const wf = getWorkflow('extraction');
+    const map: Record<string, string> = {};
+    for (const s of wf.stages) map[s.name] = s.artifactFile;
+    expect(map['source-architecture-context']).toBe('artifacts/source-architecture-context-packet.txt');
+    expect(map['source-workflow-map']).toBe('artifacts/source-workflow-map.txt');
+    expect(map['porting-map']).toBe('artifacts/source-to-target-porting-map.txt');
+    expect(map['golden-behavior-contract']).toBe('artifacts/golden-behavior-contract.txt');
+    expect(map['target-architecture']).toBe('artifacts/target-architecture-proposal.txt');
   });
 });

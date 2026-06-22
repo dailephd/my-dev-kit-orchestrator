@@ -15,6 +15,8 @@ export interface RunMetadata {
   currentStage: string;
   stages: StageDefinition[];
   status: 'created' | 'in_progress' | 'completed';
+  sourceRepoRoot?: string;
+  targetRepoRoot?: string;
 }
 
 function sanitizeSlug(input: string): string {
@@ -54,8 +56,10 @@ export function createRun(options: {
   projectRoot: string;
   name?: string;
   outputDir?: string;
+  sourceRepoRoot?: string;
+  targetRepoRoot?: string;
 }): RunMetadata {
-  const { request, mode, projectRoot, name, outputDir } = options;
+  const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
   const runId = makeRunId(request, name);
 
   const baseDir = outputDir ?? getRunsDir(projectRoot);
@@ -85,6 +89,8 @@ export function createRun(options: {
     currentStage: stages[0].name,
     stages,
     status: 'created',
+    ...(sourceRepoRoot !== undefined ? { sourceRepoRoot } : {}),
+    ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
   };
 
   fs.writeFileSync(
