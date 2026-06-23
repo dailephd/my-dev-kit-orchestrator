@@ -18,6 +18,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "start": "node dist/cli.js",
+    "smoke:cli": "node scripts/cli-smoke.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",

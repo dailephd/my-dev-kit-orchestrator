@@ -58,6 +58,21 @@
 
 ### Non-goal audit
 
+- [ ] lifecycle CLI smoke passes on `ubuntu-latest`, `windows-latest`, and `macos-latest`
+- [ ] extraction CLI smoke passes on `ubuntu-latest`, `windows-latest`, and `macos-latest`
+
+### my-dev-kit-lab security validation
+
+- [ ] `my-dev-kit-lab` build, test, and verify pass before target validation
+- [ ] `npm run security:validate` passes in `my-dev-kit-lab` for self-validation, or reports optional skipped tools explicitly
+- [ ] `npm run security:validate -- --target "<target-project-root>"` completes and writes target-specific reports under `reports/security/`
+- [ ] `npm run security:deps -- --target "<target-project-root>"` completes without modifying the target project
+- [ ] `npm run security:package -- --target "<target-project-root>"` completes without modifying the target project
+- [ ] `npm run security:semgrep -- --target "<target-project-root>"` runs or reports a clean skip
+- [ ] `npm run security:codeql -- --target "<target-project-root>"` runs or reports a clean skip
+- [ ] target repository tree is unchanged before and after security validation
+- [ ] target security verdict is recorded in the final pre-release report
+
 Run before release:
 
 ```bash
