@@ -2,7 +2,22 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
-import { getArtifactStatuses, getNextStage, getSupportingReportStatuses } from '../stageDetector';
+import {
+  getArtifactStatuses,
+  getSupportingReportStatuses,
+  getArtifactLifecycleStatuses,
+  getNextStageWithLifecycle,
+  ArtifactLifecycleStatus,
+} from '../stageDetector';
+import { readArtifactStateFile } from '../artifactLifecycle';
+
+function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
+  const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
+  if (status.reason) {
+    return [label, `                Reason: ${status.reason}`];
+  }
+  return [label];
+}
 
 export function makeStatusCommand(): Command {
   const cmd = new Command('status');
@@ -34,10 +49,12 @@ export function makeStatusCommand(): Command {
         }
       }
 
-      const statuses = getArtifactStatuses(meta);
-      const nextStage = getNextStage(meta);
-      const presentArtifacts = statuses.filter((s) => s.present);
-      const missingArtifacts = statuses.filter((s) => !s.present);
+      const stateFile = readArtifactStateFile(meta.runFolder);
+      const lifecycleStatuses = getArtifactLifecycleStatuses(meta, stateFile);
+      const legacyStatuses = getArtifactStatuses(meta);
+      const nextStage = getNextStageWithLifecycle(meta, stateFile);
+      const presentArtifacts = legacyStatuses.filter((s) => s.present);
+      const nonCompleteArtifacts = lifecycleStatuses.filter((s) => s.lifecycleState !== 'complete');
       const supportingReports = getSupportingReportStatuses(meta);
 
       const lines: string[] = [
@@ -62,10 +79,10 @@ export function makeStatusCommand(): Command {
         ...meta.stages.map((s) => `  - ${s.name}`),
         ``,
         `Artifacts:`,
-        ...statuses.map((s) => `  ${s.present ? '[present]' : '[missing]'} ${s.artifactFile}`),
+        ...lifecycleStatuses.flatMap(lifecycleLabel),
         ``,
-        `Present artifacts: ${presentArtifacts.length}/${statuses.length}`,
-        `Missing artifacts: ${missingArtifacts.length}`,
+        `Present artifacts: ${presentArtifacts.length}/${legacyStatuses.length}`,
+        `Non-complete artifacts: ${nonCompleteArtifacts.length}`,
         ``,
         `Supporting reports:`,
         ...(supportingReports.length > 0
@@ -78,7 +95,7 @@ export function makeStatusCommand(): Command {
         lines.push(`Next:`);
         lines.push(`  my-dev-kit-orchestrator prompt`);
       } else {
-        lines.push(`Status: All artifacts present.`);
+        lines.push(`Status: All artifacts complete.`);
         lines.push(`  my-dev-kit-orchestrator prompt final-report`);
       }
 

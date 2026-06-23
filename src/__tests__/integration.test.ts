@@ -279,12 +279,12 @@ describe('audit: v0.1.0 scope compliance', () => {
     }
   });
 
-  it('command surface contains only v0.1.0 commands', () => {
+  it('command surface contains only supported commands', () => {
     // Verified by unit tests in cli-foundation.test.ts
     // Structural assertion: no unsupported command files exist
     const cmdDir = path.join(__dirname, '../commands');
     const cmdFiles = fs.readdirSync(cmdDir).map((f) => f.replace('.ts', ''));
-    const allowed = ['init', 'start', 'status', 'prompt', 'list'];
+    const allowed = ['init', 'start', 'status', 'prompt', 'list', 'mark'];
     for (const file of cmdFiles) {
       expect(allowed).toContain(file);
     }

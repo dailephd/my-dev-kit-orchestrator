@@ -3,7 +3,58 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
 import { generateStagePrompt } from '../promptGenerator';
-import { getNextStage, isRunComplete, getMissingPriorArtifacts } from '../stageDetector';
+import {
+  getNextStage,
+  isRunComplete,
+  getMissingPriorArtifacts,
+  getNextStageWithLifecycle,
+  isRunCompleteWithLifecycle,
+  resolveCurrentArtifactStates,
+} from '../stageDetector';
+import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
+import { StageDefinition } from '../workflows';
+
+function buildLifecycleContextBlock(
+  stage: StageDefinition,
+  states: ArtifactLifecycleState[],
+  stateFile: ArtifactStateFile,
+): string {
+  const dominantState = states.find((s) => s !== 'complete' && s !== 'missing') ?? states[0];
+  if (dominantState === 'complete') return '';
+
+  const record = stateFile.artifacts[stage.artifactFile];
+  const reason = record?.reason;
+
+  const lines: string[] = ['=== LIFECYCLE CONTEXT ==='];
+
+  if (dominantState === 'blocked') {
+    lines.push(`Current artifact state: blocked`);
+    if (reason) lines.push(`Reason: ${reason}`);
+    lines.push('');
+    lines.push('This artifact is blocked. Do not guess or fabricate missing information.');
+    lines.push('Document the blocker clearly in the artifact. Identify what external input');
+    lines.push('or decision is needed before work can continue.');
+  } else if (dominantState === 'incomplete') {
+    lines.push(`Current artifact state: incomplete`);
+    if (reason) lines.push(`Reason: ${reason}`);
+    lines.push('');
+    lines.push('This artifact is marked incomplete. Finish the unfinished sections.');
+    lines.push('Preserve existing content that is already correct. Review and complete');
+    lines.push('what remains before marking this artifact done.');
+  } else if (dominantState === 'stale') {
+    lines.push(`Current artifact state: stale`);
+    lines.push('');
+    lines.push('This artifact is stale — an upstream artifact changed after this one was');
+    lines.push('completed. Reconcile this artifact against the newer upstream artifacts');
+    lines.push('before continuing. Review what changed and update accordingly.');
+  } else {
+    return '';
+  }
+
+  lines.push('=========================');
+  lines.push('');
+  return lines.join('\n');
+}
 
 export function makePromptCommand(): Command {
   const cmd = new Command('prompt');
@@ -36,6 +87,8 @@ export function makePromptCommand(): Command {
         }
       }
 
+      const stateFile = readArtifactStateFile(meta.runFolder);
+
       if (stage) {
         const stageExists = meta.stages.some((s) => s.name === stage);
         if (!stageExists) {
@@ -55,32 +108,47 @@ export function makePromptCommand(): Command {
           process.exit(1);
         }
 
+        const stageObj = meta.stages.find((s) => s.name === stage)!;
+        const states = resolveCurrentArtifactStates(meta, stateFile, stageObj);
+        const lifecycleBlock = buildLifecycleContextBlock(stageObj, states, stateFile);
+
         try {
           const promptText = generateStagePrompt(meta, stage);
-          process.stdout.write(promptText);
+          process.stdout.write(lifecycleBlock + promptText);
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);
           process.exit(1);
         }
       } else {
-        if (isRunComplete(meta)) {
-          console.log(
-            `Run ${meta.runId} is complete — all expected artifacts are present.\n\n` +
-            `To view the final report:\n  ${path.join(meta.runFolder, 'artifacts/final-report.txt')}\n\n` +
-            `To inspect run status:\n  my-dev-kit-orchestrator status`
-          );
+        if (isRunCompleteWithLifecycle(meta, stateFile)) {
+          if (isRunComplete(meta)) {
+            console.log(
+              `Run ${meta.runId} is complete — all expected artifacts are present.\n\n` +
+              `To view the final report:\n  ${path.join(meta.runFolder, 'artifacts/final-report.txt')}\n\n` +
+              `To inspect run status:\n  my-dev-kit-orchestrator status`
+            );
+          } else {
+            console.log(
+              `Run ${meta.runId} is complete — all artifacts are in complete state.\n\n` +
+              `To view the final report:\n  ${path.join(meta.runFolder, 'artifacts/final-report.txt')}\n\n` +
+              `To inspect run status:\n  my-dev-kit-orchestrator status`
+            );
+          }
           return;
         }
 
-        const nextStage = getNextStage(meta);
+        const nextStage = getNextStageWithLifecycle(meta, stateFile);
         if (!nextStage) {
           console.log('No missing stage artifact remains.');
           return;
         }
 
+        const states = resolveCurrentArtifactStates(meta, stateFile, nextStage);
+        const lifecycleBlock = buildLifecycleContextBlock(nextStage, states, stateFile);
+
         try {
           const promptText = generateStagePrompt(meta, nextStage.name);
-          process.stdout.write(promptText);
+          process.stdout.write(lifecycleBlock + promptText);
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);
           process.exit(1);

@@ -42,6 +42,12 @@ describe('CLI program', () => {
     expect(names).toContain('list');
   });
 
+  it('registers mark command', () => {
+    const program = createProgram();
+    const names = program.commands.map((c) => c.name());
+    expect(names).toContain('mark');
+  });
+
   it('does not register unsupported v0.1.0 commands', () => {
     const program = createProgram();
     const names = program.commands.map((c) => c.name());
@@ -62,10 +68,10 @@ describe('CLI program', () => {
     }
   });
 
-  it('command surface has exactly the v0.1.0 commands', () => {
+  it('command surface has exactly the v0.3.0 commands', () => {
     const program = createProgram();
     const names = program.commands.map((c) => c.name()).sort();
-    expect(names).toEqual(['init', 'list', 'prompt', 'start', 'status']);
+    expect(names).toEqual(['init', 'list', 'mark', 'prompt', 'start', 'status']);
   });
 
   it('describes the staged workflow including test implementation', () => {
@@ -210,6 +216,36 @@ describe('init command options', () => {
     const program = createProgram();
     const initCmd = program.commands.find((c) => c.name() === 'init')!;
     const optionNames = initCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--root');
+  });
+});
+
+describe('mark command options', () => {
+  it('mark command has --state option', () => {
+    const program = createProgram();
+    const markCmd = program.commands.find((c) => c.name() === 'mark')!;
+    const optionNames = markCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--state');
+  });
+
+  it('mark command has --reason option', () => {
+    const program = createProgram();
+    const markCmd = program.commands.find((c) => c.name() === 'mark')!;
+    const optionNames = markCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--reason');
+  });
+
+  it('mark command has --run option', () => {
+    const program = createProgram();
+    const markCmd = program.commands.find((c) => c.name() === 'mark')!;
+    const optionNames = markCmd.options.map((o) => o.long);
+    expect(optionNames).toContain('--run');
+  });
+
+  it('mark command has --root option', () => {
+    const program = createProgram();
+    const markCmd = program.commands.find((c) => c.name() === 'mark')!;
+    const optionNames = markCmd.options.map((o) => o.long);
     expect(optionNames).toContain('--root');
   });
 });
