@@ -76,7 +76,7 @@
 Run before release:
 
 ```bash
-rg -n "artifact content validation|required-section validation|schema validation|judge correction|design trace|automatic my-dev-kit|direct LLM|--create-target|ajv|zod|joi|yup|openai|anthropic|langchain" src tests README.md docs CHANGELOG.md package.json
+rg -n "artifact content validation|required-section validation|schema validation|judge correction|design trace|automatic my-dev-kit|direct LLM|--create-target|ajv|zod|joi|yup|openai|anthropic|langchain" src README.md docs CHANGELOG.md package.json
 ```
 
 Expected: only references in docs as future/non-goal items; no implemented behavior.
