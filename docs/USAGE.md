@@ -259,3 +259,83 @@ my-dev-kit-orchestrator prompt
 my-dev-kit-orchestrator status
 my-dev-kit-orchestrator list
 ```
+
+## Mark command (v0.3.0)
+
+Use `mark` to manually set the lifecycle state of a run artifact.
+
+```bash
+my-dev-kit-orchestrator mark <artifact-name> --state <state> [--reason "<reason>"]
+```
+
+Supported states:
+
+- `incomplete` — artifact exists but is not finished; reason required
+- `blocked` — artifact cannot be completed due to a blocker; reason required
+- `complete` — artifact is ready for downstream stages; reason optional
+
+Not supported (computed automatically):
+
+- `missing` — computed from file absence
+- `stale` — computed from upstream artifact timestamps
+
+Examples:
+
+```bash
+# Mark an artifact as blocked with a required reason
+my-dev-kit-orchestrator mark request-brief.txt --state blocked --reason "Waiting for PM sign-off"
+
+# Mark an artifact as incomplete with a reason
+my-dev-kit-orchestrator mark behavior-model.txt --state incomplete --reason "Edge cases not documented yet"
+
+# Mark an artifact as complete (reason optional)
+my-dev-kit-orchestrator mark request-brief.txt --state complete
+
+# Mark a specific run's artifact
+my-dev-kit-orchestrator mark pseudocode-packet.txt --state blocked --reason "Need design decision" --run 20260601T120000-add-logging
+```
+
+## Status with lifecycle states (v0.3.0)
+
+The `status` command shows the lifecycle state of each artifact:
+
+```text
+Artifacts:
+  [complete   ] artifacts/request-brief.txt
+  [stale      ] artifacts/architecture-context-packet.txt
+                Reason: request-brief.txt changed after architecture-context-packet.txt was completed
+  [missing    ] artifacts/behavior-model.txt
+  [blocked    ] artifacts/pseudocode-packet.txt
+                Reason: Waiting for design decision on pagination
+  [incomplete ] artifacts/test-strategy-packet.txt
+                Reason: Performance test cases not written yet
+```
+
+## Prompt behavior with lifecycle states (v0.3.0)
+
+When the current artifact is blocked, incomplete, or stale, the `prompt` command prepends a lifecycle context block before the standard stage prompt:
+
+```text
+=== LIFECYCLE CONTEXT ===
+Current artifact state: blocked
+Reason: Waiting for PM sign-off
+
+This artifact is blocked. Do not guess or fabricate missing information.
+Document the blocker clearly in the artifact. Identify what external input
+or decision is needed before work can continue.
+=========================
+
+Stage: request-brief
+...
+```
+
+For stale artifacts, the context instructs the agent to reconcile against newer upstream artifacts.
+
+## Backward compatibility (v0.3.0)
+
+Existing runs without an `artifact-state.json` continue to work:
+
+- artifact file present → `complete`
+- artifact file missing → `missing`
+
+No migration is required for runs created before v0.3.0.

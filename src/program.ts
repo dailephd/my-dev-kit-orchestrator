@@ -18,7 +18,7 @@ export function createProgram(): Command {
       '  -> test strategy -> implementation -> test implementation\n' +
       '  -> verification -> judge -> final report'
     )
-    .version('0.2.1');
+    .version('0.3.0');
 
   program.addCommand(makeInitCommand());
   program.addCommand(makeStartCommand());

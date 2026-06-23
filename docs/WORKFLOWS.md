@@ -301,10 +301,60 @@ Summarize:
 ## Shared workflow rules
 
 - The CLI generates one prompt file per stage when a run starts.
-- `prompt` without a stage selects the first stage whose expected artifact file is missing.
-- `prompt <stage>` requires prior stage artifacts to exist.
+- `prompt` without a stage selects the first stage whose effective artifact state is not `complete`.
+- `prompt <stage>` requires prior stage artifacts to exist (file-existence check).
 - The implementation and test-implementation stages are meant to consume the same design context rather than reinterpret the request independently.
-- `v0.1.0` does not execute a coding agent or `my-dev-kit` automatically.
+- `my-dev-kit-orchestrator` does not execute a coding agent or `my-dev-kit` automatically.
+
+## Lifecycle-aware progression (v0.3.0)
+
+Stage progression now respects artifact lifecycle states:
+
+- **`missing`**: artifact file does not exist — stage remains current
+- **`incomplete`**: artifact exists but is marked unfinished — stage remains current
+- **`blocked`**: cannot proceed due to a blocker — stage remains current
+- **`stale`**: an upstream artifact changed after this one was completed — stage returns here
+- **`complete`**: artifact is ready — stage advances to the next
+
+### Setting lifecycle states
+
+Use the `mark` command to set manual states:
+
+```bash
+my-dev-kit-orchestrator mark request-brief.txt --state blocked --reason "Waiting for PM"
+my-dev-kit-orchestrator mark behavior-model.txt --state incomplete --reason "Edge cases missing"
+my-dev-kit-orchestrator mark request-brief.txt --state complete
+```
+
+`missing` and `stale` are computed automatically and cannot be set manually.
+
+### Stale artifact recovery
+
+An artifact becomes stale when an upstream artifact is updated after it was completed.
+
+Recovery flow:
+
+1. `status` shows the stale artifact and which upstream caused it
+2. `prompt` returns to the stale artifact's stage and shows a reconciliation context block
+3. Update the artifact to reflect the newer upstream content
+4. Mark it complete to advance again
+
+### Blocked artifact handling
+
+When an artifact is blocked:
+
+1. Mark it blocked with a reason: `mark <artifact> --state blocked --reason "<blocker>"`
+2. `prompt` shows a blocked context block explaining the situation
+3. When unblocked, write the artifact file and mark it complete
+
+### Backward compatibility
+
+Existing runs without `artifact-state.json` continue to work:
+
+- file present → `complete`
+- file missing → `missing`
+
+No migration is needed for runs created before v0.3.0.
 
 ## Practical architecture-context flow
 
