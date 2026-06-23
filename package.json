@@ -1,6 +1,6 @@
 {
   "name": "my-dev-kit-orchestrator",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "CLI-first workflow tool for design-first software development with coding agents",
   "main": "dist/index.js",
   "repository": {

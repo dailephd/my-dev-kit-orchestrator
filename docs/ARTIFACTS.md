@@ -2,7 +2,7 @@
 
 Artifacts are plain-text handoff files stored in each run folder.
 
-`my-dev-kit-orchestrator` uses artifact file existence, not schema-heavy validation, to determine workflow progress.
+`my-dev-kit-orchestrator` uses artifact file existence and lifecycle state, not schema-heavy validation, to determine workflow progress.
 
 ## Run layout
 
@@ -10,6 +10,7 @@ Artifacts are plain-text handoff files stored in each run folder.
 .my-dev-kit-orchestrator/runs/<run-id>/
   00-request.txt
   run.json
+  artifact-state.json   ← added in v0.3.0
   prompts/
   artifacts/
   reports/
@@ -21,18 +22,86 @@ For extraction mode, the run layout lives under the target repository:
 <target-repo-root>/.my-dev-kit-orchestrator/runs/<run-id>/
 ```
 
+## artifact-state.json (v0.3.0)
+
+`artifact-state.json` stores manual lifecycle state for run artifacts.
+
+**Path:** `.my-dev-kit-orchestrator/runs/<run-id>/artifact-state.json`
+
+**Format:**
+
+```json
+{
+  "version": "1",
+  "artifacts": {
+    "artifacts/request-brief.txt": {
+      "state": "blocked",
+      "updatedAt": "2026-06-01T12:00:00.000Z",
+      "reason": "Waiting for PM sign-off",
+      "source": "manual"
+    }
+  }
+}
+```
+
+Keys are the relative artifact file path as used in the stage definition (e.g., `artifacts/request-brief.txt`).
+
+If `artifact-state.json` does not exist, lifecycle state is derived from file existence only (backward compatibility).
+
+## Artifact lifecycle states (v0.3.0)
+
+Each required artifact has an effective lifecycle state:
+
+| State        | Type     | Meaning |
+|-------------|----------|---------|
+| `missing`   | computed | Artifact file does not exist |
+| `incomplete`| manual   | Artifact exists but is marked unfinished |
+| `blocked`   | manual   | Artifact cannot be completed due to a blocker |
+| `complete`  | manual + computed | Artifact is ready for downstream stages |
+| `stale`     | computed | Artifact exists but an upstream artifact changed after it was completed |
+
+**Manual states** (`incomplete`, `blocked`, `complete`) are set via the `mark` command.
+
+**Computed states** (`missing`, `stale`) are derived automatically and cannot be set manually.
+
+### State resolution rules (in priority order)
+
+1. If state is `blocked` → `blocked` (even without artifact file)
+2. If artifact file does not exist → `missing`
+3. If state is `incomplete` → `incomplete`
+4. If an upstream artifact was completed or modified after this artifact → `stale`
+5. Otherwise → `complete`
+
+### Stale detection
+
+An artifact is stale when its completion time (from `updatedAt` in state record, or file `mtime` as fallback) is earlier than the completion time of any upstream required artifact.
+
+Stale detection is deterministic and local. It does not inspect artifact content.
+
+### Dependency model
+
+Dependencies follow stage order: artifacts for stage N depend on artifacts from all prior required stages. Supporting reports (e.g., `reports/architecture-context-retrieval-report.txt`) do not create stale gates.
+
+For extraction mode, the `porting-map` stage has two artifacts — `source-to-target-porting-map.txt` and `do-not-port-list.txt` — and both are treated as upstream for subsequent stages.
+
+## Not implemented in v0.3.0
+
+- artifact content validation
+- required-section validation
+- JSON schema validation
+- judge correction routing
+- design trace IDs
+- artifact scoring or grading
+
 ## How stage advancement works
 
 For the selected workflow, the CLI checks stage order from first to last.
 
-Rule used in the current release:
+Rules used in v0.3.0:
 
-- if the expected artifact file for a stage is missing, that stage is the next stage
-- if all expected artifact files exist, the run is treated as complete
-
-That means the workflow advances when the artifact file exists at the expected path.
-
-The release still uses file-existence checks, but the content expectations remain explicit so later stages receive a usable synthesized design input.
+- if the effective lifecycle state of any stage artifact is not `complete`, that stage is the current stage
+- if all artifacts are effectively `complete`, the run is complete
+- **backward compatibility**: if `artifact-state.json` does not exist, file presence means `complete` and file absence means `missing`
 
 ## Core feature-mode artifact files
 

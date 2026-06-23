@@ -44,31 +44,35 @@
 - paths-with-spaces coverage
 - macOS canonical path handling in cross-platform tests
 
+### v0.3.0 (implemented)
+
+- artifact lifecycle states: `missing`, `incomplete`, `blocked`, `complete`, `stale`
+- `artifact-state.json` per run at `.my-dev-kit-orchestrator/runs/<run-id>/artifact-state.json`
+- manual state setting via `mark` command (incomplete/blocked/complete only)
+- stale detection via upstream artifact timestamp comparison
+- lifecycle-aware `status` output with reason for blocked/incomplete/stale
+- lifecycle-aware `prompt` progression respecting incomplete/blocked/stale
+- lifecycle context block prepended to generated prompts when artifact is blocked/incomplete/stale
+- backward compatibility: runs without `artifact-state.json` use file-existence behavior
+- comprehensive lifecycle unit tests and integration tests
+
 ## Planned milestones
-
-### v0.3.0
-
-- stronger artifact validation without bloating the CLI surface
-- richer run-status summaries and clearer judge-outcome routing
-- better packaging controls for release artifacts
 
 ### v0.4.0
 
-- optional structured artifact formats alongside plain text
-- stronger traceability between behavior, pseudocode, tests, and implementation
+- artifact content validation against expected sections (optional, opt-in)
+- prompt quality checks
 - CI-friendly verification summaries
 
 ### v0.5.0
 
+- design-map and trace-link exploration
 - deeper `my-dev-kit` integration for retrieval-oriented stages while remaining prompt-driven
-- better retrieval evidence ergonomics
-- optional report helpers
 
 ### v0.6.0
 
-- design-map and trace-link exploration
+- judge routing and correction loops
 - richer comparison and reporting around workflow outcomes
-- additive validation helpers that do not turn the tool into a general runtime
 
 ### v1.0.0
 

@@ -15,6 +15,16 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
+`v0.3.0` adds artifact lifecycle and resume states:
+
+- artifact lifecycle states: `missing`, `incomplete`, `blocked`, `complete`, `stale`
+- `artifact-state.json` per run persists manual lifecycle state
+- stale artifact detection when upstream artifacts change
+- `status` shows lifecycle state for each artifact with reason for blocked/incomplete/stale
+- `prompt` progression respects incomplete, blocked, and stale states
+- `mark` command for manual lifecycle state updates: `mark <artifact-name> --state <state> [--reason]`
+- backward compatible: existing runs without `artifact-state.json` use file-existence behavior
+
 `v0.2.1` adds extraction mode:
 
 - `--mode extraction` for transferring a bounded feature, workflow, or subsystem from an existing source repository into a new or separate target repository
@@ -47,17 +57,18 @@ The CLI owns workflow order and prompt generation. Each run advances as the expe
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.md), and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the detailed design.
 
-## Non-goals for v0.1.0
+## Non-goals (current release)
 
-Version `0.1.0` does not include:
+`my-dev-kit-orchestrator` does not include and will not include in v0.3.0:
 
 - direct LLM execution
 - automatic coding-agent execution
 - automatic `my-dev-kit` command execution
-- full JSON schema validation for artifacts
-- automatic judge routing
-- design-map generation
-- extra low-level CLI commands beyond `init`, `start`, `status`, `prompt`, and `list`
+- artifact content validation or schema validation
+- required-section validation
+- automatic judge routing or correction loops
+- design trace IDs or design maps
+- extra low-level CLI commands beyond the current surface
 
 Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
 
@@ -66,7 +77,7 @@ Architecture-context prompts may suggest use of `my-dev-kit` when it is availabl
 ```text
 my-dev-kit-orchestrator init
 my-dev-kit-orchestrator start "<request>"
-my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden> "<request>"
+my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden|extraction> "<request>"
 my-dev-kit-orchestrator status
 my-dev-kit-orchestrator status --run <run-id>
 my-dev-kit-orchestrator prompt
@@ -74,6 +85,7 @@ my-dev-kit-orchestrator prompt <stage>
 my-dev-kit-orchestrator prompt <stage> --run <run-id>
 my-dev-kit-orchestrator list
 my-dev-kit-orchestrator list --mode <mode>
+my-dev-kit-orchestrator mark <artifact-name> --state <incomplete|blocked|complete> [--reason "<reason>"]
 ```
 
 Common flags:

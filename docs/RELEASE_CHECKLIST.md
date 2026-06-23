@@ -1,5 +1,79 @@
 # Release Checklist
 
+## v0.3.0 checklist
+
+### Lifecycle model verification
+
+- [ ] `artifact-state.json` is created in the run folder on first `mark` command
+- [ ] `artifact-state.json` absent → file-existence-only fallback works (backward compat)
+- [ ] `mark <artifact> --state blocked --reason "..."` writes state file
+- [ ] `mark <artifact> --state incomplete --reason "..."` writes state file
+- [ ] `mark <artifact> --state complete` writes state file (no reason required)
+- [ ] `mark <artifact> --state stale` exits with error (computed, not manual)
+- [ ] `mark <artifact> --state missing` exits with error (computed, not manual)
+- [ ] `mark <artifact> --state blocked` without `--reason` exits with error
+- [ ] `mark <artifact> --state incomplete` without `--reason` exits with error
+- [ ] `mark` with unknown artifact shows known artifact list and exits with error
+- [ ] marking `complete` without file warns but does not crash; effective state is `missing`
+
+### Status lifecycle verification
+
+- [ ] `status` shows `[complete  ]` for present artifact with no state file
+- [ ] `status` shows `[missing   ]` for absent artifact with no state file
+- [ ] `status` shows `[blocked   ]` and reason for blocked artifacts
+- [ ] `status` shows `[incomplete]` and reason for incomplete artifacts
+- [ ] `status` shows `[stale     ]` and reason for stale artifacts
+- [ ] `status` for extraction runs still shows source/target paths
+- [ ] `status` for extraction porting-map dual artifact shows both artifacts
+
+### Prompt lifecycle verification
+
+- [ ] `prompt` for a blocked artifact prepends `=== LIFECYCLE CONTEXT ===` block
+- [ ] `prompt` for an incomplete artifact prepends lifecycle context block
+- [ ] `prompt` for a stale artifact prepends lifecycle context block
+- [ ] normal prompt output (no lifecycle issues) has no context block prepended
+- [ ] `prompt` for blocked artifact does not claim content validation is running
+
+### Stale detection verification
+
+- [ ] artifact is stale when upstream has a later `updatedAt` than downstream
+- [ ] artifact is not stale when downstream is newer than all upstream
+- [ ] extraction `do-not-port-list.txt` changes make downstream artifacts stale
+- [ ] supporting reports do not create stale gates
+
+### Package dry-run
+
+- [ ] `npm pack --dry-run` does not include `node_modules/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit-orchestrator/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit/`
+- [ ] `npm pack --dry-run` does not include `agents.txt`, `claude.txt`, `docs/*.txt`
+- [ ] `npm pack --dry-run` does not include `.env` files, logs, tarballs
+- [ ] only `dist/` is included in the published package
+
+### OS matrix CI (GitHub Actions)
+
+- [ ] `ubuntu-latest` — typecheck, tests, build, lint, CLI smoke pass
+- [ ] `windows-latest` — typecheck, tests, build, lint, CLI smoke pass
+- [ ] `macos-latest` — typecheck, tests, build, lint, CLI smoke pass
+
+### Non-goal audit
+
+Run before release:
+
+```bash
+rg -n "artifact content validation|required-section validation|schema validation|judge correction|design trace|automatic my-dev-kit|direct LLM|--create-target|ajv|zod|joi|yup|openai|anthropic|langchain" src tests README.md docs CHANGELOG.md package.json
+```
+
+Expected: only references in docs as future/non-goal items; no implemented behavior.
+
+### Forbidden wording check
+
+```bash
+rg -n "\bbridge\b|Bridge|BRIDGE" README.md docs CHANGELOG.md src package.json .github
+```
+
+Expected: no matches.
+
 ## v0.2.1 checklist
 
 ### Runtime implementation verification

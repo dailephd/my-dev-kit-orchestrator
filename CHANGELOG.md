@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+## v0.3.0 — Artifact Lifecycle and Resume States
+
+### Added
+
+- `artifact-state.json` per run at `.my-dev-kit-orchestrator/runs/<run-id>/artifact-state.json`
+- Artifact lifecycle states: `missing`, `incomplete`, `blocked`, `complete`, `stale`
+- Manual states: `incomplete`, `blocked`, `complete` (set via `mark` command)
+- Computed states: `missing` (no file), `stale` (upstream changed after completion)
+- Backward-compatible state resolution: existing runs without `artifact-state.json` continue to work using file-existence behavior
+- Stale artifact detection via upstream artifact timestamp comparison
+- Lifecycle-aware `status` output: each artifact shows its lifecycle state with reason for blocked/incomplete/stale
+- Lifecycle-aware `prompt` progression: blocked/incomplete/stale artifacts keep the stage at the current position
+- Lifecycle context block prepended to generated prompts when current artifact is blocked, incomplete, or stale
+- `mark` command: `my-dev-kit-orchestrator mark <artifact-name> --state <state> [--reason <reason>]`
+  - accepts: `incomplete`, `blocked`, `complete`
+  - rejects: `missing`, `stale` (computed states; cannot be set manually)
+  - reason required for `blocked` and `incomplete`
+  - warns when marking `complete` but artifact file does not exist
+- Extraction `porting-map` dual artifact behavior preserved with lifecycle states
+- Comprehensive unit and integration tests across all lifecycle state paths
+
+### Not implemented in v0.3.0
+
+- artifact content validation
+- required-section validation
+- schema validation
+- judge correction routing
+- design trace IDs
+- automatic `my-dev-kit` execution
+- direct LLM execution
+
 ## v0.2.1 — Extraction Mode
 
 ### Added
