@@ -48,9 +48,10 @@ jobs:
         run: npm run lint
 
       - name: CLI smoke check
-        run: node dist/cli.js --version
+        run: npm run smoke:cli -- normal
+
+      - name: CLI lifecycle smoke check
+        run: npm run smoke:cli -- lifecycle
 
       - name: CLI extraction smoke check
-        shell: bash
-        run: |
-          node dist/cli.js --help | grep -q "extraction\|workflow"
+        run: npm run smoke:cli -- extraction
