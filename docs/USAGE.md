@@ -587,3 +587,68 @@ Content check: not run  (run: my-dev-kit-orchestrator check)
 ### Content checks do not affect stage advancement
 
 The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.
+
+## Artifact contract check (v1.0.0)
+
+Use `check --artifacts` to run the v1.0.0 artifact contract checker across all stages:
+
+```bash
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator check --artifacts --strict
+my-dev-kit-orchestrator check --artifacts --run 20260624T120000-add-logging
+```
+
+Each stage is checked for:
+
+- missing artifact file (CONTRACT_MISSING_FILE)
+- empty artifact file (CONTRACT_EMPTY_FILE)
+- missing required section (CONTRACT_MISSING_SECTION)
+- blank required section (CONTRACT_BLANK_SECTION; fail in strict mode)
+- placeholder-only section content (CONTRACT_PLACEHOLDER_SECTION; fail in strict mode)
+- predecessor artifact missing (CONTRACT_PREDECESSOR_MISSING; fail in strict mode)
+- no section contract defined for this artifact kind (CONTRACT_STAGE_NO_CONTRACT; fail in strict mode)
+
+Use `check --all` to run all checks in one pass:
+
+```bash
+my-dev-kit-orchestrator check --all
+my-dev-kit-orchestrator check --all --strict
+```
+
+`check --all` includes:
+
+- artifact contracts (all stages)
+- stage gate violations (detects when downstream artifact exists without required upstream)
+- trace checks (all artifacts)
+- design-map trace check (if design-map.txt exists)
+- correction routing state
+
+## Export command (v1.0.0)
+
+Use `export` to generate a portable plain-text run handoff for use in another session or agent:
+
+```bash
+my-dev-kit-orchestrator export
+my-dev-kit-orchestrator export --run 20260624T120000-add-logging
+my-dev-kit-orchestrator export --out handoff.txt
+my-dev-kit-orchestrator export --out handoff.txt --overwrite
+```
+
+The export includes:
+
+- run identity (ID, mode, status, current stage, created timestamp, run folder)
+- original request
+- artifact checklist (present or missing per stage)
+- missing artifact list
+- judge verdict
+- correction state
+- verification evidence excerpt
+- content check and trace check summaries
+- next command (with correction context if correction is active)
+
+Export behavior:
+
+- default: print to stdout
+- `--out <file>`: write to file; refuses if file already exists
+- `--overwrite`: allow replacing an existing output file
+- refuses symbolic links, path traversal, non-existent parent directories

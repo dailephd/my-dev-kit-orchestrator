@@ -197,7 +197,8 @@ describe('buildExportText', () => {
     const meta = makeExportMeta(tmpDir);
     const text = buildExportText(meta);
     // These characters would indicate mojibake or prohibited Unicode
-    expect(text).not.toMatch(/[–—“”‘’…]/);
+    // U+2013 en dash, U+2014 em dash, U+201C/D double quotes, U+2018/9 single quotes, U+2026 ellipsis
+    expect(text).not.toMatch(/\u2013\u2014\u201C\u201D\u2018\u2019\u2026/u);
   });
 
   it('export text ends with newline', () => {

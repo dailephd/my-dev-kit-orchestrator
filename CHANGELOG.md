@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## v1.0.0 - Stable Workflow Contract and Portable Run Handoff
+
+### Added
+
+- `src/contractChecker.ts` - artifact contract checker model
+  - `checkArtifactContract()`: deterministic checks per artifact (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
+  - `checkRunArtifactContracts()`: run-level contract check across all stages
+  - `checkStageGates()`: stage gate violation detection with CRITICAL_GATE_PAIRS for all five modes
+  - `resolveArtifactContractsForMode()`: returns ModeContractSummary with stage/artifact/predecessor/section metadata for all modes
+  - Strict mode: promotes BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, STAGE_NO_CONTRACT from warn to fail
+- `check --artifacts`: run v1 artifact contract check for all stages in the current run
+  - per-artifact output with code/severity/stage/mode/suggestedFix
+- `check --all`: combined check including contracts, stage gates, trace, design-map (if present), correction routing
+  - section-headered output, persists trace results, includes trace correction suggestions
+- `export` command: `my-dev-kit-orchestrator export [--run <id>] [--out <file>] [--overwrite]`
+  - portable plain-text run handoff with run identity, request, artifact checklist, missing artifacts, judge verdict, correction state, verification evidence excerpt, content/trace check summaries, next command
+  - path safety: refuses symlinks, path traversal, existing files without --overwrite, non-existent parent directories
+  - default: print to stdout; --out file: write to file
+
+### Changed
+
+- CI: pinned macos runner to macos-15 (previously macos-latest)
+- Added CLI export smoke step to CI validate workflow
+
 ## v0.6.0 - Judge Correction Routing and Trace-Aware Workflow Recovery
 
 ### Added

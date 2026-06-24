@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15]
         node-version: ['24']
 
     steps:
@@ -73,3 +73,6 @@ jobs:
 
       - name: CLI correction smoke
         run: npm run smoke:cli -- correction
+
+      - name: CLI export smoke
+        run: npm run smoke:cli -- export
