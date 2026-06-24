@@ -24,10 +24,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -49,6 +49,12 @@ jobs:
 
       - name: Lint docs
         run: npm run lint:docs
+
+      - name: CLI help
+        run: node dist/cli.js --help
+
+      - name: CLI version
+        run: node dist/cli.js --version
 
       - name: CLI smoke check
         run: npm run smoke:cli -- normal
