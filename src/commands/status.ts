@@ -12,6 +12,7 @@ import {
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
+import { readCorrectionState } from '../correctionState';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -120,6 +121,31 @@ export function makeStatusCommand(): Command {
         lines.push(`Trace check: not run  (run: my-dev-kit-orchestrator check --trace)`);
       }
       lines.push(``);
+
+      // Judge correction routing summary
+      const correctionState = readCorrectionState(meta.runFolder);
+      if (correctionState) {
+        if (correctionState.routeStatus === 'pass') {
+          lines.push(`Judge correction: PASS — no correction required`);
+        } else if (correctionState.routeStatus === 'correction_required') {
+          lines.push(`Judge correction: ${correctionState.verdict} → correction required`);
+          lines.push(`  Routed stage: ${correctionState.routedStage}`);
+          if (correctionState.warnings.length > 0) {
+            lines.push(`  Warning: ${correctionState.warnings[0]}`);
+          }
+        } else if (correctionState.routeStatus === 'blocked') {
+          lines.push(`Judge correction: ${correctionState.verdict} — run is blocked`);
+          lines.push(`  This run requires external resolution before it can continue.`);
+        } else if (correctionState.routeStatus === 'unknown_verdict') {
+          lines.push(`Judge correction: unrecognized verdict in judge-report.txt`);
+          if (correctionState.errors.length > 0) {
+            lines.push(`  Error: ${correctionState.errors[0]}`);
+          }
+        } else if (correctionState.routeStatus === 'missing_verdict') {
+          lines.push(`Judge correction: no verdict found in judge-report.txt`);
+        }
+        lines.push(``);
+      }
 
       if (nextStage) {
         lines.push(`Next:`);
