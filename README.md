@@ -15,6 +15,24 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
+`v0.6.0` adds judge correction routing and trace-aware workflow recovery:
+
+- judge verdict parser: reads `Verdict:` and `Recommended next stage:` from `judge-report.txt`
+- supported verdicts: `PASS`, `DESIGN_INCOMPLETE`, `PSEUDOCODE_INCOMPLETE`, `IMPLEMENTATION_MISMATCH`, `TEST_COVERAGE_INCOMPLETE`, `ARCHITECTURE_MISMATCH`, `NEED_VERIFICATION`, `NEED_CONTEXT`, `SCOPE_VIOLATION`, `BLOCKED`
+- deterministic routing table maps each non-PASS verdict to a correction stage
+- `status` command shows a Judge correction section when a judge report is present (verdict, routed stage, warnings)
+- `prompt` command selects the routed correction stage and generates a bounded correction-stage prompt
+- correction prompts include the judge report, prior stage inputs, and design-map when present
+- `SCOPE_VIOLATION` and `BLOCKED` verdicts produce a blocked state — no correction stage is routed
+- unknown verdicts fail the parser instead of being guessed
+- `check --trace` and `check --design-map` suggest a correction stage for each trace issue
+- trace-aware correction suggestions are deterministic: missing `BEH-NNN` target → suggest `behavior-model`, missing `PSE-NNN` → suggest `pseudocode-packet`, etc.
+- correction routing is a prompt-generation aid, not an autonomous repair runtime
+- `src/judgeParser.ts`: `parseJudgeReport`, `isValidVerdict`, `JUDGE_VERDICTS`, `JudgeVerdict`
+- `src/correctionRouter.ts`: `routeJudgeVerdict`, `parseAndRoute`, `CORRECTABLE_STAGES`, `CorrectionRouteResult`
+- `src/correctionState.ts`: `readCorrectionState`, `isCorrectionActive`
+- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) and [docs/USAGE.md](docs/USAGE.md) for correction routing usage
+
 `v0.5.0` adds design trace IDs and trace link checking:
 
 - `check --trace`: deterministic trace link checker across all run artifacts
@@ -86,19 +104,21 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 
 ## Non-goals (current release)
 
-`my-dev-kit-orchestrator` does not include in v0.5.0:
+`my-dev-kit-orchestrator` does not include in v0.6.0:
 
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting or correction loops
 - automatic judge routing
+- automatic code modification after a judge failure
 - automatic code-to-symbol tracing or AST-level dependency graph tracing
 - test coverage instrumentation
-- LLM-based trace inference
+- LLM-based trace inference or judge inference
 - automatic coding-agent execution
 - automatic `my-dev-kit` command execution
 - design-map visualization
 - direct LLM-provider execution
+- multi-agent runtime
 - extra low-level CLI commands beyond the current surface
 
 Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.

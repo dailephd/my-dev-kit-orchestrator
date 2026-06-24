@@ -1,5 +1,114 @@
 # Release Checklist
 
+## v0.6.0 checklist
+
+### Judge verdict parser verification
+
+- [ ] `parseJudgeReport('Verdict: PASS')` returns `{ verdict: 'PASS', parseError: null }`
+- [ ] `parseJudgeReport` handles all 10 supported verdict tokens
+- [ ] `parseJudgeReport` returns `verdict: null, parseError: <msg>` for unknown token
+- [ ] `parseJudgeReport` returns `verdict: null, parseError: null` when no Verdict: line
+- [ ] `parseJudgeReport` parses `Recommended next stage:` field
+- [ ] `parseJudgeReport` parses `Recommended next stage if not PASS:` variant
+- [ ] `isValidVerdict` returns true for all supported verdicts and false for others
+
+### Correction routing verification
+
+- [ ] `NEED_CONTEXT` routes to `architecture-context`
+- [ ] `DESIGN_INCOMPLETE` routes to `behavior-model`
+- [ ] `PSEUDOCODE_INCOMPLETE` routes to `pseudocode-packet`
+- [ ] `IMPLEMENTATION_MISMATCH` routes to `implementation`
+- [ ] `TEST_COVERAGE_INCOMPLETE` routes to `test-strategy` (default)
+- [ ] `TEST_COVERAGE_INCOMPLETE` routes to `test-implementation` when recommended
+- [ ] `ARCHITECTURE_MISMATCH` routes to `architecture-context` (default)
+- [ ] `NEED_VERIFICATION` routes to `verification`
+- [ ] `SCOPE_VIOLATION` produces `blocked` status with `isBlocked: true`
+- [ ] `BLOCKED` produces `blocked` status with `isBlocked: true`
+- [ ] conflict between table and recommended stage produces warning in normal mode
+- [ ] conflict between table and recommended stage produces `strictFail` in strict mode
+- [ ] unknown verdict produces `unknown_verdict` status with error
+
+### Status correction output verification
+
+- [ ] `status` shows `Judge correction: PASS` when judge report has PASS
+- [ ] `status` shows verdict and routed stage for correction_required verdicts
+- [ ] `status` shows blocked state for SCOPE_VIOLATION / BLOCKED
+- [ ] `status` shows no Judge correction section when no judge report exists (backward compat)
+
+### Prompt correction behavior verification
+
+- [ ] `prompt` prints correction-stage prompt when IMPLEMENTATION_MISMATCH verdict present
+- [ ] correction prompt contains `Stage: <stage> (correction)`
+- [ ] correction prompt includes judge-report.txt as input
+- [ ] correction prompt includes design-map.txt when present in run
+- [ ] correction prompt does not include unrelated workflow modes
+- [ ] correction prompt stop conditions include no automatic execution instruction
+- [ ] `prompt` prints blocked message when SCOPE_VIOLATION / BLOCKED verdict
+- [ ] `prompt` normal flow unchanged when no judge report exists (backward compat)
+
+### Trace-aware correction suggestions
+
+- [ ] `check --trace` with `TRACE_MISSING_LINK_TARGET` shows `Suggested correction stage:`
+- [ ] missing `BEH-NNN` target suggests `behavior-model`
+- [ ] missing `PSE-NNN` target suggests `pseudocode-packet`
+- [ ] missing `TST-NNN` target suggests `test-strategy`
+- [ ] `TRACE_MALFORMED_ID` suggests `design-map`
+- [ ] `TRACE_ORPHAN_ID` suggests `design-map`
+- [ ] check output without trace issues shows no Correction suggestions section
+
+### CLI smoke (correction mode)
+
+- [ ] `npm run smoke:cli -- correction` passes on `ubuntu-latest`
+- [ ] `npm run smoke:cli -- correction` passes on `windows-latest`
+- [ ] `npm run smoke:cli -- correction` passes on `macos-latest`
+
+### Version bump verification
+
+- [ ] `node dist/cli.js --version` outputs `0.6.0`
+- [ ] `package.json` version is `0.6.0`
+
+### Non-goal audit
+
+Run:
+
+```bash
+rg -n "automatic.*code.*modif|automatic.*agent|LLM.*infer|LLM.*judge|judge.*execut|auto.*repair|autonomous.*runtime|direct.*LLM|openai|anthropic|langchain" src README.md docs CHANGELOG.md package.json
+```
+
+Expected: no implemented non-goal behavior; references in docs as future/non-goal items only.
+
+### Forbidden wording check
+
+```bash
+rg -n "\bbridge\b|Bridge|BRIDGE" README.md docs CHANGELOG.md src package.json .github
+```
+
+Expected: no matches.
+
+### Package dry-run
+
+- [ ] `npm pack --dry-run` does not include `node_modules/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit-orchestrator/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit/`
+- [ ] `npm pack --dry-run` does not include `agents.txt`, `claude.txt`, or `docs/*.txt`
+- [ ] `npm pack --dry-run` does not include `.env` files, logs, tarballs
+- [ ] only `dist/` and `README.md` are included in the published package
+
+### OS matrix CI (GitHub Actions)
+
+- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+
+### Smoke test coverage
+
+- [ ] normal smoke passes on all three OSes
+- [ ] lifecycle smoke passes on all three OSes
+- [ ] extraction smoke passes on all three OSes
+- [ ] check smoke passes on all three OSes
+- [ ] trace smoke passes on all three OSes
+- [ ] correction smoke passes on all three OSes
+
 ## v0.5.0 checklist
 
 ### Trace checker verification
