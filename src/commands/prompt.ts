@@ -13,6 +13,8 @@ import {
 } from '../stageDetector';
 import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
 import { StageDefinition } from '../workflows';
+import { readCorrectionState } from '../correctionState';
+import { generateCorrectionPrompt } from '../promptGenerator';
 
 function buildLifecycleContextBlock(
   stage: StageDefinition,
@@ -134,6 +136,30 @@ export function makePromptCommand(): Command {
               `To inspect run status:\n  my-dev-kit-orchestrator status`
             );
           }
+          return;
+        }
+
+        // Check for active correction routing (judge-report.txt with non-PASS verdict)
+        const correctionState = readCorrectionState(meta.runFolder);
+        if (correctionState && correctionState.routeStatus === 'correction_required' && correctionState.routedStage) {
+          try {
+            const correctionPrompt = generateCorrectionPrompt(meta, correctionState);
+            process.stdout.write(correctionPrompt);
+          } catch (err) {
+            console.error(`Error generating correction prompt: ${(err as Error).message}`);
+            process.exit(1);
+          }
+          return;
+        }
+
+        if (correctionState && correctionState.routeStatus === 'blocked') {
+          console.log(
+            `Run ${meta.runId} is blocked by judge verdict: ${correctionState.verdict}\n\n` +
+            `This run requires external resolution (e.g. scope clarification or design restart)\n` +
+            `before it can continue automatically.\n\n` +
+            `Inspect the judge report:\n  ${meta.runFolder}/artifacts/judge-report.txt\n\n` +
+            `To inspect run status:\n  my-dev-kit-orchestrator status`
+          );
           return;
         }
 
