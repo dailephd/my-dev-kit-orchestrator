@@ -24,10 +24,11 @@ export interface ParsedJudgeReport {
 // Matches "Verdict: SOME_VERDICT" or "Verdict: SOME_VERDICT (optional trailing text)"
 const VERDICT_RE = /^Verdict:\s+([A-Z_]+)(?:\s|$)/im;
 
-// Matches "Recommended next stage: <stage-name>" or
-// "Recommended next stage if not PASS: <stage-name>"
+// Matches "Recommended next stage: X", "Recommended next stage - X",
+// "Recommended next stage if not PASS: X", "Recommended stage: X",
+// "Next stage: X", "Route to: X", "Routed stage: X"
 const RECOMMENDED_STAGE_RE =
-  /^Recommended next stage(?:[^:]*)?:\s+([a-z][a-z0-9-]*)(?:\s|$)/im;
+  /^(?:Recommended next stage(?:[^-:]*)?[-:]|Recommended stage:|Next stage:|Route to:|Routed stage:)\s+([a-z][a-z0-9-]*)(?:\s|$)/im;
 
 export function isValidVerdict(v: string): v is JudgeVerdict {
   return (JUDGE_VERDICTS as readonly string[]).includes(v);

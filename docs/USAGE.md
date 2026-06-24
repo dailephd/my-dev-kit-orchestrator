@@ -377,6 +377,7 @@ my-dev-kit-orchestrator prompt
 ```
 
 The correction prompt includes:
+
 - stage name with correction context (e.g., `Stage: implementation (correction)`)
 - the judge verdict and routed stage
 - `judge-report.txt` and required prior stage inputs
@@ -411,6 +412,7 @@ Correction suggestions:
 ```
 
 Suggestions are deterministic — they map trace ID prefixes to owning stages without any LLM inference:
+
 - missing `BEH-NNN` link target → suggest `behavior-model`
 - missing `PSE-NNN` link target → suggest `pseudocode-packet`
 - missing `TST-NNN` link target → suggest `test-strategy`

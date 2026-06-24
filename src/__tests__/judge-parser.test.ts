@@ -142,6 +142,42 @@ describe('parseJudgeReport', () => {
     expect(result.recommendedNextStage).toBe('pseudocode-packet');
   });
 
+  it('parses "Recommended next stage - <stage>" dash-separator variant', () => {
+    const result = parseJudgeReport(
+      'Verdict: DESIGN_INCOMPLETE\nRecommended next stage - behavior-model',
+    );
+    expect(result.verdict).toBe('DESIGN_INCOMPLETE');
+    expect(result.recommendedNextStage).toBe('behavior-model');
+  });
+
+  it('parses "Recommended stage: <stage>" short label variant', () => {
+    const result = parseJudgeReport(
+      'Verdict: PSEUDOCODE_INCOMPLETE\nRecommended stage: pseudocode-packet',
+    );
+    expect(result.recommendedNextStage).toBe('pseudocode-packet');
+  });
+
+  it('parses "Next stage: <stage>" label variant', () => {
+    const result = parseJudgeReport(
+      'Verdict: IMPLEMENTATION_MISMATCH\nNext stage: implementation',
+    );
+    expect(result.recommendedNextStage).toBe('implementation');
+  });
+
+  it('parses "Route to: <stage>" label variant', () => {
+    const result = parseJudgeReport(
+      'Verdict: NEED_CONTEXT\nRoute to: architecture-context',
+    );
+    expect(result.recommendedNextStage).toBe('architecture-context');
+  });
+
+  it('parses "Routed stage: <stage>" label variant', () => {
+    const result = parseJudgeReport(
+      'Verdict: ARCHITECTURE_MISMATCH\nRouted stage: architecture-context',
+    );
+    expect(result.recommendedNextStage).toBe('architecture-context');
+  });
+
   it('returns null recommendedNextStage when field is absent', () => {
     const result = parseJudgeReport('Verdict: PASS');
     expect(result.recommendedNextStage).toBeNull();

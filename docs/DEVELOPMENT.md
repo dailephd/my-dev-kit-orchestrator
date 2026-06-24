@@ -100,10 +100,12 @@ Important implementation files:
 ## Judge correction routing implementation (v0.6.0)
 
 `src/judgeParser.ts` parses judge report content:
+
 - `JUDGE_VERDICTS`: const tuple of all supported verdict strings
 - `parseJudgeReport(content)`: reads `Verdict:` and `Recommended next stage:` from plain-text judge report; case-insensitive label match; returns `ParsedJudgeReport` with parsed fields and any parse error
 
 `src/correctionRouter.ts` routes verdicts to correction stages:
+
 - `CORRECTABLE_STAGES`: stages that can receive a correction route
 - `VERDICT_ROUTE_TABLE`: maps non-PASS verdicts to default correction stages
 - `routeJudgeVerdict(parsed, options)`: pure routing function, no file I/O
@@ -112,10 +114,12 @@ Important implementation files:
 - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status
 
 `src/correctionState.ts` wires the parser and router to the run folder:
+
 - `readCorrectionState(runFolder, options)`: reads `artifacts/judge-report.txt` fresh each call; returns null when no judge report exists; no persistence file
 - `isCorrectionActive(runFolder)`: convenience helper
 
 `src/traceChecker.ts` trace-aware correction suggestions (added in v0.6.0):
+
 - `suggestCorrectionStageFromTraceIssue(issue)`: maps `TRACE_MISSING_LINK_TARGET` context (ID prefix) to the owning stage; `TRACE_MALFORMED_ID` and `TRACE_ORPHAN_ID` suggest `design-map`
 - `buildTraceCorrectionSuggestions(results)`: produces deduplicated suggestion strings for check output
 
