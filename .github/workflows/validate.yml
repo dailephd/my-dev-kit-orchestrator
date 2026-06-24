@@ -55,3 +55,6 @@ jobs:
 
       - name: CLI extraction smoke check
         run: npm run smoke:cli -- extraction
+
+      - name: CLI check smoke
+        run: npm run smoke:cli -- check

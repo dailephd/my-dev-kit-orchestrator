@@ -84,24 +84,88 @@ Dependencies follow stage order: artifacts for stage N depend on artifacts from 
 
 For extraction mode, the `porting-map` stage has two artifacts — `source-to-target-porting-map.txt` and `do-not-port-list.txt` — and both are treated as upstream for subsequent stages.
 
-## Not implemented in v0.3.0
+## artifact-check-results.json (v0.4.0)
 
-- artifact content validation
-- required-section validation
-- JSON schema validation
+`artifact-check-results.json` stores the most recent check results for a run.
+
+**Path:** `.my-dev-kit-orchestrator/runs/<run-id>/artifact-check-results.json`
+
+**Created by:** `my-dev-kit-orchestrator check` (when run without `--artifact` or `--prompts`)
+
+**Format:**
+
+```json
+{
+  "version": "1",
+  "checkedAt": "2026-06-24T12:00:00.000Z",
+  "artifactResults": [
+    {
+      "artifactFile": "artifacts/request-brief.txt",
+      "stageName": "request-brief",
+      "artifactKind": "RequestBrief",
+      "issues": [],
+      "passed": true,
+      "checkedAt": "2026-06-24T12:00:00.000Z"
+    }
+  ],
+  "promptResults": [
+    {
+      "promptFile": "prompts/01-request-brief.txt",
+      "stageName": "request-brief",
+      "issues": [],
+      "passed": true,
+      "checkedAt": "2026-06-24T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Artifact check codes (v0.4.0)
+
+| Code | Severity | Meaning |
+|------|----------|---------|
+| `MISSING_FILE` | `fail` | Artifact file does not exist |
+| `MISSING_SECTION` | `fail` | A required section header is absent from the artifact |
+| `EMPTY_SECTION` | `warn` | A required section is present but has no content |
+| `PLACEHOLDER_CONTENT` | `warn` | Artifact contains TODO/PLACEHOLDER/[TBD] or is shorter than 80 characters |
+| `STATUS_MISMATCH` | `warn` | Artifact `Status:` field conflicts with `artifact-state.json` lifecycle state |
+
+### Prompt check codes (v0.4.0)
+
+| Code | Severity | Meaning |
+|------|----------|---------|
+| `PROMPT_MISSING_FILE` | `fail` | Prompt file does not exist |
+| `PROMPT_EMPTY` | `fail` | Prompt file is empty or shorter than 50 characters |
+| `PROMPT_MISSING_STAGE_HEADER` | `fail` | Prompt does not contain a `Stage: ...` header line |
+| `PROMPT_MISSING_TASK_SECTION` | `fail` | Prompt does not contain a `Task:` section |
+| `PROMPT_MISSING_OUTPUT_ARTIFACT` | `warn` | Prompt does not contain `Required output artifact:` |
+| `PROMPT_PLACEHOLDER` | `warn` | Prompt contains placeholder marker text |
+
+### Check severity
+
+- `fail` — check found a definite problem; `check` exits 1
+- `warn` — check found a possible problem; `check` exits 0 unless `--strict` is set
+- `pass` — no issues found
+
+## Not implemented in v0.4.0
+
+- full JSON schema validation or Zod/AJV enforcement
+- LLM-based artifact judging or semantic artifact grading
+- automatic artifact rewriting
 - judge correction routing
 - design trace IDs
-- artifact scoring or grading
 
 ## How stage advancement works
 
 For the selected workflow, the CLI checks stage order from first to last.
 
-Rules used in v0.3.0:
+Rules used in v0.4.0:
 
 - if the effective lifecycle state of any stage artifact is not `complete`, that stage is the current stage
 - if all artifacts are effectively `complete`, the run is complete
 - **backward compatibility**: if `artifact-state.json` does not exist, file presence means `complete` and file absence means `missing`
+
+Artifact content checks (`check` command) are a separate optional layer. They do not affect stage advancement — they report quality issues for human review.
 
 ## Core feature-mode artifact files
 

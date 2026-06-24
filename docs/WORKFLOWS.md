@@ -2,7 +2,18 @@
 
 `my-dev-kit-orchestrator` supports six workflow modes in the current release.
 
-Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists.
+Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
+
+## Content check layer (v0.4.0)
+
+A separate content check layer is available via `my-dev-kit-orchestrator check`. Content checks are deterministic text-based checks that report whether artifact files contain the expected section headers. They run independently and do not block stage advancement.
+
+```bash
+my-dev-kit-orchestrator check          # check all artifacts and prompts
+my-dev-kit-orchestrator check --strict # exit 1 on any warn
+```
+
+Content checks complement the lifecycle layer — lifecycle state tracks whether an artifact is ready to proceed; content checks report what quality issues exist inside it.
 
 The common design-to-code flow is:
 
