@@ -1,5 +1,88 @@
 # Release Checklist
 
+## v0.4.0 checklist
+
+### Artifact content checker verification
+
+- [ ] `check` command is registered and appears in `--help` output
+- [ ] `check` with no arguments runs all artifact and prompt checks
+- [ ] `check` shows `Check results for run:` header
+- [ ] `check --artifact request-brief` checks only that artifact (by stage name)
+- [ ] `check --artifact request-brief.txt` checks only that artifact (by filename)
+- [ ] `check --prompts` checks only generated prompt files
+- [ ] `check --strict` exits 1 on any `warn` in addition to `fail`
+- [ ] `check` exits 1 when any artifact check has severity `fail`
+- [ ] `check` exits 0 when all checks pass
+- [ ] `MISSING_FILE` reported as `[fail]` for absent artifact files
+- [ ] `MISSING_SECTION` reported as `[fail]` for missing required sections
+- [ ] `EMPTY_SECTION` reported as `[warn]` for sections with no content
+- [ ] `PLACEHOLDER_CONTENT` reported as `[warn]` for placeholder artifacts
+- [ ] `STATUS_MISMATCH` reported as `[warn]` when artifact `Status:` conflicts with lifecycle state
+- [ ] `artifact-check-results.json` created in run folder after full `check` run
+- [ ] `status` shows `Content check: N pass, N warn, N fail` when results exist
+- [ ] `status` shows `Content check: not run` when no results exist
+
+### Prompt quality checker verification
+
+- [ ] `check --prompts` reports `[pass]` for all generated prompt files
+- [ ] `PROMPT_MISSING_FILE` reported for absent prompt files
+- [ ] `PROMPT_EMPTY` reported for empty prompt files
+- [ ] `PROMPT_MISSING_STAGE_HEADER` reported for prompts without `Stage:` line
+- [ ] `PROMPT_MISSING_TASK_SECTION` reported for prompts without `Task:` section
+- [ ] `PROMPT_MISSING_OUTPUT_ARTIFACT` reported as warn for prompts without `Required output artifact:`
+- [ ] `PROMPT_PLACEHOLDER` reported as warn for placeholder prompt text
+
+### CLI smoke (check mode)
+
+- [ ] `npm run smoke:cli -- check` passes on `ubuntu-latest`
+- [ ] `npm run smoke:cli -- check` passes on `windows-latest`
+- [ ] `npm run smoke:cli -- check` passes on `macos-latest`
+
+### Version bump verification
+
+- [ ] `node dist/cli.js --version` outputs `0.4.0`
+- [ ] `package.json` version is `0.4.0`
+
+### Non-goal audit
+
+Run:
+
+```bash
+rg -n "schema validation|Zod|AJV|joi|yup|LLM.*judge|semantic.*grading|automatic.*rewrite|judge.*routing|trace.*ID|direct.*LLM|openai|anthropic|langchain" src README.md docs CHANGELOG.md package.json
+```
+
+Expected: no implemented non-goal behavior; references in docs as future/non-goal items only.
+
+### Forbidden wording check
+
+```bash
+rg -n "\bbridge\b|Bridge|BRIDGE" README.md docs CHANGELOG.md src package.json .github
+```
+
+Expected: no matches.
+
+### Package dry-run
+
+- [ ] `npm pack --dry-run` does not include `node_modules/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit-orchestrator/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit/`
+- [ ] `npm pack --dry-run` does not include `agents.txt`, `claude.txt`, or `docs/*.txt`
+- [ ] `npm pack --dry-run` does not include `.env` files, logs, tarballs
+- [ ] only `dist/` is included in the published package
+
+### OS matrix CI (GitHub Actions)
+
+- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+
+### Smoke test coverage
+
+- [ ] normal smoke (`npm run smoke:cli -- normal`) passes on all three OSes
+- [ ] lifecycle smoke (`npm run smoke:cli -- lifecycle`) passes on all three OSes
+- [ ] extraction smoke (`npm run smoke:cli -- extraction`) passes on all three OSes
+- [ ] check smoke (`npm run smoke:cli -- check`) passes on all three OSes
+
 ## v0.3.0 checklist
 
 ### Lifecycle model verification

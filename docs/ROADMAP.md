@@ -56,13 +56,18 @@
 - backward compatibility: runs without `artifact-state.json` use file-existence behavior
 - comprehensive lifecycle unit tests and integration tests
 
+### v0.4.0 (implemented)
+
+- artifact content checker with section requirement registry
+- check codes: `MISSING_FILE`, `MISSING_SECTION`, `EMPTY_SECTION`, `PLACEHOLDER_CONTENT`, `STATUS_MISMATCH`
+- prompt quality checker with check codes: `PROMPT_MISSING_FILE`, `PROMPT_EMPTY`, `PROMPT_MISSING_STAGE_HEADER`, `PROMPT_MISSING_TASK_SECTION`, `PROMPT_MISSING_OUTPUT_ARTIFACT`, `PROMPT_PLACEHOLDER`
+- `check` command: `my-dev-kit-orchestrator check [--artifact <name>] [--prompts] [--strict]`
+- `artifact-check-results.json` persists check results per run
+- `status` command shows content check summary when results exist
+- `--strict` exits 1 on any `warn` in addition to `fail`
+- `CheckSeverity`: `pass | warn | fail`
+
 ## Planned milestones
-
-### v0.4.0
-
-- artifact content validation against expected sections (optional, opt-in)
-- prompt quality checks
-- CI-friendly verification summaries
 
 ### v0.5.0
 

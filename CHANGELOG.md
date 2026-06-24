@@ -2,6 +2,46 @@
 
 ## Unreleased
 
+## v0.4.0 — Artifact Content Checks and Prompt Quality Checks
+
+### Added
+
+- `src/artifactChecker.ts` — deterministic text-based artifact content checker
+  - section requirement registry mapping artifact kinds to required section names
+  - check codes: `MISSING_FILE`, `MISSING_SECTION`, `EMPTY_SECTION`, `PLACEHOLDER_CONTENT`, `STATUS_MISMATCH`
+  - `CheckSeverity`: `'pass' | 'warn' | 'fail'`
+  - `checkArtifact(runFolder, artifactFile, stageName, stateFile)` and `checkAllArtifacts(meta, stateFile)`
+  - `parseArtifact(content)` — regex-based section parser for plain-text artifact format
+  - `hasStatusMismatch` detects when artifact `Status:` field conflicts with `artifact-state.json` lifecycle state
+- `src/promptChecker.ts` — prompt quality checker and check-results persistence
+  - check codes: `PROMPT_MISSING_FILE`, `PROMPT_EMPTY`, `PROMPT_MISSING_STAGE_HEADER`, `PROMPT_MISSING_TASK_SECTION`, `PROMPT_MISSING_OUTPUT_ARTIFACT`, `PROMPT_PLACEHOLDER`
+  - `checkPrompt(runFolder, promptFile, stageName)` and `checkAllPrompts(meta)`
+  - `artifact-check-results.json` persists artifact and prompt check results per run
+  - `readCheckResults(runFolder)` and `writeCheckResults(runFolder, data)` for persistence
+- `check` command: `my-dev-kit-orchestrator check [--artifact <name>] [--prompts] [--strict]`
+  - checks all artifacts and prompts by default
+  - `--artifact <name>`: check a single artifact by stage name, filename, or basename
+  - `--prompts`: check only generated prompt files
+  - `--strict`: exit 1 on any `warn` (default: only exit 1 on `fail`)
+  - persists results to `artifact-check-results.json` when checking all artifacts
+- `status` command now shows a content check summary line:
+  - `Content check: N pass, N warn, N fail  (run: my-dev-kit-orchestrator check)` when results exist
+  - `Content check: not run  (run: my-dev-kit-orchestrator check)` when no results exist yet
+- `artifact-check-results.json` per run at `.my-dev-kit-orchestrator/runs/<run-id>/artifact-check-results.json`
+- Integration tests covering full v0.4.0 check behavior at CLI level
+- CLI smoke test coverage for `check` command via `npm run smoke:cli -- check`
+- GitHub Actions CI step: `CLI check smoke` covering all three OS platforms
+
+### Not implemented in v0.4.0
+
+- full JSON schema validation or Zod/AJV enforcement
+- LLM-based artifact judging or semantic artifact grading
+- automatic artifact rewriting
+- automatic judge routing
+- design trace IDs
+- automatic `my-dev-kit` execution
+- direct LLM-provider execution
+
 ## v0.3.0 — Artifact Lifecycle and Resume States
 
 ### Added

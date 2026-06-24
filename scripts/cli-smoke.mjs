@@ -45,12 +45,12 @@ function withTempDir(prefix, fn) {
 
 function smokeHelp() {
   const version = runCli(['--version'], repoRoot).trim();
-  if (version !== '0.3.0') {
-    throw new Error(`Expected version 0.3.0, got ${version}`);
+  if (version !== '0.4.0') {
+    throw new Error(`Expected version 0.4.0, got ${version}`);
   }
 
   const help = runCli(['--help'], repoRoot);
-  for (const command of ['init', 'start', 'status', 'prompt', 'list', 'mark']) {
+  for (const command of ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check']) {
     assertIncludes(help, command, 'CLI help');
   }
 }
@@ -144,6 +144,38 @@ function smokeLifecycle() {
   });
 }
 
+function smokeCheck() {
+  withTempDir('mdko-smoke-check-', (projectRoot) => {
+    runCli(['init'], projectRoot);
+    runCli(['start', '--mode', 'feature', 'Check smoke workflow'], projectRoot);
+
+    // check with no artifacts: should show fail results (exit 1)
+    let checkOutput;
+    try {
+      checkOutput = runCli(['check'], projectRoot);
+    } catch (err) {
+      checkOutput = err.stdout ?? '';
+    }
+    assertIncludes(checkOutput, 'Check results for run:', 'check output header');
+    assertIncludes(checkOutput, 'MISSING_FILE', 'check missing artifact');
+
+    // check --prompts: generated prompts should pass
+    const promptCheck = runCli(['check', '--prompts'], projectRoot);
+    assertIncludes(promptCheck, 'Prompts:', 'check --prompts output');
+    assertIncludes(promptCheck, '[pass]', 'check --prompts pass');
+
+    // status should show content check summary
+    const status = runCli(['status'], projectRoot);
+    assertIncludes(status, 'Content check:', 'status check summary');
+
+    // check --help
+    const checkHelp = runCli(['check', '--help'], projectRoot);
+    assertIncludes(checkHelp, '--artifact', 'check help --artifact');
+    assertIncludes(checkHelp, '--prompts', 'check help --prompts');
+    assertIncludes(checkHelp, '--strict', 'check help --strict');
+  });
+}
+
 const mode = process.argv[2] ?? 'all';
 
 smokeHelp();
@@ -158,4 +190,8 @@ if (mode === 'all' || mode === 'lifecycle') {
 
 if (mode === 'all' || mode === 'extraction') {
   smokeExtraction();
+}
+
+if (mode === 'all' || mode === 'check') {
+  smokeCheck();
 }

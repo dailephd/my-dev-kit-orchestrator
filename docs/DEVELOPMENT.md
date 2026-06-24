@@ -60,12 +60,14 @@ For `v0.1.0` work:
 Important implementation files:
 
 - `src/program.ts`: root CLI program, command registration, version
-- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`
+- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`, `mark`, `check`
 - `src/workflows.ts`: workflow stage order and artifact mappings
 - `src/promptGenerator.ts`: stage-specific prompt text generation
 - `src/run.ts`: run creation and run metadata handling
 - `src/stageDetector.ts`: artifact presence checks and next-stage detection
 - `src/workspace.ts`: workspace creation and config handling
+- `src/artifactChecker.ts`: artifact content checks and section requirement registry (v0.4.0)
+- `src/promptChecker.ts`: prompt quality checks and check-results persistence (v0.4.0)
 - `src/__tests__/`: Jest coverage for CLI behavior and workflow logic
 
 ## Development notes
@@ -88,6 +90,34 @@ Important implementation files:
 - `src/stageDetector.ts`: `allArtifactsPresent` helper checks primary and `additionalArtifactFiles`; `source-architecture-context` added to `STAGE_SUPPORTING_REPORTS`
 - `src/commands/status.ts`: source and target repository paths shown for extraction runs
 - `src/__tests__/extraction-mode.test.ts`: dedicated extraction mode test suite
+
+## Artifact content checker implementation (v0.4.0)
+
+`src/artifactChecker.ts` contains the section requirement registry and all check logic.
+
+- `SECTION_REGISTRY`: maps artifact kind names (e.g., `'RequestBrief'`) to arrays of required section names
+- `STAGE_TO_KIND`: maps stage names across all workflow modes to artifact kind names
+- `parseArtifact(content)`: regex `/^([A-Z][A-Za-z0-9 ()/-]{0,79}):\s*(.*)$/` matches section headers (must start with uppercase to exclude list items and numeric lines)
+- `checkArtifact(runFolder, artifactFile, stageName, stateFile)`: runs all checks for a single artifact
+- `checkAllArtifacts(meta, stateFile)`: runs `checkArtifact` for every stage including `additionalArtifactFiles`
+
+### Extending the section requirement registry
+
+To add required sections for a new artifact kind:
+
+1. Add the artifact kind name to `SECTION_REGISTRY` in `src/artifactChecker.ts`
+2. Map the stage name to the artifact kind in `STAGE_TO_KIND`
+3. Ensure the section names match the exact headers the coding agent will produce (the promptGenerator return-format templates are the source of truth)
+
+### Check results persistence
+
+`src/promptChecker.ts` owns `artifact-check-results.json` persistence:
+
+- `getCheckResultsPath(runFolder)`: returns the results file path
+- `readCheckResults(runFolder)`: reads and parses `artifact-check-results.json`, returns `null` if absent
+- `writeCheckResults(runFolder, data)`: writes `artifact-check-results.json`
+
+`status` command reads `artifact-check-results.json` via `readCheckResults` to render the content check summary line.
 
 ## Verification expectations
 

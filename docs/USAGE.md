@@ -339,3 +339,98 @@ Existing runs without an `artifact-state.json` continue to work:
 - artifact file missing → `missing`
 
 No migration is required for runs created before v0.3.0.
+
+## Check command (v0.4.0)
+
+Use `check` to run deterministic content checks on artifacts and prompts.
+
+```bash
+my-dev-kit-orchestrator check
+```
+
+Check a single artifact by stage name or filename:
+
+```bash
+my-dev-kit-orchestrator check --artifact request-brief
+my-dev-kit-orchestrator check --artifact request-brief.txt
+```
+
+Check only generated prompt files:
+
+```bash
+my-dev-kit-orchestrator check --prompts
+```
+
+Exit 1 on any warn in addition to fail (CI strict mode):
+
+```bash
+my-dev-kit-orchestrator check --strict
+```
+
+Target a specific run:
+
+```bash
+my-dev-kit-orchestrator check --run 20260624T120000-add-logging
+my-dev-kit-orchestrator check --root /path/to/project
+```
+
+### What check reports
+
+For each artifact:
+
+- `[pass]` — no issues
+- `[warn]` — possible problem (empty section, placeholder content, status mismatch)
+- `[fail]` — definite problem (missing file, missing required section)
+
+For each prompt:
+
+- `[pass]` — all required prompt elements present
+- `[warn]` — prompt missing optional elements (output artifact declaration, placeholder text)
+- `[fail]` — prompt missing file, empty, or missing required stage elements
+
+Example output:
+
+```text
+Check results for run: 20260624T120000-add-logging
+
+Artifacts:
+  [pass] artifacts/request-brief.txt
+  [fail] artifacts/architecture-context-packet.txt
+         MISSING_FILE: artifact file does not exist
+  [warn] artifacts/behavior-model.txt
+         PLACEHOLDER_CONTENT: artifact content appears to be placeholder or stub
+
+Prompts:
+  [pass] prompts/01-request-brief.txt
+  [pass] prompts/02-architecture-context.txt
+
+Summary:
+  Artifacts: 1 pass, 1 warn, 1 fail
+  Prompts: 2 pass, 0 warn, 0 fail
+```
+
+### How status shows check results
+
+After `check` has been run, `status` shows a summary line:
+
+```text
+Content check: 1 pass, 1 warn, 1 fail  (run: my-dev-kit-orchestrator check)
+```
+
+Before `check` has been run:
+
+```text
+Content check: not run  (run: my-dev-kit-orchestrator check)
+```
+
+### Check severity
+
+| Severity | Meaning | Default exit behavior |
+|----------|---------|----------------------|
+| `pass` | No issues found | continues |
+| `warn` | Possible problem | exits 0 (exits 1 with `--strict`) |
+| `fail` | Definite problem | exits 1 |
+
+### Content checks do not affect stage advancement
+
+The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.

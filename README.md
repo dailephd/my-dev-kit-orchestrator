@@ -15,6 +15,16 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
+`v0.4.0` adds artifact content checks and prompt quality checks:
+
+- `check` command: `my-dev-kit-orchestrator check [--artifact <name>] [--prompts] [--strict]`
+- deterministic text-based checks for required sections in each artifact kind
+- check codes: `MISSING_FILE`, `MISSING_SECTION`, `EMPTY_SECTION`, `PLACEHOLDER_CONTENT`, `STATUS_MISMATCH` (artifacts); `PROMPT_MISSING_FILE`, `PROMPT_EMPTY`, `PROMPT_MISSING_STAGE_HEADER`, `PROMPT_MISSING_TASK_SECTION`, `PROMPT_MISSING_OUTPUT_ARTIFACT`, `PROMPT_PLACEHOLDER` (prompts)
+- `artifact-check-results.json` persists check results per run
+- `status` command shows a content check summary when results are available
+- `--strict` mode exits 1 on any `warn` in addition to `fail`
+- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for check codes and result schema
+
 `v0.3.0` adds artifact lifecycle and resume states:
 
 - artifact lifecycle states: `missing`, `incomplete`, `blocked`, `complete`, `stale`
@@ -59,15 +69,16 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 
 ## Non-goals (current release)
 
-`my-dev-kit-orchestrator` does not include and will not include in v0.3.0:
+`my-dev-kit-orchestrator` does not include in v0.4.0:
 
-- direct LLM execution
+- full JSON schema validation or Zod/AJV enforcement
+- LLM-based artifact judging or semantic artifact grading
+- automatic artifact rewriting or correction loops
+- automatic judge routing
+- design trace IDs or design maps
 - automatic coding-agent execution
 - automatic `my-dev-kit` command execution
-- artifact content validation or schema validation
-- required-section validation
-- automatic judge routing or correction loops
-- design trace IDs or design maps
+- direct LLM-provider execution
 - extra low-level CLI commands beyond the current surface
 
 Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
@@ -86,6 +97,10 @@ my-dev-kit-orchestrator prompt <stage> --run <run-id>
 my-dev-kit-orchestrator list
 my-dev-kit-orchestrator list --mode <mode>
 my-dev-kit-orchestrator mark <artifact-name> --state <incomplete|blocked|complete> [--reason "<reason>"]
+my-dev-kit-orchestrator check
+my-dev-kit-orchestrator check --artifact <stage-name|filename>
+my-dev-kit-orchestrator check --prompts
+my-dev-kit-orchestrator check --strict
 ```
 
 Common flags:
