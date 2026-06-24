@@ -37,7 +37,7 @@ describe('isCorrectableStage', () => {
   });
 });
 
-describe('routeJudgeVerdict — PASS', () => {
+describe('routeJudgeVerdict - PASS', () => {
   it('routes PASS to routeStatus pass with no correction', () => {
     const parsed = parseJudgeReport('Verdict: PASS');
     const result = routeJudgeVerdict(parsed);
@@ -50,7 +50,7 @@ describe('routeJudgeVerdict — PASS', () => {
   });
 });
 
-describe('routeJudgeVerdict — correction-required verdicts', () => {
+describe('routeJudgeVerdict - correction-required verdicts', () => {
   it('NEED_CONTEXT routes to architecture-context', () => {
     const result = parseAndRoute('Verdict: NEED_CONTEXT');
     expect(result.routeStatus).toBe('correction_required');
@@ -109,7 +109,7 @@ describe('routeJudgeVerdict — correction-required verdicts', () => {
   });
 });
 
-describe('routeJudgeVerdict — blocked verdicts', () => {
+describe('routeJudgeVerdict - blocked verdicts', () => {
   it('SCOPE_VIOLATION produces blocked status', () => {
     const result = parseAndRoute('Verdict: SCOPE_VIOLATION');
     expect(result.routeStatus).toBe('blocked');
@@ -125,7 +125,7 @@ describe('routeJudgeVerdict — blocked verdicts', () => {
   });
 });
 
-describe('routeJudgeVerdict — missing verdict', () => {
+describe('routeJudgeVerdict - missing verdict', () => {
   it('returns missing_verdict status when no verdict line', () => {
     const result = parseAndRoute('This judge report has no verdict line.');
     expect(result.routeStatus).toBe('missing_verdict');
@@ -143,7 +143,7 @@ describe('routeJudgeVerdict — missing verdict', () => {
   });
 });
 
-describe('routeJudgeVerdict — recommended stage', () => {
+describe('routeJudgeVerdict - recommended stage', () => {
   it('uses recommended stage when it matches table', () => {
     const result = parseAndRoute(
       'Verdict: NEED_CONTEXT\nRecommended next stage: architecture-context',
@@ -183,12 +183,13 @@ describe('routeJudgeVerdict — recommended stage', () => {
   });
 });
 
-describe('routeJudgeVerdict — no autonomous execution', () => {
+describe('routeJudgeVerdict - no autonomous execution', () => {
   it('does not modify any files or side effects (pure function)', () => {
     // Just verify the function returns a plain object without side effects
     const result = parseAndRoute('Verdict: IMPLEMENTATION_MISMATCH');
     expect(typeof result).toBe('object');
     expect(result.routeStatus).toBe('correction_required');
-    // No file system access, no mutation — verified by the function signature and pure logic
+    // No file system access, no mutation - verified by the function signature and pure logic
   });
 });
+

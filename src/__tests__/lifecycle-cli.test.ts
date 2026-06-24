@@ -33,7 +33,7 @@ function writeArtifact(runFolder: string, artifactFile: string, content = 'done'
 
 // ─── Stage progression: lifecycle-aware ──────────────────────────────────────
 
-describe('getNextStageWithLifecycle — stage progression', () => {
+describe('getNextStageWithLifecycle - stage progression', () => {
   it('missing artifact remains at current stage', () => {
     const tmp = makeTempDir();
     try {
@@ -620,3 +620,4 @@ describe('backward compatibility: runs without artifact-state.json', () => {
     }
   });
 });
+

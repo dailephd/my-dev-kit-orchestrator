@@ -7,9 +7,9 @@ describe('CLI program', () => {
     expect(program.name()).toBe('my-dev-kit-orchestrator');
   });
 
-  it('has version 0.6.0', () => {
+  it('has version 1.0.0', () => {
     const program = createProgram();
-    expect(program.version()).toBe('0.6.0');
+    expect(program.version()).toBe('1.0.0');
   });
 
   it('registers init command', () => {
@@ -68,10 +68,10 @@ describe('CLI program', () => {
     }
   });
 
-  it('command surface has exactly the v0.4.0 commands', () => {
+  it('command surface has exactly the v1.0.0 commands', () => {
     const program = createProgram();
     const names = program.commands.map((c) => c.name()).sort();
-    expect(names).toEqual(['check', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
+    expect(names).toEqual(['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
   });
 
   it('describes the staged workflow including test implementation', () => {

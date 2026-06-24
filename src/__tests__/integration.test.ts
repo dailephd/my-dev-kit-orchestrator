@@ -39,7 +39,7 @@ describe('integration: init → start → prompt flow', () => {
       expect(fs.existsSync(path.join(meta.runFolder, 'artifacts'))).toBe(true);
       expect(fs.existsSync(path.join(meta.runFolder, 'reports'))).toBe(true);
 
-      // 3. prompt — first stage
+      // 3. prompt - first stage
       const firstStage = getNextStage(meta);
       expect(firstStage).not.toBeNull();
       expect(firstStage!.name).toBe('request-brief');
@@ -83,7 +83,7 @@ describe('integration: init → start → prompt flow', () => {
     }
   });
 
-  it('run is complete when all artifacts exist — suggests final-report', () => {
+  it('run is complete when all artifacts exist - suggests final-report', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
@@ -284,7 +284,7 @@ describe('audit: v0.1.0 scope compliance', () => {
     // Structural assertion: no unsupported command files exist
     const cmdDir = path.join(__dirname, '../commands');
     const cmdFiles = fs.readdirSync(cmdDir).map((f) => f.replace('.ts', ''));
-    const allowed = ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check'];
+    const allowed = ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check', 'export'];
     for (const file of cmdFiles) {
       expect(allowed).toContain(file);
     }
@@ -466,3 +466,4 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
     }
   });
 });
+

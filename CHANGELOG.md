@@ -2,11 +2,35 @@
 
 ## Unreleased
 
-## v0.6.0 — Judge Correction Routing and Trace-Aware Workflow Recovery
+## v1.0.0 - Stable Workflow Contract and Portable Run Handoff
 
 ### Added
 
-- `src/judgeParser.ts` — judge verdict parser
+- `src/contractChecker.ts` - artifact contract checker model
+  - `checkArtifactContract()`: deterministic checks per artifact (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
+  - `checkRunArtifactContracts()`: run-level contract check across all stages
+  - `checkStageGates()`: stage gate violation detection with CRITICAL_GATE_PAIRS for all five modes
+  - `resolveArtifactContractsForMode()`: returns ModeContractSummary with stage/artifact/predecessor/section metadata for all modes
+  - Strict mode: promotes BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, STAGE_NO_CONTRACT from warn to fail
+- `check --artifacts`: run v1 artifact contract check for all stages in the current run
+  - per-artifact output with code/severity/stage/mode/suggestedFix
+- `check --all`: combined check including contracts, stage gates, trace, design-map (if present), correction routing
+  - section-headered output, persists trace results, includes trace correction suggestions
+- `export` command: `my-dev-kit-orchestrator export [--run <id>] [--out <file>] [--overwrite]`
+  - portable plain-text run handoff with run identity, request, artifact checklist, missing artifacts, judge verdict, correction state, verification evidence excerpt, content/trace check summaries, next command
+  - path safety: refuses symlinks, path traversal, existing files without --overwrite, non-existent parent directories
+  - default: print to stdout; --out file: write to file
+
+### Changed
+
+- CI: pinned macos runner to macos-15 (previously macos-latest)
+- Added CLI export smoke step to CI validate workflow
+
+## v0.6.0 - Judge Correction Routing and Trace-Aware Workflow Recovery
+
+### Added
+
+- `src/judgeParser.ts` - judge verdict parser
   - `JUDGE_VERDICTS`: `['PASS','DESIGN_INCOMPLETE','PSEUDOCODE_INCOMPLETE','IMPLEMENTATION_MISMATCH','TEST_COVERAGE_INCOMPLETE','ARCHITECTURE_MISMATCH','NEED_VERIFICATION','NEED_CONTEXT','SCOPE_VIOLATION','BLOCKED']`
   - `JudgeVerdict` type, `isValidVerdict()` type guard
   - `parseJudgeReport(content)`: parses `Verdict:` and `Recommended next stage:` from judge report text
@@ -14,22 +38,22 @@
     - returns null verdict without error when field is absent
     - case-insensitive `Verdict:` label matching
     - robust to extra surrounding prose in judge report
-- `src/correctionRouter.ts` — deterministic correction routing model
+- `src/correctionRouter.ts` - deterministic correction routing model
   - `CORRECTABLE_STAGES` const: `['architecture-context','behavior-model','pseudocode-packet','test-strategy','test-implementation','implementation','verification']`
   - `routeJudgeVerdict(parsed, options)`: routes verdict to a correction stage
   - `parseAndRoute(content, options)`: parse + route in one call
   - routing table: `NEED_CONTEXT→architecture-context`, `DESIGN_INCOMPLETE→behavior-model`, `PSEUDOCODE_INCOMPLETE→pseudocode-packet`, `IMPLEMENTATION_MISMATCH→implementation`, `TEST_COVERAGE_INCOMPLETE→test-strategy`, `ARCHITECTURE_MISMATCH→architecture-context`, `NEED_VERIFICATION→verification`
-  - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status — no correction stage
+  - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status - no correction stage
   - recommended stage overrides table default when it is a valid correctable stage
   - conflict between table and recommended stage: warning (normal mode) / `strictFail` + error (strict mode)
   - unknown verdict: `unknown_verdict` status with parse error
   - missing verdict: `missing_verdict` status
   - no file I/O, no automatic code modification, pure routing functions
-- `src/correctionState.ts` — reads judge-report.txt and computes correction route
+- `src/correctionState.ts` - reads judge-report.txt and computes correction route
   - `readCorrectionState(runFolder, options)`: returns `CorrectionRouteResult` or null when no judge report exists
   - `isCorrectionActive(runFolder)`: true when correction is required with a correctable stage
 - `status` command extended with Judge correction section
-  - `PASS`: shows "Judge correction: PASS — no correction required"
+  - `PASS`: shows "Judge correction: PASS - no correction required"
   - correction required: shows verdict, routed stage, and routing warnings
   - blocked: shows blocked state message
   - unknown or missing verdict: shows error or note
@@ -68,21 +92,21 @@
 - test coverage instrumentation
 - full JSON schema validation
 
-## v0.5.0 — Design Trace IDs and Trace Link Checking
+## v0.5.0 - Design Trace IDs and Trace Link Checking
 
 ### Added
 
-- `src/traceModel.ts` — trace prefix constants, canonical ID regex, `isValidTracePrefix`, `isValidTraceId`, `isMalformedTraceId`
+- `src/traceModel.ts` - trace prefix constants, canonical ID regex, `isValidTracePrefix`, `isValidTraceId`, `isMalformedTraceId`
   - `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
   - `TRACE_ID_RE`: `/^(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})$/`
   - `isMalformedTraceId` detects near-miss tokens (e.g., `BEH001`, `FOO-001`)
-- `src/traceParser.ts` — trace ID and link parser utilities
+- `src/traceParser.ts` - trace ID and link parser utilities
   - `parseTraceIds(content)`: finds all valid trace IDs in text by line
   - `parseTraceLinks(content)`: finds all `FROM -> TO` link expressions
   - `findMalformedTraceIds(content)`: finds malformed trace-like tokens
   - `findDuplicateIds`, `findOrphanIds`, `findMissingLinkTargets`
   - `parseTrace(content)`: composite result of all parse functions
-- `src/traceChecker.ts` — deterministic trace link checker
+- `src/traceChecker.ts` - deterministic trace link checker
   - `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only (skips `->` lines), preventing false "known target" matches
   - `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact file for malformed IDs, duplicate declared IDs, orphan IDs, missing link targets
   - `checkAllTraces(meta)`: runs trace checks on all run artifact files
@@ -119,18 +143,18 @@
 - automatic `my-dev-kit` execution
 - direct LLM-provider execution
 
-## v0.4.0 — Artifact Content Checks and Prompt Quality Checks
+## v0.4.0 - Artifact Content Checks and Prompt Quality Checks
 
 ### Added
 
-- `src/artifactChecker.ts` — deterministic text-based artifact content checker
+- `src/artifactChecker.ts` - deterministic text-based artifact content checker
   - section requirement registry mapping artifact kinds to required section names
   - check codes: `MISSING_FILE`, `MISSING_SECTION`, `EMPTY_SECTION`, `PLACEHOLDER_CONTENT`, `STATUS_MISMATCH`
   - `CheckSeverity`: `'pass' | 'warn' | 'fail'`
   - `checkArtifact(runFolder, artifactFile, stageName, stateFile)` and `checkAllArtifacts(meta, stateFile)`
-  - `parseArtifact(content)` — regex-based section parser for plain-text artifact format
+  - `parseArtifact(content)` - regex-based section parser for plain-text artifact format
   - `hasStatusMismatch` detects when artifact `Status:` field conflicts with `artifact-state.json` lifecycle state
-- `src/promptChecker.ts` — prompt quality checker and check-results persistence
+- `src/promptChecker.ts` - prompt quality checker and check-results persistence
   - check codes: `PROMPT_MISSING_FILE`, `PROMPT_EMPTY`, `PROMPT_MISSING_STAGE_HEADER`, `PROMPT_MISSING_TASK_SECTION`, `PROMPT_MISSING_OUTPUT_ARTIFACT`, `PROMPT_PLACEHOLDER`
   - `checkPrompt(runFolder, promptFile, stageName)` and `checkAllPrompts(meta)`
   - `artifact-check-results.json` persists artifact and prompt check results per run
@@ -159,7 +183,7 @@
 - automatic `my-dev-kit` execution
 - direct LLM-provider execution
 
-## v0.3.0 — Artifact Lifecycle and Resume States
+## v0.3.0 - Artifact Lifecycle and Resume States
 
 ### Added
 
@@ -190,7 +214,7 @@
 - automatic `my-dev-kit` execution
 - direct LLM execution
 
-## v0.2.1 — Extraction Mode
+## v0.2.1 - Extraction Mode
 
 ### Added
 
@@ -229,7 +253,7 @@
 
 **Not published to npm.** Tag will be created on release preparation.
 
-## v0.2.1 — Documentation preparation
+## v0.2.1 - Documentation preparation
 
 ### Added
 
@@ -253,9 +277,9 @@
 - added extraction mode examples to `docs/USAGE.md`
 - added `docs/RELEASE_CHECKLIST.md` with v0.2.1 verification items
 
-**Note:** Documentation-only preparation entry. Runtime implementation shipped in the `v0.2.1 — Extraction Mode` entry above.
+**Note:** Documentation-only preparation entry. Runtime implementation shipped in the `v0.2.1 - Extraction Mode` entry above.
 
-## v0.2.0 — Graph-Guided Architecture Context
+## v0.2.0 - Graph-Guided Architecture Context
 
 ### Added
 
@@ -281,7 +305,7 @@
 
 **Note:** Tagged as `v0.2.0` in git. Not published to npm.
 
-## v0.1.0 — Workflow Shell
+## v0.1.0 - Workflow Shell
 
 Initial release of `my-dev-kit-orchestrator`.
 

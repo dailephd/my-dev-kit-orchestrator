@@ -1,5 +1,56 @@
 # Release Checklist
 
+## v1.0.0 checklist
+
+### Artifact contract check verification
+
+- [ ] `check --artifacts` shows CONTRACT_MISSING_FILE for all missing artifacts
+- [ ] `check --artifacts` shows [pass] when all artifacts present with required sections
+- [ ] `check --artifacts --strict` exits 1 on BLANK_SECTION
+- [ ] `check --artifacts --strict` exits 1 on PLACEHOLDER_SECTION
+- [ ] `check --artifacts --strict` exits 1 on PREDECESSOR_MISSING
+- [ ] `check --artifacts` exits 1 on CONTRACT_MISSING_FILE (fail severity)
+- [ ] `check --artifacts` exits 1 on CONTRACT_MISSING_SECTION (fail severity)
+- [ ] `resolveArtifactContractsForMode` returns non-null for all 6 modes
+
+### Stage gate verification
+
+- [ ] `checkStageGates` returns no violations when no artifacts exist
+- [ ] Gate 1: pseudocode-packet without behavior-model produces violation
+- [ ] Gate 2: implementation without pseudocode-packet produces violation
+- [ ] Gate 3: test-implementation without test-strategy produces violation
+- [ ] Gate 5: judge without verification produces violation
+- [ ] Gate 6: final-report without judge produces violation
+- [ ] violations have severity:fail and include missingArtifact, presentArtifact, suggestedFix
+
+### check --all verification
+
+- [ ] `check --all` produces all four section headers
+- [ ] `check --all` persists trace-check-results.json
+- [ ] `check --all` includes correction routing output
+- [ ] `check --all` exits 1 on any contract fail or gate violation
+
+### Export command verification
+
+- [ ] `export` prints run identity, request, artifact checklist to stdout
+- [ ] `export --out <file>` writes to file and prints confirmation
+- [ ] `export --out <existing>` exits 1 with message about --overwrite
+- [ ] `export --out <existing> --overwrite` succeeds
+- [ ] export refuses symlink output path
+- [ ] export refuses path traversal (..) in output path
+- [ ] export text contains no em dash, en dash, smart quotes, or ellipsis
+
+### Version verification
+
+- [ ] `node dist/cli.js --version` prints `1.0.0`
+- [ ] `package.json` version is `1.0.0`
+
+### CI verification
+
+- [ ] GitHub Actions validate.yml uses macos-15 (not macos-latest)
+- [ ] GitHub Actions validate.yml includes CLI export smoke step
+- [ ] CI passes on ubuntu-latest, windows-latest, macos-15 with Node 24
+
 ## v0.6.0 checklist
 
 ### Judge verdict parser verification
@@ -96,9 +147,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -181,9 +232,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -265,9 +316,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -328,9 +379,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, CLI smoke pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, CLI smoke pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, CLI smoke pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, CLI smoke pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, CLI smoke pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, CLI smoke pass
 
 ### Non-goal audit
 
