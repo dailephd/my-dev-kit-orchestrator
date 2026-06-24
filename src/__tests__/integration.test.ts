@@ -284,7 +284,7 @@ describe('audit: v0.1.0 scope compliance', () => {
     // Structural assertion: no unsupported command files exist
     const cmdDir = path.join(__dirname, '../commands');
     const cmdFiles = fs.readdirSync(cmdDir).map((f) => f.replace('.ts', ''));
-    const allowed = ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check'];
+    const allowed = ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check', 'export'];
     for (const file of cmdFiles) {
       expect(allowed).toContain(file);
     }
