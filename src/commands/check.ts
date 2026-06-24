@@ -5,6 +5,12 @@ import { getMostRecentRun, loadRun, getRunFolder } from '../run';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { checkAllArtifacts, checkArtifact, ArtifactCheckResult } from '../artifactChecker';
 import { checkAllPrompts, PromptCheckResult, writeCheckResults } from '../promptChecker';
+import {
+  checkAllTraces,
+  checkDesignMapTrace,
+  TraceCheckResult,
+  writeTraceCheckResults,
+} from '../traceChecker';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -36,6 +42,18 @@ function formatPromptResult(result: PromptCheckResult): string[] {
   return lines;
 }
 
+function formatTraceResult(result: TraceCheckResult): string[] {
+  const hasWarns = result.issues.some((i) => i.severity === 'warn');
+  const label = resultLabel(result.passed, hasWarns);
+  const lines = [`  [${label}] ${result.artifactFile}`];
+  for (const issue of result.issues) {
+    if (issue.severity !== 'pass') {
+      lines.push(`         ${issue.code}: ${issue.message}`);
+    }
+  }
+  return lines;
+}
+
 function summarize(
   artifactResults: ArtifactCheckResult[],
   promptResults: PromptCheckResult[],
@@ -56,6 +74,15 @@ function summarize(
     lines.push(`  Prompts:   ${pPass} pass, ${pFail} fail, ${pWarn} warn`);
   }
   return lines;
+}
+
+function summarizeTrace(traceResults: TraceCheckResult[]): string[] {
+  // Exclude pass-with-no-issues (files that didn't exist — they return passed:true, issues:[])
+  const checked = traceResults.filter((r) => r.issues.length > 0 || !r.passed);
+  const pass = checked.filter((r) => r.passed && !r.issues.some((i) => i.severity === 'warn')).length;
+  const warn = checked.filter((r) => r.passed && r.issues.some((i) => i.severity === 'warn')).length;
+  const fail = checked.filter((r) => !r.passed).length;
+  return ['Summary:', `  Trace: ${pass} pass, ${fail} fail, ${warn} warn`];
 }
 
 function resolveArtifactTarget(
@@ -89,6 +116,8 @@ export function makeCheckCommand(): Command {
     .option('--root <path>', 'project root directory (default: current working directory)')
     .option('--artifact <name>', 'check a single artifact by filename or stage name')
     .option('--prompts', 'check generated prompt files instead of artifacts')
+    .option('--trace', 'check trace IDs and links in all artifacts')
+    .option('--design-map', 'check the design-map artifact (sections and trace links)')
     .option('--strict', 'treat warn-severity issues as failures in exit code')
     .action(
       (options: {
@@ -96,6 +125,8 @@ export function makeCheckCommand(): Command {
         root?: string;
         artifact?: string;
         prompts?: boolean;
+        trace?: boolean;
+        designMap?: boolean;
         strict?: boolean;
       }) => {
         const projectRoot = path.resolve(options.root ?? process.cwd());
@@ -123,6 +154,83 @@ export function makeCheckCommand(): Command {
           }
         }
 
+        // ── --trace mode ──────────────────────────────────────────────────────
+        if (options.trace) {
+          const traceResults = checkAllTraces(meta);
+          const lines: string[] = [`Trace check results for run: ${meta.runId}`, ``];
+
+          const hasAny = traceResults.some((r) => r.issues.length > 0);
+          if (hasAny) {
+            lines.push('Artifacts:');
+            for (const result of traceResults) {
+              if (result.issues.length > 0) {
+                lines.push(...formatTraceResult(result));
+              }
+            }
+          } else {
+            lines.push('Artifacts: no trace issues found');
+          }
+          lines.push('');
+          lines.push(...summarizeTrace(traceResults));
+          console.log(lines.join('\n'));
+
+          // Persist
+          try {
+            writeTraceCheckResults(meta.runFolder, {
+              version: '1',
+              checkedAt: new Date().toISOString(),
+              traceResults,
+            });
+          } catch {
+            // Non-fatal
+          }
+
+          const anyFail = traceResults.some((r) => !r.passed);
+          const anyWarn = traceResults.some((r) =>
+            r.issues.some((i) => i.severity === 'warn'),
+          );
+          if (anyFail || (options.strict && anyWarn)) {
+            process.exit(1);
+          }
+          return;
+        }
+
+        // ── --design-map mode ─────────────────────────────────────────────────
+        if (options.designMap) {
+          const stateFile = readArtifactStateFile(meta.runFolder);
+          // Section/structure check via existing artifact checker
+          const artifactResult = checkArtifact(
+            meta.runFolder,
+            'artifacts/design-map.txt',
+            'design-map',
+            stateFile,
+          );
+          // Trace-specific check
+          const traceResult = checkDesignMapTrace(meta.runFolder);
+
+          const lines: string[] = [`Design map check for run: ${meta.runId}`, ``];
+
+          lines.push('Artifact check:');
+          lines.push(...formatArtifactResult(artifactResult));
+          lines.push('');
+          lines.push('Trace check:');
+          lines.push(...formatTraceResult(traceResult));
+          lines.push('');
+
+          const anyFail = !artifactResult.passed || !traceResult.passed;
+          const anyWarn =
+            artifactResult.issues.some((i) => i.severity === 'warn') ||
+            traceResult.issues.some((i) => i.severity === 'warn');
+
+          console.log(lines.join('\n'));
+
+          if (anyFail || (options.strict && anyWarn)) {
+            process.exit(1);
+          }
+          return;
+        }
+
+        // ── Standard artifact/prompts mode (unchanged) ────────────────────────
         const stateFile = readArtifactStateFile(meta.runFolder);
         const artifactResults: ArtifactCheckResult[] = [];
         const promptResults: PromptCheckResult[] = [];
