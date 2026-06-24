@@ -113,6 +113,28 @@ const SECTION_REGISTRY: Record<string, SectionRequirements> = {
       'Status',
     ],
   },
+  DesignMap: {
+    required: [
+      'Artifact',
+      'DesignMap',
+      'Workflow mode',
+      'Inputs used',
+      'Trace ID registry',
+      'Requirement links',
+      'Context links',
+      'Behavior links',
+      'Invariant links',
+      'Transition links',
+      'Pseudocode links',
+      'Test responsibility links',
+      'Implementation links',
+      'Verification links',
+      'Risk links',
+      'Orphan or missing links',
+      'Trace gaps',
+      'Status',
+    ],
+  },
 };
 
 // ─── Artifact kind resolver ───────────────────────────────────────────────────
@@ -157,6 +179,8 @@ const STAGE_TO_KIND: Record<string, string> = {
   'porting-map': 'PortingMap',
   'golden-behavior-contract': 'GoldenBehaviorContract',
   'target-architecture': 'TargetArchitectureProposal',
+  // design trace
+  'design-map': 'DesignMap',
 };
 
 export function resolveArtifactKind(stageName: string): string | undefined {

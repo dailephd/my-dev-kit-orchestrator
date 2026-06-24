@@ -270,6 +270,12 @@ The BehaviorModel must define:
 - behavior intentionally changed
 - unresolved design questions
 
+Trace IDs (optional):
+Assign trace IDs to behaviors, invariants, and transitions to enable downstream traceability.
+Format: BEH-001: description, INV-001: description, TRN-001: description.
+If trace IDs are used, link related items using: FROM_ID -> TO_ID.
+Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
+
 Required output artifact: BehaviorModel
 Output file: ${ctx.runFolder}/artifacts/behavior-model.txt
 
@@ -319,6 +325,11 @@ The PseudocodePacket must define:
 - assumptions preserved
 - assumptions removed or guarded
 - unresolved implementation questions
+
+Trace IDs (optional):
+Assign PSE-NNN trace IDs to pseudocode entries to enable downstream traceability.
+Format: PSE-001: pseudocode entry. Link to behavior IDs using: BEH-001 -> PSE-001.
+Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
 
 Required output artifact: PseudocodePacket
 Output file: ${ctx.runFolder}/artifacts/pseudocode-packet.txt
@@ -378,6 +389,11 @@ Each test responsibility must trace to at least one of:
 - boundary
 - external contract
 - failure mode
+
+Trace IDs (optional):
+Assign TST-NNN trace IDs to test responsibilities to enable downstream traceability.
+Format: TST-001: test responsibility. Link to behaviors or pseudocode: PSE-001 -> TST-001.
+Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
 
 Required output artifact: TestStrategyPacket
 Output file: ${ctx.runFolder}/artifacts/test-strategy-packet.txt
@@ -567,6 +583,9 @@ The JudgeReport must assess:
 - scope control
 - verification evidence
 - risks and gaps
+- trace link integrity (if trace IDs were used): check for orphan IDs, missing link targets,
+  and malformed IDs by running: my-dev-kit-orchestrator check --trace
+  Include trace check results or note that trace IDs were not used in this run.
 
 Verdict must be one of:
   PASS | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
@@ -580,6 +599,7 @@ Stop conditions:
 - do not rewrite code
 - do not approve without verification evidence
 - do not hide uncertainty or gaps
+- do not skip trace check if trace IDs are present in prior artifacts
 
 Return format:
 Produce the artifact as a plain-text file.

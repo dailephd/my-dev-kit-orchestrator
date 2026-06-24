@@ -11,6 +11,7 @@ import {
 } from '../stageDetector';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
+import { readTraceCheckResults } from '../traceChecker';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -104,6 +105,19 @@ export function makeStatusCommand(): Command {
         lines.push(`Content check: ${pass} pass, ${warn} warn, ${fail} fail  (run: my-dev-kit-orchestrator check)`);
       } else {
         lines.push(`Content check: not run  (run: my-dev-kit-orchestrator check)`);
+      }
+      lines.push(``);
+
+      // Trace check summary
+      const traceResults = readTraceCheckResults(meta.runFolder);
+      if (traceResults) {
+        const tr = traceResults.traceResults;
+        const pass = tr.filter((r) => r.passed && !r.issues.some((i) => i.severity === 'warn')).length;
+        const warn = tr.filter((r) => r.passed && r.issues.some((i) => i.severity === 'warn')).length;
+        const fail = tr.filter((r) => !r.passed).length;
+        lines.push(`Trace check: ${pass} pass, ${warn} warn, ${fail} fail  (run: my-dev-kit-orchestrator check --trace)`);
+      } else {
+        lines.push(`Trace check: not run  (run: my-dev-kit-orchestrator check --trace)`);
       }
       lines.push(``);
 

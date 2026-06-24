@@ -51,6 +51,8 @@ const ARTIFACT_MAP: Record<string, string> = {
   'porting-map': 'artifacts/source-to-target-porting-map.txt',
   'golden-behavior-contract': 'artifacts/golden-behavior-contract.txt',
   'target-architecture': 'artifacts/target-architecture-proposal.txt',
+  // design trace
+  'design-map': 'artifacts/design-map.txt',
 };
 
 const ADDITIONAL_ARTIFACT_MAP: Record<string, string[]> = {

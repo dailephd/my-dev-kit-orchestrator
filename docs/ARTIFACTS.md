@@ -147,13 +147,80 @@ For extraction mode, the `porting-map` stage has two artifacts — `source-to-ta
 - `warn` — check found a possible problem; `check` exits 0 unless `--strict` is set
 - `pass` — no issues found
 
+## trace-check-results.json (v0.5.0)
+
+`trace-check-results.json` stores the most recent trace check results for a run.
+
+**Path:** `.my-dev-kit-orchestrator/runs/<run-id>/trace-check-results.json`
+
+**Created by:** `my-dev-kit-orchestrator check --trace`
+
+**Format:**
+
+```json
+{
+  "version": "1",
+  "checkedAt": "2026-06-24T12:00:00.000Z",
+  "traceResults": [
+    {
+      "artifactFile": "artifacts/behavior-model.txt",
+      "issues": [],
+      "passed": true,
+      "checkedAt": "2026-06-24T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Trace check codes (v0.5.0)
+
+| Code | Severity | Meaning |
+|------|----------|---------|
+| `TRACE_MALFORMED_ID` | `fail` | A token looks like a trace ID but is not in valid canonical format (e.g., `BEH001`, `FOO-001`) |
+| `TRACE_DUPLICATE_ID` | `warn` | The same trace ID is declared more than once in the artifact |
+| `TRACE_ORPHAN_ID` | `warn` | A declared trace ID appears in no trace link in the artifact |
+| `TRACE_MISSING_LINK_TARGET` | `fail` | A trace link references a valid trace ID not declared in this artifact |
+
+Trace IDs are optional in artifacts. The trace checker skips artifacts with no trace IDs. Only artifacts that declare at least one trace ID are evaluated for orphan and link integrity.
+
+## DesignMap artifact (v0.5.0)
+
+**Path:** `artifacts/design-map.txt`
+
+**Produced by:** `design-map` stage
+
+**Purpose:** Maps trace IDs across all run artifacts into a single registry. Records requirement links, behavior links, invariant links, and orphan or missing links.
+
+**Required sections:**
+
+- Artifact
+- DesignMap
+- Workflow mode
+- Inputs used
+- Trace ID registry
+- Requirement links
+- Context links
+- Behavior links
+- Invariant links
+- Transition links
+- Pseudocode links
+- Test responsibility links
+- Implementation links
+- Verification links
+- Risk links
+- Orphan or missing links
+- Trace gaps
+- Status
+
+Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifact has all required sections and no trace link issues.
+
 ## Not implemented in v0.4.0
 
+- design trace IDs (implemented in v0.5.0)
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting
 - judge correction routing
-- design trace IDs
 
 ## How stage advancement works
 

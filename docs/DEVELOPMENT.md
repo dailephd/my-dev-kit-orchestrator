@@ -68,6 +68,9 @@ Important implementation files:
 - `src/workspace.ts`: workspace creation and config handling
 - `src/artifactChecker.ts`: artifact content checks and section requirement registry (v0.4.0)
 - `src/promptChecker.ts`: prompt quality checks and check-results persistence (v0.4.0)
+- `src/traceModel.ts`: trace prefix constants, canonical ID regex, `isValidTraceId`, `isMalformedTraceId` (v0.5.0)
+- `src/traceParser.ts`: trace ID and link parsing utilities (v0.5.0)
+- `src/traceChecker.ts`: deterministic trace link checker and `trace-check-results.json` persistence (v0.5.0)
 - `src/__tests__/`: Jest coverage for CLI behavior and workflow logic
 
 ## Development notes
@@ -90,6 +93,29 @@ Important implementation files:
 - `src/stageDetector.ts`: `allArtifactsPresent` helper checks primary and `additionalArtifactFiles`; `source-architecture-context` added to `STAGE_SUPPORTING_REPORTS`
 - `src/commands/status.ts`: source and target repository paths shown for extraction runs
 - `src/__tests__/extraction-mode.test.ts`: dedicated extraction mode test suite
+
+## Trace checker implementation (v0.5.0)
+
+`src/traceModel.ts` defines the canonical trace ID format:
+
+- `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
+- `TRACE_ID_RE`: `/^(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})$/`
+- `isValidTraceId(id)`: returns true for canonical format (e.g., `BEH-001`)
+- `isMalformedTraceId(text)`: returns true for near-miss tokens (e.g., `BEH001`, `FOO-001`) that are not valid trace IDs
+
+`src/traceParser.ts` provides low-level parsing utilities. For checker use, prefer `src/traceChecker.ts`.
+
+`src/traceChecker.ts` owns all trace check logic:
+
+- `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only — lines containing `->` are skipped so that link target IDs are not counted as declared. This is critical for correct `TRACE_MISSING_LINK_TARGET` detection.
+- `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact for malformed IDs, duplicate declared IDs, orphan IDs, and missing link targets. Missing files return `passed: true` with no issues (the artifact checker handles missing files separately).
+- `checkAllTraces(meta)`: runs `checkArtifactTrace` for all run artifact files
+- `checkDesignMapTrace(runFolder)`: shorthand for checking `artifacts/design-map.txt`
+- `readTraceCheckResults(runFolder)` and `writeTraceCheckResults(runFolder, data)`: persistence for `trace-check-results.json`. Writes are atomic via a `.tmp` rename.
+
+### Orphan detection rule
+
+A declared trace ID is orphan only if trace links exist in the artifact. If the artifact has no links at all, no orphan warnings are raised. This prevents false positives for artifacts that use trace IDs as labels without linking.
 
 ## Artifact content checker implementation (v0.4.0)
 

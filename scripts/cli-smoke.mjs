@@ -45,8 +45,8 @@ function withTempDir(prefix, fn) {
 
 function smokeHelp() {
   const version = runCli(['--version'], repoRoot).trim();
-  if (version !== '0.4.0') {
-    throw new Error(`Expected version 0.4.0, got ${version}`);
+  if (version !== '0.5.0') {
+    throw new Error(`Expected version 0.5.0, got ${version}`);
   }
 
   const help = runCli(['--help'], repoRoot);
@@ -173,6 +173,57 @@ function smokeCheck() {
     assertIncludes(checkHelp, '--artifact', 'check help --artifact');
     assertIncludes(checkHelp, '--prompts', 'check help --prompts');
     assertIncludes(checkHelp, '--strict', 'check help --strict');
+    assertIncludes(checkHelp, '--trace', 'check help --trace');
+    assertIncludes(checkHelp, '--design-map', 'check help --design-map');
+  });
+}
+
+function smokeTrace() {
+  withTempDir('mdko-smoke-trace-', (projectRoot) => {
+    runCli(['init'], projectRoot);
+    runCli(['start', '--mode', 'feature', 'Trace smoke workflow'], projectRoot);
+
+    const runFolder = getSingleRunFolder(projectRoot);
+    const artifactDir = path.join(runFolder, 'artifacts');
+    fs.mkdirSync(artifactDir, { recursive: true });
+
+    // Write artifact with well-formed trace IDs and links
+    const wellFormed = [
+      'REQ-001: smoke requirement',
+      'BEH-001: smoke behavior',
+      'REQ-001 -> BEH-001',
+    ].join('\n');
+    fs.writeFileSync(path.join(artifactDir, 'behavior-model.txt'), wellFormed, 'utf8');
+
+    // check --trace with well-formed artifact should succeed
+    const traceOutput = runCli(['check', '--trace'], projectRoot);
+    assertIncludes(traceOutput, 'Trace check results for run:', 'check --trace output header');
+
+    // Write an artifact with a missing link target
+    const badContent = 'REQ-001: requirement\nREQ-001 -> BEH-999';
+    fs.writeFileSync(path.join(artifactDir, 'pseudocode-packet.txt'), badContent, 'utf8');
+
+    let badTraceOutput;
+    try {
+      badTraceOutput = runCli(['check', '--trace'], projectRoot);
+    } catch (err) {
+      badTraceOutput = err.stdout ?? '';
+    }
+    assertIncludes(badTraceOutput, 'TRACE_MISSING_LINK_TARGET', 'check --trace detects missing target');
+
+    // check --design-map with no design-map file should show MISSING_FILE (exit 1)
+    let designMapOutput;
+    try {
+      designMapOutput = runCli(['check', '--design-map'], projectRoot);
+    } catch (err) {
+      designMapOutput = err.stdout ?? '';
+    }
+    assertIncludes(designMapOutput, 'Design map check for run:', 'check --design-map output header');
+    assertIncludes(designMapOutput, 'MISSING_FILE', 'check --design-map missing file');
+
+    // status should show "Trace check:" summary after check --trace
+    const status = runCli(['status'], projectRoot);
+    assertIncludes(status, 'Trace check:', 'status trace check summary');
   });
 }
 
@@ -194,4 +245,8 @@ if (mode === 'all' || mode === 'extraction') {
 
 if (mode === 'all' || mode === 'check') {
   smokeCheck();
+}
+
+if (mode === 'all' || mode === 'trace') {
+  smokeTrace();
 }
