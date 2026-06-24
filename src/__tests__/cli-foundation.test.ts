@@ -68,10 +68,10 @@ describe('CLI program', () => {
     }
   });
 
-  it('command surface has exactly the v0.4.0 commands', () => {
+  it('command surface has exactly the v1.0.0 commands', () => {
     const program = createProgram();
     const names = program.commands.map((c) => c.name()).sort();
-    expect(names).toEqual(['check', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
+    expect(names).toEqual(['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
   });
 
   it('describes the staged workflow including test implementation', () => {

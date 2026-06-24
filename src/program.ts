@@ -6,6 +6,7 @@ import { makePromptCommand } from './commands/prompt';
 import { makeListCommand } from './commands/list';
 import { makeMarkCommand } from './commands/mark';
 import { makeCheckCommand } from './commands/check';
+import { makeExportCommand } from './commands/export';
 
 export function createProgram(): Command {
   const program = new Command();
@@ -28,6 +29,7 @@ export function createProgram(): Command {
   program.addCommand(makeListCommand());
   program.addCommand(makeMarkCommand());
   program.addCommand(makeCheckCommand());
+  program.addCommand(makeExportCommand());
 
   return program;
 }
