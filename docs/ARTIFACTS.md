@@ -147,6 +147,41 @@ For extraction mode, the `porting-map` stage has two artifacts — `source-to-ta
 - `warn` — check found a possible problem; `check` exits 0 unless `--strict` is set
 - `pass` — no issues found
 
+## Judge correction routing (v0.6.0)
+
+The judge report artifact drives correction routing in v0.6.0.
+
+**Path:** `artifacts/judge-report.txt`
+
+The parser reads two fields from the judge report:
+
+```text
+Verdict: IMPLEMENTATION_MISMATCH
+Recommended next stage: implementation
+```
+
+**Supported verdicts:**
+
+| Verdict | Route status | Default correction stage |
+|---------|-------------|------------------------|
+| `PASS` | pass | (none) |
+| `DESIGN_INCOMPLETE` | correction_required | `behavior-model` |
+| `PSEUDOCODE_INCOMPLETE` | correction_required | `pseudocode-packet` |
+| `IMPLEMENTATION_MISMATCH` | correction_required | `implementation` |
+| `TEST_COVERAGE_INCOMPLETE` | correction_required | `test-strategy` |
+| `ARCHITECTURE_MISMATCH` | correction_required | `architecture-context` |
+| `NEED_VERIFICATION` | correction_required | `verification` |
+| `NEED_CONTEXT` | correction_required | `architecture-context` |
+| `SCOPE_VIOLATION` | blocked | (none) |
+| `BLOCKED` | blocked | (none) |
+
+**Unknown verdicts** fail the parser — they are not guessed.
+**Missing verdict** field returns `missing_verdict` status without error.
+
+The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage.
+
+Correction routing is computed fresh on each `status` or `prompt` call. No additional persistence file is required.
+
 ## trace-check-results.json (v0.5.0)
 
 `trace-check-results.json` stores the most recent trace check results for a run.

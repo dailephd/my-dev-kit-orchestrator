@@ -10,6 +10,7 @@ import {
   checkDesignMapTrace,
   TraceCheckResult,
   writeTraceCheckResults,
+  buildTraceCorrectionSuggestions,
 } from '../traceChecker';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
@@ -172,6 +173,17 @@ export function makeCheckCommand(): Command {
           }
           lines.push('');
           lines.push(...summarizeTrace(traceResults));
+
+          // Trace-aware correction suggestions
+          const traceSuggestions = buildTraceCorrectionSuggestions(traceResults);
+          if (traceSuggestions.length > 0) {
+            lines.push('');
+            lines.push('Correction suggestions:');
+            for (const suggestion of traceSuggestions) {
+              lines.push(`  ${suggestion}`);
+            }
+          }
+
           console.log(lines.join('\n'));
 
           // Persist
@@ -221,6 +233,16 @@ export function makeCheckCommand(): Command {
           const anyWarn =
             artifactResult.issues.some((i) => i.severity === 'warn') ||
             traceResult.issues.some((i) => i.severity === 'warn');
+
+          // Trace-aware correction suggestions for design-map
+          const dmSuggestions = buildTraceCorrectionSuggestions([traceResult]);
+          if (dmSuggestions.length > 0) {
+            lines.push('Correction suggestions:');
+            for (const suggestion of dmSuggestions) {
+              lines.push(`  ${suggestion}`);
+            }
+            lines.push('');
+          }
 
           console.log(lines.join('\n'));
 

@@ -7,9 +7,9 @@ describe('CLI program', () => {
     expect(program.name()).toBe('my-dev-kit-orchestrator');
   });
 
-  it('has version 0.5.0', () => {
+  it('has version 0.6.0', () => {
     const program = createProgram();
-    expect(program.version()).toBe('0.5.0');
+    expect(program.version()).toBe('0.6.0');
   });
 
   it('registers init command', () => {

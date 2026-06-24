@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { WorkflowMode } from './types';
 import { RunMetadata } from './run';
+import { CorrectionRouteResult } from './correctionRouter';
 
 interface PromptContext {
   stage: string;
@@ -2453,6 +2454,141 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     default:
       throw new Error(`No prompt generator for stage: "${stageName}"`);
   }
+}
+
+// Artifact files used as inputs for each correctable stage
+const CORRECTION_STAGE_INPUTS: Record<string, string[]> = {
+  'architecture-context': ['artifacts/request-brief.txt'],
+  'behavior-model': [
+    'artifacts/request-brief.txt',
+    'artifacts/architecture-context-packet.txt',
+  ],
+  'pseudocode-packet': [
+    'artifacts/request-brief.txt',
+    'artifacts/architecture-context-packet.txt',
+    'artifacts/behavior-model.txt',
+  ],
+  'test-strategy': [
+    'artifacts/behavior-model.txt',
+    'artifacts/pseudocode-packet.txt',
+  ],
+  'test-implementation': [
+    'artifacts/behavior-model.txt',
+    'artifacts/pseudocode-packet.txt',
+    'artifacts/test-strategy-packet.txt',
+  ],
+  'implementation': [
+    'artifacts/request-brief.txt',
+    'artifacts/architecture-context-packet.txt',
+    'artifacts/pseudocode-packet.txt',
+  ],
+  'verification': [
+    'artifacts/implementation-report.txt',
+    'artifacts/test-implementation-report.txt',
+    'artifacts/test-strategy-packet.txt',
+  ],
+};
+
+/**
+ * Generates a bounded, stage-specific correction prompt.
+ * The prompt instructs the coding agent to revise only the failed stage artifact
+ * based on the judge report finding — without broadening scope, modifying code
+ * automatically, or invoking any external runtime.
+ */
+export function generateCorrectionPrompt(
+  meta: RunMetadata,
+  correctionState: CorrectionRouteResult,
+): string {
+  const routedStage = correctionState.routedStage!;
+  const verdict = correctionState.verdict ?? 'UNKNOWN';
+  const runFolder = meta.runFolder;
+
+  const priorInputs = CORRECTION_STAGE_INPUTS[routedStage] ?? [];
+  const designMapPath = path.join(runFolder, 'artifacts', 'design-map.txt');
+  const designMapExists = fs.existsSync(designMapPath);
+
+  const inputLines: string[] = [
+    `- ${runFolder}/artifacts/judge-report.txt`,
+    ...priorInputs.map((f) => `- ${runFolder}/${f}`),
+  ];
+  if (designMapExists) {
+    inputLines.push(`- ${runFolder}/artifacts/design-map.txt`);
+  }
+
+  const outputFile = path.join(runFolder, 'artifacts', stageToArtifactBasename(routedStage));
+
+  const warningLines =
+    correctionState.warnings.length > 0
+      ? [`\nWarning from routing:\n${correctionState.warnings.map((w) => `  ${w}`).join('\n')}\n`]
+      : [];
+
+  return [
+    `Stage: ${routedStage} (correction)`,
+    `Workflow mode: ${meta.mode}`,
+    `Run ID: ${meta.runId}`,
+    `Project root: ${meta.projectRoot}`,
+    `Run folder: ${runFolder}`,
+    ``,
+    `Correction context:`,
+    `  Judge verdict: ${verdict}`,
+    `  Routed correction stage: ${routedStage}`,
+    ...(correctionState.recommendedStage
+      ? [`  Judge recommended: ${correctionState.recommendedStage}`]
+      : []),
+    ...warningLines,
+    ``,
+    `Inputs:`,
+    ...inputLines,
+    ``,
+    `Task:`,
+    `Revise the ${routedStage} artifact to resolve the judge finding.`,
+    `Read the judge-report.txt to understand what was found insufficient.`,
+    `Read the prior artifacts listed above to understand the current design state.`,
+    `Produce an updated artifact that addresses the judge finding.`,
+    ``,
+    `Required output artifact: ${artifactKindForStage(routedStage)}`,
+    `Output file: ${outputFile}`,
+    ``,
+    `Stop conditions:`,
+    `- revise only the artifact for this stage`,
+    `- do not modify production code unless this stage is implementation`,
+    `- do not write test files unless this stage is test-strategy or test-implementation`,
+    `- do not broaden scope beyond what the judge finding requires`,
+    `- do not route back further unless the prior artifact is also found insufficient`,
+    `- do not run any external agent, LLM call, or automated tool`,
+    `- do not claim the issue is resolved without updating the artifact`,
+    ``,
+    `Return format:`,
+    `Produce the updated artifact as a plain-text file.`,
+    `Update the Status: field to complete when the correction is done.`,
+    ``,
+  ].join('\n');
+}
+
+function stageToArtifactBasename(stageName: string): string {
+  const map: Record<string, string> = {
+    'architecture-context': 'architecture-context-packet.txt',
+    'behavior-model': 'behavior-model.txt',
+    'pseudocode-packet': 'pseudocode-packet.txt',
+    'test-strategy': 'test-strategy-packet.txt',
+    'test-implementation': 'test-implementation-report.txt',
+    'implementation': 'implementation-report.txt',
+    'verification': 'verification-report.txt',
+  };
+  return map[stageName] ?? `${stageName}.txt`;
+}
+
+function artifactKindForStage(stageName: string): string {
+  const map: Record<string, string> = {
+    'architecture-context': 'ArchitectureContextPacket',
+    'behavior-model': 'BehaviorModel',
+    'pseudocode-packet': 'PseudocodePacket',
+    'test-strategy': 'TestStrategyPacket',
+    'test-implementation': 'TestImplementationReport',
+    'implementation': 'ImplementationReport',
+    'verification': 'VerificationReport',
+  };
+  return map[stageName] ?? stageName;
 }
 
 export function writeStagePrompts(meta: RunMetadata): void {
