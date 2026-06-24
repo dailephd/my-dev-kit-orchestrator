@@ -22,6 +22,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
+    "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
@@ -40,7 +41,8 @@
     "commander": "^11.1.0"
   },
   "overrides": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "markdown-it": "^14.2.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -49,6 +51,7 @@
     "@typescript-eslint/parser": "^8.62.0",
     "eslint": "^8.55.0",
     "jest": "^30.4.2",
+    "markdownlint-cli2": "^0.22.1",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.4.11",
     "typescript": "^5.3.3"

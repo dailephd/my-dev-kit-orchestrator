@@ -195,11 +195,11 @@ npx my-dev-kit-orchestrator start --mode extraction `
 
 ### Stage behavior
 
-**request-brief**
+#### `request-brief`
 
 Capture the source repository path, target repository path, workflow to extract, desired target scope, features excluded from the extraction, critical behaviors to preserve, and expected deliverables.
 
-**source-architecture-context**
+#### `source-architecture-context`
 
 Use `my-dev-kit` on the source repository. Index the source repository into its own `.my-dev-kit` directory:
 
@@ -209,33 +209,34 @@ npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root
 
 Do not use target repository indexing to infer source behavior. Source and target indices must stay separate.
 
-**source-workflow-map**
+#### `source-workflow-map`
 
 Write `artifacts/source-workflow-map.txt`. This stage describes what exists in the source repository. It does not decide what to port yet.
 
-**porting-map**
+#### `porting-map`
 
 Write `artifacts/source-to-target-porting-map.txt` and `artifacts/do-not-port-list.txt`. Classify each source subsystem as reusable, refactorable, rewritable, discardable, or postponed. Explicitly list systems that must not be ported.
 
-**golden-behavior-contract**
+#### `golden-behavior-contract`
 
 Write `artifacts/golden-behavior-contract.txt`. Define the exact behavior the target implementation must satisfy. No production implementation should begin before this artifact exists.
 
-**target-architecture**
+#### `target-architecture`
 
 Write `artifacts/target-architecture-proposal.txt`. If the target repository already exists, use `my-dev-kit` to inspect it. If the target repository does not exist yet, define the planned structure and contracts before scaffolding.
 
-**behavior-model**
+#### `behavior-model`
 
 Write a behavior model for the target system using the golden behavior contract as the primary source of truth.
 
-**pseudocode-packet**
+#### `pseudocode-packet`
 
 Write pseudocode for the target implementation. The pseudocode must map to the target architecture, not the source architecture.
 
-**test-strategy**
+#### `test-strategy`
 
 Write the test strategy before any test implementation begins. Include:
+
 - contract tests
 - backend unit tests
 - frontend component tests
@@ -244,21 +245,22 @@ Write the test strategy before any test implementation begins. Include:
 - E2E tests for the full extracted workflow
 - regression tests for every golden behavior item
 
-**implementation**
+#### `implementation`
 
 Implement the extracted workflow in the target repository only. Do not modify the source repository unless the user explicitly permits it.
 
-**test-implementation**
+#### `test-implementation`
 
 Add or update tests in the target repository.
 
-**verification**
+#### `verification`
 
 Run actual target project validation commands. Record results.
 
-**judge**
+#### `judge`
 
 Compare the target implementation against:
+
 - request brief
 - source workflow map
 - source-to-target porting map
@@ -270,9 +272,10 @@ Compare the target implementation against:
 - test strategy
 - verification report
 
-**final-report**
+#### `final-report`
 
 Summarize:
+
 - extracted workflow
 - source repository inspected
 - target repository modified

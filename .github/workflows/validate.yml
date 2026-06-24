@@ -47,6 +47,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Lint docs
+        run: npm run lint:docs
+
       - name: CLI smoke check
         run: npm run smoke:cli -- normal
 
