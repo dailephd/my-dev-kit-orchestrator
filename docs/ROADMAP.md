@@ -100,18 +100,28 @@
 - correction smoke in `scripts/cli-smoke.mjs`
 - CI `validate.yml` updated with CLI correction smoke step
 
+### v1.0.0 (implemented)
+
+- `src/contractChecker.ts`: deterministic artifact contract checker
+  - `checkArtifactContract()`: per-artifact checks (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
+  - `checkRunArtifactContracts()`: run-level check across all stages and modes
+  - `checkStageGates()`: stage gate violation detection (CRITICAL_GATE_PAIRS for all five modes)
+  - `resolveArtifactContractsForMode()`: ModeContractSummary with predecessor and section metadata
+  - strict mode promotes warn-severity issues to fail in exit code
+- `check --artifacts`: v1 contract check for all stages, per-artifact output with code/severity/stage/mode/suggestedFix
+- `check --all`: combined check (contracts + gates + trace + design-map + correction routing), section-headered output
+- `export` command: portable plain-text run handoff
+  - run identity, request, artifact checklist, missing artifacts, judge verdict, correction state, verification evidence, check summaries, next command
+  - path safety: symlink refusal, traversal refusal, existing-file refusal without --overwrite
+  - stdout or --out file
+- CI: macos runner pinned to macos-15
+- CI: export smoke step added
+
 ## Planned milestones
 
-### v0.7.0
+### v1.1.0
 
 - richer comparison and reporting around workflow outcomes
-- richer comparison and reporting around workflow outcomes
-
-### v1.0.0
-
-- stable workflow architecture and artifact contracts
-- polished extraction-mode guidance and release documentation
-- mature cross-platform release validation
 
 ## Non-goals
 

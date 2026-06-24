@@ -45,12 +45,12 @@ function withTempDir(prefix, fn) {
 
 function smokeHelp() {
   const version = runCli(['--version'], repoRoot).trim();
-  if (version !== '0.6.0') {
-    throw new Error(`Expected version 0.6.0, got ${version}`);
+  if (version !== '1.0.0') {
+    throw new Error(`Expected version 1.0.0, got ${version}`);
   }
 
   const help = runCli(['--help'], repoRoot);
-  for (const command of ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check']) {
+  for (const command of ['init', 'start', 'status', 'prompt', 'list', 'mark', 'check', 'export']) {
     assertIncludes(help, command, 'CLI help');
   }
 }
@@ -294,6 +294,48 @@ function smokeCorrection() {
   });
 }
 
+function smokeExport() {
+  withTempDir('mdko-smoke-export-', (projectRoot) => {
+    runCli(['init'], projectRoot);
+    runCli(['start', '--mode', 'feature', 'Export smoke workflow'], projectRoot);
+
+    // export to stdout: should contain run identity sections
+    const exportOut = runCli(['export'], projectRoot);
+    assertIncludes(exportOut, 'Run ID:', 'export run id');
+    assertIncludes(exportOut, 'Mode:', 'export mode');
+    assertIncludes(exportOut, '=== Request ===', 'export request section');
+    assertIncludes(exportOut, 'Export smoke workflow', 'export request content');
+    assertIncludes(exportOut, '=== Artifact checklist ===', 'export artifact checklist');
+    assertIncludes(exportOut, '[missing]', 'export missing artifact marker');
+    assertIncludes(exportOut, '=== Missing artifacts ===', 'export missing artifacts section');
+    assertIncludes(exportOut, '=== Judge verdict ===', 'export judge section');
+    assertIncludes(exportOut, '=== Next command ===', 'export next command section');
+    assertIncludes(exportOut, 'my-dev-kit-orchestrator prompt', 'export next command value');
+
+    // export --out file
+    const outFile = path.join(projectRoot, 'handoff.txt');
+    runCli(['export', '--out', outFile], projectRoot);
+    if (!fs.existsSync(outFile)) throw new Error('export --out: file not created');
+
+    // export --out file: refuse overwrite without --overwrite
+    let refused = false;
+    try {
+      runCli(['export', '--out', outFile], projectRoot);
+    } catch {
+      refused = true;
+    }
+    if (!refused) throw new Error('export --out: should have refused to overwrite existing file');
+
+    // export --out file --overwrite: should succeed
+    runCli(['export', '--out', outFile, '--overwrite'], projectRoot);
+
+    // export --help
+    const exportHelp = runCli(['export', '--help'], projectRoot);
+    assertIncludes(exportHelp, '--out', 'export help --out');
+    assertIncludes(exportHelp, '--overwrite', 'export help --overwrite');
+  });
+}
+
 const mode = process.argv[2] ?? 'all';
 
 smokeHelp();
@@ -320,4 +362,8 @@ if (mode === 'all' || mode === 'trace') {
 
 if (mode === 'all' || mode === 'correction') {
   smokeCorrection();
+}
+
+if (mode === 'all' || mode === 'export') {
+  smokeExport();
 }
