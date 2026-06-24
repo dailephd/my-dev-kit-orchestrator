@@ -12,6 +12,13 @@ import {
   writeTraceCheckResults,
   buildTraceCorrectionSuggestions,
 } from '../traceChecker';
+import {
+  checkRunArtifactContracts,
+  checkStageGates,
+  ArtifactContractCheckResult,
+  StageGateViolation,
+} from '../contractChecker';
+import { readCorrectionState } from '../correctionState';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -86,6 +93,37 @@ function summarizeTrace(traceResults: TraceCheckResult[]): string[] {
   return ['Summary:', `  Trace: ${pass} pass, ${fail} fail, ${warn} warn`];
 }
 
+function formatContractResult(result: ArtifactContractCheckResult): string[] {
+  const hasWarns = result.issues.some((i) => i.severity === 'warn');
+  const label = resultLabel(result.passed, hasWarns);
+  const lines = [
+    `  [${label}] ${result.artifactFile} (${result.artifactKind}, stage: ${result.stageName}, mode: ${result.mode})`,
+  ];
+  for (const issue of result.issues) {
+    if (issue.severity !== 'pass') {
+      lines.push(`         ${issue.code} [${issue.severity}]: ${issue.message}`);
+      if (issue.suggestedFix) {
+        lines.push(`         Fix: ${issue.suggestedFix}`);
+      }
+    }
+  }
+  return lines;
+}
+
+function summarizeContracts(results: ArtifactContractCheckResult[]): string[] {
+  const pass = results.filter((r) => r.passed && !r.issues.some((i) => i.severity === 'warn')).length;
+  const warn = results.filter((r) => r.passed && r.issues.some((i) => i.severity === 'warn')).length;
+  const fail = results.filter((r) => !r.passed).length;
+  return [`  Contracts: ${pass} pass, ${fail} fail, ${warn} warn`];
+}
+
+function formatGateViolation(v: StageGateViolation): string[] {
+  return [
+    `  [fail] ${v.gateName}: ${v.message}`,
+    `         Fix: ${v.suggestedFix}`,
+  ];
+}
+
 function resolveArtifactTarget(
   meta: { stages: { name: string; artifactFile: string }[] },
   artifactArg: string,
@@ -116,6 +154,8 @@ export function makeCheckCommand(): Command {
     .option('--run <run-id>', 'select a specific workflow run by ID')
     .option('--root <path>', 'project root directory (default: current working directory)')
     .option('--artifact <name>', 'check a single artifact by filename or stage name')
+    .option('--artifacts', 'check artifact contracts for all stages in the run (v1)')
+    .option('--all', 'run all checks: contracts, stage gates, trace, design-map, correction routing (v1)')
     .option('--prompts', 'check generated prompt files instead of artifacts')
     .option('--trace', 'check trace IDs and links in all artifacts')
     .option('--design-map', 'check the design-map artifact (sections and trace links)')
@@ -125,6 +165,8 @@ export function makeCheckCommand(): Command {
         run?: string;
         root?: string;
         artifact?: string;
+        artifacts?: boolean;
+        all?: boolean;
         prompts?: boolean;
         trace?: boolean;
         designMap?: boolean;
@@ -153,6 +195,188 @@ export function makeCheckCommand(): Command {
             );
             return;
           }
+        }
+
+        // ── --artifacts mode (v1 contract check) ──────────────────────────────
+        if (options.artifacts) {
+          const contractResult = checkRunArtifactContracts(meta, { strict: options.strict });
+          const lines: string[] = [`Artifact contract check for run: ${meta.runId}`, ``];
+
+          if (!contractResult.modeValid) {
+            for (const issue of contractResult.modeIssues) {
+              lines.push(`  [fail] ${issue.code}: ${issue.message}`);
+            }
+          } else {
+            if (contractResult.modeIssues.length > 0) {
+              lines.push('Run issues:');
+              for (const issue of contractResult.modeIssues) {
+                lines.push(`  [warn] ${issue.code}: ${issue.message}`);
+              }
+              lines.push('');
+            }
+
+            lines.push('Artifacts:');
+            for (const result of contractResult.results) {
+              lines.push(...formatContractResult(result));
+            }
+            lines.push('');
+            lines.push('Summary:');
+            lines.push(...summarizeContracts(contractResult.results));
+          }
+
+          console.log(lines.join('\n'));
+
+          const anyFail = !contractResult.modeValid ||
+            contractResult.results.some((r) => !r.passed) ||
+            contractResult.modeIssues.some((i) => i.severity === 'fail');
+          const anyWarn = contractResult.results.some((r) =>
+            r.issues.some((i) => i.severity === 'warn'),
+          );
+          if (anyFail || (options.strict && anyWarn)) {
+            process.exit(1);
+          }
+          return;
+        }
+
+        // ── --all mode (all v1 checks combined) ───────────────────────────────
+        if (options.all) {
+          const contractOpts = { strict: options.strict };
+          const contractResult = checkRunArtifactContracts(meta, contractOpts);
+          const gateViolations = checkStageGates(meta);
+          const traceResults = checkAllTraces(meta);
+
+          // Design-map check if file exists
+          const designMapPath = path.join(meta.runFolder, 'artifacts/design-map.txt');
+          const hasDesignMap = fs.existsSync(designMapPath);
+          const dmTraceResult = hasDesignMap ? checkDesignMapTrace(meta.runFolder) : null;
+
+          // Correction routing check
+          const correctionState = readCorrectionState(meta.runFolder);
+
+          const lines: string[] = [`Full check for run: ${meta.runId}`, ``];
+
+          // Contract checks
+          lines.push('=== Artifact contracts ===');
+          if (!contractResult.modeValid) {
+            for (const issue of contractResult.modeIssues) {
+              lines.push(`  [fail] ${issue.code}: ${issue.message}`);
+            }
+          } else {
+            if (contractResult.modeIssues.length > 0) {
+              for (const issue of contractResult.modeIssues) {
+                lines.push(`  [warn] ${issue.code}: ${issue.message}`);
+              }
+            }
+            for (const result of contractResult.results) {
+              if (!result.passed || result.issues.length > 0) {
+                lines.push(...formatContractResult(result));
+              }
+            }
+            const hasNoIssues = contractResult.results.every(
+              (r) => r.passed && r.issues.length === 0,
+            );
+            if (hasNoIssues && contractResult.modeIssues.length === 0) {
+              lines.push('  all artifact contracts pass');
+            }
+          }
+          lines.push('');
+
+          // Stage gate checks
+          lines.push('=== Stage gates ===');
+          if (gateViolations.length === 0) {
+            lines.push('  all stage gates pass');
+          } else {
+            for (const v of gateViolations) {
+              lines.push(...formatGateViolation(v));
+            }
+          }
+          lines.push('');
+
+          // Trace checks
+          lines.push('=== Trace checks ===');
+          const hasTraceIssues = traceResults.some((r) => r.issues.length > 0);
+          if (hasTraceIssues) {
+            for (const result of traceResults) {
+              if (result.issues.length > 0) {
+                lines.push(...formatTraceResult(result));
+              }
+            }
+          } else {
+            lines.push('  no trace issues found');
+          }
+          if (dmTraceResult && dmTraceResult.issues.length > 0) {
+            lines.push('  design-map:');
+            lines.push(...formatTraceResult(dmTraceResult));
+          }
+          lines.push('');
+
+          // Correction routing
+          lines.push('=== Correction routing ===');
+          if (!correctionState) {
+            lines.push('  no judge report found');
+          } else if (correctionState.routeStatus === 'pass') {
+            lines.push('  Judge correction: PASS -- no correction required');
+          } else if (correctionState.routeStatus === 'correction_required') {
+            lines.push(`  Judge correction: ${correctionState.verdict} -> ${correctionState.routedStage}`);
+          } else if (correctionState.routeStatus === 'blocked') {
+            lines.push(`  Judge correction: ${correctionState.verdict} -- run is blocked`);
+          } else {
+            lines.push(`  Judge correction: ${correctionState.routeStatus}`);
+          }
+          lines.push('');
+
+          // Persist trace results
+          try {
+            writeTraceCheckResults(meta.runFolder, {
+              version: '1',
+              checkedAt: new Date().toISOString(),
+              traceResults,
+            });
+          } catch {
+            // Non-fatal
+          }
+
+          // Trace-aware correction suggestions
+          const allTraceResults = dmTraceResult ? [...traceResults, dmTraceResult] : traceResults;
+          const traceSuggestions = buildTraceCorrectionSuggestions(allTraceResults);
+          if (traceSuggestions.length > 0) {
+            lines.push('=== Correction suggestions ===');
+            for (const suggestion of traceSuggestions) {
+              lines.push(`  ${suggestion}`);
+            }
+            lines.push('');
+          }
+
+          // Summary
+          lines.push('=== Summary ===');
+          lines.push(...summarizeContracts(contractResult.results));
+          lines.push(
+            `  Stage gates: ${gateViolations.length} violation${gateViolations.length === 1 ? '' : 's'}`,
+          );
+          lines.push(...summarizeTrace(traceResults));
+
+          console.log(lines.join('\n'));
+
+          const anyContractFail =
+            !contractResult.modeValid ||
+            contractResult.results.some((r) => !r.passed) ||
+            contractResult.modeIssues.some((i) => i.severity === 'fail');
+          const anyContractWarn = contractResult.results.some((r) =>
+            r.issues.some((i) => i.severity === 'warn'),
+          );
+          const anyTraceFail = traceResults.some((r) => !r.passed);
+          const anyTraceWarn = traceResults.some((r) =>
+            r.issues.some((i) => i.severity === 'warn'),
+          );
+          const hasGateViolations = gateViolations.length > 0;
+
+          const hasFail = anyContractFail || anyTraceFail || hasGateViolations;
+          const hasWarn = anyContractWarn || anyTraceWarn;
+
+          if (hasFail || (options.strict && hasWarn)) {
+            process.exit(1);
+          }
+          return;
         }
 
         // ── --trace mode ──────────────────────────────────────────────────────

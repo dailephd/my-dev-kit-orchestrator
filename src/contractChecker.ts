@@ -301,6 +301,69 @@ export function checkRunArtifactContracts(
   };
 }
 
+// ─── Stage gate checks ────────────────────────────────────────────────────────
+
+export interface StageGateViolation {
+  gateName: string;
+  severity: 'fail';
+  message: string;
+  missingArtifact: string;
+  presentArtifact: string;
+  suggestedFix: string;
+}
+
+// Critical gate pairs: if downstream artifact exists but prerequisite does not, gate is violated.
+// Derived from agents.txt gate rules, applied across all modes via stage name lookup.
+const CRITICAL_GATE_PAIRS: ReadonlyArray<[string, string, string]> = [
+  ['pseudocode-packet', 'behavior-model', 'Gate 1: pseudocode-packet requires behavior-model'],
+  ['implementation', 'pseudocode-packet', 'Gate 2: implementation requires pseudocode-packet'],
+  ['test-implementation', 'test-strategy', 'Gate 3: test-implementation requires test-strategy'],
+  ['verification', 'implementation', 'Gate 4a: verification requires implementation'],
+  ['verification', 'test-implementation', 'Gate 4b: verification requires test-implementation'],
+  ['judge', 'verification', 'Gate 5: judge requires verification'],
+  ['final-report', 'judge', 'Gate 6: final-report requires judge'],
+  // repair-mode specific
+  ['correction-design', 'divergence-report', 'Repair gate: correction-design requires divergence-report'],
+  // test-mode specific
+  ['test-implementation', 'behavior-reconstruction', 'Test gate: test-implementation requires behavior-reconstruction'],
+  // refactor-mode specific
+  ['implementation', 'refactor-pseudocode-packet', 'Refactor gate: implementation requires refactor-pseudocode-packet'],
+  // harden-mode specific
+  ['implementation', 'guard-pseudocode-packet', 'Harden gate: implementation requires guard-pseudocode-packet'],
+];
+
+export function checkStageGates(meta: RunMetadata): StageGateViolation[] {
+  const violations: StageGateViolation[] = [];
+  const stageArtifactMap = new Map<string, string>();
+  for (const stage of meta.stages) {
+    stageArtifactMap.set(stage.name, stage.artifactFile);
+  }
+
+  const exists = (stageName: string): boolean => {
+    const file = stageArtifactMap.get(stageName);
+    if (!file) return false;
+    return fs.existsSync(path.join(meta.runFolder, file));
+  };
+
+  for (const [downstream, prerequisite, gateName] of CRITICAL_GATE_PAIRS) {
+    const downstreamFile = stageArtifactMap.get(downstream);
+    const prerequisiteFile = stageArtifactMap.get(prerequisite);
+    if (!downstreamFile || !prerequisiteFile) continue;
+    if (exists(downstream) && !exists(prerequisite)) {
+      violations.push({
+        gateName,
+        severity: 'fail',
+        message: `"${downstream}" artifact exists but required prerequisite "${prerequisite}" is missing`,
+        missingArtifact: prerequisiteFile,
+        presentArtifact: downstreamFile,
+        suggestedFix: `Complete the ${prerequisite} stage before proceeding to ${downstream}.`,
+      });
+    }
+  }
+
+  return violations;
+}
+
 // ─── Mode contract summary ─────────────────────────────────────────────────────
 
 export function resolveArtifactContractsForMode(mode: string): ModeContractSummary | null {
