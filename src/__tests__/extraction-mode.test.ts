@@ -365,7 +365,7 @@ function makeExtractionMeta() {
   };
 }
 
-describe('extraction prompt generation — required fields', () => {
+describe('extraction prompt generation - required fields', () => {
   const REQUIRED = ['Stage:', 'Workflow mode:', 'Run ID:', 'Project root:', 'Run folder:', 'Task:', 'Required output artifact:', 'Output file:', 'Stop conditions:', 'Return format:'];
 
   for (const stage of getWorkflow('extraction').stages) {
@@ -379,7 +379,7 @@ describe('extraction prompt generation — required fields', () => {
   }
 });
 
-describe('extraction prompt generation — stage identity', () => {
+describe('extraction prompt generation - stage identity', () => {
   it('each extraction prompt contains its own stage name', () => {
     const meta = makeExtractionMeta();
     for (const stage of getWorkflow('extraction').stages) {
@@ -390,7 +390,7 @@ describe('extraction prompt generation — stage identity', () => {
   });
 });
 
-describe('extraction prompt generation — source/target context', () => {
+describe('extraction prompt generation - source/target context', () => {
   it('request-brief prompt includes source and target repo', () => {
     const meta = makeExtractionMeta();
     const prompt = generateStagePrompt(meta, 'request-brief');
@@ -577,3 +577,4 @@ describe('extraction prompt guardrails', () => {
     expect(prompt).toContain('DoNotPortList');
   });
 });
+

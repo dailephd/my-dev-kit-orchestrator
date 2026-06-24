@@ -23,7 +23,7 @@ It is for teams or individual developers who want a coding agent to work through
 - `status` command shows a Judge correction section when a judge report is present (verdict, routed stage, warnings)
 - `prompt` command selects the routed correction stage and generates a bounded correction-stage prompt
 - correction prompts include the judge report, prior stage inputs, and design-map when present
-- `SCOPE_VIOLATION` and `BLOCKED` verdicts produce a blocked state — no correction stage is routed
+- `SCOPE_VIOLATION` and `BLOCKED` verdicts produce a blocked state - no correction stage is routed
 - unknown verdicts fail the parser instead of being guessed
 - `check --trace` and `check --design-map` suggest a correction stage for each trace issue
 - trace-aware correction suggestions are deterministic: missing `BEH-NNN` target → suggest `behavior-model`, missing `PSE-NNN` → suggest `pseudocode-packet`, etc.

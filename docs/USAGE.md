@@ -270,14 +270,14 @@ my-dev-kit-orchestrator mark <artifact-name> --state <state> [--reason "<reason>
 
 Supported states:
 
-- `incomplete` — artifact exists but is not finished; reason required
-- `blocked` — artifact cannot be completed due to a blocker; reason required
-- `complete` — artifact is ready for downstream stages; reason optional
+- `incomplete` - artifact exists but is not finished; reason required
+- `blocked` - artifact cannot be completed due to a blocker; reason required
+- `complete` - artifact is ready for downstream stages; reason optional
 
 Not supported (computed automatically):
 
-- `missing` — computed from file absence
-- `stale` — computed from upstream artifact timestamps
+- `missing` - computed from file absence
+- `stale` - computed from upstream artifact timestamps
 
 Examples:
 
@@ -356,13 +356,13 @@ Judge correction: IMPLEMENTATION_MISMATCH → correction required
 For PASS:
 
 ```text
-Judge correction: PASS — no correction required
+Judge correction: PASS - no correction required
 ```
 
 For SCOPE_VIOLATION or BLOCKED:
 
 ```text
-Judge correction: SCOPE_VIOLATION — run is blocked
+Judge correction: SCOPE_VIOLATION - run is blocked
   This run requires external resolution before it can continue.
 ```
 
@@ -411,7 +411,7 @@ Correction suggestions:
   Suggested correction stage: design-map  (TRACE_MALFORMED_ID)
 ```
 
-Suggestions are deterministic — they map trace ID prefixes to owning stages without any LLM inference:
+Suggestions are deterministic - they map trace ID prefixes to owning stages without any LLM inference:
 
 - missing `BEH-NNN` link target → suggest `behavior-model`
 - missing `PSE-NNN` link target → suggest `pseudocode-packet`
@@ -453,9 +453,9 @@ my-dev-kit-orchestrator check --strict --design-map
 
 For each artifact that contains trace IDs or trace links:
 
-- `[pass]` — no trace issues
-- `[warn]` — possible problem (duplicate declared ID, orphan ID that appears in no link)
-- `[fail]` — definite problem (malformed trace ID token, link target not declared in this artifact)
+- `[pass]` - no trace issues
+- `[warn]` - possible problem (duplicate declared ID, orphan ID that appears in no link)
+- `[fail]` - definite problem (malformed trace ID token, link target not declared in this artifact)
 
 ### Trace check codes
 
@@ -531,15 +531,15 @@ my-dev-kit-orchestrator check --root /path/to/project
 
 For each artifact:
 
-- `[pass]` — no issues
-- `[warn]` — possible problem (empty section, placeholder content, status mismatch)
-- `[fail]` — definite problem (missing file, missing required section)
+- `[pass]` - no issues
+- `[warn]` - possible problem (empty section, placeholder content, status mismatch)
+- `[fail]` - definite problem (missing file, missing required section)
 
 For each prompt:
 
-- `[pass]` — all required prompt elements present
-- `[warn]` — prompt missing optional elements (output artifact declaration, placeholder text)
-- `[fail]` — prompt missing file, empty, or missing required stage elements
+- `[pass]` - all required prompt elements present
+- `[warn]` - prompt missing optional elements (output artifact declaration, placeholder text)
+- `[fail]` - prompt missing file, empty, or missing required stage elements
 
 Example output:
 

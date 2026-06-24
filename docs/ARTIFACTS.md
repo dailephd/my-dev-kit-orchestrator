@@ -82,7 +82,7 @@ Stale detection is deterministic and local. It does not inspect artifact content
 
 Dependencies follow stage order: artifacts for stage N depend on artifacts from all prior required stages. Supporting reports (e.g., `reports/architecture-context-retrieval-report.txt`) do not create stale gates.
 
-For extraction mode, the `porting-map` stage has two artifacts — `source-to-target-porting-map.txt` and `do-not-port-list.txt` — and both are treated as upstream for subsequent stages.
+For extraction mode, the `porting-map` stage has two artifacts - `source-to-target-porting-map.txt` and `do-not-port-list.txt` - and both are treated as upstream for subsequent stages.
 
 ## artifact-check-results.json (v0.4.0)
 
@@ -143,9 +143,9 @@ For extraction mode, the `porting-map` stage has two artifacts — `source-to-ta
 
 ### Check severity
 
-- `fail` — check found a definite problem; `check` exits 1
-- `warn` — check found a possible problem; `check` exits 0 unless `--strict` is set
-- `pass` — no issues found
+- `fail` - check found a definite problem; `check` exits 1
+- `warn` - check found a possible problem; `check` exits 0 unless `--strict` is set
+- `pass` - no issues found
 
 ## Judge correction routing (v0.6.0)
 
@@ -175,7 +175,7 @@ Recommended next stage: implementation
 | `SCOPE_VIOLATION` | blocked | (none) |
 | `BLOCKED` | blocked | (none) |
 
-**Unknown verdicts** fail the parser — they are not guessed.
+**Unknown verdicts** fail the parser - they are not guessed.
 **Missing verdict** field returns `missing_verdict` status without error.
 
 The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage.
@@ -267,7 +267,7 @@ Rules used in v0.4.0:
 - if all artifacts are effectively `complete`, the run is complete
 - **backward compatibility**: if `artifact-state.json` does not exist, file presence means `complete` and file absence means `missing`
 
-Artifact content checks (`check` command) are a separate optional layer. They do not affect stage advancement — they report quality issues for human review.
+Artifact content checks (`check` command) are a separate optional layer. They do not affect stage advancement - they report quality issues for human review.
 
 ## Core feature-mode artifact files
 

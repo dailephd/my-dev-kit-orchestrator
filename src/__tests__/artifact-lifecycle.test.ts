@@ -220,9 +220,9 @@ describe('setArtifactManualState', () => {
   });
 });
 
-// ─── resolveArtifactState — backward compatibility ────────────────────────────
+// ─── resolveArtifactState - backward compatibility ────────────────────────────
 
-describe('resolveArtifactState — backward compatibility (no state file)', () => {
+describe('resolveArtifactState - backward compatibility (no state file)', () => {
   it('file exists -> complete when no state file', () => {
     const tmp = makeTempDir();
     try {
@@ -249,9 +249,9 @@ describe('resolveArtifactState — backward compatibility (no state file)', () =
   });
 });
 
-// ─── resolveArtifactState — manual states ────────────────────────────────────
+// ─── resolveArtifactState - manual states ────────────────────────────────────
 
-describe('resolveArtifactState — manual states', () => {
+describe('resolveArtifactState - manual states', () => {
   it('manual incomplete with file present -> incomplete', () => {
     const tmp = makeTempDir();
     try {
@@ -272,7 +272,7 @@ describe('resolveArtifactState — manual states', () => {
     const tmp = makeTempDir();
     try {
       const rf = makeRunFolder(tmp);
-      // No file written — blocked even without file
+      // No file written - blocked even without file
       setArtifactManualState(rf, 'artifacts/request-brief.txt', 'blocked', {
         reason: 'Blocker',
       });
@@ -464,9 +464,9 @@ describe('isArtifactStale', () => {
   });
 });
 
-// ─── resolveArtifactState — stale detection ──────────────────────────────────
+// ─── resolveArtifactState - stale detection ──────────────────────────────────
 
-describe('resolveArtifactState — stale detection', () => {
+describe('resolveArtifactState - stale detection', () => {
   it('resolves to stale when upstream was updated after downstream', () => {
     const tmp = makeTempDir();
     try {
@@ -628,3 +628,4 @@ describe('state guard helpers', () => {
     expect(isForbiddenManualState('incomplete')).toBe(false);
   });
 });
+

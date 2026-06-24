@@ -70,9 +70,9 @@ describe('parseDeclaredTraceIds', () => {
   });
 });
 
-// ─── checkArtifactTrace — missing file ───────────────────────────────────────
+// ─── checkArtifactTrace - missing file ───────────────────────────────────────
 
-describe('checkArtifactTrace — missing file', () => {
+describe('checkArtifactTrace - missing file', () => {
   it('returns passed:true with no issues for missing files (MISSING_FILE handled by artifactChecker)', () => {
     const tmp = makeTempDir();
     try {
@@ -85,9 +85,9 @@ describe('checkArtifactTrace — missing file', () => {
   });
 });
 
-// ─── checkArtifactTrace — well-formed artifact ───────────────────────────────
+// ─── checkArtifactTrace - well-formed artifact ───────────────────────────────
 
-describe('checkArtifactTrace — well-formed artifact', () => {
+describe('checkArtifactTrace - well-formed artifact', () => {
   it('passes for artifact with no trace IDs', () => {
     const tmp = makeTempDir();
     try {
@@ -118,9 +118,9 @@ describe('checkArtifactTrace — well-formed artifact', () => {
   });
 });
 
-// ─── checkArtifactTrace — malformed IDs ──────────────────────────────────────
+// ─── checkArtifactTrace - malformed IDs ──────────────────────────────────────
 
-describe('checkArtifactTrace — malformed IDs', () => {
+describe('checkArtifactTrace - malformed IDs', () => {
   it('fails for artifact containing malformed trace ID token', () => {
     const tmp = makeTempDir();
     try {
@@ -157,9 +157,9 @@ describe('checkArtifactTrace — malformed IDs', () => {
   });
 });
 
-// ─── checkArtifactTrace — duplicate IDs ──────────────────────────────────────
+// ─── checkArtifactTrace - duplicate IDs ──────────────────────────────────────
 
-describe('checkArtifactTrace — duplicate declared IDs', () => {
+describe('checkArtifactTrace - duplicate declared IDs', () => {
   it('warns for duplicate declared IDs', () => {
     const tmp = makeTempDir();
     try {
@@ -186,9 +186,9 @@ describe('checkArtifactTrace — duplicate declared IDs', () => {
   });
 });
 
-// ─── checkArtifactTrace — orphan IDs ─────────────────────────────────────────
+// ─── checkArtifactTrace - orphan IDs ─────────────────────────────────────────
 
-describe('checkArtifactTrace — orphan declared IDs', () => {
+describe('checkArtifactTrace - orphan declared IDs', () => {
   it('warns for declared ID not referenced in any link', () => {
     const tmp = makeTempDir();
     try {
@@ -237,9 +237,9 @@ describe('checkArtifactTrace — orphan declared IDs', () => {
   });
 });
 
-// ─── checkArtifactTrace — missing link targets (Prompt 1 risk) ───────────────
+// ─── checkArtifactTrace - missing link targets (Prompt 1 risk) ───────────────
 
-describe('checkArtifactTrace — missing link targets', () => {
+describe('checkArtifactTrace - missing link targets', () => {
   it('fails when a link target is a valid trace ID not declared in this artifact', () => {
     const tmp = makeTempDir();
     try {
@@ -260,7 +260,7 @@ describe('checkArtifactTrace — missing link targets', () => {
   it('does not flag missing link targets for non-trace-ID link targets', () => {
     const tmp = makeTempDir();
     try {
-      // Link target is not a valid trace ID — should not be flagged
+      // Link target is not a valid trace ID - should not be flagged
       const content = 'REQ-001: requirement\nREQ-001 -> some-section';
       writeFile(tmp, 'artifacts/behavior-model.txt', content);
       const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
@@ -387,3 +387,4 @@ describe('trace check results persistence', () => {
     }
   });
 });
+

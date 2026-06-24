@@ -235,7 +235,7 @@ describe('getArtifactSectionRequirements', () => {
 
 // ─── checkArtifact ────────────────────────────────────────────────────────────
 
-describe('checkArtifact — MISSING_FILE', () => {
+describe('checkArtifact - MISSING_FILE', () => {
   it('returns fail result when artifact file does not exist', () => {
     const tmp = makeTempDir();
     try {
@@ -249,7 +249,7 @@ describe('checkArtifact — MISSING_FILE', () => {
   });
 });
 
-describe('checkArtifact — MISSING_SECTION', () => {
+describe('checkArtifact - MISSING_SECTION', () => {
   it('returns fail when a required section is absent', () => {
     const tmp = makeTempDir();
     try {
@@ -268,7 +268,7 @@ describe('checkArtifact — MISSING_SECTION', () => {
   });
 });
 
-describe('checkArtifact — EMPTY_SECTION', () => {
+describe('checkArtifact - EMPTY_SECTION', () => {
   it('returns warn when a required section is present but empty', () => {
     const tmp = makeTempDir();
     try {
@@ -296,7 +296,7 @@ describe('checkArtifact — EMPTY_SECTION', () => {
   });
 });
 
-describe('checkArtifact — PLACEHOLDER_CONTENT', () => {
+describe('checkArtifact - PLACEHOLDER_CONTENT', () => {
   it('returns warn for very short content', () => {
     const tmp = makeTempDir();
     try {
@@ -338,7 +338,7 @@ describe('checkArtifact — PLACEHOLDER_CONTENT', () => {
   });
 });
 
-describe('checkArtifact — STATUS_MISMATCH', () => {
+describe('checkArtifact - STATUS_MISMATCH', () => {
   it('returns warn when artifact says blocked but state says complete', () => {
     const tmp = makeTempDir();
     try {
@@ -386,7 +386,7 @@ describe('checkArtifact — STATUS_MISMATCH', () => {
   });
 });
 
-describe('checkArtifact — unknown kind graceful fallback', () => {
+describe('checkArtifact - unknown kind graceful fallback', () => {
   it('passes for artifact with unknown stage name when file exists', () => {
     const tmp = makeTempDir();
     try {
@@ -454,3 +454,4 @@ describe('checkAllArtifacts', () => {
     }
   });
 });
+

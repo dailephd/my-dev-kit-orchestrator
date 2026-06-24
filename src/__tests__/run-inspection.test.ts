@@ -13,7 +13,7 @@ function cleanup(dir: string) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
-describe('status — artifact detection', () => {
+describe('status - artifact detection', () => {
   it('shows all artifacts missing on fresh run', () => {
     const tmp = makeTempDir();
     try {
@@ -69,13 +69,13 @@ describe('status — artifact detection', () => {
   });
 });
 
-describe('status — most recent run selection', () => {
+describe('status - most recent run selection', () => {
   it('selects most recently modified run folder', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
       createRun({ request: 'first run', mode: 'feature', projectRoot: tmp });
-      // small delay to differentiate timestamps in test — use mtime-based ordering
+      // small delay to differentiate timestamps in test - use mtime-based ordering
       const recent = getMostRecentRun(tmp);
       expect(recent).not.toBeNull();
       expect(recent!.request).toBe('first run');
@@ -85,7 +85,7 @@ describe('status — most recent run selection', () => {
   });
 });
 
-describe('status — --run selection', () => {
+describe('status - --run selection', () => {
   it('can load a specific run by ID', () => {
     const tmp = makeTempDir();
     try {
@@ -100,7 +100,7 @@ describe('status — --run selection', () => {
   });
 });
 
-describe('list — run listing', () => {
+describe('list - run listing', () => {
   it('returns empty array when no runs exist', () => {
     const tmp = makeTempDir();
     try {
@@ -135,7 +135,7 @@ describe('list — run listing', () => {
   });
 });
 
-describe('list — mode filtering', () => {
+describe('list - mode filtering', () => {
   it('can filter runs by mode using listRunFolders + loadRun', () => {
     const tmp = makeTempDir();
     try {
@@ -307,3 +307,4 @@ describe('supporting report status', () => {
     }
   });
 });
+

@@ -126,7 +126,7 @@ export function makeStatusCommand(): Command {
       const correctionState = readCorrectionState(meta.runFolder);
       if (correctionState) {
         if (correctionState.routeStatus === 'pass') {
-          lines.push(`Judge correction: PASS — no correction required`);
+          lines.push(`Judge correction: PASS - no correction required`);
         } else if (correctionState.routeStatus === 'correction_required') {
           lines.push(`Judge correction: ${correctionState.verdict} → correction required`);
           lines.push(`  Routed stage: ${correctionState.routedStage}`);
@@ -134,7 +134,7 @@ export function makeStatusCommand(): Command {
             lines.push(`  Warning: ${correctionState.warnings[0]}`);
           }
         } else if (correctionState.routeStatus === 'blocked') {
-          lines.push(`Judge correction: ${correctionState.verdict} — run is blocked`);
+          lines.push(`Judge correction: ${correctionState.verdict} - run is blocked`);
           lines.push(`  This run requires external resolution before it can continue.`);
         } else if (correctionState.routeStatus === 'unknown_verdict') {
           lines.push(`Judge correction: unrecognized verdict in judge-report.txt`);
@@ -159,3 +159,4 @@ export function makeStatusCommand(): Command {
     });
   return cmd;
 }
+
