@@ -45,8 +45,8 @@ function withTempDir(prefix, fn) {
 
 function smokeHelp() {
   const version = runCli(['--version'], repoRoot).trim();
-  if (version !== '0.5.0') {
-    throw new Error(`Expected version 0.5.0, got ${version}`);
+  if (version !== '0.6.0') {
+    throw new Error(`Expected version 0.6.0, got ${version}`);
   }
 
   const help = runCli(['--help'], repoRoot);
@@ -227,6 +227,73 @@ function smokeTrace() {
   });
 }
 
+function smokeCorrection() {
+  withTempDir('mdko-smoke-correction-', (projectRoot) => {
+    runCli(['init'], projectRoot);
+    runCli(['start', '--mode', 'feature', 'Correction smoke workflow'], projectRoot);
+
+    const runFolder = getSingleRunFolder(projectRoot);
+    const artifactDir = path.join(runFolder, 'artifacts');
+    fs.mkdirSync(artifactDir, { recursive: true });
+
+    // No judge report: status should not show Judge correction section
+    const statusBefore = runCli(['status'], projectRoot);
+    if (statusBefore.includes('Judge correction:')) {
+      throw new Error('status should not show Judge correction when no judge report exists');
+    }
+
+    // PASS verdict: status should show PASS
+    fs.writeFileSync(path.join(artifactDir, 'judge-report.txt'), 'Verdict: PASS\n', 'utf8');
+    const statusPass = runCli(['status'], projectRoot);
+    assertIncludes(statusPass, 'Judge correction: PASS', 'status PASS correction');
+
+    // IMPLEMENTATION_MISMATCH: status shows correction required + routed stage
+    fs.writeFileSync(
+      path.join(artifactDir, 'judge-report.txt'),
+      'Verdict: IMPLEMENTATION_MISMATCH\n',
+      'utf8',
+    );
+    const statusMismatch = runCli(['status'], projectRoot);
+    assertIncludes(statusMismatch, 'Judge correction:', 'status correction required');
+    assertIncludes(statusMismatch, 'Routed stage: implementation', 'status routed stage');
+
+    // prompt should print correction stage prompt
+    const correctionPrompt = runCli(['prompt'], projectRoot);
+    assertIncludes(correctionPrompt, 'Stage: implementation (correction)', 'correction prompt stage');
+    assertIncludes(correctionPrompt, 'IMPLEMENTATION_MISMATCH', 'correction prompt verdict');
+    assertIncludes(correctionPrompt, 'judge-report.txt', 'correction prompt judge input');
+
+    // BLOCKED verdict: prompt prints blocked message
+    fs.writeFileSync(
+      path.join(artifactDir, 'judge-report.txt'),
+      'Verdict: BLOCKED\n',
+      'utf8',
+    );
+    let blockedOutput;
+    try {
+      blockedOutput = runCli(['prompt'], projectRoot);
+    } catch (err) {
+      blockedOutput = err.stdout ?? '';
+    }
+    assertIncludes(blockedOutput, 'blocked', 'blocked prompt output');
+
+    // check --trace with trace issues should suggest correction stage
+    fs.writeFileSync(
+      path.join(artifactDir, 'behavior-model.txt'),
+      'BEH-001: first behavior\nBEH-001 -> PSE-999',
+      'utf8',
+    );
+    let traceOutput;
+    try {
+      traceOutput = runCli(['check', '--trace'], projectRoot);
+    } catch (err) {
+      traceOutput = err.stdout ?? '';
+    }
+    assertIncludes(traceOutput, 'TRACE_MISSING_LINK_TARGET', 'trace check missing target');
+    assertIncludes(traceOutput, 'Suggested correction stage:', 'trace correction suggestion');
+  });
+}
+
 const mode = process.argv[2] ?? 'all';
 
 smokeHelp();
@@ -249,4 +316,8 @@ if (mode === 'all' || mode === 'check') {
 
 if (mode === 'all' || mode === 'trace') {
   smokeTrace();
+}
+
+if (mode === 'all' || mode === 'correction') {
+  smokeCorrection();
 }

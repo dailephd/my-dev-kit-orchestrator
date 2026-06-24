@@ -70,3 +70,6 @@ jobs:
 
       - name: CLI trace smoke
         run: npm run smoke:cli -- trace
+
+      - name: CLI correction smoke
+        run: npm run smoke:cli -- correction

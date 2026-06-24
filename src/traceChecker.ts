@@ -181,6 +181,75 @@ export function checkDesignMapTrace(runFolder: string): TraceCheckResult {
   return checkArtifactTrace(runFolder, 'artifacts/design-map.txt');
 }
 
+// ─── Trace-aware correction suggestions ──────────────────────────────────────
+
+// Maps trace ID prefix to the workflow stage that owns IDs with that prefix
+const PREFIX_TO_STAGE: Record<string, string> = {
+  REQ: 'request-brief',
+  CTX: 'architecture-context',
+  BEH: 'behavior-model',
+  INV: 'behavior-model',
+  TRN: 'behavior-model',
+  PSE: 'pseudocode-packet',
+  TST: 'test-strategy',
+  IMP: 'implementation',
+  VER: 'verification',
+  RISK: 'judge',
+};
+
+/**
+ * Suggests a correction stage for a trace check issue.
+ * Returns null when no meaningful suggestion can be made.
+ * These suggestions are deterministic and do not infer semantics with an LLM.
+ */
+export function suggestCorrectionStageFromTraceIssue(
+  issue: TraceCheckIssue,
+): string | null {
+  if (issue.code === 'TRACE_MISSING_LINK_TARGET' && issue.context) {
+    // Extract prefix from a canonical trace ID like BEH-001
+    const prefixMatch = /^([A-Z]+)-\d+$/.exec(issue.context);
+    const prefix = prefixMatch ? prefixMatch[1] : null;
+    if (prefix && PREFIX_TO_STAGE[prefix]) {
+      return PREFIX_TO_STAGE[prefix];
+    }
+    return 'design-map';
+  }
+
+  if (issue.code === 'TRACE_MALFORMED_ID') {
+    return 'design-map';
+  }
+
+  if (issue.code === 'TRACE_ORPHAN_ID') {
+    return 'design-map';
+  }
+
+  return null;
+}
+
+/**
+ * Returns deduplicated correction suggestions from a list of trace check results.
+ * Each entry is "suggested stage: reason".
+ */
+export function buildTraceCorrectionSuggestions(
+  results: TraceCheckResult[],
+): string[] {
+  const suggestions = new Map<string, Set<string>>();
+
+  for (const result of results) {
+    for (const issue of result.issues) {
+      const stage = suggestCorrectionStageFromTraceIssue(issue);
+      if (stage) {
+        if (!suggestions.has(stage)) suggestions.set(stage, new Set());
+        suggestions.get(stage)!.add(issue.code);
+      }
+    }
+  }
+
+  return [...suggestions.entries()].map(
+    ([stage, codes]) => `Suggested correction stage: ${stage}  (${[...codes].join(', ')})`,
+  );
+}
+
 // ─── Persistence ─────────────────────────────────────────────────────────────
 
 export function getTraceCheckResultsPath(runFolder: string): string {

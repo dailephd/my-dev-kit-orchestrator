@@ -2,6 +2,72 @@
 
 ## Unreleased
 
+## v0.6.0 — Judge Correction Routing and Trace-Aware Workflow Recovery
+
+### Added
+
+- `src/judgeParser.ts` — judge verdict parser
+  - `JUDGE_VERDICTS`: `['PASS','DESIGN_INCOMPLETE','PSEUDOCODE_INCOMPLETE','IMPLEMENTATION_MISMATCH','TEST_COVERAGE_INCOMPLETE','ARCHITECTURE_MISMATCH','NEED_VERIFICATION','NEED_CONTEXT','SCOPE_VIOLATION','BLOCKED']`
+  - `JudgeVerdict` type, `isValidVerdict()` type guard
+  - `parseJudgeReport(content)`: parses `Verdict:` and `Recommended next stage:` from judge report text
+    - returns null verdict with `parseError` for unrecognized tokens
+    - returns null verdict without error when field is absent
+    - case-insensitive `Verdict:` label matching
+    - robust to extra surrounding prose in judge report
+- `src/correctionRouter.ts` — deterministic correction routing model
+  - `CORRECTABLE_STAGES` const: `['architecture-context','behavior-model','pseudocode-packet','test-strategy','test-implementation','implementation','verification']`
+  - `routeJudgeVerdict(parsed, options)`: routes verdict to a correction stage
+  - `parseAndRoute(content, options)`: parse + route in one call
+  - routing table: `NEED_CONTEXT→architecture-context`, `DESIGN_INCOMPLETE→behavior-model`, `PSEUDOCODE_INCOMPLETE→pseudocode-packet`, `IMPLEMENTATION_MISMATCH→implementation`, `TEST_COVERAGE_INCOMPLETE→test-strategy`, `ARCHITECTURE_MISMATCH→architecture-context`, `NEED_VERIFICATION→verification`
+  - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status — no correction stage
+  - recommended stage overrides table default when it is a valid correctable stage
+  - conflict between table and recommended stage: warning (normal mode) / `strictFail` + error (strict mode)
+  - unknown verdict: `unknown_verdict` status with parse error
+  - missing verdict: `missing_verdict` status
+  - no file I/O, no automatic code modification, pure routing functions
+- `src/correctionState.ts` — reads judge-report.txt and computes correction route
+  - `readCorrectionState(runFolder, options)`: returns `CorrectionRouteResult` or null when no judge report exists
+  - `isCorrectionActive(runFolder)`: true when correction is required with a correctable stage
+- `status` command extended with Judge correction section
+  - `PASS`: shows "Judge correction: PASS — no correction required"
+  - correction required: shows verdict, routed stage, and routing warnings
+  - blocked: shows blocked state message
+  - unknown or missing verdict: shows error or note
+  - no judge report: section omitted (backward compatible)
+- `prompt` command extended with correction routing
+  - when correction active: generates correction-stage prompt for the routed stage
+  - when blocked: prints blocked state message instead of next stage prompt
+  - normal flow unchanged when no judge report present (backward compatible)
+- `generateCorrectionPrompt(meta, correctionState)` in `promptGenerator.ts`
+  - bounded, stage-specific correction prompt
+  - includes judge-report.txt, prior stage artifact inputs, and design-map when present
+  - stop conditions: revise only the corrected stage, no automatic execution, no broadened scope
+  - does not include unrelated workflow modes or giant instruction sets
+- `src/traceChecker.ts` extended with trace-aware correction suggestions
+  - `suggestCorrectionStageFromTraceIssue(issue)`: deterministic prefix-to-stage mapping
+    - `TRACE_MISSING_LINK_TARGET`: maps target ID prefix to owning stage (`BEH→behavior-model`, `PSE→pseudocode-packet`, `TST→test-strategy`, `VER→verification`, etc.)
+    - `TRACE_MALFORMED_ID` and `TRACE_ORPHAN_ID`: suggest `design-map`
+  - `buildTraceCorrectionSuggestions(results)`: returns deduplicated suggestion strings
+- `check --trace` and `check --design-map` output now includes correction suggestions when trace issues exist
+- CI `validate.yml` updated with CLI correction smoke step
+- 54 tests in `src/__tests__/judge-parser.test.ts`
+- 40 tests in `src/__tests__/correction-router.test.ts`
+- 24 tests in `src/__tests__/v060-integration.test.ts`
+- correction smoke in `scripts/cli-smoke.mjs` covering all major routing paths
+
+### Not implemented in v0.6.0
+
+- automatic code modification after a judge failure
+- automatic judge correction execution or agent routing
+- LLM-based trace inference or judge inference
+- multi-agent runtime
+- automatic `my-dev-kit` execution
+- direct LLM-provider execution
+- design-map visualization
+- AST-level dependency graph tracing
+- test coverage instrumentation
+- full JSON schema validation
+
 ## v0.5.0 — Design Trace IDs and Trace Link Checking
 
 ### Added

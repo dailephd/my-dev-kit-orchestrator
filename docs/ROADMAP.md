@@ -82,11 +82,29 @@
 - `judge` prompt requests trace link review when trace IDs are present in prior artifacts
 - CI `validate.yml` updated with CLI trace smoke step
 
+### v0.6.0 (implemented)
+
+- `src/judgeParser.ts`: judge verdict parser, `JUDGE_VERDICTS`, `parseJudgeReport`, `isValidVerdict`
+- `src/correctionRouter.ts`: `routeJudgeVerdict`, `parseAndRoute`, `CORRECTABLE_STAGES`, `CorrectionRouteResult`
+- `src/correctionState.ts`: `readCorrectionState`, `isCorrectionActive`
+- deterministic routing table maps non-PASS verdicts to correction stages
+- `SCOPE_VIOLATION` and `BLOCKED` produce blocked status — no correction stage routed
+- unknown verdicts fail the parser instead of being guessed
+- `status` command shows Judge correction section when judge report exists
+- `prompt` command selects routed correction stage and generates bounded correction-stage prompt
+- correction prompts include judge-report.txt, prior stage inputs, and design-map when present
+- `check --trace` and `check --design-map` suggest correction stages from trace issues
+- trace-aware correction is deterministic — no LLM inference
+- correction routing is prompt-generation, not autonomous execution
+- 118 new tests across judge-parser, correction-router, and v060-integration suites
+- correction smoke in `scripts/cli-smoke.mjs`
+- CI `validate.yml` updated with CLI correction smoke step
+
 ## Planned milestones
 
-### v0.6.0
+### v0.7.0
 
-- judge routing and correction loops
+- richer comparison and reporting around workflow outcomes
 - richer comparison and reporting around workflow outcomes
 
 ### v1.0.0

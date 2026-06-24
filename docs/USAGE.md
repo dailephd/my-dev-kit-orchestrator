@@ -340,6 +340,92 @@ Existing runs without an `artifact-state.json` continue to work:
 
 No migration is required for runs created before v0.3.0.
 
+## Judge correction routing (v0.6.0)
+
+When a run's judge report contains a non-PASS verdict, `status` and `prompt` integrate correction routing automatically.
+
+### Status shows correction state
+
+After `judge-report.txt` is saved, `status` shows a Judge correction section:
+
+```text
+Judge correction: IMPLEMENTATION_MISMATCH → correction required
+  Routed stage: implementation
+```
+
+For PASS:
+
+```text
+Judge correction: PASS — no correction required
+```
+
+For SCOPE_VIOLATION or BLOCKED:
+
+```text
+Judge correction: SCOPE_VIOLATION — run is blocked
+  This run requires external resolution before it can continue.
+```
+
+No judge report → the section is omitted (backward compatible with pre-v0.6.0 runs).
+
+### Prompt prints the correction stage
+
+When correction is active, `prompt` prints a bounded correction-stage prompt instead of the normal next-stage prompt:
+
+```bash
+my-dev-kit-orchestrator prompt
+```
+
+The correction prompt includes:
+- stage name with correction context (e.g., `Stage: implementation (correction)`)
+- the judge verdict and routed stage
+- `judge-report.txt` and required prior stage inputs
+- `design-map.txt` if present
+- stop conditions: revise only the corrected artifact, no automatic execution, no broadened scope
+
+### Verdict routing table
+
+| Verdict | Default correction stage |
+|---------|------------------------|
+| `NEED_CONTEXT` | `architecture-context` |
+| `DESIGN_INCOMPLETE` | `behavior-model` |
+| `PSEUDOCODE_INCOMPLETE` | `pseudocode-packet` |
+| `IMPLEMENTATION_MISMATCH` | `implementation` |
+| `TEST_COVERAGE_INCOMPLETE` | `test-strategy` |
+| `ARCHITECTURE_MISMATCH` | `architecture-context` |
+| `NEED_VERIFICATION` | `verification` |
+| `SCOPE_VIOLATION` | blocked (no correction stage) |
+| `BLOCKED` | blocked (no correction stage) |
+| `PASS` | no correction (run continues normally) |
+
+A `Recommended next stage:` field in the judge report overrides the table default when it names a valid correctable stage.
+
+### Trace-aware correction suggestions (v0.6.0)
+
+When `check --trace` or `check --design-map` finds trace issues, the output includes a correction suggestion:
+
+```text
+Correction suggestions:
+  Suggested correction stage: pseudocode-packet  (TRACE_MISSING_LINK_TARGET)
+  Suggested correction stage: design-map  (TRACE_MALFORMED_ID)
+```
+
+Suggestions are deterministic — they map trace ID prefixes to owning stages without any LLM inference:
+- missing `BEH-NNN` link target → suggest `behavior-model`
+- missing `PSE-NNN` link target → suggest `pseudocode-packet`
+- missing `TST-NNN` link target → suggest `test-strategy`
+- malformed trace ID → suggest `design-map`
+- orphan ID → suggest `design-map`
+
+### What correction routing does not do
+
+- correction routing does not modify files automatically
+- correction routing does not execute agents
+- correction routing does not call an LLM
+- correction routing does not restart the run automatically
+
+After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
+
 ## Trace check command (v0.5.0)
 
 Use `check --trace` to run deterministic trace link checks on all run artifacts.
