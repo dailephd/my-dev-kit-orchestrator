@@ -2,6 +2,57 @@
 
 ## Unreleased
 
+## v0.5.0 — Design Trace IDs and Trace Link Checking
+
+### Added
+
+- `src/traceModel.ts` — trace prefix constants, canonical ID regex, `isValidTracePrefix`, `isValidTraceId`, `isMalformedTraceId`
+  - `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
+  - `TRACE_ID_RE`: `/^(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})$/`
+  - `isMalformedTraceId` detects near-miss tokens (e.g., `BEH001`, `FOO-001`)
+- `src/traceParser.ts` — trace ID and link parser utilities
+  - `parseTraceIds(content)`: finds all valid trace IDs in text by line
+  - `parseTraceLinks(content)`: finds all `FROM -> TO` link expressions
+  - `findMalformedTraceIds(content)`: finds malformed trace-like tokens
+  - `findDuplicateIds`, `findOrphanIds`, `findMissingLinkTargets`
+  - `parseTrace(content)`: composite result of all parse functions
+- `src/traceChecker.ts` — deterministic trace link checker
+  - `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only (skips `->` lines), preventing false "known target" matches
+  - `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact file for malformed IDs, duplicate declared IDs, orphan IDs, missing link targets
+  - `checkAllTraces(meta)`: runs trace checks on all run artifact files
+  - `checkDesignMapTrace(runFolder)`: checks the design-map artifact specifically
+  - `trace-check-results.json` per run persists trace check results
+  - `readTraceCheckResults`, `writeTraceCheckResults`
+  - check codes: `TRACE_MALFORMED_ID` (fail), `TRACE_DUPLICATE_ID` (warn), `TRACE_ORPHAN_ID` (warn), `TRACE_MISSING_LINK_TARGET` (fail)
+- `check` command extended with `--trace` and `--design-map` options
+  - `my-dev-kit-orchestrator check --trace`: runs trace checks on all run artifacts
+  - `my-dev-kit-orchestrator check --design-map`: checks DesignMap sections and trace links
+  - `--strict --trace` / `--strict --design-map`: promote warns to failure in exit code
+  - trace check results persisted to `trace-check-results.json` when running `--trace`
+- `status` command now shows trace check summary:
+  - `Trace check: N pass, N warn, N fail  (run: my-dev-kit-orchestrator check --trace)` when results exist
+  - `Trace check: not run  (run: my-dev-kit-orchestrator check --trace)` before first run
+- `DesignMap` artifact kind added to `SECTION_REGISTRY` in `artifactChecker.ts` with 18 required sections
+- `'design-map': 'DesignMap'` added to `STAGE_TO_KIND` in `artifactChecker.ts`
+- `'design-map': 'artifacts/design-map.txt'` added to `ARTIFACT_MAP` in `workflows.ts`
+- `behavior-model`, `pseudocode-packet`, `test-strategy` prompts updated with optional trace ID guidance (BEH-NNN, INV-NNN, TRN-NNN, PSE-NNN, TST-NNN)
+- `judge` prompt updated to request trace link review when trace IDs are present
+- CI `validate.yml` updated with CLI trace smoke step
+- 72 new tests in `trace-model.test.ts` and `trace-parser.test.ts`
+- 39 new tests in `trace-checker.test.ts` and `v050-integration.test.ts`
+
+### Not implemented in v0.5.0
+
+- automatic code-to-symbol tracing
+- AST-level dependency graph tracing
+- test coverage instrumentation
+- LLM-based trace inference
+- automatic judge correction routing
+- design-map visualization
+- full JSON schema validation
+- automatic `my-dev-kit` execution
+- direct LLM-provider execution
+
 ## v0.4.0 — Artifact Content Checks and Prompt Quality Checks
 
 ### Added

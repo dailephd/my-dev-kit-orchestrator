@@ -67,12 +67,22 @@
 - `--strict` exits 1 on any `warn` in addition to `fail`
 - `CheckSeverity`: `pass | warn | fail`
 
+### v0.5.0 (implemented)
+
+- `src/traceModel.ts`: `TRACE_PREFIXES`, `TRACE_ID_RE`, `isValidTraceId`, `isMalformedTraceId`
+- `src/traceParser.ts`: `parseTraceIds`, `parseTraceLinks`, `findMalformedTraceIds`, `findDuplicateIds`, `findOrphanIds`, `findMissingLinkTargets`, `parseTrace`
+- `src/traceChecker.ts`: `parseDeclaredTraceIds` (skips link lines), `checkArtifactTrace`, `checkAllTraces`, `checkDesignMapTrace`, `trace-check-results.json` persistence
+- `check --trace`: deterministic trace link checker across all run artifacts
+- `check --design-map`: checks DesignMap artifact (required sections + trace links)
+- `check --strict --trace` / `check --strict --design-map`: promote warns to failures in exit code
+- trace check codes: `TRACE_MALFORMED_ID` (fail), `TRACE_DUPLICATE_ID` (warn), `TRACE_ORPHAN_ID` (warn), `TRACE_MISSING_LINK_TARGET` (fail)
+- `status` shows trace check summary when `trace-check-results.json` exists
+- `DesignMap` artifact kind in section registry with 18 required sections
+- optional trace ID guidance added to `behavior-model`, `pseudocode-packet`, and `test-strategy` prompts
+- `judge` prompt requests trace link review when trace IDs are present in prior artifacts
+- CI `validate.yml` updated with CLI trace smoke step
+
 ## Planned milestones
-
-### v0.5.0
-
-- design-map and trace-link exploration
-- deeper `my-dev-kit` integration for retrieval-oriented stages while remaining prompt-driven
 
 ### v0.6.0
 

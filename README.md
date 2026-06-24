@@ -15,6 +15,23 @@ It is for teams or individual developers who want a coding agent to work through
 - plain-text prompt and artifact files
 - simple stage advancement based on expected artifact file existence
 
+`v0.5.0` adds design trace IDs and trace link checking:
+
+- `check --trace`: deterministic trace link checker across all run artifacts
+- `check --design-map`: checks the DesignMap artifact (required sections + trace links)
+- `check --strict --trace` / `check --strict --design-map`: promote warns to failures
+- `trace-check-results.json` persists trace check results per run
+- `status` command shows a trace check summary when results are available
+- `src/traceModel.ts`: `TRACE_PREFIXES`, `TRACE_ID_RE`, `isValidTraceId`, `isMalformedTraceId`
+- `src/traceParser.ts`: `parseTraceIds`, `parseTraceLinks`, `findMalformedTraceIds`, `findDuplicateIds`, `findOrphanIds`, `findMissingLinkTargets`, `parseTrace`
+- `src/traceChecker.ts`: `parseDeclaredTraceIds` (skips link lines to avoid false negatives), `checkArtifactTrace`, `checkAllTraces`, `checkDesignMapTrace`
+- `DesignMap` artifact kind added to section registry with 18 required sections
+- Trace IDs are optional guidance in `behavior-model`, `pseudocode-packet`, and `test-strategy` prompts
+- `judge` prompt requests trace link review when trace IDs are present
+- check codes: `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, `TRACE_MISSING_LINK_TARGET`
+- canonical trace ID format: `PREFIX-NNN` (3+ zero-padded digits; prefix one of `REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK`)
+- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for trace check codes and DesignMap sections
+
 `v0.4.0` adds artifact content checks and prompt quality checks:
 
 - `check` command: `my-dev-kit-orchestrator check [--artifact <name>] [--prompts] [--strict]`
@@ -69,15 +86,18 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 
 ## Non-goals (current release)
 
-`my-dev-kit-orchestrator` does not include in v0.4.0:
+`my-dev-kit-orchestrator` does not include in v0.5.0:
 
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting or correction loops
 - automatic judge routing
-- design trace IDs or design maps
+- automatic code-to-symbol tracing or AST-level dependency graph tracing
+- test coverage instrumentation
+- LLM-based trace inference
 - automatic coding-agent execution
 - automatic `my-dev-kit` command execution
+- design-map visualization
 - direct LLM-provider execution
 - extra low-level CLI commands beyond the current surface
 

@@ -58,3 +58,6 @@ jobs:
 
       - name: CLI check smoke
         run: npm run smoke:cli -- check
+
+      - name: CLI trace smoke
+        run: npm run smoke:cli -- trace

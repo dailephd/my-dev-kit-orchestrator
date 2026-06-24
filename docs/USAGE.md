@@ -340,6 +340,71 @@ Existing runs without an `artifact-state.json` continue to work:
 
 No migration is required for runs created before v0.3.0.
 
+## Trace check command (v0.5.0)
+
+Use `check --trace` to run deterministic trace link checks on all run artifacts.
+
+```bash
+my-dev-kit-orchestrator check --trace
+```
+
+Check only the DesignMap artifact (required sections + trace links):
+
+```bash
+my-dev-kit-orchestrator check --design-map
+```
+
+Exit 1 on any warn in addition to fail:
+
+```bash
+my-dev-kit-orchestrator check --strict --trace
+my-dev-kit-orchestrator check --strict --design-map
+```
+
+### What trace check reports
+
+For each artifact that contains trace IDs or trace links:
+
+- `[pass]` — no trace issues
+- `[warn]` — possible problem (duplicate declared ID, orphan ID that appears in no link)
+- `[fail]` — definite problem (malformed trace ID token, link target not declared in this artifact)
+
+### Trace check codes
+
+| Code | Severity | Meaning |
+|------|----------|---------|
+| `TRACE_MALFORMED_ID` | `fail` | A token looks like a trace ID but is not in valid canonical format (e.g., `BEH001`, `FOO-001`) |
+| `TRACE_DUPLICATE_ID` | `warn` | The same trace ID is declared more than once in the artifact |
+| `TRACE_ORPHAN_ID` | `warn` | A declared trace ID is never referenced in any trace link in the artifact |
+| `TRACE_MISSING_LINK_TARGET` | `fail` | A trace link references a valid trace ID that is not declared in this artifact |
+
+### Trace ID format
+
+Canonical format: `PREFIX-NNN` where:
+
+- `PREFIX` is one of: `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `IMP`, `VER`, `RISK`
+- `NNN` is a zero-padded number with 3 or more digits (e.g., `001`, `012`, `100`)
+
+Link format: `FROM_ID -> TO_ID` (one link per line)
+
+Trace IDs are optional. The trace checker only runs when you call `check --trace`. Artifacts without any trace IDs pass silently.
+
+### trace-check-results.json
+
+After `check --trace`, results are persisted to `trace-check-results.json` in the run folder.
+
+The `status` command shows a trace check summary when results exist:
+
+```text
+Trace check: 3 pass, 1 warn, 0 fail  (run: my-dev-kit-orchestrator check --trace)
+```
+
+Before `check --trace` has been run:
+
+```text
+Trace check: not run  (run: my-dev-kit-orchestrator check --trace)
+```
+
 ## Check command (v0.4.0)
 
 Use `check` to run deterministic content checks on artifacts and prompts.

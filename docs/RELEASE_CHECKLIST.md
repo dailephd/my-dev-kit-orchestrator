@@ -1,5 +1,89 @@
 # Release Checklist
 
+## v0.5.0 checklist
+
+### Trace checker verification
+
+- [ ] `check --trace` is registered and appears in `check --help` output
+- [ ] `check --design-map` is registered and appears in `check --help` output
+- [ ] `check --trace` with no artifacts reports no issues (exits 0)
+- [ ] `check --trace` shows `Trace check results for run:` header
+- [ ] `check --trace` detects `TRACE_MALFORMED_ID` as `[fail]` (e.g., `BEH001`)
+- [ ] `check --trace` detects `TRACE_DUPLICATE_ID` as `[warn]`
+- [ ] `check --trace` detects `TRACE_ORPHAN_ID` as `[warn]` when links exist
+- [ ] `check --trace` detects `TRACE_MISSING_LINK_TARGET` as `[fail]` for undeclared link targets
+- [ ] `check --trace` exits 1 when any artifact has a `fail` issue
+- [ ] `check --strict --trace` exits 1 when any artifact has a `warn` issue
+- [ ] `check --trace` persists `trace-check-results.json` in the run folder
+- [ ] `check --design-map` shows `Design map check for run:` header
+- [ ] `check --design-map` reports `MISSING_FILE` when `artifacts/design-map.txt` absent
+- [ ] well-formed artifacts with correct trace IDs pass with exit 0
+- [ ] `status` shows `Trace check: not run` before first `check --trace`
+- [ ] `status` shows `Trace check: N pass, N warn, N fail` after `check --trace`
+- [ ] `parseDeclaredTraceIds` skips lines containing `->` (prevents false link-target declarations)
+
+### Trace model verification
+
+- [ ] `TRACE_PREFIXES` = `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
+- [ ] `isValidTraceId('BEH-001')` returns `true`
+- [ ] `isValidTraceId('BEH001')` returns `false`
+- [ ] `isValidTraceId('FOO-001')` returns `false`
+- [ ] `isMalformedTraceId('BEH001')` returns `true`
+- [ ] `isMalformedTraceId('FOO-001')` returns `true`
+- [ ] `isMalformedTraceId('BEH-001')` returns `false` (valid ID, not malformed)
+
+### CLI smoke (trace mode)
+
+- [ ] `npm run smoke:cli -- trace` passes on `ubuntu-latest`
+- [ ] `npm run smoke:cli -- trace` passes on `windows-latest`
+- [ ] `npm run smoke:cli -- trace` passes on `macos-latest`
+
+### Version bump verification
+
+- [ ] `node dist/cli.js --version` outputs `0.5.0`
+- [ ] `package.json` version is `0.5.0`
+
+### Non-goal audit
+
+Run:
+
+```bash
+rg -n "automatic.*code.*symbol|AST.*dependency.*graph|coverage.*instrument|LLM.*trace.*infer|judge.*correction.*routing|design.map.*visuali|automatic.*my-dev-kit|direct.*LLM|openai|anthropic|langchain" src README.md docs CHANGELOG.md package.json
+```
+
+Expected: no implemented non-goal behavior; references in docs as future/non-goal items only.
+
+### Forbidden wording check
+
+```bash
+rg -n "\bbridge\b|Bridge|BRIDGE" README.md docs CHANGELOG.md src package.json .github
+```
+
+Expected: no matches.
+
+### Package dry-run
+
+- [ ] `npm pack --dry-run` does not include `node_modules/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit-orchestrator/`
+- [ ] `npm pack --dry-run` does not include `.my-dev-kit/`
+- [ ] `npm pack --dry-run` does not include `agents.txt`, `claude.txt`, or `docs/*.txt`
+- [ ] `npm pack --dry-run` does not include `.env` files, logs, tarballs
+- [ ] only `dist/` is included in the published package
+
+### OS matrix CI (GitHub Actions)
+
+- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+
+### Smoke test coverage
+
+- [ ] normal smoke (`npm run smoke:cli -- normal`) passes on all three OSes
+- [ ] lifecycle smoke (`npm run smoke:cli -- lifecycle`) passes on all three OSes
+- [ ] extraction smoke (`npm run smoke:cli -- extraction`) passes on all three OSes
+- [ ] check smoke (`npm run smoke:cli -- check`) passes on all three OSes
+- [ ] trace smoke (`npm run smoke:cli -- trace`) passes on all three OSes
+
 ## v0.4.0 checklist
 
 ### Artifact content checker verification
