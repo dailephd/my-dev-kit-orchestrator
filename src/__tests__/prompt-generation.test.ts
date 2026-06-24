@@ -21,7 +21,7 @@ function makeFakeRun(mode: typeof VALID_MODES[number]): RunMetadata {
   };
 }
 
-describe('generateStagePrompt — required sections', () => {
+describe('generateStagePrompt - required sections', () => {
   it('throws for unknown stage name', () => {
     const meta = makeFakeRun('feature');
     expect(() => generateStagePrompt(meta, 'unknown-stage')).toThrow();
@@ -51,7 +51,7 @@ describe('generateStagePrompt — required sections', () => {
   }
 });
 
-describe('generateStagePrompt — stage identity', () => {
+describe('generateStagePrompt - stage identity', () => {
   it('each prompt contains only its own stage name in Stage: line', () => {
     for (const mode of VALID_MODES) {
       const meta = makeFakeRun(mode);
@@ -66,7 +66,7 @@ describe('generateStagePrompt — stage identity', () => {
   });
 });
 
-describe('generateStagePrompt — scope boundaries', () => {
+describe('generateStagePrompt - scope boundaries', () => {
   it('implementation prompt requires pseudocode-packet as input', () => {
     for (const mode of ['feature', 'repair', 'refactor', 'harden'] as const) {
       const meta = makeFakeRun(mode);
@@ -143,7 +143,7 @@ describe('generateStagePrompt — scope boundaries', () => {
   });
 });
 
-describe('generateStagePrompt — no unrelated workflow modes', () => {
+describe('generateStagePrompt - no unrelated workflow modes', () => {
   it('feature mode prompts do not mention repair mode stages', () => {
     const meta = makeFakeRun('feature');
     for (const stage of getWorkflow('feature').stages) {
@@ -175,7 +175,7 @@ describe('generateStagePrompt — no unrelated workflow modes', () => {
 // extraction mode uses source-architecture-context, not architecture-context
 const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction');
 
-describe('generateStagePrompt — architecture-context my-dev-kit guidance', () => {
+describe('generateStagePrompt - architecture-context my-dev-kit guidance', () => {
   it('architecture-context prompt mentions my-dev-kit as prompt-driven guidance', () => {
     for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
@@ -195,7 +195,7 @@ describe('generateStagePrompt — architecture-context my-dev-kit guidance', () 
   });
 });
 
-describe('generateStagePrompt — architecture-context v0.2.0 graph-guided context acquisition', () => {
+describe('generateStagePrompt - architecture-context v0.2.0 graph-guided context acquisition', () => {
   it('architecture-context prompt includes full retrieval sequence steps', () => {
     for (const mode of MODES_WITH_ARCH_CONTEXT) {
       const meta = makeFakeRun(mode);
@@ -338,7 +338,7 @@ describe('writeStagePrompts', () => {
   });
 });
 
-describe('generateStagePrompt — output file path', () => {
+describe('generateStagePrompt - output file path', () => {
   it('each prompt specifies the correct output file path', () => {
     const meta = makeFakeRun('feature');
     const workflow = getWorkflow('feature');
@@ -349,3 +349,4 @@ describe('generateStagePrompt — output file path', () => {
     }
   });
 });
+

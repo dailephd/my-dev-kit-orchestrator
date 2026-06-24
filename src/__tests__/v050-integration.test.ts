@@ -45,7 +45,7 @@ function runCli(
 
 // ─── check --trace: no artifacts ─────────────────────────────────────────────
 
-describe('v0.5.0 integration — check --trace with no artifacts', () => {
+describe('v0.5.0 integration - check --trace with no artifacts', () => {
   it('shows trace check results with no issues when no artifacts exist', () => {
     const tmp = makeTempDir();
     try {
@@ -61,7 +61,7 @@ describe('v0.5.0 integration — check --trace with no artifacts', () => {
 
 // ─── check --trace: detects missing link target ───────────────────────────────
 
-describe('v0.5.0 integration — check --trace detects missing link target', () => {
+describe('v0.5.0 integration - check --trace detects missing link target', () => {
   it('fails with TRACE_MISSING_LINK_TARGET when a link target is not declared', () => {
     const tmp = makeTempDir();
     try {
@@ -84,7 +84,7 @@ describe('v0.5.0 integration — check --trace detects missing link target', () 
 
 // ─── check --trace: passes for well-formed artifact ──────────────────────────
 
-describe('v0.5.0 integration — check --trace passes for well-formed artifact', () => {
+describe('v0.5.0 integration - check --trace passes for well-formed artifact', () => {
   it('exits 0 for artifact with correctly declared and linked IDs', () => {
     const tmp = makeTempDir();
     try {
@@ -107,7 +107,7 @@ describe('v0.5.0 integration — check --trace passes for well-formed artifact',
 
 // ─── check --trace: detects malformed IDs ────────────────────────────────────
 
-describe('v0.5.0 integration — check --trace detects malformed IDs', () => {
+describe('v0.5.0 integration - check --trace detects malformed IDs', () => {
   it('fails with TRACE_MALFORMED_ID for near-miss tokens', () => {
     const tmp = makeTempDir();
     try {
@@ -129,7 +129,7 @@ describe('v0.5.0 integration — check --trace detects malformed IDs', () => {
 
 // ─── check --trace: warns for orphan IDs ─────────────────────────────────────
 
-describe('v0.5.0 integration — check --trace warns for orphan IDs', () => {
+describe('v0.5.0 integration - check --trace warns for orphan IDs', () => {
   it('reports TRACE_ORPHAN_ID as warn', () => {
     const tmp = makeTempDir();
     try {
@@ -152,7 +152,7 @@ describe('v0.5.0 integration — check --trace warns for orphan IDs', () => {
 
 // ─── check --strict --trace: promotes warn to fail ───────────────────────────
 
-describe('v0.5.0 integration — check --strict --trace', () => {
+describe('v0.5.0 integration - check --strict --trace', () => {
   it('exits 1 when any warn present with --strict', () => {
     const tmp = makeTempDir();
     try {
@@ -184,7 +184,7 @@ describe('v0.5.0 integration — check --strict --trace', () => {
 
 // ─── check --trace: persists results ─────────────────────────────────────────
 
-describe('v0.5.0 integration — check --trace persists trace-check-results.json', () => {
+describe('v0.5.0 integration - check --trace persists trace-check-results.json', () => {
   it('creates trace-check-results.json after running --trace', () => {
     const tmp = makeTempDir();
     try {
@@ -203,7 +203,7 @@ describe('v0.5.0 integration — check --trace persists trace-check-results.json
 
 // ─── check --design-map: missing file ────────────────────────────────────────
 
-describe('v0.5.0 integration — check --design-map missing file', () => {
+describe('v0.5.0 integration - check --design-map missing file', () => {
   it('shows MISSING_FILE for design-map when it does not exist', () => {
     const tmp = makeTempDir();
     try {
@@ -221,7 +221,7 @@ describe('v0.5.0 integration — check --design-map missing file', () => {
 
 // ─── check --design-map: section and trace checks ────────────────────────────
 
-describe('v0.5.0 integration — check --design-map with well-formed design-map', () => {
+describe('v0.5.0 integration - check --design-map with well-formed design-map', () => {
   it('shows both artifact and trace sections in output', () => {
     const tmp = makeTempDir();
     try {
@@ -262,7 +262,7 @@ describe('v0.5.0 integration — check --design-map with well-formed design-map'
 
 // ─── status shows trace check summary ────────────────────────────────────────
 
-describe('v0.5.0 integration — status shows trace check summary', () => {
+describe('v0.5.0 integration - status shows trace check summary', () => {
   it('shows "Trace check: not run" before check --trace', () => {
     const tmp = makeTempDir();
     try {
@@ -307,7 +307,7 @@ describe('v0.5.0 integration — status shows trace check summary', () => {
 
 // ─── v0.4.0 regression: check without --trace still works ────────────────────
 
-describe('v0.5.0 regression — check without --trace unaffected', () => {
+describe('v0.5.0 regression - check without --trace unaffected', () => {
   it('check command without --trace still shows artifact/prompt results', () => {
     const tmp = makeTempDir();
     try {
@@ -321,3 +321,4 @@ describe('v0.5.0 regression — check without --trace unaffected', () => {
     }
   });
 });
+

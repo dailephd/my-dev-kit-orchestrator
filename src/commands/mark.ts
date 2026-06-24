@@ -133,7 +133,7 @@ export function makeMarkCommand(): Command {
           }
         }
 
-        const reasonMsg = options.reason ? ` — ${options.reason}` : '';
+        const reasonMsg = options.reason ? ` - ${options.reason}` : '';
         console.log(
           `Marked ${path.basename(artifactKey)} as ${state}${reasonMsg}\n` +
           `Run: ${meta.runId}`,
@@ -142,3 +142,4 @@ export function makeMarkCommand(): Command {
     );
   return cmd;
 }
+

@@ -13,7 +13,7 @@ my-dev-kit-orchestrator check          # check all artifacts and prompts
 my-dev-kit-orchestrator check --strict # exit 1 on any warn
 ```
 
-Content checks complement the lifecycle layer — lifecycle state tracks whether an artifact is ready to proceed; content checks report what quality issues exist inside it.
+Content checks complement the lifecycle layer - lifecycle state tracks whether an artifact is ready to proceed; content checks report what quality issues exist inside it.
 
 The common design-to-code flow is:
 
@@ -291,14 +291,14 @@ Summarize:
 
 | Responsibility | Source repository | Target repository |
 |---|---|---|
-| Graph-guided inspection | ✓ | — |
+| Graph-guided inspection | ✓ | - |
 | Index artifacts | `<source>/.my-dev-kit` | `<target>/.my-dev-kit` |
-| Orchestrator run workspace | — | `<target>/.my-dev-kit-orchestrator/runs/<run-id>/` |
+| Orchestrator run workspace | - | `<target>/.my-dev-kit-orchestrator/runs/<run-id>/` |
 | Porting analysis | input | output |
 | Implementation | read-only evidence | ✓ implementation happens here |
-| Testing | — | ✓ |
-| Verification | — | ✓ |
-| Reports | — | ✓ |
+| Testing | - | ✓ |
+| Verification | - | ✓ |
+| Reports | - | ✓ |
 
 ### Extraction guardrails
 
@@ -324,11 +324,11 @@ Summarize:
 
 Stage progression now respects artifact lifecycle states:
 
-- **`missing`**: artifact file does not exist — stage remains current
-- **`incomplete`**: artifact exists but is marked unfinished — stage remains current
-- **`blocked`**: cannot proceed due to a blocker — stage remains current
-- **`stale`**: an upstream artifact changed after this one was completed — stage returns here
-- **`complete`**: artifact is ready — stage advances to the next
+- **`missing`**: artifact file does not exist - stage remains current
+- **`incomplete`**: artifact exists but is marked unfinished - stage remains current
+- **`blocked`**: cannot proceed due to a blocker - stage remains current
+- **`stale`**: an upstream artifact changed after this one was completed - stage returns here
+- **`complete`**: artifact is ready - stage advances to the next
 
 ### Setting lifecycle states
 

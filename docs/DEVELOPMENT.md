@@ -70,7 +70,7 @@ Important implementation files:
 - `src/promptChecker.ts`: prompt quality checks and check-results persistence (v0.4.0)
 - `src/traceModel.ts`: trace prefix constants, canonical ID regex, `isValidTraceId`, `isMalformedTraceId` (v0.5.0)
 - `src/traceParser.ts`: trace ID and link parsing utilities (v0.5.0)
-- `src/traceChecker.ts`: deterministic trace link checker, `trace-check-results.json` persistence, and trace-aware correction suggestions (v0.5.0–v0.6.0)
+- `src/traceChecker.ts`: deterministic trace link checker, `trace-check-results.json` persistence, and trace-aware correction suggestions (v0.5.0-v0.6.0)
 - `src/judgeParser.ts`: judge verdict parser, `JUDGE_VERDICTS`, `parseJudgeReport` (v0.6.0)
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
@@ -136,7 +136,7 @@ Important implementation files:
 
 `src/traceChecker.ts` owns all trace check logic:
 
-- `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only — lines containing `->` are skipped so that link target IDs are not counted as declared. This is critical for correct `TRACE_MISSING_LINK_TARGET` detection.
+- `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only - lines containing `->` are skipped so that link target IDs are not counted as declared. This is critical for correct `TRACE_MISSING_LINK_TARGET` detection.
 - `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact for malformed IDs, duplicate declared IDs, orphan IDs, and missing link targets. Missing files return `passed: true` with no issues (the artifact checker handles missing files separately).
 - `checkAllTraces(meta)`: runs `checkArtifactTrace` for all run artifact files
 - `checkDesignMapTrace(runFolder)`: shorthand for checking `artifacts/design-map.txt`

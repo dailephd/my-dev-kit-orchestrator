@@ -96,9 +96,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -181,9 +181,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -265,9 +265,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, all smoke tests pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, all smoke tests pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, all smoke tests pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, all smoke tests pass
 
 ### Smoke test coverage
 
@@ -328,9 +328,9 @@ Expected: no matches.
 
 ### OS matrix CI (GitHub Actions)
 
-- [ ] `ubuntu-latest` — typecheck, tests, build, lint, CLI smoke pass
-- [ ] `windows-latest` — typecheck, tests, build, lint, CLI smoke pass
-- [ ] `macos-latest` — typecheck, tests, build, lint, CLI smoke pass
+- [ ] `ubuntu-latest` - typecheck, tests, build, lint, CLI smoke pass
+- [ ] `windows-latest` - typecheck, tests, build, lint, CLI smoke pass
+- [ ] `macos-latest` - typecheck, tests, build, lint, CLI smoke pass
 
 ### Non-goal audit
 

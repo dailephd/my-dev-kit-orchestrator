@@ -46,7 +46,7 @@ function buildLifecycleContextBlock(
   } else if (dominantState === 'stale') {
     lines.push(`Current artifact state: stale`);
     lines.push('');
-    lines.push('This artifact is stale — an upstream artifact changed after this one was');
+    lines.push('This artifact is stale - an upstream artifact changed after this one was');
     lines.push('completed. Reconcile this artifact against the newer upstream artifacts');
     lines.push('before continuing. Review what changed and update accordingly.');
   } else {
@@ -125,13 +125,13 @@ export function makePromptCommand(): Command {
         if (isRunCompleteWithLifecycle(meta, stateFile)) {
           if (isRunComplete(meta)) {
             console.log(
-              `Run ${meta.runId} is complete — all expected artifacts are present.\n\n` +
+              `Run ${meta.runId} is complete - all expected artifacts are present.\n\n` +
               `To view the final report:\n  ${path.join(meta.runFolder, 'artifacts/final-report.txt')}\n\n` +
               `To inspect run status:\n  my-dev-kit-orchestrator status`
             );
           } else {
             console.log(
-              `Run ${meta.runId} is complete — all artifacts are in complete state.\n\n` +
+              `Run ${meta.runId} is complete - all artifacts are in complete state.\n\n` +
               `To view the final report:\n  ${path.join(meta.runFolder, 'artifacts/final-report.txt')}\n\n` +
               `To inspect run status:\n  my-dev-kit-orchestrator status`
             );
@@ -183,3 +183,4 @@ export function makePromptCommand(): Command {
     });
   return cmd;
 }
+

@@ -34,7 +34,7 @@ export interface CorrectionRouteResult {
 
 /**
  * Deterministic routing table: maps each non-PASS verdict to a default
- * correction stage. SCOPE_VIOLATION and BLOCKED do not route to a stage —
+ * correction stage. SCOPE_VIOLATION and BLOCKED do not route to a stage -
  * they produce the "blocked" status instead.
  */
 const VERDICT_ROUTE_TABLE: Partial<Record<JudgeVerdict, CorrectableStage>> = {
@@ -174,3 +174,4 @@ export function parseAndRoute(
   const parsed = parseJudgeReport(content);
   return routeJudgeVerdict(parsed, options);
 }
+

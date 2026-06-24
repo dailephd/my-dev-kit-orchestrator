@@ -78,7 +78,7 @@ function summarize(
 }
 
 function summarizeTrace(traceResults: TraceCheckResult[]): string[] {
-  // Exclude pass-with-no-issues (files that didn't exist — they return passed:true, issues:[])
+  // Exclude pass-with-no-issues (files that didn't exist - they return passed:true, issues:[])
   const checked = traceResults.filter((r) => r.issues.length > 0 || !r.passed);
   const pass = checked.filter((r) => r.passed && !r.issues.some((i) => i.severity === 'warn')).length;
   const warn = checked.filter((r) => r.passed && r.issues.some((i) => i.severity === 'warn')).length;
@@ -332,3 +332,4 @@ export function makeCheckCommand(): Command {
     );
   return cmd;
 }
+

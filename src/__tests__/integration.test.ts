@@ -39,7 +39,7 @@ describe('integration: init → start → prompt flow', () => {
       expect(fs.existsSync(path.join(meta.runFolder, 'artifacts'))).toBe(true);
       expect(fs.existsSync(path.join(meta.runFolder, 'reports'))).toBe(true);
 
-      // 3. prompt — first stage
+      // 3. prompt - first stage
       const firstStage = getNextStage(meta);
       expect(firstStage).not.toBeNull();
       expect(firstStage!.name).toBe('request-brief');
@@ -83,7 +83,7 @@ describe('integration: init → start → prompt flow', () => {
     }
   });
 
-  it('run is complete when all artifacts exist — suggests final-report', () => {
+  it('run is complete when all artifacts exist - suggests final-report', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
@@ -466,3 +466,4 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
     }
   });
 });
+

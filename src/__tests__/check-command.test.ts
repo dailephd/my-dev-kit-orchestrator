@@ -62,7 +62,7 @@ describe('check command registration', () => {
 
 // ─── Check command behavior ───────────────────────────────────────────────────
 
-describe('check command — artifact checking', () => {
+describe('check command - artifact checking', () => {
   it('returns MISSING_FILE issues when artifacts do not exist', () => {
     const tmp = makeTempDir();
     try {
@@ -204,7 +204,7 @@ describe('check command — artifact checking', () => {
   });
 });
 
-describe('check command — prompt checking', () => {
+describe('check command - prompt checking', () => {
   it('check --prompts covers prompt files', () => {
     const tmp = makeTempDir();
     try {
@@ -235,7 +235,7 @@ describe('check command — prompt checking', () => {
   });
 });
 
-describe('check command — strict mode', () => {
+describe('check command - strict mode', () => {
   it('exits 1 with --strict when there are warnings', () => {
     const tmp = makeTempDir();
     try {
@@ -272,7 +272,7 @@ describe('check command — strict mode', () => {
   });
 });
 
-describe('check command — persistence', () => {
+describe('check command - persistence', () => {
   it('persists artifact-check-results.json when checking all', () => {
     const tmp = makeTempDir();
     try {
@@ -305,7 +305,7 @@ describe('check command — persistence', () => {
 
 // ─── Status command integration ───────────────────────────────────────────────
 
-describe('status — content check integration', () => {
+describe('status - content check integration', () => {
   it('shows "Content check: not run" when no check results exist', () => {
     const tmp = makeTempDir();
     try {
@@ -417,3 +417,4 @@ describe('backward compatibility', () => {
     }
   });
 });
+

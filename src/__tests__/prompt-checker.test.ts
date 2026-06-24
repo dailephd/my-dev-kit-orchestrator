@@ -43,9 +43,9 @@ Stop conditions:
 - do not write code
 `;
 
-// ─── checkPrompt — PROMPT_MISSING_FILE ────────────────────────────────────────
+// ─── checkPrompt - PROMPT_MISSING_FILE ────────────────────────────────────────
 
-describe('checkPrompt — PROMPT_MISSING_FILE', () => {
+describe('checkPrompt - PROMPT_MISSING_FILE', () => {
   it('returns fail when prompt file does not exist', () => {
     const tmp = makeTempDir();
     try {
@@ -59,9 +59,9 @@ describe('checkPrompt — PROMPT_MISSING_FILE', () => {
   });
 });
 
-// ─── checkPrompt — PROMPT_EMPTY ───────────────────────────────────────────────
+// ─── checkPrompt - PROMPT_EMPTY ───────────────────────────────────────────────
 
-describe('checkPrompt — PROMPT_EMPTY', () => {
+describe('checkPrompt - PROMPT_EMPTY', () => {
   it('returns fail when prompt file is under minimum length', () => {
     const tmp = makeTempDir();
     try {
@@ -76,9 +76,9 @@ describe('checkPrompt — PROMPT_EMPTY', () => {
   });
 });
 
-// ─── checkPrompt — PROMPT_MISSING_STAGE_HEADER ───────────────────────────────
+// ─── checkPrompt - PROMPT_MISSING_STAGE_HEADER ───────────────────────────────
 
-describe('checkPrompt — PROMPT_MISSING_STAGE_HEADER', () => {
+describe('checkPrompt - PROMPT_MISSING_STAGE_HEADER', () => {
   it('returns fail when prompt has no Stage: line', () => {
     const tmp = makeTempDir();
     try {
@@ -98,9 +98,9 @@ describe('checkPrompt — PROMPT_MISSING_STAGE_HEADER', () => {
   });
 });
 
-// ─── checkPrompt — PROMPT_MISSING_TASK_SECTION ───────────────────────────────
+// ─── checkPrompt - PROMPT_MISSING_TASK_SECTION ───────────────────────────────
 
-describe('checkPrompt — PROMPT_MISSING_TASK_SECTION', () => {
+describe('checkPrompt - PROMPT_MISSING_TASK_SECTION', () => {
   it('returns warn when prompt has no Task: section', () => {
     const tmp = makeTempDir();
     try {
@@ -121,9 +121,9 @@ describe('checkPrompt — PROMPT_MISSING_TASK_SECTION', () => {
   });
 });
 
-// ─── checkPrompt — PROMPT_MISSING_OUTPUT_ARTIFACT ────────────────────────────
+// ─── checkPrompt - PROMPT_MISSING_OUTPUT_ARTIFACT ────────────────────────────
 
-describe('checkPrompt — PROMPT_MISSING_OUTPUT_ARTIFACT', () => {
+describe('checkPrompt - PROMPT_MISSING_OUTPUT_ARTIFACT', () => {
   it('returns warn when prompt has no Required output artifact: line', () => {
     const tmp = makeTempDir();
     try {
@@ -144,9 +144,9 @@ describe('checkPrompt — PROMPT_MISSING_OUTPUT_ARTIFACT', () => {
   });
 });
 
-// ─── checkPrompt — well-formed prompt ────────────────────────────────────────
+// ─── checkPrompt - well-formed prompt ────────────────────────────────────────
 
-describe('checkPrompt — well-formed prompt', () => {
+describe('checkPrompt - well-formed prompt', () => {
   it('returns pass for a well-formed generated prompt', () => {
     const tmp = makeTempDir();
     try {
@@ -210,3 +210,4 @@ describe('checkAllPrompts', () => {
     }
   });
 });
+

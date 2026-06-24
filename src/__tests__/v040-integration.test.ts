@@ -61,7 +61,7 @@ const FULL_REQUEST_BRIEF =
 
 // ─── Feature run: check with no artifacts shows all as fail ──────────────────
 
-describe('v0.4.0 integration — check with no artifacts', () => {
+describe('v0.4.0 integration - check with no artifacts', () => {
   it('shows MISSING_FILE for all artifacts when none exist', () => {
     const tmp = makeTempDir();
     try {
@@ -79,7 +79,7 @@ describe('v0.4.0 integration — check with no artifacts', () => {
 
 // ─── Feature run: check shows pass for well-formed request-brief ─────────────
 
-describe('v0.4.0 integration — check shows pass for complete artifact', () => {
+describe('v0.4.0 integration - check shows pass for complete artifact', () => {
   it('shows [pass] for request-brief with all required sections', () => {
     const tmp = makeTempDir();
     try {
@@ -97,7 +97,7 @@ describe('v0.4.0 integration — check shows pass for complete artifact', () => 
 
 // ─── Feature run: check shows fail for missing required section ──────────────
 
-describe('v0.4.0 integration — check shows fail for missing section', () => {
+describe('v0.4.0 integration - check shows fail for missing section', () => {
   it('shows MISSING_SECTION fail when a required section is absent', () => {
     const tmp = makeTempDir();
     try {
@@ -117,7 +117,7 @@ describe('v0.4.0 integration — check shows fail for missing section', () => {
 
 // ─── Feature run: placeholder artifact triggers warn ─────────────────────────
 
-describe('v0.4.0 integration — placeholder content warn', () => {
+describe('v0.4.0 integration - placeholder content warn', () => {
   it('shows PLACEHOLDER_CONTENT warn for placeholder-only artifact', () => {
     const tmp = makeTempDir();
     try {
@@ -134,7 +134,7 @@ describe('v0.4.0 integration — placeholder content warn', () => {
 
 // ─── check --prompts passes for all generated prompt files from start ─────────
 
-describe('v0.4.0 integration — check --prompts passes for generated prompts', () => {
+describe('v0.4.0 integration - check --prompts passes for generated prompts', () => {
   it('shows all prompts as pass after createRun generates them', () => {
     const tmp = makeTempDir();
     try {
@@ -152,7 +152,7 @@ describe('v0.4.0 integration — check --prompts passes for generated prompts', 
 
 // ─── check --strict exits 1 when any warn is present ─────────────────────────
 
-describe('v0.4.0 integration — check --strict', () => {
+describe('v0.4.0 integration - check --strict', () => {
   it('exits 1 when any warn is present with --strict', () => {
     const tmp = makeTempDir();
     try {
@@ -177,7 +177,7 @@ describe('v0.4.0 integration — check --strict', () => {
 
 // ─── STATUS_MISMATCH warn when artifact says complete but state says blocked ──
 
-describe('v0.4.0 integration — STATUS_MISMATCH', () => {
+describe('v0.4.0 integration - STATUS_MISMATCH', () => {
   it('shows STATUS_MISMATCH warn when artifact Status says complete but lifecycle says blocked', () => {
     const tmp = makeTempDir();
     try {
@@ -198,7 +198,7 @@ describe('v0.4.0 integration — STATUS_MISMATCH', () => {
 
 // ─── Extraction run: lifecycle and check work without errors ─────────────────
 
-describe('v0.4.0 integration — extraction mode', () => {
+describe('v0.4.0 integration - extraction mode', () => {
   it('extraction run lifecycle and check work without errors', () => {
     const tmp = makeTempDir();
     try {
@@ -225,7 +225,7 @@ describe('v0.4.0 integration — extraction mode', () => {
 
 // ─── v0.3.0 lifecycle still works alongside check results ────────────────────
 
-describe('v0.4.0 integration — v0.3.0 lifecycle preserved', () => {
+describe('v0.4.0 integration - v0.3.0 lifecycle preserved', () => {
   it('lifecycle states from v0.3.0 still correct alongside check results', () => {
     const tmp = makeTempDir();
     try {
@@ -256,7 +256,7 @@ describe('v0.4.0 integration — v0.3.0 lifecycle preserved', () => {
 
 // ─── artifact-check-results.json persisted and read by status ────────────────
 
-describe('v0.4.0 integration — check results persistence', () => {
+describe('v0.4.0 integration - check results persistence', () => {
   it('artifact-check-results.json is created and read by status', () => {
     const tmp = makeTempDir();
     try {
@@ -275,3 +275,4 @@ describe('v0.4.0 integration — check results persistence', () => {
     }
   });
 });
+

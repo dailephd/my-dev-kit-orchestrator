@@ -96,30 +96,30 @@ Synthesize retrieval evidence into the artifact before writing it.
 
 Graph-guided context acquisition sequence (when my-dev-kit is available):
 
-Step 1 — Index or refresh the target repository:
+Step 1 - Index or refresh the target repository:
   npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
 
-Step 2 — Search for task-specific candidate nodes:
+Step 2 - Search for task-specific candidate nodes:
   npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task-specific term>" --limit 20 --json
   Run multiple queries for different aspects of the request.
 
-Step 3 — Look up selected nodes and their relationships:
+Step 3 - Look up selected nodes and their relationships:
   npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<selected-node-id>" --depth 1 --json
 
-Step 4 — Slice around the strongest relevant node:
+Step 4 - Slice around the strongest relevant node:
   npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --out .my-dev-kit/<task-name>-slice.json --json
 
-Step 5 — Retrieve exact symbol source (preferred):
+Step 5 - Retrieve exact symbol source (preferred):
   npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
   or:
   npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --symbol "<symbol-name>" --max-lines 160 --format numbered
 
-Step 6 — Use line-range retrieval only as fallback when symbol retrieval is insufficient:
+Step 6 - Use line-range retrieval only as fallback when symbol retrieval is insufficient:
   npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines <cap> --format numbered
 
-Step 7 — Inspect semantic artifacts, tests, docs, or data-model artifacts only when relevant to the task.
+Step 7 - Inspect semantic artifacts, tests, docs, or data-model artifacts only when relevant to the task.
 
-Step 8 — Avoid whole-file reading unless bounded retrieval is insufficient. If a whole file must be read, state why.
+Step 8 - Avoid whole-file reading unless bounded retrieval is insufficient. If a whole file must be read, state why.
 
 If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols. Document what was inspected, why, and what bounded context was gathered.
 
@@ -1394,28 +1394,28 @@ Extraction guardrails:
 
 Source repository inspection sequence (when my-dev-kit is available):
 
-Step 1 — Index the source repository into its own index directory:
+Step 1 - Index the source repository into its own index directory:
   npx @dailephd/my-dev-kit index --root ${sourceDir} --src src --out ${sourceDir}/.my-dev-kit --call-graph --json
 
   Do not use ${targetDir}/.my-dev-kit to infer source behavior.
 
-Step 2 — Search for task-specific candidate nodes in the source repository:
+Step 2 - Search for task-specific candidate nodes in the source repository:
   npx @dailephd/my-dev-kit search --index ${sourceDir}/.my-dev-kit --query "<task-specific term>" --limit 20 --json
   Run multiple queries for different aspects of the extraction request.
 
-Step 3 — Look up selected nodes and their relationships:
+Step 3 - Look up selected nodes and their relationships:
   npx @dailephd/my-dev-kit lookup --index ${sourceDir}/.my-dev-kit --node "<selected-node-id>" --depth 1 --json
 
-Step 4 — Slice around the strongest relevant node:
+Step 4 - Slice around the strongest relevant node:
   npx @dailephd/my-dev-kit slice --index ${sourceDir}/.my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --json
 
-Step 5 — Retrieve exact symbol source (preferred):
+Step 5 - Retrieve exact symbol source (preferred):
   npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
 
-Step 6 — Use line-range retrieval only as fallback when symbol retrieval is insufficient:
+Step 6 - Use line-range retrieval only as fallback when symbol retrieval is insufficient:
   npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines 220 --format numbered
 
-Step 7 — Avoid reading whole source files unless bounded retrieval is insufficient. If a whole file must be read, state why.
+Step 7 - Avoid reading whole source files unless bounded retrieval is insufficient. If a whole file must be read, state why.
 
 If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols in the source repository. Document what was inspected and why.
 
@@ -2110,7 +2110,7 @@ Extraction guardrails:
 - Do not port systems listed in the DoNotPortList.
 - Do not import source repository modules into the target.
 - Do not assume source architecture is the required target architecture.
-- The GoldenBehaviorContract defines what must be true — not the source code.
+- The GoldenBehaviorContract defines what must be true - not the source code.
 
 The ImplementationReport must include:
 - files read (source and target)
@@ -2410,7 +2410,7 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
   const isExtraction = meta.mode === 'extraction';
 
   switch (stageName) {
-    // shared — non-extraction
+    // shared - non-extraction
     case 'architecture-context': return architectureContextPrompt(ctx);
     case 'verification': return isExtraction ? extractionVerificationPrompt(ctx) : verificationPrompt(ctx);
     case 'judge': return isExtraction ? extractionJudgePrompt(ctx) : judgePrompt(ctx);
@@ -2492,7 +2492,7 @@ const CORRECTION_STAGE_INPUTS: Record<string, string[]> = {
 /**
  * Generates a bounded, stage-specific correction prompt.
  * The prompt instructs the coding agent to revise only the failed stage artifact
- * based on the judge report finding — without broadening scope, modifying code
+ * based on the judge report finding - without broadening scope, modifying code
  * automatically, or invoking any external runtime.
  */
 export function generateCorrectionPrompt(
@@ -2598,3 +2598,4 @@ export function writeStagePrompts(meta: RunMetadata): void {
     fs.writeFileSync(promptPath, promptContent, 'utf8');
   }
 }
+

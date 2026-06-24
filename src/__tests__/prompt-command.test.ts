@@ -198,7 +198,7 @@ describe('stage detection across all modes', () => {
   }
 });
 
-describe('prompt command behavior — content validation', () => {
+describe('prompt command behavior - content validation', () => {
   it('prompt for a specific stage returns stage-specific content', () => {
     const tmp = makeTempDir();
     try {
@@ -229,3 +229,4 @@ describe('prompt command behavior — content validation', () => {
     }
   });
 });
+

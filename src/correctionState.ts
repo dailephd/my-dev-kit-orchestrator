@@ -6,7 +6,7 @@ import { routeJudgeVerdict, CorrectionRouteResult } from './correctionRouter';
 /**
  * Reads artifacts/judge-report.txt from the run folder and computes the
  * correction route result. Returns null when no judge report exists yet.
- * This is computed fresh each call — no additional persistence file is needed.
+ * This is computed fresh each call - no additional persistence file is needed.
  */
 export function readCorrectionState(
   runFolder: string,
@@ -29,3 +29,4 @@ export function isCorrectionActive(runFolder: string): boolean {
   const state = readCorrectionState(runFolder);
   return state !== null && state.routeStatus === 'correction_required';
 }
+

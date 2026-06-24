@@ -129,11 +129,11 @@ describe('integration: full feature lifecycle flow', () => {
     }
   });
 
-  it('mark rejects stale state — isForbiddenManualState', () => {
+  it('mark rejects stale state - isForbiddenManualState', () => {
     expect(isForbiddenManualState('stale')).toBe(true);
   });
 
-  it('mark rejects missing state — isForbiddenManualState', () => {
+  it('mark rejects missing state - isForbiddenManualState', () => {
     expect(isForbiddenManualState('missing')).toBe(true);
   });
 
@@ -273,7 +273,7 @@ describe('integration: v0.2.1 backward compatibility', () => {
       // Write first artifact directly (no state file)
       writeArtifact(meta.runFolder, 'artifacts/request-brief.txt');
 
-      // No artifact-state.json — should read empty state
+      // No artifact-state.json - should read empty state
       const sf = readArtifactStateFile(meta.runFolder);
       expect(Object.keys(sf.artifacts)).toHaveLength(0);
 
@@ -300,3 +300,4 @@ describe('integration: v0.2.1 backward compatibility', () => {
     }
   });
 });
+

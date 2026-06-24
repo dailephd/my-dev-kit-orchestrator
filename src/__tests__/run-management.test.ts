@@ -256,7 +256,7 @@ describe('createRun', () => {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
       fs.mkdirSync(meta.runFolder, { recursive: true });
-      // Create a second run with the same folder — this can't happen naturally (timestamp),
+      // Create a second run with the same folder - this can't happen naturally (timestamp),
       // but we test the guard by trying to create in an existing dir
       expect(() => {
         if (!fs.existsSync(meta.runFolder)) {
@@ -385,3 +385,4 @@ describe('listRunFolders and getMostRecentRun', () => {
     }
   });
 });
+
