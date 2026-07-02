@@ -6,7 +6,17 @@ It is for teams or individual developers who want a coding agent to work through
 
 ## Capabilities
 
-`v0.1.0` provided the workflow shell:
+`v1.0.0` is the current stable workflow contract release and is newer than every `v0.x.0` release. It adds:
+
+- deterministic artifact contract checks with `check --artifacts`
+- critical artifact dependency checks through `check --all`
+- combined contract, stage-gate, trace, DesignMap, and correction-routing coverage
+- portable plain-text run handoff through `export`
+- compatibility with the v0.5.0 trace checks and v0.6.0 correction-routing behavior
+
+Release history below is summarized newest first after the original workflow-shell baseline.
+
+`v0.1.0` established the first usable CLI workflow shell:
 
 - a small CLI command surface
 - five workflow modes: `feature`, `repair`, `test`, `refactor`, `harden`
@@ -26,7 +36,7 @@ It is for teams or individual developers who want a coding agent to work through
 - `SCOPE_VIOLATION` and `BLOCKED` verdicts produce a blocked state - no correction stage is routed
 - unknown verdicts fail the parser instead of being guessed
 - `check --trace` and `check --design-map` suggest a correction stage for each trace issue
-- trace-aware correction suggestions are deterministic: missing `BEH-NNN` target → suggest `behavior-model`, missing `PSE-NNN` → suggest `pseudocode-packet`, etc.
+- trace-aware correction suggestions are deterministic: missing `BEH-NNN` target -> suggest `behavior-model`, missing `PSE-NNN` -> suggest `pseudocode-packet`, etc.
 - correction routing is a prompt-generation aid, not an autonomous repair runtime
 - `src/judgeParser.ts`: `parseJudgeReport`, `isValidVerdict`, `JUDGE_VERDICTS`, `JudgeVerdict`
 - `src/correctionRouter.ts`: `routeJudgeVerdict`, `parseAndRoute`, `CORRECTABLE_STAGES`, `CorrectionRouteResult`
@@ -104,12 +114,12 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 
 ## Non-goals (current release)
 
-`my-dev-kit-orchestrator` does not include in v0.6.0:
+`my-dev-kit-orchestrator` does not include in v1.0.0:
 
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting or correction loops
-- automatic judge routing
+- autonomous judge correction execution
 - automatic code modification after a judge failure
 - automatic code-to-symbol tracing or AST-level dependency graph tracing
 - test coverage instrumentation

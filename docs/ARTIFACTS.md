@@ -10,7 +10,7 @@ Artifacts are plain-text handoff files stored in each run folder.
 .my-dev-kit-orchestrator/runs/<run-id>/
   00-request.txt
   run.json
-  artifact-state.json   ← added in v0.3.0
+  artifact-state.json   <- added in v0.3.0
   prompts/
   artifacts/
   reports/
@@ -66,11 +66,11 @@ Each required artifact has an effective lifecycle state:
 
 ### State resolution rules (in priority order)
 
-1. If state is `blocked` → `blocked` (even without artifact file)
-2. If artifact file does not exist → `missing`
-3. If state is `incomplete` → `incomplete`
-4. If an upstream artifact was completed or modified after this artifact → `stale`
-5. Otherwise → `complete`
+1. If state is `blocked` -> `blocked` (even without artifact file)
+2. If artifact file does not exist -> `missing`
+3. If state is `incomplete` -> `incomplete`
+4. If an upstream artifact was completed or modified after this artifact -> `stale`
+5. Otherwise -> `complete`
 
 ### Stale detection
 
@@ -222,7 +222,7 @@ Trace IDs are optional in artifacts. The trace checker skips artifacts with no t
 
 **Path:** `artifacts/design-map.txt`
 
-**Produced by:** `design-map` stage
+**Produced by:** the workflow participant when a consolidated trace registry is needed. DesignMap is not a registered workflow stage.
 
 **Purpose:** Maps trace IDs across all run artifacts into a single registry. Records requirement links, behavior links, invariant links, and orphan or missing links.
 
@@ -248,6 +248,12 @@ Trace IDs are optional in artifacts. The trace checker skips artifacts with no t
 - Status
 
 Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifact has all required sections and no trace link issues.
+
+## Artifact contract checks (v1.0.0)
+
+`my-dev-kit-orchestrator check --artifacts` checks every stage artifact against its mode-aware plain-text contract. It reports missing or empty files, required sections, placeholder or blank content, missing predecessor artifacts, and unsupported modes or stages. Warnings remain warnings in normal mode and cause exit code 1 with `--strict`.
+
+`my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. Contract and stage-gate checks inspect the run but do not change lifecycle state or advance stages.
 
 ## Not implemented in v0.4.0
 

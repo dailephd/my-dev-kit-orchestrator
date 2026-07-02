@@ -161,7 +161,7 @@ This mode is not for normal feature implementation. It is for inspecting an exis
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -170,7 +170,7 @@ npx my-dev-kit-orchestrator start --mode extraction \
 Windows example:
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
   --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
   --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
   "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
@@ -365,8 +365,8 @@ When an artifact is blocked:
 
 Existing runs without `artifact-state.json` continue to work:
 
-- file present → `complete`
-- file missing → `missing`
+- file present -> `complete`
+- file missing -> `missing`
 
 No migration is needed for runs created before v0.3.0.
 

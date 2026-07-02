@@ -332,7 +332,7 @@ Expected: no matches.
 ### Lifecycle model verification
 
 - [ ] `artifact-state.json` is created in the run folder on first `mark` command
-- [ ] `artifact-state.json` absent → file-existence-only fallback works (backward compat)
+- [ ] `artifact-state.json` absent -> file-existence-only fallback works (backward compat)
 - [ ] `mark <artifact> --state blocked --reason "..."` writes state file
 - [ ] `mark <artifact> --state incomplete --reason "..."` writes state file
 - [ ] `mark <artifact> --state complete` writes state file (no reason required)

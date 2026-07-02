@@ -2,16 +2,18 @@
 
 `my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
 
-`v0.1.0` established the workflow shell. `v0.2.0` added graph-guided architecture context support. `v0.2.1` adds extraction mode and cross-platform validation across Ubuntu, Windows, and macOS.
+`v1.0.0` is the current stable workflow contract release. It preserves the v0.5.0 Design Trace and DesignMap checks and the v0.6.0 correction-routing behavior while adding artifact contract checks, stage-gate validation, combined checks, and portable run export.
 
 ## Architecture overview
 
-The released architecture has five main responsibilities:
+The released architecture has seven main responsibilities:
 
 - define the workflow mode and ordered stages for each run
 - create and manage the local run workspace
 - generate stage-specific prompt files
 - detect workflow progress from expected artifact files
+- inspect artifact quality, trace links, and critical stage dependencies on request
+- export portable plain-text run handoff summaries
 - keep source-repository evidence and target-repository implementation responsibilities separate in extraction mode
 
 The CLI is intentionally small. It does not try to become a general automation platform, a task runner, or an autonomous multi-agent system.
@@ -47,8 +49,11 @@ The public command surface is:
 - `status`
 - `prompt`
 - `list`
+- `mark`
+- `check`
+- `export`
 
-These commands cover workspace setup, run creation, prompt retrieval, run inspection, and run listing. The release does not expose a larger set of low-level workflow management commands.
+These commands cover workspace setup, run creation, prompt retrieval, run inspection, lifecycle state, deterministic checks, run listing, and portable handoff export. The release does not expose a larger set of low-level workflow management commands.
 
 ## Workflow mode layer
 
@@ -150,7 +155,7 @@ Each stage produces one expected artifact file, except `porting-map`, which prod
 - `artifacts/source-to-target-porting-map.txt`
 - `artifacts/do-not-port-list.txt`
 
-The next stage consumes the request, prior artifacts, or both. The CLI does not parse a heavy structured schema to decide whether a stage is complete. It uses required artifact existence at the expected paths.
+The next stage consumes the request, prior artifacts, or both. Lifecycle progression uses artifact existence and lifecycle state. Deterministic content, contract, trace, and stage-gate checks are explicit inspection operations and do not replace lifecycle progression.
 
 That handoff model keeps the workflow simple:
 
@@ -168,7 +173,7 @@ Two artifact relationships matter especially in the current release:
 - the pseudocode packet is the shared design source for implementation and test implementation
 - the test strategy packet is the source for test implementation
 
-Verification and final report artifacts are expected to include command evidence and unresolved risks, but the CLI does not enforce content validation automatically.
+Verification and final report artifacts are expected to include command evidence and unresolved risks. `check --artifacts` validates required artifact sections, and `check --all` adds critical stage-gate, trace, DesignMap, and correction-routing coverage. These checks are deterministic and user-invoked; they do not semantically judge evidence or advance the run.
 
 ## Stage gate model
 
@@ -191,7 +196,7 @@ Extraction mode adds additional pre-implementation gates:
 - no implementation before `golden-behavior-contract.txt` exists
 - no implementation before `target-architecture-proposal.txt` exists
 
-These gates are enforced through ordered stages, expected artifact names, and stage-specific prompt instructions rather than through a large validation engine.
+Ordered stages, lifecycle state, and stage-specific prompts control progression. `check --all` additionally reports critical dependency violations when a downstream artifact exists without a required upstream artifact.
 
 ## Extraction mode architecture
 
@@ -286,8 +291,8 @@ The current release does not include:
 - automatic `my-dev-kit` execution
 - automatic provider integration
 - full JSON schema validation
-- automatic judge routing
-- design-map generation
+- autonomous judge correction execution
+- automatic design-map generation
 - autonomous multi-agent execution
 - a large low-level command surface
 - low-level retrieval commands inside `my-dev-kit-orchestrator`
@@ -295,15 +300,8 @@ The current release does not include:
 
 Those exclusions are intentional. The release is designed to keep workflow logic clear, local, and easy to inspect.
 
-## Future architecture direction
+## Check and export boundaries
 
-Possible future extensions:
+Artifact and trace checks are deterministic text inspection. They do not perform AST-level code tracing, coverage instrumentation, semantic LLM grading, automatic artifact rewriting, or automatic code modification.
 
-- stronger artifact validation
-- design-map generation
-- deeper `my-dev-kit` integration
-- optional provider integrations
-- CI-friendly verification summaries
-- richer run status and judge-outcome routing
-
-These are possible directions, not current features.
+The `export` command reads run state and emits a portable plain-text handoff to stdout or a selected output file. It does not execute agents, call external services, or mutate run artifacts.

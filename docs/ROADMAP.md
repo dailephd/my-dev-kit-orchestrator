@@ -1,5 +1,18 @@
 # Roadmap
 
+Versions are listed in chronological order. `v1.0.0` is the newest implemented release and is newer than every `v0.x.0` release.
+
+## Version summary
+
+- `v0.1.0` established the first usable CLI workflow shell with init/start/prompt/status/list, local run folders, supported modes, text artifacts, and stage-specific prompts for design-first coding-agent workflows.
+- `v0.2.0` stabilized graph-guided architecture context retrieval and artifact handoff for downstream stages.
+- `v0.2.1` added the extraction workflow and cross-platform validation.
+- `v0.3.0` stabilized the artifact lifecycle with explicit states, stale detection, and resumable prompt progression.
+- `v0.4.0` added deterministic artifact content checks and prompt-quality checks.
+- `v0.5.0` added Design Trace and DesignMap support across requirements, context, behavior, invariants, transitions, pseudocode, tests, implementation, verification, and risks.
+- `v0.6.0` added judge correction routing and trace-aware workflow recovery.
+- `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
+
 ## Implemented
 
 ### v0.1.0
@@ -100,12 +113,12 @@
 - correction smoke in `scripts/cli-smoke.mjs`
 - CI `validate.yml` updated with CLI correction smoke step
 
-### v1.0.0 (implemented)
+### v1.0.0 (implemented - current stable release)
 
 - `src/contractChecker.ts`: deterministic artifact contract checker
   - `checkArtifactContract()`: per-artifact checks (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
   - `checkRunArtifactContracts()`: run-level check across all stages and modes
-  - `checkStageGates()`: stage gate violation detection (CRITICAL_GATE_PAIRS for all five modes)
+  - `checkStageGates()`: critical stage dependency checks across supported workflow modes
   - `resolveArtifactContractsForMode()`: ModeContractSummary with predecessor and section metadata
   - strict mode promotes warn-severity issues to fail in exit code
 - `check --artifacts`: v1 contract check for all stages, per-artifact output with code/severity/stage/mode/suggestedFix

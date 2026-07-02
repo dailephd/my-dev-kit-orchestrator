@@ -146,7 +146,7 @@ Extraction mode transfers a bounded feature, workflow, subsystem, or behavior fr
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -155,7 +155,7 @@ npx my-dev-kit-orchestrator start --mode extraction \
 ### Windows example
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
   --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
   --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
   "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
@@ -335,8 +335,8 @@ For stale artifacts, the context instructs the agent to reconcile against newer 
 
 Existing runs without an `artifact-state.json` continue to work:
 
-- artifact file present → `complete`
-- artifact file missing → `missing`
+- artifact file present -> `complete`
+- artifact file missing -> `missing`
 
 No migration is required for runs created before v0.3.0.
 
@@ -349,7 +349,7 @@ When a run's judge report contains a non-PASS verdict, `status` and `prompt` int
 After `judge-report.txt` is saved, `status` shows a Judge correction section:
 
 ```text
-Judge correction: IMPLEMENTATION_MISMATCH → correction required
+Judge correction: IMPLEMENTATION_MISMATCH -> correction required
   Routed stage: implementation
 ```
 
@@ -366,7 +366,7 @@ Judge correction: SCOPE_VIOLATION - run is blocked
   This run requires external resolution before it can continue.
 ```
 
-No judge report → the section is omitted (backward compatible with pre-v0.6.0 runs).
+No judge report -> the section is omitted (backward compatible with pre-v0.6.0 runs).
 
 ### Prompt prints the correction stage
 
@@ -413,11 +413,11 @@ Correction suggestions:
 
 Suggestions are deterministic - they map trace ID prefixes to owning stages without any LLM inference:
 
-- missing `BEH-NNN` link target → suggest `behavior-model`
-- missing `PSE-NNN` link target → suggest `pseudocode-packet`
-- missing `TST-NNN` link target → suggest `test-strategy`
-- malformed trace ID → suggest `design-map`
-- orphan ID → suggest `design-map`
+- missing `BEH-NNN` link target -> suggest `behavior-model`
+- missing `PSE-NNN` link target -> suggest `pseudocode-packet`
+- missing `TST-NNN` link target -> suggest `test-strategy`
+- malformed trace ID -> suggest `design-map`
+- orphan ID -> suggest `design-map`
 
 ### What correction routing does not do
 

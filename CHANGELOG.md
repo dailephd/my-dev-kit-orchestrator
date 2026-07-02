@@ -9,7 +9,7 @@
 - `src/contractChecker.ts` - artifact contract checker model
   - `checkArtifactContract()`: deterministic checks per artifact (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
   - `checkRunArtifactContracts()`: run-level contract check across all stages
-  - `checkStageGates()`: stage gate violation detection with CRITICAL_GATE_PAIRS for all five modes
+  - `checkStageGates()`: critical stage dependency checks across supported workflow modes
   - `resolveArtifactContractsForMode()`: returns ModeContractSummary with stage/artifact/predecessor/section metadata for all modes
   - Strict mode: promotes BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, STAGE_NO_CONTRACT from warn to fail
 - `check --artifacts`: run v1 artifact contract check for all stages in the current run
@@ -42,7 +42,7 @@
   - `CORRECTABLE_STAGES` const: `['architecture-context','behavior-model','pseudocode-packet','test-strategy','test-implementation','implementation','verification']`
   - `routeJudgeVerdict(parsed, options)`: routes verdict to a correction stage
   - `parseAndRoute(content, options)`: parse + route in one call
-  - routing table: `NEED_CONTEXT→architecture-context`, `DESIGN_INCOMPLETE→behavior-model`, `PSEUDOCODE_INCOMPLETE→pseudocode-packet`, `IMPLEMENTATION_MISMATCH→implementation`, `TEST_COVERAGE_INCOMPLETE→test-strategy`, `ARCHITECTURE_MISMATCH→architecture-context`, `NEED_VERIFICATION→verification`
+  - routing table: `NEED_CONTEXT -> architecture-context`, `DESIGN_INCOMPLETE -> behavior-model`, `PSEUDOCODE_INCOMPLETE -> pseudocode-packet`, `IMPLEMENTATION_MISMATCH -> implementation`, `TEST_COVERAGE_INCOMPLETE -> test-strategy`, `ARCHITECTURE_MISMATCH -> architecture-context`, `NEED_VERIFICATION -> verification`
   - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status - no correction stage
   - recommended stage overrides table default when it is a valid correctable stage
   - conflict between table and recommended stage: warning (normal mode) / `strictFail` + error (strict mode)
@@ -69,7 +69,7 @@
   - does not include unrelated workflow modes or giant instruction sets
 - `src/traceChecker.ts` extended with trace-aware correction suggestions
   - `suggestCorrectionStageFromTraceIssue(issue)`: deterministic prefix-to-stage mapping
-    - `TRACE_MISSING_LINK_TARGET`: maps target ID prefix to owning stage (`BEH→behavior-model`, `PSE→pseudocode-packet`, `TST→test-strategy`, `VER→verification`, etc.)
+    - `TRACE_MISSING_LINK_TARGET`: maps target ID prefix to owning stage (`BEH -> behavior-model`, `PSE -> pseudocode-packet`, `TST -> test-strategy`, `VER -> verification`, etc.)
     - `TRACE_MALFORMED_ID` and `TRACE_ORPHAN_ID`: suggest `design-map`
   - `buildTraceCorrectionSuggestions(results)`: returns deduplicated suggestion strings
 - `check --trace` and `check --design-map` output now includes correction suggestions when trace issues exist

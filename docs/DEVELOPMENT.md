@@ -110,7 +110,7 @@ Important implementation files:
 - `VERDICT_ROUTE_TABLE`: maps non-PASS verdicts to default correction stages
 - `routeJudgeVerdict(parsed, options)`: pure routing function, no file I/O
 - `parseAndRoute(content, options)`: convenience wrapper
-- conflict detection: recommended stage vs. routing table → warning in normal mode, `strictFail` + error in strict mode
+- conflict detection: recommended stage vs. routing table -> warning in normal mode, `strictFail` + error in strict mode
 - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status
 
 `src/correctionState.ts` wires the parser and router to the run folder:
