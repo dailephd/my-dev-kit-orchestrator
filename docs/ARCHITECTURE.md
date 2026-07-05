@@ -2,7 +2,10 @@
 
 `my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
 
-`v1.0.0` is the current stable workflow contract release. It preserves the v0.5.0 Design Trace and DesignMap checks and the v0.6.0 correction-routing behavior while adding artifact contract checks, stage-gate validation, combined checks, and portable run export.
+`v1.1.0` is the current published release. It preserves the v1.0.0 workflow
+contract, the v0.5.0 Design Trace and DesignMap checks, and the v0.6.0
+correction-routing behavior while adding greenfield workflow support and a
+target-owned package security contract.
 
 ## Architecture overview
 
@@ -306,4 +309,15 @@ Those exclusions are intentional. The release is designed to keep workflow logic
 
 Artifact and trace checks are deterministic text inspection. They do not perform AST-level code tracing, coverage instrumentation, semantic LLM grading, automatic artifact rewriting, or automatic code modification.
 
-The `export` command reads run state and emits a portable plain-text handoff to stdout or a selected output file. It does not execute agents, call external services, or mutate run artifacts.
+The `export` command reads run state and emits a portable plain-text handoff to stdout or a selected output file. It rejects raw `..` traversal in `--out`, refuses symlink targets, and does not execute agents, call external services, or mutate run artifacts.
+
+## Package security contract
+
+The release branch also carries a lightweight target-owned security contract:
+
+- `npm run test:security` runs `scripts/test-security.mjs`
+- the script validates package name, semver, CLI bin path, `files` policy, and
+  `npm pack --dry-run --json` contents
+- it is deterministic, local, and dependency-free
+- it does not replace `my-dev-kit-lab`; it gives the package its own portable
+  release-safety baseline

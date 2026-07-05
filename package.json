@@ -21,6 +21,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "start": "node dist/cli.js",
+    "docs:check": "node scripts/check-docs-consistency.mjs",
     "smoke:cli": "node scripts/cli-smoke.mjs",
     "test": "jest",
     "test:security": "node scripts/test-security.mjs",

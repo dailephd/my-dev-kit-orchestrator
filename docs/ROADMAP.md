@@ -2,9 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.0.0` is the current stable implemented release and is newer than every `v0.x.0` release.
+`v1.1.0` is the current published release and is newer than every prior
+`v1.0.0` or `v0.x.0` release.
 
-`v1.1.0` is implemented and awaiting a separate pre-release workflow.
+`v1.0.0` remains the prior stable workflow-contract release.
 Later versions remain planned milestones.
 
 ## Version summary
@@ -17,7 +18,7 @@ Later versions remain planned milestones.
 - `v0.5.0` added Design Trace and DesignMap support across requirements, context, behavior, invariants, transitions, pseudocode, tests, implementation, verification, and risks.
 - `v0.6.0` added judge correction routing and trace-aware workflow recovery.
 - `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
-- `v1.1.0` adds the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
+- `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
 - `v1.2.0` will add the Android Compose greenfield profile as the first mobile starter profile, with Android stack defaults, scaffold-plan guidance, docs templates, verification commands, and first vertical slice guidance.
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
@@ -170,7 +171,7 @@ Later versions remain planned milestones.
 
 ### v1.0.0
 
-- current stable workflow contract release
+- prior stable workflow contract release
 - `src/contractChecker.ts`: deterministic artifact contract checker
   - `checkArtifactContract()`: per-artifact checks
   - `checkRunArtifactContracts()`: run-level check across all stages and modes
@@ -212,6 +213,9 @@ Later versions remain planned milestones.
 ## Implemented v1.1.0
 
 ### v1.1.0 - Greenfield Bootstrap Foundation
+
+Status:
+Published as `1.1.0`.
 
 Goal:
 Add platform-neutral Greenfield Project Bootstrap mode so
@@ -343,8 +347,7 @@ Boundary:
   workflows.
 - shared artifact and contract checking covers greenfield; no
   `validateGreenfieldArtifacts.ts` was added.
-- the pre-existing cross-mode export traversal-guard gap remains a separate
-  follow-up and is not greenfield scope.
+- cross-mode export traversal rejection is implemented in the current release.
 
 ## Planned milestones
 

@@ -4,7 +4,7 @@
 
 ## v1.1.0 - Greenfield Bootstrap Foundation
 
-Implemented but not yet published:
+Released.
 
 - added `greenfield` as the seventh workflow mode with 13 bounded stages
 - added project-brief loading and deterministic normalization
@@ -19,14 +19,23 @@ Implemented but not yet published:
   registries rather than creating parallel greenfield infrastructure
 - added greenfield regression coverage for `check --artifacts`, `check --all`,
   `export`, and existing modes
+- added a target-owned `test:security` contract for package metadata and
+  tarball-content validation
+- fixed the cross-mode `export --out` traversal guard so raw parent-path
+  traversal attempts such as `../x.txt` are rejected before path resolution
+- verified the Node 22 and Node 24 GitHub Actions matrix across
+  `windows-latest`, `macos-15`, and `ubuntu-latest`
+- completed `my-dev-kit-lab` security validation for release preparation
 - retained the shared artifact checker and contract checker; a separate
   `validateGreenfieldArtifacts.ts` was intentionally unnecessary
 - deferred Android and mobile profiles to v1.2.0 or later
 
-Known follow-up: the pre-existing cross-mode `export --out` traversal guard
-does not reject a normalized parent path such as `../x.txt`. This remains
-unfixed in v1.1.0 and export documentation does not claim complete traversal
-protection.
+Known limitations in the released `v1.1.0` line:
+
+- component docs remain empty until the brief schema adds module/component hints
+- the repository still has split `src/__tests__/*.test.ts` and
+  `tests/**/*.spec.ts` conventions
+- Android/mobile support remains deferred to v1.2.0 or later
 
 ## v1.0.0 - Stable Workflow Contract and Portable Run Handoff
 

@@ -48,11 +48,9 @@ npm run lint
 
 ## Branch expectations
 
-For `v0.1.0` work:
-
-- start from `feature/v0.1.0-workflow-shell` unless a task says otherwise
-- use professional branch names that describe the task clearly
-- merge task branches back into `feature/v0.1.0-workflow-shell`
+- start from the branch named in the task or release prompt
+- use branch names that describe the task clearly
+- keep documentation-only work scoped to documentation and validation changes
 - do not push, tag, or publish unless explicitly asked
 
 ## Source layout
@@ -78,11 +76,12 @@ Important implementation files:
 
 ## Development notes
 
-- Keep the command surface small. `v0.1.0` is a workflow shell, not a large automation platform.
-- Do not add direct LLM execution or automatic `my-dev-kit` execution in `v0.1.0`.
+- Keep the command surface small. The project is a workflow shell, not a large automation platform.
+- Do not add direct LLM execution or automatic `my-dev-kit` execution.
 - Prefer edits that preserve the existing workflow architecture instead of introducing parallel systems.
 - Keep run folders local and untracked.
-- When behavior changes, keep docs aligned with the real CLI output and stage definitions.
+- When behavior changes, keep docs aligned with real CLI output, stage definitions, artifact paths, and package metadata.
+- Run `npm run docs:check` when changing user-facing documentation.
 
 ## Extraction mode implementation (v0.2.1)
 
@@ -203,5 +202,5 @@ move tests merely while adding a mode.
 - Verify changes with the narrowest relevant checks first, then broader ones when needed.
 - Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
 - Run `npm run lint` when changing TypeScript files.
-- Keep the GitHub Actions OS matrix on `ubuntu-latest`, `windows-latest`, and `macos-latest` for release-facing CI work.
+- Keep the GitHub Actions OS matrix on `ubuntu-latest`, `windows-latest`, and `macos-15` for release-facing CI work, with Node 22 and Node 24.
 - Report skipped checks and unresolved risks clearly in release work.
