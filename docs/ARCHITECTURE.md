@@ -57,7 +57,7 @@ These commands cover workspace setup, run creation, prompt retrieval, run inspec
 
 ## Workflow mode layer
 
-`my-dev-kit-orchestrator` ships with six workflow modes:
+`my-dev-kit-orchestrator` ships with seven workflow modes:
 
 - `feature`
 - `repair`
@@ -65,6 +65,7 @@ These commands cover workspace setup, run creation, prompt retrieval, run inspec
 - `refactor`
 - `harden`
 - `extraction`
+- `greenfield`
 
 Each mode has a fixed stage sequence and a corresponding ordered list of expected artifact files. The CLI uses those definitions as the source of truth for prompt generation and stage advancement.
 
@@ -76,6 +77,7 @@ Examples:
 - `refactor` preserves behavior through invariant and compatibility stages
 - `harden` emphasizes assumptions, failure modes, guards, and resilience testing
 - `extraction` adds source-repository inspection, source workflow mapping, source-to-target porting analysis, a do-not-port gate, a golden behavior contract, and a target architecture proposal before implementation begins
+- `greenfield` guides a new project from an idea brief through a platform-neutral scaffold and first vertical slice to an initial `my-dev-kit` index
 
 ## Run workspace and storage model
 

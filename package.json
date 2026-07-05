@@ -1,6 +1,6 @@
 {
   "name": "@dailephd/my-dev-kit-orchestrator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI-first workflow tool for design-first software development with coding agents",
   "main": "dist/index.js",
   "repository": {
@@ -23,6 +23,7 @@
     "start": "node dist/cli.js",
     "smoke:cli": "node scripts/cli-smoke.mjs",
     "test": "jest",
+    "test:security": "node scripts/test-security.mjs",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",

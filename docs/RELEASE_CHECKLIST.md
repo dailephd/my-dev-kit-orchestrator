@@ -11,6 +11,7 @@ release completion.
 - [ ] `npx jest tests/greenfield --silent`
 - [ ] `npx tsc --noEmit`
 - [ ] `npm test`
+- [ ] `npm run test:security`
 - [ ] `npm run build`
 - [ ] `node dist/cli.js --version`
 - [ ] `node dist/cli.js --help`
