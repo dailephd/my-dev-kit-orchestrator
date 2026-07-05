@@ -1,0 +1,131 @@
+Artifact: V120AndroidComposeArchitectureAudit
+Batch: v1.2.0 Batch 1
+
+PURPOSE
+Inspect the actual v1.1.0 implementation and define exactly how Android Compose should fit into the existing greenfield profile architecture, before any v1.2.0 code changes.
+
+BASELINE
+- branch (at batch start): release/v1.1.0, HEAD 299fb4543c7fc4ee482e364adb214bc13424a54c
+- planning branch created for this batch: plan/v1.2.0-android-compose-architecture-audit (from the same commit)
+- package version: 1.1.0 (package.json and package-lock.json both confirm 1.1.0)
+- tag status: `v1.1.0` tag exists locally, pointing at commit 48d341e ("Record real cross-platform CI evidence and final pre-release rerun results")
+- npm publication status: confirmed published -- `npm view @dailephd/my-dev-kit-orchestrator versions --json` returned `["1.0.0", "1.1.0"]`
+- important baseline nuance: current HEAD (299fb45) is 2 commits ahead of the v1.1.0 tag (48d341e): "Stop tracking ignored docs and reports" and "Repair v1.1.0 documentation compatibility". `git diff --stat v1.1.0 HEAD` confirms these 2 commits touched only CHANGELOG.md, README.md, docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, docs/RELEASE_CHECKLIST.md, docs/ROADMAP.md, package.json (added a `docs:check` script only, version unchanged), and added scripts/check-docs-consistency.mjs plus src/__tests__/docs-consistency.test.ts. No src/ runtime code changed between the tag and current HEAD. This batch treats current HEAD as the effective v1.1.0 baseline (published version's behavior plus already-committed, not-yet-tagged documentation hardening), per section 1.5's instruction to start from the latest release/v1.1.0 state and report it clearly.
+- CLI version: `node dist/cli.js --version` -> 1.1.0 (confirmed by build+run in this batch)
+
+COMMANDS RUN
+1. git status --short / git branch --show-current / git rev-parse HEAD / git log --oneline --decorate -15 / git tag --list
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   exit code: 0 (all)
+   summary: clean working tree; on release/v1.1.0 at 299fb45; v1.1.0 tag present at 48d341e (2 commits behind HEAD).
+
+2. node --version / npm --version
+   exit code: 0
+   summary: Node v24.11.0, npm 11.14.0.
+
+3. node -p "require('./package.json').name/version/scripts/bin"
+   exit code: 0
+   summary: @dailephd/my-dev-kit-orchestrator@1.1.0; scripts include build, docs:check, smoke:cli, test, test:security, lint, lint:docs, typecheck; bin: my-dev-kit-orchestrator -> dist/cli.js.
+
+4. node -p "require('./package-lock.json').version / packages[''].version"
+   exit code: 0
+   summary: both report 1.1.0, consistent with package.json.
+
+5. npm view @dailephd/my-dev-kit-orchestrator versions --json
+   exit code: 0
+   summary: ["1.0.0", "1.1.0"] -- v1.1.0 is published.
+
+6. git checkout -b plan/v1.2.0-android-compose-architecture-audit
+   exit code: 0
+   summary: planning branch created from current HEAD.
+
+7. npx @dailephd/my-dev-kit@latest index --root . --src src --out .my-dev-kit --call-graph --json
+   exit code: 0
+   summary: index refreshed cleanly (0 errors, 0 warnings).
+
+8. npx @dailephd/my-dev-kit@latest context --index .my-dev-kit --query "my-dev-kit-orchestrator v1.2.0 Android Compose greenfield profile architecture: ..." --out .my-dev-kit/context-capsule-v120-batch1.json --audit-out .my-dev-kit/retrieval-audit-record-v120-batch1.json --json
+   exit code: 0
+   summary: context adequacy "context sufficient with listed assumptions" (no specific gaps listed); combined with targeted full-file reads below, judged sufficient for this batch's purpose.
+
+9. git diff --stat v1.1.0 HEAD
+   exit code: 0
+   summary: confirmed only docs/scripts/tests changed between the tag and HEAD (see "Baseline" above); no greenfield runtime source changed.
+
+Targeted source reads (all in this session, no full-file-read justification needed beyond normal targeted retrieval since every file below was named explicitly in section 5 of this batch's own instructions):
+- src/greenfield/profiles/profileTypes.ts, resolveGreenfieldProfile.ts, typescriptCliProfile.ts
+- src/greenfield/brief/briefTypes.ts
+- src/greenfield/bootstrap/bootstrapBundleTypes.ts, buildBootstrapBundle.ts, validateBootstrapDocs.ts, populateProjectDocsFromBrief.ts
+- src/greenfield/scaffold/scaffoldPlanTypes.ts, buildScaffoldPlan.ts
+- src/greenfield/modes/greenfieldArtifactContract.ts, greenfieldStages.ts
+- scripts/check-docs-consistency.mjs (new since v1.1.0 tag)
+- docs/WORKFLOWS.md, README.md, docs/ARTIFACTS.md (grep-targeted sections on profile/artifact mentions)
+
+Skipped (relied on established knowledge from direct implementation work across the v1.1.0 batches, confirmed unchanged by `git diff --stat v1.1.0 HEAD` above): src/program.ts, src/types.ts, src/workflows.ts, src/artifactChecker.ts, src/contractChecker.ts, src/commands/{start,prompt,status,list,check,export}.ts, src/greenfield/modes/greenfieldMode.ts, src/greenfield/brief/{briefSchema,loadProjectBrief,normalizeProjectBrief}.ts, src/greenfield/bootstrap/{projectDocBootstrapTypes,bootstrapProjectDocs,populateComponentDocsFromBrief}.ts, src/greenfield/scaffold/renderScaffoldPrompt.ts, scripts/cli-smoke.mjs, scripts/test-security.mjs, .github/workflows/validate.yml, all tests/greenfield/*.spec.ts, all src/__tests__/*.test.ts. These were all authored or last verified directly in the v1.1.0 batches (2 through 5 and the release-risk repair) within recent memory, and the diff above confirms none of them changed since. Re-reading them in full would not surface new information.
+
+CURRENT GREENFIELD ARCHITECTURE (owners, confirmed by direct inspection)
+- mode registration owner: src/types.ts (VALID_MODES) -- unchanged since v1.1.0 Batch 4, not re-read this batch (confirmed unchanged by diff).
+- stage definition owner: src/workflows.ts (WORKFLOW_DEFINITIONS/ARTIFACT_MAP) + src/greenfield/modes/greenfieldStages.ts (GREENFIELD_STAGE_NAMES, data fed into workflows.ts) -- unchanged.
+- artifact map owner: src/greenfield/modes/greenfieldMode.ts (GREENFIELD_ARTIFACT_MAP, the 10 greenfield-only stage-to-path entries) -- unchanged; re-confirmed via greenfieldStages.ts's own header comment.
+- artifact contract owner: src/artifactChecker.ts (STAGE_TO_KIND/SECTION_REGISTRY) + src/greenfield/modes/greenfieldArtifactContract.ts (GREENFIELD_STAGE_TO_KIND/GREENFIELD_SECTION_REGISTRY, spread in) -- re-read this batch, unchanged shape.
+- profile type owner: src/greenfield/profiles/profileTypes.ts (GreenfieldProfile, GreenfieldProfileId, GreenfieldProfileSelection) -- re-read this batch in full.
+- profile resolution owner: src/greenfield/profiles/resolveGreenfieldProfile.ts -- re-read this batch in full.
+- profile catalog owner: src/greenfield/profiles/typescriptCliProfile.ts, nextjsAppProfile.ts (one file per profile, each exporting a single GreenfieldProfile constant) -- re-read typescriptCliProfile.ts this batch; nextjsAppProfile.ts follows the identical shape (confirmed in prior batches, unchanged).
+- brief normalization owner: src/greenfield/brief/normalizeProjectBrief.ts (not re-read; confirmed unchanged) -- brief type owner (briefTypes.ts) re-read this batch.
+- bootstrap bundle owner: src/greenfield/bootstrap/buildBootstrapBundle.ts + bootstrapBundleTypes.ts -- both re-read this batch in full.
+- docs bootstrap owner: src/greenfield/bootstrap/populateProjectDocsFromBrief.ts (re-read this batch) + bootstrapProjectDocs.ts, populateComponentDocsFromBrief.ts (not re-read, confirmed unchanged).
+- docs validation owner: src/greenfield/bootstrap/validateBootstrapDocs.ts -- re-read this batch in full; this file is the single most important integration point for v1.2.0 (see below).
+- scaffold plan owner: src/greenfield/scaffold/buildScaffoldPlan.ts + scaffoldPlanTypes.ts -- both re-read this batch in full; the second most important integration point.
+- prompt generation owner: src/promptGenerator.ts (11 inline greenfield stage functions) + src/greenfield/scaffold/renderScaffoldPrompt.ts (scaffold-plan/scaffold-implementation delegated prompts) -- not re-read in full this batch (confirmed unchanged by diff); the `greenfieldStarterProfilePrompt` function's hardcoded profile-list prose (known from prior implementation work) is flagged below from memory and should be re-verified verbatim at Batch 2 time.
+- check/export owner: src/commands/check.ts, src/commands/export.ts, src/contractChecker.ts, src/artifactChecker.ts -- not re-read this batch (confirmed unchanged); already proven fully generic over mode/stage/profile in v1.1.0 Batch 5's regression suite.
+- docs consistency owner: scripts/check-docs-consistency.mjs (new since the v1.1.0 tag) -- read in full this batch. This script is itself a second, load-bearing integration point for v1.2.0 (see below).
+- tests owner: tests/greenfield/*.spec.ts (10 files) + src/__tests__/*.test.ts (29 files, including the new docs-consistency.test.ts) -- not re-read in full this batch; file-by-file mapping to v1.2.0 test needs is in artifacts/v1.2.0-android-compose-test-plan.txt.
+
+V1.2.0 FIT ASSESSMENT
+
+Where Android Compose should integrate:
+1. A new profile catalog file, src/greenfield/profiles/androidComposeProfile.ts, exporting a single `ANDROID_COMPOSE_PROFILE: GreenfieldProfile` constant -- exactly the same pattern as typescriptCliProfile.ts/nextjsAppProfile.ts. No new profile *type* is needed (see profile contract artifact).
+2. `GreenfieldProfileId` (profileTypes.ts) gains the literal `'android-compose'`.
+3. `SUPPORTED_PROFILES` (resolveGreenfieldProfile.ts) gains an `'android-compose': ANDROID_COMPOSE_PROFILE` entry.
+4. Profile resolution gains two new, additive behaviors (both currently absent, not currently misbehaving because they've never been exercised): (a) a small, explicit alias table for a few unambiguous synonyms ("android", "android-app", "kotlin-compose", "jetpack-compose") mapping to `'android-compose'`, resolved via exact lookup, not fuzzy matching; (b) a new "generic mobile ambiguity" fallback branch that returns `status: 'unresolved'` (a status value already defined in `GreenfieldProfileResolutionStatus` but never actually produced by any code path today) when the brief signals "mobile" without naming a specific technology, so ambiguous mobile requests are never silently resolved to Android Compose.
+5. `buildBootstrapBundle.ts`'s `buildValidationRules()` currently hardcodes a rule literally named `'no-android-mobile-claims'` with the description "Generated docs must not claim Android, iOS, React Native, or Flutter support." This rule is definitionally wrong once Android Compose ships and must be split/renamed so Android/Jetpack claims are permitted exactly when the selected profile is `android-compose`, while iOS/Flutter/React Native/Kotlin-Multiplatform/Compose-Multiplatform claims remain forbidden for every profile, always.
+6. `validateBootstrapDocs.ts`'s `ANDROID_MOBILE_RE` (currently `/\b(android|ios|react-native|flutter|jetpack|kotlin multiplatform|compose-multiplatform)\b/i`, applied unconditionally to every generated doc) must become profile-aware: `validateBootstrapDocs()` needs an additional parameter (e.g. the selected profile id) so it can distinguish "android"/"jetpack" mentions that are legitimate for an android-compose bundle from the same words appearing in, say, a typescript-cli bundle's docs (which would still be a genuine defect). "ios", "react-native", "flutter", "kotlin multiplatform", and "compose-multiplatform" remain forbidden unconditionally, for every profile, forever (Android Compose is single-platform Android, not a multiplatform/cross-platform technology).
+7. `buildScaffoldPlan.ts` has two hardcoded, npm-specific behaviors that do not generalize to a Gradle-based profile: (a) `setupCommands: profile ? ['npm install'] : []` is unconditionally npm; (b) `buildValidationCommands()` keyword-maps "typecheck"/"build"/"test" substrings in `profile.validationExpectations` to hardcoded `npm run typecheck`/`npm run build`/`npm test` strings, which would incorrectly produce npm commands for a Gradle profile's "build"/"test" expectations. The correct fix is additive: give `GreenfieldProfile` its own explicit `setupCommands: string[]` and `validationCommands: string[]` fields (each profile states its own literal commands), and have `buildScaffoldPlan.ts` prefer those over the current hardcoded/keyword-sniffing logic. This keeps typescript-cli and nextjs-app's existing behavior identical (they simply declare the same commands the current code already hardcodes) while letting android-compose declare Gradle-appropriate commands.
+8. `buildFirstRunnableBehavior()`'s entry-point detection regex `/\.(ts|tsx)$/` only matches TypeScript files and must be broadened (e.g. to `/\.(ts|tsx|kt)$/`) so a Kotlin `MainActivity.kt`-style entry point can be detected for android-compose.
+9. `scripts/check-docs-consistency.mjs` hardcodes the expected profile-support sentence as a regex requiring exactly `` `typescript-cli` and `nextjs-app` `` (line ~125) and separately hardcodes `misleadingAndroidClaims` patterns that explicitly reject any doc containing "supports android" or "supports mobile" (line ~155-165) -- both **must** change once Android Compose docs are written, or the docs:check gate will either (a) permanently fail once docs correctly list three profiles, or (b) incorrectly flag "supports Android Compose" as a misleading claim. This script also already demonstrates the *correct* pattern to follow for the profile-list check: it extracts ground truth programmatically from source for modes (`extractModes` reads `src/types.ts`) and greenfield stages (`extractGreenfieldStages` reads `greenfieldStages.ts`) rather than hardcoding an expected list; the profile-list check should be refactored the same way (extract `SUPPORTED_PROFILES`' keys from `resolveGreenfieldProfile.ts`, or `GreenfieldProfileId`'s union members from `profileTypes.ts`) instead of hardcoding a two-profile sentence that will go stale again at v1.3.0.
+
+What should remain unchanged (confirmed, with evidence):
+- Mode registry, stage registry, artifact-map registry, artifact-contract registry (types.ts/workflows.ts/artifactChecker.ts/contractChecker.ts/greenfieldMode.ts/greenfieldArtifactContract.ts): Android Compose is profile-content, not a new stage or artifact path. Zero changes needed to any of these files. Confirmed by design: artifact paths are keyed by stage name, never by profile.
+- `GreenfieldBootstrapBundle`'s field set (bootstrapBundleTypes.ts): all 9 fields already sufficient; Android-Compose-specific content flows through `stackAssumptions`/`templateTargets`/`validationExpectations`/etc. automatically once the profile exists. No new bundle fields needed.
+- `populateProjectDocsFromBrief.ts`'s nine doc builders: already fully generic/bundle-field-driven, confirmed by direct re-read; needs zero changes.
+- Component docs: remain intentionally empty. The brief schema's lack of module/component hints is unrelated to Android Compose (Android Compose's own internal structure -- composables, activities -- is not the same concern as the orchestrator's cross-package "component/module" concept, which was about monorepo-style layering). No change to this decision.
+- `check`/`export`/`contractChecker`/`artifactChecker`: fully generic over mode and stage already; profiles never reach these layers at all (they operate on `RunMetadata.stages`, which is mode-keyed, not profile-keyed). Zero changes needed; v1.1.0 Batch 5 already proved this with a full regression suite.
+- `renderScaffoldPrompt.ts`'s two delegated prompts (scaffold-plan, scaffold-implementation): already say "use the bootstrap bundle's scaffoldPlanningInputs as the source of truth; do not invent structure beyond it" -- profile-driven content flows through automatically; no wording changes anticipated, but should be spot-checked at Batch 3 time once the profile exists to confirm the rendered prompt reads sensibly for a Gradle-based profile.
+
+What must not be duplicated:
+- No second profile-resolution mechanism, no second bootstrap-bundle builder, no second scaffold-plan builder, no second artifact-contract registry, no second docs-validation function. Every integration point above is an additive change to an existing, single-owner file/function -- never a new parallel file duplicating existing logic for "the mobile case."
+
+REQUIRED ARCHITECTURE DECISIONS (see artifacts/v1.2.0-android-compose-profile-contract.txt for full detail)
+- brief schema: no changes required. Existing `preferredProfile`/`platformTarget` free-text fields are already sufficient for explicit Android Compose requests.
+- profile contract: no new type needed for the profile shape itself; `GreenfieldProfileId` gains one literal; `GreenfieldProfile` gains two new fields (`setupCommands`, `validationCommands`) needed by all profiles going forward (additive, and the two existing profiles must be updated to declare their current implicit values explicitly, preserving today's behavior byte-for-byte).
+- profile resolution: add an explicit alias table (small, bounded, testable) and a new "unresolved" fallback branch for generic mobile ambiguity; unsupported iOS/Flutter/React Native continue to fall through the existing catalog-miss path unchanged.
+- bootstrap bundle: `buildValidationRules()`'s Android/mobile-claims rule must be split into an always-on "no unsupported mobile platform claims" rule (iOS/Flutter/React Native/multiplatform) and a profile-conditional "Android/Jetpack claims permitted only for android-compose" rule.
+- docs bootstrap: `validateBootstrapDocs()` needs a new parameter carrying the selected profile id so its claim-detection regex can become profile-aware; the nine doc builders themselves need no changes.
+- scaffold planning: `GreenfieldProfile` gains `setupCommands`/`validationCommands`; `buildScaffoldPlan.ts` prefers these over its current hardcoded npm logic; the entry-point regex is broadened to include `.kt`.
+- prompt generation: `greenfieldStarterProfilePrompt`'s hardcoded "Supported profiles in v1.1.0: typescript-cli, nextjs-app" prose needs a one-line update (to be verified verbatim and updated at Batch 2 time); no other prompt changes anticipated.
+- check/export: no changes.
+- documentation: README.md/docs/WORKFLOWS.md profile-support sentences need updating (Batch 5); `scripts/check-docs-consistency.mjs` needs its profile-list check refactored to extract ground truth from source (matching its own established pattern for modes/stages) instead of a hardcoded two-profile regex, and its `misleadingAndroidClaims` patterns need narrowing so "supports Android Compose" is no longer a false positive while "supports react native"/"supports flutter"/"supports ios" remain rejected.
+
+EXISTING RISKS
+- test-directory split (src/__tests__/*.test.ts vs tests/**/*.spec.ts): unchanged from v1.1.0's own disposition (documented, non-blocking, both conventions exercised by `npm test`). Not re-litigated this batch; v1.2.0 test plan follows the same tests/greenfield/*.spec.ts convention for new greenfield-profile tests, consistent with section 6.7's explicit instruction.
+- component docs limitation: unchanged, confirmed still applicable and not affected by Android Compose (see "What should remain unchanged" above).
+- docs drift: the `check-docs-consistency.mjs` hardcoded profile-list regex and `misleadingAndroidClaims` patterns are precisely the kind of drift risk this script exists to catch for *other* claims, but the script itself is not yet future-proofed against its own next required change. This is a new, concrete finding from this batch (not a carryover risk) and is the most important documentation-workflow risk for v1.2.0 Batch 5 to resolve.
+- `buildScaffoldPlan.ts`'s current hardcoded npm-specific logic is not a defect in v1.1.0 (npm is correct for both existing profiles) but is a latent gap that would silently produce wrong output (npm commands for a Gradle project) if a new profile were added without also fixing this function. This is a new finding from this batch, not a pre-existing tracked risk.
+- my-dev-kit's indexing (used by the `initial-index` greenfield stage) is TypeScript/JavaScript-oriented; it is not yet confirmed whether it meaningfully indexes Kotlin/Gradle source. This is a documented open question for Batch 3/4 to resolve empirically (e.g. by running `npx @dailephd/my-dev-kit@latest index` against a hand-written minimal Kotlin file during Batch 3 or 4's own validation), not a blocker for this batch, since the `initial-index` prompt already only *guides* the handoff and does not require the orchestrator itself to successfully index anything -- an honest "not indexable by current my-dev-kit language support" outcome is an acceptable, documented result, not a failure.
+
+CONTEXT ADEQUACY STATEMENT
+sufficient for Batch 2, with the following listed assumptions:
+- The two hardcoded-npm functions found in buildScaffoldPlan.ts (setupCommands, buildValidationCommands) are the only scaffold-planning code with platform-specific assumptions; no other file in src/greenfield/scaffold/ was found to have platform-specific logic.
+- greenfieldStarterProfilePrompt's exact current prose was not re-read verbatim this batch (relied on memory from authoring it in v1.1.0 Batch 4); Batch 2 must re-read src/promptGenerator.ts directly before editing it, not assume this audit's paraphrase is byte-exact.
+- my-dev-kit's Kotlin/Gradle indexing capability is unconfirmed and treated as an open question, not a blocker, per "Existing risks" above.
+
+STATUS: complete

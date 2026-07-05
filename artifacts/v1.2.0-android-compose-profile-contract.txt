@@ -1,0 +1,140 @@
+Artifact: V120AndroidComposeProfileContract
+Batch: v1.2.0 Batch 1
+
+PURPOSE
+Define the exact Android Compose profile contract for implementation in later v1.2.0 batches, so Batch 2 does not need to make new design decisions -- only implement this contract.
+
+PROFILE IDENTITY
+- profile id: `android-compose` (GreenfieldProfileId literal, added alongside the existing `'typescript-cli' | 'nextjs-app'`)
+- display name: "Android Compose"
+- category: `"mobile"` (a new category value; existing categories are `"cli"` and `"web-app"`)
+- supported project kind: "Android application built with Jetpack Compose"
+
+STACK ASSUMPTIONS
+- Kotlin
+- Jetpack Compose
+- Gradle (via the generated Gradle wrapper, not a system-installed Gradle)
+- Android application module (single `app` module; no multi-module/dynamic-feature scaffold in v1.2.0)
+- Android SDK: an **external environment requirement**, not an orchestrator requirement. The orchestrator never installs, invokes, or assumes availability of the Android SDK, an emulator, or a connected device. This must be stated explicitly in `unsupportedConditions` and in generated docs (see "Docs requirements" below), not merely implied.
+
+PROFILE METADATA (all fields already exist on `GreenfieldProfile`; values below are what `androidComposeProfile.ts` should declare)
+
+- templateTargets (illustrative planned paths only; nothing is written to disk by this profile):
+  - `settings.gradle.kts`
+  - `build.gradle.kts`
+  - `app/build.gradle.kts`
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/java/<package>/MainActivity.kt`
+  - `app/src/test/java/<package>/ExampleUnitTest.kt`
+  - `app/src/androidTest/java/<package>/ExampleInstrumentedTest.kt`
+  (Note: the existing `buildFileGroups()` config/source split in buildScaffoldPlan.ts -- files without a `/` are "configuration", files with a `/` are "source" -- already generalizes correctly to this list without any change: `settings.gradle.kts`/`build.gradle.kts` become the configuration group, everything under `app/` becomes the source group.)
+
+- documentationExpectations:
+  - "README.md usage section (Gradle build/run instructions)"
+  - "Compose UI entry-point overview"
+  - "Android SDK/emulator environment prerequisites (external, not orchestrator-managed)"
+
+- testExpectations:
+  - "unit tests under app/src/test (JVM, no device required)"
+  - "instrumentation tests under app/src/androidTest (require a connected device or emulator; not run by the orchestrator)"
+
+- validationExpectations (existing field; drives docGenerationInstructions.validationExpectations, which is profile-content, not command text -- see "validationCommands" below for the new field that carries actual command strings):
+  - "Gradle build"
+  - "Gradle unit tests"
+  - "Gradle instrumented tests (requires a connected device or emulator)"
+
+- scaffoldPlanningHints:
+  - "single Android app module"
+  - "Compose-based UI, no XML layouts"
+  - "Gradle wrapper included; no separate dependency-manager install step"
+
+- unsupportedConditions:
+  - "requires a native iOS build"
+  - "requires React Native or Flutter tooling"
+  - "requires a connected Android device or emulator for instrumentation tests (orchestrator does not provide or manage one)"
+  - "requires an installed Android SDK for any actual Gradle build to succeed (orchestrator does not install or verify this)"
+
+- notesForBootstrapBundle: "Single-module Android app; Gradle wrapper included; no npm-based setup step. Android SDK availability is an external environment prerequisite, not verified by the orchestrator."
+
+TWO NEW ADDITIVE FIELDS REQUIRED ON `GreenfieldProfile` (profileTypes.ts)
+
+Both fields are required (not optional) so every profile -- including the two existing ones -- must declare them explicitly, preserving current behavior byte-for-byte while removing the hardcoded npm assumption from buildScaffoldPlan.ts:
+
+- `setupCommands: string[]`
+  - typescript-cli: `['npm install']` (current hardcoded behavior, made explicit)
+  - nextjs-app: `['npm install']` (current hardcoded behavior, made explicit)
+  - android-compose: `[]` (the generated Gradle wrapper handles dependency resolution on first build; there is no separate "install" step analogous to `npm install`)
+
+- `validationCommands: string[]`
+  - typescript-cli: `['npm run typecheck', 'npm run build', 'npm test']` (current keyword-mapped output, made explicit)
+  - nextjs-app: `['npm run typecheck', 'npm run build', 'npm test']` (current keyword-mapped output, made explicit)
+  - android-compose: `['./gradlew build', './gradlew testDebugUnitTest']` (NOT `./gradlew connectedAndroidTest` -- instrumentation tests require a connected device/emulator and must be described as available-but-not-orchestrator-run, per the do-not-expand list, not listed as a plain validation command the same way unit tests are)
+
+`buildScaffoldPlan.ts` changes required (Batch 3): `setupCommands: profile ? profile.setupCommands : []` (replacing the hardcoded `['npm install']`); `validationCommands: profile ? profile.validationCommands : []` (replacing `buildValidationCommands()`'s keyword-sniffing entirely). `buildFirstRunnableBehavior()`'s entry-point regex changes from `/\.(ts|tsx)$/` to `/\.(ts|tsx|kt)$/`.
+
+RESOLUTION RULES (resolveGreenfieldProfile.ts)
+
+- explicit `android-compose`: already works via the existing generic `normalizedId = requested.trim().toLowerCase().replace(/\s+/g, '-')` + catalog lookup, once `'android-compose'` is added to `SUPPORTED_PROFILES`. No special-case code needed for the exact id or for "Android Compose" (spaced) input.
+- explicit "Android app", "android", "Kotlin Compose app", "jetpack compose" wording (as the literal `preferredProfile` string, not free-text idea prose): resolved via a small, explicit, bounded alias table checked after normalization and before the strict catalog lookup:
+  ```
+  const PROFILE_ALIASES: Record<string, GreenfieldProfileId> = {
+    'android': 'android-compose',
+    'android-app': 'android-compose',
+    'kotlin-compose': 'android-compose',
+    'kotlin-compose-app': 'android-compose',
+    'jetpack-compose': 'android-compose',
+  };
+  ```
+  If `normalizedId` matches an alias key, resolve to the aliased profile with `status: 'selected'` and a `reason` that names both the raw request and the alias target (e.g. `Explicit profile "Android app" was resolved via known alias to "android-compose" and selected.`). This is still an explicit, deterministic, testable mapping -- not silent inference from free text.
+- generic "mobile app" ambiguity (no `preferredProfile` at all; brief only signals "mobile" through `platformTarget`/`preferredStack`/idea text): **new** fallback branch, checked before the existing web/CLI fallback. Add a `MOBILE_HINT_RE` (e.g. `/\b(mobile|android|ios)\b/i`) tested against the same `platformTarget`/`preferredStack` signals `resolveFallbackProfile` already inspects. If it matches and no explicit `preferredProfile` was given, return:
+  ```
+  {
+    status: 'unresolved',
+    reason: 'The brief signals a mobile project but does not name a specific platform or profile. ' +
+      'Android Compose is supported; set preferredProfile to "android-compose" to select it explicitly. ' +
+      'This request is preserved as unresolved rather than silently defaulted.',
+    stackDecisionNotes: [],
+  }
+  ```
+  This is the first real use of the `'unresolved'` status value, which exists in `GreenfieldProfileResolutionStatus` today but is never produced by any current code path.
+- unsupported "iOS", "Flutter", "React Native": unchanged. These are not added to `SUPPORTED_PROFILES` or to `PROFILE_ALIASES`, so they continue to fall through the existing catalog-miss branch in `resolveExplicitProfile`, producing `status: 'unsupported'` exactly as they do today for any unrecognized profile id. No code path treats them specially; this is intentional (see do-not-expand list).
+
+BUNDLE REQUIREMENTS (buildBootstrapBundle.ts / bootstrapBundleTypes.ts)
+
+- stackDecision: no field changes. `chosenStack` will naturally contain `['Kotlin', 'Jetpack Compose', 'Gradle', ...]` once the profile exists, via the existing `dedupeStable([...profile.stackAssumptions, ...userPreferredStack])` logic.
+- templateTargets: no field changes; the existing three static categories (project-docs / component-docs / scaffold-tree) remain accurate for android-compose exactly as they are for the existing profiles.
+- docGenerationInstructions: no field changes; `validationExpectations` will naturally surface the profile's `validationExpectations` strings (the descriptive ones, not the new `validationCommands` command strings -- these are deliberately two different fields serving two different purposes: one for docs prose, one for actual command text fed to scaffold planning).
+- scaffoldPlanningInputs: no field changes; already carries `scaffoldPlanningHints`/`templateTargets` generically.
+- validationRules (`buildValidationRules()`): the existing `'no-android-mobile-claims'` rule must be replaced with two rules:
+  - `no-unsupported-mobile-platform-claims`: "Generated docs must not claim iOS, React Native, Flutter, Kotlin Multiplatform, or Compose Multiplatform support, regardless of the selected profile."
+  - `android-claims-require-android-compose-profile`: "Generated docs may mention Android/Jetpack Compose only when the selected profile is android-compose; any other profile's docs must not claim Android support."
+- unresolvedDecisions (`buildUnresolvedDecisions()`): add a branch for `selectedProfile.status === 'unresolved'` (mirroring the existing `status === 'unsupported'` branch), pushing `{ field: 'preferredProfile', reason: selectedProfile.reason }` so ambiguous-mobile requests are visible in the bundle's unresolved-decisions list, not just in the profile selection object.
+
+DOCS REQUIREMENTS (validateBootstrapDocs.ts / populateProjectDocsFromBrief.ts)
+
+- project docs: no change to the nine doc builders in populateProjectDocsFromBrief.ts; all already consume bundle fields generically.
+- component docs: remain empty, unchanged reasoning (see architecture audit "What should remain unchanged").
+- limitation notes: the `stack-decision` and `scaffold-planning-notes` docs should read naturally once android-compose's `stackDecisionNotes`/`scaffoldPlanningHints` flow through -- no template changes needed, only content changes driven by the new profile data.
+- unsupported claims (`validateBootstrapDocs()`): the function signature must change from `validateBootstrapDocs(result)` to `validateBootstrapDocs(result, selectedProfileId?: GreenfieldProfileId)`. `ANDROID_MOBILE_RE` splits into two checks:
+  - an always-on regex for iOS/react-native/flutter/kotlin-multiplatform/compose-multiplatform (never permitted, any profile)
+  - a conditional check for android/jetpack terms: flagged as `android-mobile-claim` **unless** `selectedProfileId === 'android-compose'`
+  All call sites of `validateBootstrapDocs()` must be updated to pass the profile id through (traced from the bundle it was built from).
+
+SCAFFOLD PLANNING REQUIREMENTS
+- file groups: use `buildFileGroups()` unchanged (see "templateTargets" above -- the existing config/source split heuristic already works).
+- setup commands: `[]` for android-compose (see "Two new additive fields" above).
+- validation commands: `['./gradlew build', './gradlew testDebugUnitTest']` for android-compose; instrumentation tests are described in `testExpectations`/`unsupportedConditions` prose, never listed as a plain validation command.
+- first runnable behavior: a single Compose screen in `MainActivity.kt` (e.g. `setContent { Text("...") }`) that builds via `./gradlew build`; entry point detected via the broadened `/\.(ts|tsx|kt)$/` regex.
+- tests: unit tests under `app/src/test`, instrumentation tests under `app/src/androidTest` explicitly marked as requiring a device/emulator.
+- stop conditions (for the scaffold-plan/scaffold-implementation/first-vertical-slice prompts, unchanged wording already covers this generically): do not write scaffold files, do not install dependencies, do not run project-creation commands, do not run Gradle, do not require Android SDK/emulator availability to complete the stage.
+
+NON-GOALS
+- no Android SDK execution requirement anywhere in the orchestrator or its tests
+- no Gradle execution by the orchestrator itself (validation commands are recommended text, never invoked)
+- no Play Store or app-release workflow
+- no React Native profile
+- no Flutter profile
+- no iOS profile
+- no generic mobile mode or mobile-specific workflow mode
+
+STATUS: complete
