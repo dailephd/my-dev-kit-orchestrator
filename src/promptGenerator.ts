@@ -2422,7 +2422,7 @@ Output file: ${ctx.runFolder}/artifacts/idea-brief.json
 Stop conditions:
 - do not scaffold files
 - do not implement code
-- do not choose Android/mobile defaults
+- do not silently choose a mobile/Android profile as a default when the request is ambiguous (see src/greenfield/profiles/resolveGreenfieldProfile.ts)
 - do not claim validation or release readiness
 
 Return format:
@@ -2476,7 +2476,7 @@ Inputs:
 Task:
 Define a platform-neutral stack decision from the brief and any explicit stack/profile preferences, and produce ${ctx.runFolder}/artifacts/stack-decision.txt (artifact: StackDecision).
 
-Preserve unresolved stack decisions rather than inventing a choice. Do not default to an unsupported (e.g. Android/mobile) stack.
+Preserve unresolved stack decisions rather than inventing a choice. Do not silently default to a mobile/Android stack when the request is ambiguous; only choose it when explicitly requested.
 
 Required output artifact: StackDecision
 Output file: ${ctx.runFolder}/artifacts/stack-decision.txt
@@ -2507,13 +2507,13 @@ Inputs:
 Task:
 Select or describe a starter profile using src/greenfield/profiles/resolveGreenfieldProfile.ts and produce ${ctx.runFolder}/artifacts/starter-profile.json (artifact: StarterProfile).
 
-Supported profiles in v1.1.0: typescript-cli, nextjs-app. If an unsupported profile is requested, report it clearly as unsupported; do not substitute a default silently.
+Supported profiles in v1.2.0: typescript-cli, nextjs-app, android-compose. If an unsupported profile is requested, report it clearly as unsupported; do not substitute a default silently.
 
 Required output artifact: StarterProfile
 Output file: ${ctx.runFolder}/artifacts/starter-profile.json
 
 Stop conditions:
-- do not use Android/mobile profiles
+- do not silently substitute a mobile/Android profile for an ambiguous or unsupported request
 - do not scaffold files
 
 Return format:
@@ -2562,7 +2562,7 @@ Output file: ${ctx.runFolder}/artifacts/project-docs-report.txt
 
 Stop conditions:
 - do not update the current repository's README.md or docs/ROADMAP.md
-- do not claim Android/mobile support
+- do not claim Android/mobile support unless the selected profile is android-compose (see src/greenfield/bootstrap/validateBootstrapDocs.ts)
 - do not claim release, security, or publish completion
 
 Return format:

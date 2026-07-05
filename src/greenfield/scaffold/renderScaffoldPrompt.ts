@@ -55,7 +55,7 @@ Stop conditions:
 - do not install dependencies
 - do not run project creation commands
 - do not implement first vertical slice in this stage
-- do not add Android/mobile file trees or profiles
+- do not add file trees for a profile other than the one selected in the bootstrap bundle
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -96,7 +96,7 @@ Output file: ${ctx.runFolder}/reports/scaffold-implementation-report.txt
 Stop conditions:
 - do not claim verification success without command evidence
 - do not broaden scope beyond scaffold-plan.txt
-- do not add Android/mobile behavior
+- do not add behavior for a profile other than the one selected in the bootstrap bundle
 
 Return format:
 Produce the artifact as a plain-text file using the template:

@@ -7,7 +7,10 @@
 // (REWRITE_FOR_ORCHESTRATOR, see artifacts/greenfield-porting-map.txt and
 // artifacts/greenfield-do-not-port-list.txt). Content never claims
 // implementation, testing, security, release, or publication completion
-// (section 9.3), and never mentions Android/mobile (section 9.3/9.4).
+// (section 9.3). Doc content mentions Android/Jetpack/Gradle whenever the
+// selected profile is android-compose (v1.2.0); whether that is a
+// legitimate claim or a violation is decided by validateBootstrapDocs.ts's
+// profile-aware check, not by this generator.
 
 import { GreenfieldBootstrapBundle } from './bootstrapBundleTypes';
 import { GreenfieldDocTarget } from './projectDocBootstrapTypes';
