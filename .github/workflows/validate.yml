@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Tracked ignored file guard
+        run: npm run check:tracked-ignored
+
       - name: Build
         run: npm run build
 
