@@ -6,7 +6,21 @@ It is for teams or individual developers who want a coding agent to work through
 
 ## Capabilities
 
-`v1.0.0` is the current stable workflow contract release and is newer than every `v0.x.0` release. It adds:
+`v1.0.0` is the current published stable workflow contract release. The
+implemented `v1.1.0` Greenfield Bootstrap Foundation adds:
+
+- `greenfield` as the seventh workflow mode for projects without a useful
+  codebase yet
+- platform-neutral brief normalization and `typescript-cli` or `nextjs-app`
+  profile selection
+- deterministic bootstrap-bundle and structured in-memory project-doc
+  preparation
+- prompt-guided scaffold planning, implementation, and first vertical slice
+- an initial `my-dev-kit` indexing handoff after code exists
+- greenfield coverage through the shared `check --artifacts`, `check --all`,
+  and `export` commands
+
+The established `v1.0.0` behavior includes:
 
 - deterministic artifact contract checks with `check --artifacts`
 - critical artifact dependency checks through `check --all`
@@ -114,7 +128,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 
 ## Non-goals (current release)
 
-`my-dev-kit-orchestrator` does not include in v1.0.0:
+`my-dev-kit-orchestrator` does not include in v1.1.0:
 
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
@@ -130,6 +144,9 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.
 - direct LLM-provider execution
 - multi-agent runtime
 - extra low-level CLI commands beyond the current surface
+- autonomous project generation, security validation, release, or publishing
+  execution
+- Android or mobile profiles; Android Compose remains planned for v1.2.0
 
 Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
 
@@ -138,7 +155,8 @@ Architecture-context prompts may suggest use of `my-dev-kit` when it is availabl
 ```text
 my-dev-kit-orchestrator init
 my-dev-kit-orchestrator start "<request>"
-my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden|extraction> "<request>"
+my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden|extraction|greenfield> "<request>"
+my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
 my-dev-kit-orchestrator status
 my-dev-kit-orchestrator status --run <run-id>
 my-dev-kit-orchestrator prompt
@@ -151,6 +169,9 @@ my-dev-kit-orchestrator check
 my-dev-kit-orchestrator check --artifact <stage-name|filename>
 my-dev-kit-orchestrator check --prompts
 my-dev-kit-orchestrator check --strict
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator check --all
+my-dev-kit-orchestrator export
 ```
 
 Common flags:
@@ -252,6 +273,23 @@ Stage order:
 `request-brief -> source-architecture-context -> source-workflow-map -> porting-map -> golden-behavior-contract -> target-architecture -> behavior-model -> pseudocode-packet -> test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
 
 See [docs/WORKFLOWS.md](docs/WORKFLOWS.md) and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the full extraction workflow and artifact contracts.
+
+### `greenfield`
+
+Use to bootstrap a new project before useful code exists. The v1.1.0
+foundation is platform-neutral and supports `typescript-cli` and `nextjs-app`
+profiles; it does not implement Android or other mobile profiles.
+
+Stage order:
+`idea-brief -> product-boundary -> stack-decision -> starter-profile -> bootstrap-bundle -> project-docs -> scaffold-plan -> scaffold-implementation -> first-vertical-slice -> verification -> initial-index -> judge -> final-report`
+
+Greenfield generates bounded, stage-specific prompts and artifact contracts.
+The user still gives each prompt to a coding agent and saves its output; the
+orchestrator does not autonomously generate a project. After code exists, the
+`initial-index` prompt hands the project to `my-dev-kit` for its first index.
+
+The shared artifact and contract registries provide `check --artifacts`,
+`check --all`, and `export` support for greenfield runs.
 
 ## Run folder layout
 

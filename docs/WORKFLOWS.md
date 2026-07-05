@@ -1,6 +1,6 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports six workflow modes in the current release.
+`my-dev-kit-orchestrator` supports seven workflow modes in v1.1.0.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
@@ -311,6 +311,49 @@ Summarize:
 - Modify only the target repository unless the user explicitly permits source repository changes.
 
 ---
+
+## Greenfield
+
+Use greenfield mode to start a new project before useful code exists:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+```
+
+The v1.1.0 foundation is platform-neutral. It supports the
+`typescript-cli` and `nextjs-app` profiles, not Android or other mobile
+profiles. It also excludes security validation, release, and publishing
+workflows.
+
+The 13 stages are:
+
+1. `idea-brief` - capture and normalize the project idea.
+2. `product-boundary` - define goals, users, constraints, and non-goals.
+3. `stack-decision` - record the platform-neutral stack decision.
+4. `starter-profile` - resolve a supported profile and its validation rules.
+5. `bootstrap-bundle` - assemble deterministic brief, profile, template,
+   documentation, scaffold, and validation inputs.
+6. `project-docs` - prepare and validate structured in-memory project
+   documentation content.
+7. `scaffold-plan` - define bounded files, commands, and acceptance criteria.
+8. `scaffold-implementation` - guide a coding agent through the approved
+   scaffold plan.
+9. `first-vertical-slice` - guide the smallest useful runnable behavior.
+10. `verification` - record actual implementation-level evidence.
+11. `initial-index` - hand the now-existing codebase to `my-dev-kit` for its
+    first index and context retrieval.
+12. `judge` - compare implementation and evidence with the greenfield plan.
+13. `final-report` - summarize the run, verdict, risks, and next action.
+
+Scaffold planning and implementation are prompt-guided. The CLI generates a
+bounded prompt for one stage; the user gives that prompt to a coding agent and
+saves the returned artifact. It does not invoke an LLM or autonomously write a
+project.
+
+The bootstrap runtime is deterministic and has no disk I/O or timestamps.
+Project-doc bootstrap returns structured in-memory content rather than writing
+template files. Component documentation remains empty until the brief schema
+has module or component hints.
 
 ## Shared workflow rules
 

@@ -59,6 +59,39 @@ Result:
 - writes `run.json`
 - writes all prompt files for the chosen workflow
 
+## Start and inspect a greenfield run
+
+Greenfield mode bootstraps a project before useful code exists:
+
+```bash
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator list
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator check --all
+my-dev-kit-orchestrator export
+```
+
+For example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
+```
+
+The v1.1.0 greenfield foundation is platform-neutral and does not provide an
+Android or mobile profile. Each generated prompt remains specific to the
+current stage. Paste that bounded prompt into the coding agent, save the
+required artifact in the run folder, and then request the next prompt.
+
+`check --artifacts` and `check --all` use the shared artifact and contract
+checkers for greenfield runs. On a newly created run they report missing stage
+artifacts and may exit with code 1; that is a completed check with findings,
+not a CLI crash. `export` produces the same portable run handoff used by other
+modes. Do not rely on `--out` as a complete path-traversal boundary; normalized
+parent paths are a known cross-mode follow-up.
+
 ## Print prompts
 
 Print the next prompt for the most recent run:
@@ -651,4 +684,5 @@ Export behavior:
 - default: print to stdout
 - `--out <file>`: write to file; refuses if file already exists
 - `--overwrite`: allow replacing an existing output file
-- refuses symbolic links, path traversal, non-existent parent directories
+- refuses symbolic links and non-existent parent directories; normalized
+  parent traversal remains a known follow-up

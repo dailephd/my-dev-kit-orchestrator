@@ -174,6 +174,29 @@ To add required sections for a new artifact kind:
 
 `status` command reads `artifact-check-results.json` via `readCheckResults` to render the content check summary line.
 
+## Adding a workflow mode
+
+Greenfield demonstrates the expected extension pattern. A new mode extends
+the existing shared registries instead of introducing a parallel workflow or
+artifact subsystem:
+
+- `VALID_MODES` in `src/types.ts`
+- `WORKFLOW_DEFINITIONS` and `ARTIFACT_MAP` in `src/workflows.ts`
+- `STAGE_TO_KIND` and `SECTION_REGISTRY` in `src/artifactChecker.ts`
+
+Mode-local constants may be spread into those registries, as greenfield does,
+but the shared registries remain authoritative. Reuse existing stage names
+and artifact paths when the stage semantics are shared.
+
+Tests for a mode addition should cover its exact stage order, artifact paths,
+required artifact sections, prompt generation, lifecycle progression,
+`start`, `prompt`, `status`, and `list`. Also cover `check --artifacts`,
+`check --all`, and `export`, plus regression coverage for existing modes.
+
+The repository currently has both `src/__tests__/*.test.ts` and
+`tests/**/*.spec.ts`. This convention split is a maintenance follow-up; do not
+move tests merely while adding a mode.
+
 ## Verification expectations
 
 - Confirm user-facing documentation matches the shipped command behavior.

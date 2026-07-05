@@ -346,6 +346,42 @@ Feature mode expects these artifact files in order:
 - `artifacts/judge-report.txt`
 - `artifacts/final-report.txt`
 
+## Greenfield mode artifacts
+
+Greenfield uses the same `ARTIFACT_MAP`, stage-kind registry, section
+registry, artifact checker, and contract checker as every other mode. It does
+not have a parallel artifact engine or a
+`validateGreenfieldArtifacts.ts` module.
+
+The 13 stage outputs are:
+
+| Stage | Implemented path |
+| --- | --- |
+| `idea-brief` | `artifacts/idea-brief.json` |
+| `product-boundary` | `artifacts/product-boundary.txt` |
+| `stack-decision` | `artifacts/stack-decision.txt` |
+| `starter-profile` | `artifacts/starter-profile.json` |
+| `bootstrap-bundle` | `artifacts/bootstrap-bundle.json` |
+| `project-docs` | `artifacts/project-docs-report.txt` |
+| `scaffold-plan` | `artifacts/scaffold-plan.txt` |
+| `scaffold-implementation` | `reports/scaffold-implementation-report.txt` |
+| `first-vertical-slice` | `artifacts/first-vertical-slice.txt` |
+| `verification` | `artifacts/verification-report.txt` |
+| `initial-index` | `reports/initial-index-report.txt` |
+| `judge` | `artifacts/judge-report.txt` |
+| `final-report` | `artifacts/final-report.txt` |
+
+`verification`, `judge`, and `final-report` deliberately reuse the shared
+`artifacts/*.txt` paths because `ARTIFACT_MAP` is keyed by stage name across
+all modes. They do not use greenfield-only `reports/*.txt` alternatives.
+
+The JSON-named brief, profile, and bundle files still participate in the
+shared existence, predecessor, and required-section checks. Bootstrap project
+documentation is structured in-memory runtime output; it does not imply that
+the orchestrator writes template documents. `validateBootstrapDocs` checks
+required content and rejects unsupported Android/mobile and
+release/security/publishing claims.
+
 ## Extraction mode artifacts
 
 Extraction mode is implemented in `v0.2.1`.

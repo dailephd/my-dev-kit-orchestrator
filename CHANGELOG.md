@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+## v1.1.0 - Greenfield Bootstrap Foundation
+
+Implemented but not yet published:
+
+- added `greenfield` as the seventh workflow mode with 13 bounded stages
+- added project-brief loading and deterministic normalization
+- added the platform-neutral profile foundation with `typescript-cli` and
+  `nextjs-app` profiles
+- added the pure, deterministic `GreenfieldBootstrapBundle` runtime
+- added structured in-memory project-doc bootstrap and unsupported-claim
+  validation
+- added scaffold planning and implementation prompts, first-vertical-slice
+  guidance, and the initial `my-dev-kit` indexing handoff prompt
+- extended the shared mode, workflow, artifact, stage-kind, and section
+  registries rather than creating parallel greenfield infrastructure
+- added greenfield regression coverage for `check --artifacts`, `check --all`,
+  `export`, and existing modes
+- retained the shared artifact checker and contract checker; a separate
+  `validateGreenfieldArtifacts.ts` was intentionally unnecessary
+- deferred Android and mobile profiles to v1.2.0 or later
+
+Known follow-up: the pre-existing cross-mode `export --out` traversal guard
+does not reject a normalized parent path such as `../x.txt`. This remains
+unfixed in v1.1.0 and export documentation does not claim complete traversal
+protection.
+
 ## v1.0.0 - Stable Workflow Contract and Portable Run Handoff
 
 ### Added
@@ -18,7 +44,9 @@
   - section-headered output, persists trace results, includes trace correction suggestions
 - `export` command: `my-dev-kit-orchestrator export [--run <id>] [--out <file>] [--overwrite]`
   - portable plain-text run handoff with run identity, request, artifact checklist, missing artifacts, judge verdict, correction state, verification evidence excerpt, content/trace check summaries, next command
-  - path safety: refuses symlinks, path traversal, existing files without --overwrite, non-existent parent directories
+  - path checks refuse symlinks, existing files without --overwrite, and
+    non-existent parent directories; complete traversal rejection is a known
+    follow-up
   - default: print to stdout; --out file: write to file
 
 ### Changed
