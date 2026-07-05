@@ -124,12 +124,16 @@ describe('mode validation', () => {
     expect(isValidMode('feat')).toBe(false);
   });
 
-  it('VALID_MODES contains exactly six modes', () => {
-    expect(VALID_MODES).toHaveLength(6);
+  it('VALID_MODES contains exactly seven modes', () => {
+    expect(VALID_MODES).toHaveLength(7);
   });
 
   it('accepts extraction', () => {
     expect(isValidMode('extraction')).toBe(true);
+  });
+
+  it('accepts greenfield', () => {
+    expect(isValidMode('greenfield')).toBe(true);
   });
 });
 

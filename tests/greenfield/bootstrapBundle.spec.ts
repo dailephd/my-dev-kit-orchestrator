@@ -158,11 +158,16 @@ describe('buildGreenfieldBootstrapBundle', () => {
   it('performs no scaffold execution or filesystem writes while building the bundle', () => {
     const fs = require('fs');
     const os = require('os');
-    const before = fs.readdirSync(os.tmpdir()).length;
+    const path = require('path');
+    // Use a dedicated, exclusively-owned temp directory rather than counting
+    // entries in the shared os.tmpdir() root (flaky under parallel test execution).
+    const ownDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-bundle-build-'));
+    const before = fs.readdirSync(ownDir).length;
     const normalizedBrief = normalize('A CLI tool for X.');
     const selection = resolveGreenfieldProfile(normalizedBrief);
     buildGreenfieldBootstrapBundle(normalizedBrief, selection);
-    const after = fs.readdirSync(os.tmpdir()).length;
+    const after = fs.readdirSync(ownDir).length;
+    fs.rmSync(ownDir, { recursive: true, force: true });
     expect(after).toBe(before);
   });
 
