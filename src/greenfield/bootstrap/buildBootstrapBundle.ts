@@ -35,7 +35,7 @@ export function buildGreenfieldBootstrapBundle(
     stackDecision,
   );
   const scaffoldPlanningInputs = buildScaffoldPlanningInputs(normalizedBrief, selectedProfile);
-  const validationRules = buildValidationRules();
+  const validationRules = buildValidationRules(selectedProfile);
   const unresolvedDecisions = buildUnresolvedDecisions(normalizedBrief, selectedProfile);
 
   return {
@@ -176,18 +176,42 @@ function buildScaffoldPlanningInputs(
   };
 }
 
-function buildValidationRules(): GreenfieldBundleValidationRule[] {
+function buildValidationRules(
+  selectedProfile: GreenfieldProfileSelection,
+): GreenfieldBundleValidationRule[] {
+  const isAndroidCompose = selectedProfile.profile?.id === 'android-compose';
+
   return [
     { id: 'has-normalized-brief', description: 'The bundle must carry a normalized brief.' },
     { id: 'has-profile-selection', description: 'The bundle must carry a profile selection with a status.' },
     { id: 'stack-decision-present', description: 'The bundle must carry a stack decision, even when unresolved.' },
     {
-      id: 'no-android-mobile-claims',
-      description: 'Generated docs must not claim Android, iOS, React Native, or Flutter support.',
+      id: 'no-unsupported-mobile-platform-claims',
+      description:
+        'Generated docs must not claim iOS, React Native, Flutter, Kotlin Multiplatform, or Compose ' +
+        'Multiplatform support, regardless of the selected profile.',
     },
+    isAndroidCompose
+      ? {
+          id: 'android-claims-allowed-for-android-compose',
+          description:
+            'Generated docs may mention Android, Jetpack Compose, Kotlin, and Gradle because the ' +
+            'selected profile is android-compose.',
+        }
+      : {
+          id: 'android-claims-require-android-compose-profile',
+          description:
+            'Generated docs must not claim Android/Jetpack support because the selected profile is ' +
+            'not android-compose.',
+        },
     {
       id: 'no-release-security-publish-claims',
       description: 'Generated docs must not claim release, security-validation, or publish completion.',
+    },
+    {
+      id: 'no-play-store-release-readiness-claims',
+      description:
+        'Generated docs must not claim Play Store submission or app-release readiness, for any profile.',
     },
   ];
 }
@@ -201,7 +225,7 @@ function buildUnresolvedDecisions(
     reason: u.reason,
   }));
 
-  if (selectedProfile.status === 'unsupported') {
+  if (selectedProfile.status === 'unsupported' || selectedProfile.status === 'unresolved') {
     decisions.push({
       field: 'preferredProfile',
       reason: selectedProfile.reason,

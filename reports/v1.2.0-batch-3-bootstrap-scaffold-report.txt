@@ -1,0 +1,85 @@
+Artifact: V120Batch3BootstrapScaffoldReport
+Batch: v1.2.0 Batch 3
+
+BRANCH
+- branch name: feature/v1.2.0-android-compose-bootstrap-scaffold
+- starting commit: da606e7 (Batch 2 ending commit)
+- ending commit: recorded in reports/v1.2.0-batch-3-final-report.txt after commit
+
+INPUTS USED
+- reports/v1.2.0-android-compose-architecture-audit.txt
+- artifacts/v1.2.0-android-compose-profile-contract.txt (in full: "Bundle requirements", "Docs requirements", "Scaffold planning requirements" sections)
+- artifacts/v1.2.0-android-compose-do-not-expand-list.txt
+- artifacts/v1.2.0-android-compose-test-plan.txt ("Batch 3 tests" section)
+- reports/v1.2.0-batch-2-profile-implementation-report.txt, batch-2-final-report.txt
+- current profile implementation files (src/greenfield/profiles/*, unmodified in this batch)
+
+FILES READ
+- src/greenfield/bootstrap/buildBootstrapBundle.ts -- reason: confirm exact current buildValidationRules()/buildUnresolvedDecisions() implementation before splitting/conditioning them
+- src/greenfield/bootstrap/validateBootstrapDocs.ts -- reason: confirm exact current ANDROID_MOBILE_RE/RELEASE_SECURITY_PUBLISH_RE implementation before making it profile-aware
+- src/greenfield/scaffold/buildScaffoldPlan.ts, scaffoldPlanTypes.ts -- reason: confirm exact current hardcoded npm logic and entry-point regex before replacing/broadening them
+- src/greenfield/bootstrap/populateProjectDocsFromBrief.ts, bootstrapProjectDocs.ts, populateComponentDocsFromBrief.ts (re-confirmed via passing test runs, not re-read line-by-line since Batch 1 already established these are fully bundle-field-driven and profile-agnostic) -- reason: verify Task "docs bootstrap flows Android content generically" claim; confirmed true (no changes needed) by running tests/greenfield/bootstrapProjectDocs.spec.ts against an android-compose-selected bundle and observing correct, unmodified doc generation
+- grep for call sites of `validateBootstrapDocs` across src/ and tests/ -- reason: confirm exactly which files needed updating for the new `selectedProfileId` parameter before changing the signature; found zero production call sites (only a text mention inside a prompt string in src/promptGenerator.ts, and test-file call sites)
+
+FILES CHANGED
+- src/greenfield/bootstrap/buildBootstrapBundle.ts -- `buildValidationRules()` now takes `selectedProfile: GreenfieldProfileSelection` and returns profile-conditional rules; `buildUnresolvedDecisions()`'s status check widened from `=== 'unsupported'` to `=== 'unsupported' || === 'unresolved'`
+- src/greenfield/bootstrap/validateBootstrapDocs.ts -- `validateBootstrapDocs()` gains an optional `selectedProfileId?: GreenfieldProfileId` second parameter; the single `ANDROID_MOBILE_RE` regex is split into `UNSUPPORTED_PLATFORM_RE` (always-on: iOS/react-native/flutter/kotlin-multiplatform/compose-multiplatform) and `ANDROID_JETPACK_RE` (conditional: only flagged when `selectedProfileId !== 'android-compose'`); adds a new `PLAY_STORE_RELEASE_READINESS_RE` check (always-on, every profile) and its own issue kind `play-store-release-readiness-claim`
+- src/greenfield/scaffold/scaffoldPlanTypes.ts -- `GreenfieldScaffoldPlan.setupCommands`/`validationCommands` changed from `string[]` to `GreenfieldProfileCommand[]` (imported from profileTypes.ts), to preserve each command's `required`/`environmentNotes` distinction through to the scaffold plan
+- src/greenfield/scaffold/buildScaffoldPlan.ts -- `setupCommands`/`validationCommands` now read directly from `profile.setupCommands`/`profile.validationCommands` (Batch 2's new fields) instead of a hardcoded `['npm install']` literal and a keyword-sniffing `buildValidationCommands()` helper (removed, now dead code); entry-point detection regex broadened from `/\.(ts|tsx)$/` to `/\.(ts|tsx|kt)$/`
+- tests/greenfield/bootstrapBundle.spec.ts -- updated 1 stale assertion (validation-rule id list)
+- tests/greenfield/bootstrapProjectDocs.spec.ts -- updated 1 test to pass the profile id explicitly; added 3 new tests (android-compose permission, unsupported-platform still rejected, Play Store claim rejected)
+- tests/greenfield/scaffoldPrompt.spec.ts -- updated 1 stale assertion (setupCommands/validationCommands shape)
+- tests/greenfield/androidComposeBootstrapBundle.spec.ts (new, 11 tests)
+- tests/greenfield/androidComposeBootstrapDocs.spec.ts (new, 12 tests)
+- tests/greenfield/androidComposeScaffoldPlan.spec.ts (new, 11 tests)
+
+BOOTSTRAP BUNDLE CHANGES
+- Android Compose profile support: `buildGreenfieldBootstrapBundle()` itself required zero changes -- it was already fully generic over the selected profile (confirmed in Batch 1's audit); only its two internal helper functions needed profile-conditional logic.
+- stackDecision behavior: unchanged, already generic (`dedupeStable([...profile.stackAssumptions, ...userPreferredStack])` naturally includes Kotlin/Jetpack Compose/Gradle/Android app module once the profile exists).
+- templateTargets behavior: unchanged (the three static categories -- project-docs/component-docs/scaffold-tree -- are profile-independent by design).
+- docGenerationInstructions behavior: unchanged, already generic.
+- scaffoldPlanningInputs behavior: unchanged, already generic (`profile.scaffoldPlanningHints`/`profile.templateTargets` flow through automatically).
+- validationRules behavior: changed as described above (profile-conditional split).
+
+PROFILE-CONDITIONAL VALIDATION
+- buildValidationRules change: now accepts the selected profile selection and branches on `profile?.id === 'android-compose'`.
+- Android/Jetpack allowance for android-compose: when the profile is android-compose, the bundle's `validationRules` list includes `android-claims-allowed-for-android-compose` instead of the rejection rule.
+- Android/Jetpack rejection for non-Android profiles: when the profile is anything else (or unresolved/unsupported), the list includes `android-claims-require-android-compose-profile`.
+- Play Store/release-readiness rejection: a new, always-on rule (`no-play-store-release-readiness-claims`) was added, applying to every profile including android-compose, per section 7.4's explicit requirement ("Play Store/release-readiness claims must be rejected for Android Compose").
+
+PROJECT DOCS BOOTSTRAP CHANGES
+- Android Compose docs behavior: no source changes were needed in `populateProjectDocsFromBrief.ts`/`bootstrapProjectDocs.ts`; both already consume the bundle's fields generically, so Android Compose content (Kotlin/Jetpack Compose/Gradle/AndroidManifest/MainActivity mentions, Gradle-based validation expectations) flows through correctly once the profile and bundle exist. Verified empirically via tests/greenfield/androidComposeBootstrapDocs.spec.ts rather than assumed.
+- validation expectations: confirmed the `validation-expectations` doc surfaces Gradle-based text (not npm) for an android-compose bundle.
+- unsupported claims handling: handled entirely by the updated `validateBootstrapDocs()` (see above); no changes needed in the doc-generation layer itself, since it does not perform its own claim validation (that is `validateBootstrapDocs()`'s sole responsibility, confirming the "one owner per concern" architecture is intact).
+- component docs decision: unchanged and reconfirmed. `populateComponentDocsFromBrief.ts` was not modified; it always returns `[]` regardless of profile, because `NormalizedGreenfieldBrief` still has no module/component-hints field (a brief-schema concern, explicitly out of Batch 3 scope per section 9.4/10.2 of this batch and every prior batch's non-goals). Test coverage explicitly asserts `componentTargets` is `[]` for an android-compose bundle, with the reasoning documented inline in the test.
+
+VALIDATEBOOTSTRAPDOCS CHANGES
+- profile-aware validation: `validateBootstrapDocs(result, selectedProfileId?)` -- the second parameter is optional, so all pre-existing call sites (which never passed a profile id) continue to compile and behave exactly as before (Android/Jetpack claims still flagged by default, i.e. when no profile id is passed or it is not `'android-compose'`).
+- Android Compose allowed claims: `android`/`jetpack` mentions no longer produce an `android-mobile-claim` issue when `selectedProfileId === 'android-compose'`.
+- non-Android rejected claims: unchanged behavior for every other profile id (or when omitted).
+- release/security/publish rejected claims: unchanged, still always-on for every profile.
+- new: Play Store/release-readiness claims (`play store`, `app release`, `release-ready`/`release ready`) are now their own always-on check (`play-store-release-readiness-claim`), separate from the general release/security/publish check, since section 7.4 called this out as its own explicit requirement ("Play Store/release-readiness claims must be rejected for Android Compose unless explicitly framed as future/non-goal limitations" -- Batch 3 rejects them unconditionally rather than trying to detect "future/non-goal framing," which would require natural-language understanding beyond a regex; this is documented as a conservative, deliberate simplification, not an oversight).
+- unsupported platform claims (iOS/react-native/flutter/kotlin-multiplatform/compose-multiplatform): split into their own always-on, profile-independent check (`unsupported-platform-claim`), separate from the Android/Jetpack conditional check, since these must never be permitted for any profile including android-compose.
+
+SCAFFOLD PLANNING CHANGES
+- setupCommands integration: `buildScaffoldPlan()` now reads `profile.setupCommands` directly. For android-compose this is `[]` (no separate install step); for typescript-cli/nextjs-app it is `[{ command: 'npm install', ... }]`, identical to the previous hardcoded behavior.
+- validationCommands integration: `buildScaffoldPlan()` now reads `profile.validationCommands` directly. For android-compose this is the three Gradle commands (build/testDebugUnitTest/connectedAndroidTest, the last marked `required: false` with a device/emulator note); for typescript-cli/nextjs-app it is the same three npm commands as before, now carried as `GreenfieldProfileCommand` objects instead of plain strings.
+- hardcoded npm assumption removed or constrained: the `buildValidationCommands()` keyword-sniffing helper (which mapped `profile.validationExpectations` substrings like "typecheck"/"build"/"test" to hardcoded `npm run ...` strings) was removed entirely as dead code; `setupCommands`/`validationCommands` are no longer derived by inference from `validationExpectations` prose at all -- they are sourced from the profile's own dedicated command fields, which is a strictly more correct design (no more risk of a future profile's prose accidentally matching an npm-shaped keyword).
+- TypeScript CLI regression behavior: preserved exactly; only the data *shape* changed (object instead of string), not the command values or count.
+- Next.js regression behavior: same.
+- Android Compose command behavior: setupCommands empty; validationCommands are the three Gradle commands; entry-point detection now recognizes `.kt` files (broadened regex), confirmed to still correctly detect `.ts`/`.tsx` for the other two profiles (regression-tested).
+
+DEFERRED ITEMS
+- CLI/check/export regression coverage: Batch 4, untouched in this batch.
+- user-facing documentation update: Batch 5, untouched in this batch (confirmed: `npm run lint:docs` ran against 9 unchanged doc files).
+- platformTarget-only Android auto-selection decision: still open, per Batch 2's explicit deferral; not touched in this batch (Batch 3's scope was bootstrap/docs/scaffold integration downstream of profile *resolution*, not resolution logic itself, which was entirely Batch 2's and remains unmodified here).
+- empirical my-dev-kit Kotlin indexing check: not performed in this batch (out of scope; Batch 3 touched no indexing-related code; this remains for Batch 3/4 per Batch 1's framing, and since Batch 3 is now complete without needing it, it is deferred further to Batch 4 if that batch's CLI/initial-index regression work needs it).
+
+SCOPE CONTROL
+- no Gradle execution: confirmed. No test or source file invokes `gradle`/`./gradlew`/`gradlew.bat`; all validation/setup commands remain plain string data inside `GreenfieldProfileCommand` objects.
+- no Android SDK requirement: confirmed. The full test suite (1097 tests) passes in this environment, which has no Android SDK installed.
+- no Flutter/React Native/iOS support: confirmed. `UNSUPPORTED_PLATFORM_RE` in validateBootstrapDocs.ts explicitly continues to reject these terms for every profile, regression-tested.
+- no mobile mode: confirmed. No changes to src/types.ts, src/workflows.ts, or any mode-registry file.
+- no user-facing docs rewrite: confirmed. README.md, CHANGELOG.md, docs/ROADMAP.md, docs/USAGE.md, docs/WORKFLOWS.md, docs/ARTIFACTS.md, docs/DEVELOPMENT.md, docs/ARCHITECTURE.md, docs/RELEASE_CHECKLIST.md were not touched.
+
+STATUS: complete

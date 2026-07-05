@@ -157,7 +157,7 @@ describe('validateBootstrapDocs', () => {
     );
   });
 
-  it('flags an Android/mobile claim if one appears in generated docs', () => {
+  it('flags an Android/mobile claim if one appears in generated docs for a non-android-compose profile', () => {
     const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'typescript-cli' });
     const result = bootstrapProjectDocs(bundle);
     const tampered: GreenfieldProjectDocBootstrapResult = {
@@ -168,10 +168,64 @@ describe('validateBootstrapDocs', () => {
           : t,
       ),
     };
-    const validation = validateBootstrapDocs(tampered);
+    // v1.2.0: validateBootstrapDocs is now profile-aware; explicitly pass the
+    // profile id (typescript-cli) so this test does not rely on the
+    // no-profile-id default behavior.
+    const validation = validateBootstrapDocs(tampered, 'typescript-cli');
     expect(validation.valid).toBe(false);
     expect(validation.issues).toContainEqual(
       expect.objectContaining({ docName: 'non-goals', kind: 'android-mobile-claim' }),
+    );
+  });
+
+  it('v1.2.0: permits an Android/Jetpack claim when the selected profile is android-compose', () => {
+    const bundle = buildBundleFor('An Android app.', { preferredProfile: 'android-compose' });
+    const result = bootstrapProjectDocs(bundle);
+    const tampered: GreenfieldProjectDocBootstrapResult = {
+      ...result,
+      targets: result.targets.map((t) =>
+        t.docName === 'non-goals'
+          ? { ...t, sections: [{ heading: 'Non-goals', content: 'built with Android and Jetpack Compose' }] }
+          : t,
+      ),
+    };
+    const validation = validateBootstrapDocs(tampered, 'android-compose');
+    expect(validation.issues.find((i) => i.kind === 'android-mobile-claim')).toBeUndefined();
+  });
+
+  it('v1.2.0: still flags iOS/React Native/Flutter/multiplatform claims even for android-compose', () => {
+    const bundle = buildBundleFor('An Android app.', { preferredProfile: 'android-compose' });
+    const result = bootstrapProjectDocs(bundle);
+    const tampered: GreenfieldProjectDocBootstrapResult = {
+      ...result,
+      targets: result.targets.map((t) =>
+        t.docName === 'non-goals'
+          ? { ...t, sections: [{ heading: 'Non-goals', content: 'also runs on iOS via Compose Multiplatform' }] }
+          : t,
+      ),
+    };
+    const validation = validateBootstrapDocs(tampered, 'android-compose');
+    expect(validation.valid).toBe(false);
+    expect(validation.issues).toContainEqual(
+      expect.objectContaining({ docName: 'non-goals', kind: 'unsupported-platform-claim' }),
+    );
+  });
+
+  it('v1.2.0: flags a Play Store/release-readiness claim for any profile, including android-compose', () => {
+    const bundle = buildBundleFor('An Android app.', { preferredProfile: 'android-compose' });
+    const result = bootstrapProjectDocs(bundle);
+    const tampered: GreenfieldProjectDocBootstrapResult = {
+      ...result,
+      targets: result.targets.map((t) =>
+        t.docName === 'non-goals'
+          ? { ...t, sections: [{ heading: 'Non-goals', content: 'ready for Play Store submission' }] }
+          : t,
+      ),
+    };
+    const validation = validateBootstrapDocs(tampered, 'android-compose');
+    expect(validation.valid).toBe(false);
+    expect(validation.issues).toContainEqual(
+      expect.objectContaining({ docName: 'non-goals', kind: 'play-store-release-readiness-claim' }),
     );
   });
 

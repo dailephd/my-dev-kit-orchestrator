@@ -8,7 +8,7 @@
 // scaffold-implementation stage should create; it never writes files itself
 // (see buildScaffoldPlan.ts).
 
-import { GreenfieldProfileId } from '../profiles/profileTypes';
+import { GreenfieldProfileCommand, GreenfieldProfileId } from '../profiles/profileTypes';
 
 export interface GreenfieldScaffoldFileGroup {
   name: string;
@@ -26,8 +26,19 @@ export interface GreenfieldScaffoldPlan {
   profileId?: GreenfieldProfileId;
   plannedFileGroups: GreenfieldScaffoldFileGroup[];
   firstRunnableBehavior: GreenfieldFirstRunnableBehavior;
-  setupCommands: string[];
-  validationCommands: string[];
+  /**
+   * Sourced directly from the selected profile's own `setupCommands`
+   * (v1.2.0; see artifacts/v1.2.0-android-compose-profile-contract.txt).
+   * Never executed by the orchestrator.
+   */
+  setupCommands: GreenfieldProfileCommand[];
+  /**
+   * Sourced directly from the selected profile's own `validationCommands`
+   * (v1.2.0). Preserves each command's `required`/`environmentNotes` (e.g.
+   * Android Compose's connectedAndroidTest is `required: false` with a
+   * device/emulator note). Never executed by the orchestrator.
+   */
+  validationCommands: GreenfieldProfileCommand[];
   testExpectations: string[];
   documentationExpectations: string[];
   unresolvedDecisions: string[];

@@ -113,9 +113,18 @@ describe('buildGreenfieldBootstrapBundle', () => {
     const selection = resolveGreenfieldProfile(normalizedBrief);
     const bundle = buildGreenfieldBootstrapBundle(normalizedBrief, selection);
 
+    // v1.2.0: 'no-android-mobile-claims' was split into an always-on
+    // unsupported-platform rule and a profile-conditional Android/Jetpack
+    // rule (see tests/greenfield/androidComposeBootstrapBundle.spec.ts for
+    // the android-compose-selected case, where the conditional rule flips).
     expect(bundle.validationRules.length).toBeGreaterThan(0);
     expect(bundle.validationRules.map((r) => r.id)).toEqual(
-      expect.arrayContaining(['no-android-mobile-claims', 'no-release-security-publish-claims']),
+      expect.arrayContaining([
+        'no-unsupported-mobile-platform-claims',
+        'android-claims-require-android-compose-profile',
+        'no-release-security-publish-claims',
+        'no-play-store-release-readiness-claims',
+      ]),
     );
   });
 

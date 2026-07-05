@@ -20,8 +20,13 @@ export function buildScaffoldPlan(bundle: GreenfieldBootstrapBundle): Greenfield
     profileId: profile?.id,
     plannedFileGroups: profile ? buildFileGroups(profile) : [],
     firstRunnableBehavior: buildFirstRunnableBehavior(bundle, profile),
-    setupCommands: profile ? ['npm install'] : [],
-    validationCommands: profile ? buildValidationCommands(profile) : [],
+    // v1.2.0: sourced directly from the profile's own command fields, added
+    // in Batch 2, rather than a hardcoded npm assumption. This is what makes
+    // android-compose's [] setupCommands and Gradle-based validationCommands
+    // (instead of npm install / npm run build / npm test) flow through
+    // correctly (see artifacts/v1.2.0-android-compose-profile-contract.txt).
+    setupCommands: profile ? profile.setupCommands : [],
+    validationCommands: profile ? profile.validationCommands : [],
     testExpectations: bundle.docGenerationInstructions.testingExpectations,
     documentationExpectations: bundle.normalizedBrief.documentationPreferences,
     unresolvedDecisions: bundle.unresolvedDecisions.map((d) => `${d.field}: ${d.reason}`),
@@ -65,21 +70,11 @@ function buildFirstRunnableBehavior(
         `Reason: ${bundle.selectedProfile.reason}`,
     };
   }
-  const entryPoint = profile.templateTargets.find((f) => /\.(ts|tsx)$/.test(f) && f.includes('/'));
+  const entryPoint = profile.templateTargets.find((f) => /\.(ts|tsx|kt)$/.test(f) && f.includes('/'));
   return {
     description: `${profile.notesForBootstrapBundle} Product boundary: ${bundle.docGenerationInstructions.productBoundary}`,
     entryPoint,
   };
-}
-
-function buildValidationCommands(profile: GreenfieldProfile): string[] {
-  return profile.validationExpectations.map((expectation) => {
-    const key = expectation.toLowerCase();
-    if (key.includes('typecheck')) return 'npm run typecheck';
-    if (key.includes('build')) return 'npm run build';
-    if (key.includes('test')) return 'npm test';
-    return expectation;
-  });
 }
 
 function buildUnsupportedClaims(bundle: GreenfieldBootstrapBundle): string[] {

@@ -35,8 +35,16 @@ describe('buildScaffoldPlan', () => {
     const plan = buildScaffoldPlan(bundle);
     expect(plan.profileId).toBe('typescript-cli');
     expect(plan.plannedFileGroups.length).toBeGreaterThan(0);
-    expect(plan.setupCommands).toEqual(['npm install']);
-    expect(plan.validationCommands).toEqual(expect.arrayContaining(['npm run typecheck', 'npm run build', 'npm test']));
+    // v1.2.0: setupCommands/validationCommands are now sourced directly from
+    // the profile's own command fields (added in Batch 2), not a hardcoded
+    // npm assumption. See tests/greenfield/androidComposeScaffoldPlan.spec.ts
+    // for the Android Compose (Gradle-based) equivalent of this test.
+    expect(plan.setupCommands).toEqual([
+      { command: 'npm install', purpose: 'Install dependencies.', required: true },
+    ]);
+    expect(plan.validationCommands.map((c) => c.command)).toEqual(
+      expect.arrayContaining(['npm run typecheck', 'npm run build', 'npm test']),
+    );
   });
 
   it('preserves unresolved decisions and non-goals from the bundle', () => {
