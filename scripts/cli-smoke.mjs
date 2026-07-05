@@ -340,7 +340,10 @@ function smokeExport() {
 function smokeGreenfield() {
   withTempDir('mdko-smoke-greenfield-', (projectRoot) => {
     runCli(['init'], projectRoot);
-    runCli(['start', '--mode', 'greenfield', 'Create a sample TypeScript CLI app'], projectRoot);
+    runCli(
+      ['start', '--mode', 'greenfield', 'Create an Android Compose habit tracker app'],
+      projectRoot,
+    );
 
     const status = runCli(['status'], projectRoot);
     assertIncludes(status, 'greenfield', 'greenfield status mode');
@@ -350,6 +353,23 @@ function smokeGreenfield() {
     const prompt = runCli(['prompt'], projectRoot);
     assertIncludes(prompt, 'Stage: idea-brief', 'greenfield prompt stage');
     assertIncludes(prompt, 'Workflow mode: greenfield', 'greenfield prompt mode');
+    const lowerPrompt = prompt.toLowerCase();
+    for (const forbidden of [
+      'gradle ran',
+      'gradle succeeded',
+      'android sdk is installed',
+      'android sdk exists',
+      'android sdk available',
+      'play store readiness',
+      'flutter support',
+      'react native support',
+      'ios support',
+      'mobile mode',
+    ]) {
+      if (lowerPrompt.includes(forbidden)) {
+        throw new Error(`greenfield prompt unexpectedly claimed: ${forbidden}`);
+      }
+    }
 
     const list = runCli(['list'], projectRoot);
     assertIncludes(list, 'greenfield', 'greenfield list mode');
@@ -373,6 +393,24 @@ function smokeGreenfield() {
     assertIncludes(exportOut, 'greenfield', 'greenfield export mode value');
     assertIncludes(exportOut, 'reports/scaffold-implementation-report.txt', 'greenfield export scaffold-implementation path');
     assertIncludes(exportOut, 'reports/initial-index-report.txt', 'greenfield export initial-index path');
+
+    const safeOut = path.join(projectRoot, 'android-compose-export.txt');
+    runCli(['export', '--out', safeOut], projectRoot);
+    if (!fs.existsSync(safeOut)) {
+      throw new Error('greenfield export --out did not create the expected file');
+    }
+
+    const parentUnsafeOut = path.join(path.dirname(projectRoot), 'unsafe-export.txt');
+    const unsafeBefore = fs.existsSync(parentUnsafeOut);
+    const unsafeExportOut = runCliExpectingExit(
+      ['export', '--out', '../unsafe-export.txt'],
+      projectRoot,
+      1,
+    );
+    assertIncludes(unsafeExportOut, 'path traversal', 'greenfield unsafe export rejection');
+    if (fs.existsSync(parentUnsafeOut) !== unsafeBefore) {
+      throw new Error('greenfield unsafe export wrote outside the allowed project root');
+    }
   });
 }
 
@@ -385,7 +423,7 @@ function runCliExpectingExit(args, cwd, expectedStatus) {
         `${args.join(' ')}: expected exit ${expectedStatus}, got ${err.status}\nstdout: ${err.stdout}\nstderr: ${err.stderr}`,
       );
     }
-    return err.stdout ?? '';
+    return `${err.stdout ?? ''}${err.stderr ?? ''}`;
   }
 }
 

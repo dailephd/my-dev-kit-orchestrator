@@ -1,5 +1,6 @@
 import { createProgram } from '../program';
 import { VALID_MODES, isValidMode } from '../types';
+import packageJson from '../../package.json';
 
 describe('CLI program', () => {
   it('has the correct name', () => {
@@ -7,9 +8,9 @@ describe('CLI program', () => {
     expect(program.name()).toBe('my-dev-kit-orchestrator');
   });
 
-  it('has version 1.1.0', () => {
+  it('has the package version', () => {
     const program = createProgram();
-    expect(program.version()).toBe('1.1.0');
+    expect(program.version()).toBe(packageJson.version);
   });
 
   it('registers init command', () => {
