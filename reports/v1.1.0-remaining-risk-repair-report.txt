@@ -1,0 +1,61 @@
+Artifact: V110RemainingRiskRepairReport
+
+Branch: release/v1.1.0
+Starting commit: 820ef0c
+
+RISKS ADDRESSED
+- export path-traversal guard gap (fixed)
+- macOS/Linux Node 22/24 evidence (CI matrix updated; execution pending a real GitHub Actions run, see cross-platform evidence report)
+- split test-directory conventions (confirmed non-blocking, documented as deferred)
+- empty component docs until module hints exist (confirmed intentional limitation, documented)
+
+EXPORT TRAVERSAL FIX
+
+Root cause: `isSafePath()` in src/commands/export.ts was called with the already-`path.resolve()`d output path (`isSafePath(outPath)` where `outPath = path.resolve(options.out)`). `path.resolve()` normalizes away `..` segments before the function's own `outputPath.includes('..')` check ever runs, so the check could never fire for any traversal attempt, on any mode, on any platform.
+
+Files changed:
+- src/commands/export.ts -- `isSafePath()` now takes two parameters: `rawInput` (the raw, pre-resolution `--out` string) and `resolved` (the resolved absolute path). The `..`-substring check now runs against `rawInput` first; the existing directory/symlink checks continue to run against `resolved`, unchanged. The call site now passes `isSafePath(options.out, outPath)` instead of `isSafePath(outPath)`.
+- scripts/cli-smoke.mjs -- unrelated to the traversal fix itself, but fixed in the same pass after being discovered broken (see "Not changed" section for why it was in scope): `smokeHelp()` hardcoded an expectation of CLI version "1.0.0", which fails now that package.json is at 1.1.0. Replaced with a dynamic read of package.json's own version. Also added a new `smokeGreenfield()` category (init, start --mode greenfield, prompt, status, list, check --artifacts, check --all, export), wired into the mode dispatcher and into .github/workflows/validate.yml, since section 6.6 requires greenfield smoke coverage in CI.
+
+Behavior before: `export --out ../x.txt` succeeded (exit 0) and wrote a file one directory above the current working directory, for every mode.
+
+Behavior after: `export --out ../x.txt`, `export --out ..\x.txt`, `export --out nested/../../x.txt`, and `export --out nested\..\..\x.txt` are all rejected (exit 1, "output path contains path traversal (..)"), for every mode, on this platform (Windows). Safe relative paths (`export.txt`, `./export.txt`, `reports/export.txt` into an existing subdirectory) continue to work exactly as before. The pre-existing, already-working safety checks (reject existing directory, reject symlink) are unchanged and continue to pass.
+
+Cross-platform path handling: the fix is a plain substring check (`rawInput.includes('..')`) against the raw CLI argument, before any path parsing occurs. This works identically regardless of which separator convention the raw string uses (`/` or `\`), since no path-specific parsing is involved in the detection itself -- confirmed by testing both `../x.txt` and `..\x.txt` styles locally (this platform is Windows, where both separator styles are meaningful to the OS; on macOS/Linux, a raw `..\x.txt` argument is not treated as a directory reference by the OS itself, but the raw-substring check still correctly flags it as containing a suspicious ".." sequence, which is the intended conservative behavior -- reject when uncertain, per the pre-existing design intent already documented in the function's own comment).
+
+Tests added: src/__tests__/run-export.test.ts, new describe block "export --out path traversal rejection (CLI-level regression)" -- 12 new tests covering: unix-style relative traversal, windows-style relative traversal, nested unix-style traversal, nested windows-style traversal (all for feature mode), traversal rejection for greenfield mode, traversal rejection for repair mode (non-regression check), a safe relative path (chdir'd into the run directory, since `--out` resolves against process.cwd() like any CLI tool, not against `--root`), a safe nested relative path into an existing subdirectory, a safe `./`-prefixed relative path, and confirmation that the pre-existing existing-directory rejection still works unaffected by the fix.
+
+ARCHITECTURE COMPLIANCE
+- The fix was made in the existing export path-safety owner (src/commands/export.ts's `isSafePath()`); no separate greenfield-only validator was created.
+- The fix applies to all seven modes uniformly (isSafePath has no mode parameter and never did).
+- Existing export behavior for safe paths is unchanged (regression-tested).
+- Existing export output format (buildExportText's structure) is unchanged.
+- The pre-existing directory/symlink rejection checks are preserved unchanged.
+
+TEST-DIRECTORY CONVENTION DECISION
+- Current state: src/__tests__/*.test.ts (28 files) and tests/greenfield/*.spec.ts (10 files) both exist and are both exercised by jest.config.js's testMatch (`**/__tests__/**/*.ts`, `**/*.test.ts`, `**/*.spec.ts`), both under `roots: ['<rootDir>/src', '<rootDir>/tests']`. `npm test` runs all 37 suites / 1020 tests across both conventions successfully.
+- Why deferred: this is a pre-existing, already-documented (Batches 2-5) cosmetic convention split with zero effect on correctness or CI outcome; consolidating it would touch dozens of files for no functional benefit and is explicitly out of this repair prompt's scope (section 7.1/7.3).
+- Release impact: none. Both conventions are exercised identically by `npm test`, `npx jest tests/greenfield --silent`, and CI. This is a non-blocking cleanup item, recorded in docs/RELEASE_CHECKLIST.md's scope-audit section.
+
+COMPONENT DOCS DECISION
+- Current state: `populateComponentDocsFromBrief.ts` (src/greenfield/bootstrap/) always returns an empty array, because `NormalizedGreenfieldBrief` (src/greenfield/brief/briefTypes.ts) has no module/component-hints field. This was an intentional Batch 3 design decision (not inventing architecture the brief schema doesn't support), reaffirmed in every subsequent batch.
+- Why deferred: adding module/component hints would be a brief-schema/product-scope change, explicitly forbidden by this repair prompt (section 8.1/8.3) and out of proportion to a release-readiness repair.
+- Release impact: none. This is documented, tested behavior (tests/greenfield/bootstrapProjectDocs.spec.ts asserts `componentTargets` is always `[]` and explains why), not a defect.
+
+DOCUMENTATION UPDATES
+- docs/RELEASE_CHECKLIST.md -- updated the existing "Scope audit" section (added by an earlier docs-readiness pass) to: (a) reflect that the export traversal gap is now fixed and regression-tested, rather than "known"/"tracked follow-up"; (b) add an explicit line confirming the test-directory split is intentional, non-blocking, and both conventions pass; (c) add an explicit line confirming component docs are an intentional v1.1.0 limitation, not a defect.
+
+CI UPDATES
+- .github/workflows/validate.yml -- matrix `node-version` changed from `['24']` to `['22', '24']` (doubling matrix cells to 6: ubuntu/windows/macos-15 x 22/24). Added a "Security contract check" step (`npm run test:security`) after lint steps. Added a "CLI greenfield smoke" step (`npm run smoke:cli -- greenfield`) after the existing export smoke step.
+- scripts/cli-smoke.mjs -- added `smokeGreenfield()` (see "Export traversal fix" section above for why this was bundled into this repair rather than deferred: it was a genuinely broken script discovered while validating, not new scope).
+
+NOT CHANGED
+- No publish, tag, or GitHub release action was taken.
+- No Android/mobile behavior was added.
+- No module/component hints were added to the brief schema.
+- No test-directory consolidation was performed.
+- src/greenfield/validation/validateGreenfieldArtifacts.ts was not added (Batch 5's decision stands; nothing in this repair changed that analysis).
+- StarterConfig and TaskBundle coupling were not reintroduced (not touched by this repair at all).
+- Greenfield stage order was not changed.
+
+STATUS: complete

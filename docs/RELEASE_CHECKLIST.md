@@ -37,8 +37,16 @@ release completion.
 - [ ] Android/mobile remains deferred to v1.2.0 or later
 - [ ] shared artifact checking is used; no
   `validateGreenfieldArtifacts.ts` is required
-- [ ] the known cross-mode export traversal-guard gap remains a tracked
-  follow-up
+- [ ] the cross-mode export traversal-guard gap is fixed (`src/commands/export.ts`
+  checks the raw `--out` argument before path resolution) and covered by
+  regression tests in `src/__tests__/run-export.test.ts`
+- [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally
+  split; both are exercised by `npm test` and consolidation is a deferred,
+  non-blocking cleanup item, not a v1.1.0 requirement
+- [ ] greenfield component docs remain intentionally empty in v1.1.0 because
+  `NormalizedGreenfieldBrief` has no module/component-hints field yet; this is
+  a documented limitation, not a defect -- adding module/component hints is
+  deferred to a later version
 
 ## v1.0.0 checklist
 
