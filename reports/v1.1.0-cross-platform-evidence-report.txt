@@ -9,74 +9,82 @@ REQUIRED MATRIX
 - Linux Node 24
 
 EVIDENCE SOURCE
-- local: this environment (Windows, Node 24.11.0, npm 11.14.0) -- the only platform/Node combination physically available here. No nvm or alternate Node install is present locally (checked: no `nvm` command, no additional Node install under Program Files); Node 22 could not be exercised locally at all.
-- GitHub Actions: .github/workflows/validate.yml was updated in this repair (matrix now `os: [ubuntu-latest, windows-latest, macos-15]` x `node-version: ['22', '24']`, 6 cells) and validated for YAML correctness (parsed successfully with js-yaml; matrix and step count confirmed programmatically), but this repair branch has not yet been pushed as of this report's writing, so no GitHub Actions run exists yet for it. The user was asked whether to push to obtain real remote evidence and approved doing so; that push and its resulting run (if any) are recorded in the final pre-release rerun report as a follow-up action taken after this report was written, not retroactively folded into the matrix results below.
+- local: this environment (Windows, Node 24.11.0, npm 11.14.0) -- used for iterative development and the detailed command-by-command log in reports/v1.1.0-final-pre-release-rerun-report.txt. No nvm or alternate Node install is present locally, so Windows Node 22 could not be exercised locally.
+- GitHub Actions: .github/workflows/validate.yml (updated in this repair: matrix expanded to `os: [ubuntu-latest, windows-latest, macos-15]` x `node-version: ['22', '24']`, 6 cells; added a "Security contract check" step and a "CLI greenfield smoke" step) was pushed to `release/v1.1.0` (commit a3bbd17) with the user's explicit approval, and the resulting run was inspected. This is the authoritative source for the full 6-cell matrix below.
 - other CI: none.
-- not executed: macOS (both Node versions), Linux (both Node versions), and Windows Node 22 were not executed anywhere as of this report's writing, for the reasons above.
+- not executed: none. All 6 required matrix cells actually ran on GitHub Actions.
 
 MATRIX RESULTS
 
-platform: Windows (local, Windows 11)
-Node version: 24.11.0
-npm version: 11.14.0
-command set: npm ci; npm run test:security; npx jest tests/greenfield --silent; npx tsc --noEmit; npm test; npm run build; npm run lint; npm run lint:docs; node dist/cli.js --version; node dist/cli.js --help; node scripts/cli-smoke.mjs all; npm pack --dry-run
-exit codes: all 0
+Run: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266 (triggered by push of commit a3bbd17 to release/v1.1.0)
+
+platform: windows-latest (GitHub Actions)
+Node version: 24
+command set: npm ci; npm run build; npx tsc --noEmit; npm test; npm run lint; npm run lint:docs; npm run test:security; node dist/cli.js --help; node dist/cli.js --version; npm run smoke:cli -- normal/lifecycle/extraction/check/trace/correction/export/greenfield
+exit codes: all steps succeeded
 pass/fail: PASS
-run URL or evidence reference: local execution, not CI; see reports/v1.1.0-final-pre-release-rerun-report.txt for the full command-by-command log
+duration: 1m29s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245734926
 
-platform: Windows (local, Windows 11)
+platform: windows-latest (GitHub Actions)
 Node version: 22
-npm version: n/a
-command set: not run
-exit codes: n/a
-pass/fail: NOT EXECUTED
-run URL or evidence reference: none -- Node 22 is not installed in this environment and no alternate Node version manager is available
+command set: same as above
+exit codes: all steps succeeded
+pass/fail: PASS
+duration: 1m34s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245734930
 
-platform: macOS
-Node version: 22 and 24
-npm version: n/a
-command set: not run
-exit codes: n/a
-pass/fail: NOT EXECUTED
-run URL or evidence reference: none locally available; requires the GitHub Actions macos-15 matrix cells to actually run
+platform: macos-15 (GitHub Actions)
+Node version: 24
+command set: same as above
+exit codes: all steps succeeded
+pass/fail: PASS
+duration: 33s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245734931
 
-platform: Linux
-Node version: 22 and 24
-npm version: n/a
-command set: not run
-exit codes: n/a
-pass/fail: NOT EXECUTED
-run URL or evidence reference: none locally available; requires the GitHub Actions ubuntu-latest matrix cells to actually run
+platform: macos-15 (GitHub Actions)
+Node version: 22
+command set: same as above
+exit codes: all steps succeeded
+pass/fail: PASS
+duration: 33s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245734932
+
+platform: ubuntu-latest (GitHub Actions)
+Node version: 24
+command set: same as above
+exit codes: all steps succeeded
+pass/fail: PASS
+duration: 33s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245734948
+
+platform: ubuntu-latest (GitHub Actions)
+Node version: 22
+command set: same as above
+exit codes: all steps succeeded
+pass/fail: PASS
+duration: 39s
+run URL: https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266/job/85245735001
+note: spot-checked this job's raw log directly (not just the job-level conclusion) to confirm the two new steps actually executed rather than being skipped: "Security contract check" printed "SECURITY_CONTRACT_PASS: package metadata and tarball contents are safe", and "CLI greenfield smoke" ran `node scripts/cli-smoke.mjs greenfield` to completion with no error output.
 
 SMOKE RESULTS
 
-platform: Windows (local)
+platform: windows-latest, macos-15, ubuntu-latest (GitHub Actions), Node 22 and 24 (all 6 cells)
+commands: npm run smoke:cli -- normal, lifecycle, extraction, check, trace, correction, export, greenfield (8 categories, run sequentially as separate CI steps per matrix cell)
+expected nonzero exits: the greenfield smoke category's internal check --artifacts/check --all calls against a fresh run (all 13 artifacts missing) exit 1 as documented CLI behavior; scripts/cli-smoke.mjs's `runCliExpectingExit()` helper explicitly asserts this exact expected exit code and treats any other exit code as an unexpected failure, so a passing CI step is genuine evidence the distinction was correctly applied on every platform, not just locally.
+unexpected failures: none across all 6 cells.
+cleanup status: each smoke category uses `withTempDir()` (mkdtemp + recursive rm in a finally block), so no smoke artifacts were left in the repository checkout on any runner.
+
+platform: windows-latest (local, this session)
 Node version: 24.11.0
 commands: init, start --mode greenfield "Create a sample TypeScript CLI app", prompt, status, list, check --artifacts, check --all, export --out <file>, export --out ../<traversal> (expected rejection)
-expected nonzero exits: check --artifacts and check --all both exited 1 (all 13 artifacts missing on a fresh run) -- expected, matches documented CLI semantics, not a failure. export --out ../unsafe-export.txt exited 1 with "output path contains path traversal (..)" -- expected, confirms the fix.
+expected nonzero exits: check --artifacts and check --all both exited 1 (all 13 artifacts missing) -- expected. export --out ../unsafe-export.txt exited 1 with "output path contains path traversal (..)" -- expected, confirms the fix.
 unexpected failures: none
-cleanup status: temporary directory removed after each smoke run (mkdtemp-based, `rm -rf` in cleanup)
-
-platform: macOS / Linux
-status: NOT EXECUTED (see "Matrix results" above)
+cleanup status: temporary directory removed after the smoke run
 
 MISSING EVIDENCE
+- none. All 6 required (platform, Node version) combinations were exercised on GitHub Actions and passed, in addition to local Windows/Node 24 validation.
 
-- platform: macOS
-  Node version: 22, 24
-  reason: no macOS hardware/VM available in this environment; requires GitHub Actions
-  release impact: this project's own CI matrix (.github/workflows/validate.yml) already targets macos-15 and has a track record of passing on macOS for every prior release (v0.2.0 through v1.0.0, per `gh run list` history inspected in this repair); the code changes in this repair (export.ts's isSafePath, a plain string/fs operation with no OS-specific API) carry very low platform-specific risk, but the requirement for actual evidence is not satisfied by that inference alone.
+VERDICT: PASS
 
-- platform: Linux
-  Node version: 22, 24
-  reason: no Linux environment available in this local session; requires GitHub Actions
-  release impact: same reasoning as macOS above -- low inferred risk, but not yet actual evidence.
-
-- platform: Windows
-  Node version: 22
-  reason: only Node 24 is installed locally; no version manager available to install Node 22 without modifying the user's system, which was not authorized
-  release impact: low -- the codebase has no Node-version-conditional logic; Node 22 and 24 both fully support every language/API feature used (ES2020 target, standard fs/path/child_process APIs). Risk is inferred, not evidenced.
-
-VERDICT: PASS_WITH_DOCUMENTED_GAPS
-
-Local Windows/Node 24 validation is fully green (see final pre-release rerun report). The updated CI workflow correctly defines the full required 6-cell matrix and is syntactically valid, but as of this report's initial writing had not yet actually executed on GitHub Actions for this repair's changes. Per the user's explicit approval, the branch is being pushed to obtain real execution evidence; any concrete pass/fail results from that run should be appended to this report or recorded as a follow-up before treating the cross-platform requirement as fully closed rather than accepted-with-gaps.
+All 6 required matrix cells (windows-latest/macos-15/ubuntu-latest x Node 22/24) passed on GitHub Actions for the release-risk repair commit (a3bbd17), including the newly added security-contract-check step and greenfield smoke category. Combined with the full local Windows/Node 24 validation (see reports/v1.1.0-final-pre-release-rerun-report.txt), cross-platform readiness for v1.1.0 is fully evidenced, not inferred.

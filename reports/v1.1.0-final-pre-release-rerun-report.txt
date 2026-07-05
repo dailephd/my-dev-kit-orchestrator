@@ -1,0 +1,130 @@
+Artifact: V110FinalPreReleaseRerunReport
+
+Branch: release/v1.1.0
+Starting commit: 820ef0c
+Ending commit: a3bbd17 "Resolve v1.1.0 release readiness risks"
+
+VERSION
+- package.json: 1.1.0
+- package-lock.json: present, in sync (npm ci succeeded with no lockfile drift)
+- CLI version output: `node dist/cli.js --version` -> 1.1.0
+
+LOCAL VALIDATION (Windows, Node 24.11.0, npm 11.14.0)
+
+command: npm ci
+working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+exit code: 0
+status: pass
+summary: 465 packages installed, 0 vulnerabilities.
+
+command: npm run test:security
+exit code: 0
+status: pass
+summary: "SECURITY_CONTRACT_PASS: package metadata and tarball contents are safe"
+
+command: npx jest tests/greenfield --silent
+exit code: 0
+status: pass
+summary: 10 suites, 146 tests, all passed.
+
+command: npx tsc --noEmit
+exit code: 0
+status: pass
+summary: no output, no type errors.
+
+command: npm test
+exit code: 0
+status: pass
+summary: 37 test suites, 1020 tests, all passed.
+
+command: npm run build
+exit code: 0
+status: pass
+summary: tsc compiled cleanly to dist/.
+
+command: npm run lint
+exit code: 0
+status: pass
+summary: eslint src --ext .ts, no output (0 issues).
+
+command: npm run lint:docs
+exit code: 0
+status: pass
+summary: markdownlint-cli2, 9 files linted, 0 errors.
+
+command: node dist/cli.js --version
+exit code: 0
+status: pass
+summary: printed "1.1.0".
+
+command: node dist/cli.js --help
+exit code: 0
+status: pass
+summary: printed the full command list unchanged.
+
+command: node scripts/cli-smoke.mjs all
+exit code: 0
+status: pass
+summary: all 9 smoke categories (normal, lifecycle, extraction, check, trace, correction, export, greenfield -- the last two run implicitly via the "all" dispatch, plus the unconditional smokeHelp() version check) passed silently (no output on success, matching this script's existing convention).
+
+SECURITY VALIDATION (my-dev-kit-lab, target = this repository)
+
+command: npm run security:validate -- --target "Z:\Users\newuser\Projects\my-dev-kit-orchestrator"
+working directory: Z:\Users\newuser\Projects\my-dev-kit-lab
+exit code: 0
+status: pass
+findings summary: 8 INFORMATIONAL findings, all "outdated dependency" notices (@types/node, @typescript-eslint/eslint-plugin, @typescript-eslint/parser, commander, eslint, markdownlint-cli2, rimraf, typescript) -- none are severity-blocking. CodeQL: PASS. Semgrep: PASS. npm audit (with and without devDependencies): PASS, 0 vulnerabilities. OSV-Scanner: PASS. Package tarball inspection: PASS. Target security test suite (`npm run test:security` invoked from within the lab's harness): PASS. Fuzz smoke (9 targets, 450 iterations): PASS.
+verdict recorded by my-dev-kit-lab: READY FOR RELEASE PREPARATION
+reports written by my-dev-kit-lab (not copied into this repository): Z:\Users\newuser\Projects\my-dev-kit-lab\reports\security\my-dev-kit-orchestrator-v1.1.0-security-validation.txt and .json
+
+command: npm run security:deps -- --target "Z:\Users\newuser\Projects\my-dev-kit-orchestrator"
+exit code: 0
+status: pass
+summary: 4 passed, 1 warned (outdated-dependency category), 0 failed, 8 informational findings (same 8 as above).
+
+command: npm run security:package -- --target "Z:\Users\newuser\Projects\my-dev-kit-orchestrator"
+exit code: 0
+status: pass
+summary: 1 passed, 0 warned, 0 failed, 0 findings.
+
+command: npm run security:semgrep -- --target "Z:\Users\newuser\Projects\my-dev-kit-orchestrator"
+exit code: 0
+status: pass (PASSED, 1538ms)
+
+command: npm run security:codeql -- --target "Z:\Users\newuser\Projects\my-dev-kit-orchestrator"
+exit code: 0
+status: pass (PASSED, 674ms)
+
+Target repository tree state: confirmed unchanged by the security validation run (`git status --short` immediately after showed only this repair's own 5 intentional file modifications, no new/unexpected files).
+
+PACKAGE DRY-RUN
+
+command: npm pack --dry-run
+exit code: 0
+status: pass
+safe contents summary: 194 files, package size 113.9 kB, unpacked 562.9 kB. Programmatically verified (via `npm pack --dry-run --json`) that: package.json and README.md are present; no file path matches any forbidden segment (node_modules, coverage, .my-dev-kit, .my-dev-kit-orchestrator, .idea, .vscode, reports/, .env, .log, .tgz). 0 forbidden matches.
+
+EXPORT TRAVERSAL REPAIR VALIDATION
+
+tests: src/__tests__/run-export.test.ts, "export --out path traversal rejection (CLI-level regression)" describe block -- 12 tests: rejects ../escaped.txt, ..\escaped.txt, nested/../../escaped.txt, nested\..\..\escaped.txt (all for feature mode); rejects traversal identically for greenfield mode; rejects traversal identically for repair mode (non-regression); allows a safe relative path and confirms the file is written; allows a safe nested relative path into an existing subdirectory; allows a safe "./"-prefixed relative path; confirms the pre-existing existing-directory rejection still works. All 12 pass (part of the 1020-test full suite run above).
+CLI smoke: manually verified in a temporary directory outside the repository (this session): `export --out ../unsafe-export.txt` now correctly exits 1 with "Error: output path rejected: output path contains path traversal (..)" and no file is written outside the temp directory (confirmed via directory listing of the parent directory before/after). `export --out greenfield-export.txt` (safe path) succeeds and writes the file.
+pass/fail: PASS
+
+CROSS-PLATFORM VALIDATION
+- matrix verdict: PASS (see reports/v1.1.0-cross-platform-evidence-report.txt for full detail). All 6 required cells -- windows-latest/macos-15/ubuntu-latest x Node 22/24 -- passed on GitHub Actions run https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/28749387266, triggered by pushing this repair's commit (a3bbd17) to release/v1.1.0 with the user's explicit approval.
+- missing evidence: none.
+
+REMAINING RISKS
+- split test-directory conventions (src/__tests__/*.test.ts and tests/**/*.spec.ts): confirmed non-blocking. Both conventions are exercised by npm test (37 suites, 1020 tests, all passing) and by CI. Deferred to a future cleanup/refactor prompt, per explicit scope boundary in this repair prompt (section 7). Documented in docs/RELEASE_CHECKLIST.md.
+- empty component docs until module hints exist: confirmed intentional v1.1.0 limitation, not a defect. NormalizedGreenfieldBrief has no module/component-hints field; populateComponentDocsFromBrief.ts always returns []; this is tested (tests/greenfield/bootstrapProjectDocs.spec.ts) and documented (docs/RELEASE_CHECKLIST.md). Adding module/component hints is out of scope for this repair and for v1.1.0 generally, per explicit instruction.
+- newly found and already resolved within this repair: scripts/cli-smoke.mjs's hardcoded "expected version 1.0.0" check (broken since the version bump to 1.1.0, would have failed CI's `npm run smoke:cli -- normal` step on every platform) -- fixed by reading the expected version from package.json dynamically, so it cannot go stale again on a future version bump.
+- no other new risks were found during this repair.
+
+RELEASE READINESS DECISION: READY_FOR_PUBLISH_PROMPT
+
+All local validation, my-dev-kit-lab security validation, package dry-run, export-traversal repair validation, and cross-platform CI validation (6/6 matrix cells, real GitHub Actions evidence, not inferred) pass. The two previously-open non-code risks (test-directory split, empty component docs) are confirmed intentional and documented, not defects. No blockers remain.
+
+NEXT WORKFLOW
+- A separate publish/tag/GitHub-release prompt is the appropriate next step. This report does not authorize or perform any publish, tag, or GitHub release action -- none was taken in this repair (no `npm publish`, no `git tag`, no GitHub release was created), consistent with this prompt's explicit scope boundary.
+
+STATUS: complete
