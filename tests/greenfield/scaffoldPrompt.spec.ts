@@ -47,7 +47,12 @@ describe('buildScaffoldPlan', () => {
   });
 
   it('leaves the plan incomplete rather than inventing a file tree when the profile is unsupported', () => {
-    const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'android-compose' });
+    // v1.2.0: android-compose is now supported (see
+    // artifacts/v1.2.0-android-compose-profile-contract.txt), so this
+    // regression case now uses a still-unsupported profile (flutter)
+    // instead. See the dedicated android-compose scaffold-plan coverage
+    // added in tests/greenfield/androidComposeProfile.spec.ts.
+    const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'flutter' });
     const plan = buildScaffoldPlan(bundle);
     expect(plan.profileId).toBeUndefined();
     expect(plan.plannedFileGroups).toEqual([]);

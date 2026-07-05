@@ -19,4 +19,12 @@ export const TYPESCRIPT_CLI_PROFILE: GreenfieldProfile = {
   scaffoldPlanningHints: ['single package', 'bin entry point', 'no UI layer'],
   unsupportedConditions: ['requires a graphical or browser-rendered UI'],
   notesForBootstrapBundle: 'Minimal single-package layout; no frontend build step required.',
+  setupCommands: [
+    { command: 'npm install', purpose: 'Install dependencies.', required: true },
+  ],
+  validationCommands: [
+    { command: 'npm run typecheck', purpose: 'Type-check the project.', required: true },
+    { command: 'npm run build', purpose: 'Build the project.', required: true },
+    { command: 'npm test', purpose: 'Run the test suite.', required: true },
+  ],
 };

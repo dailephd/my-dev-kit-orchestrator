@@ -44,14 +44,24 @@ describe('resolveGreenfieldProfile', () => {
     expect(selection.reason).toMatch(/not in the supported/);
   });
 
-  it('returns unsupported (not a mobile fallback) for an Android Compose profile request', () => {
+  // v1.2.0: android-compose is now a supported profile (see
+  // artifacts/v1.2.0-android-compose-profile-contract.txt). This test
+  // previously asserted "unsupported" as a v1.1.0-era regression guard; that
+  // assumption is now false and the test is updated accordingly, per the
+  // same "narrowly fix stale assumptions, do not weaken real behavior"
+  // discipline used for the v1.1.0 mode-count fixes.
+  it('selects the explicit Android Compose profile (v1.2.0)', () => {
     const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'android-compose' }));
+    expect(selection.status).toBe('selected');
+    expect(selection.profile?.id).toBe('android-compose');
+    expect(selection.requestedProfileId).toBe('android-compose');
+  });
+
+  it('does not leak Android/mobile stack details into an unrelated unsupported profile request', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'rust-mobile-thing' }));
     expect(selection.status).toBe('unsupported');
     expect(selection.profile).toBeUndefined();
     const serialized = JSON.stringify(selection).toLowerCase();
-    // The only occurrence of "android" should be the echoed requestedProfileId; no android
-    // stack assumptions, template targets, or hints should appear anywhere in the result.
-    expect(selection.requestedProfileId).toBe('android-compose');
     expect(serialized).not.toMatch(/compose-multiplatform|jetpack|kotlin/);
   });
 
@@ -116,4 +126,102 @@ describe('resolveGreenfieldProfile', () => {
       }),
     );
   });
+
+  it('every supported profile declares setupCommands and validationCommands (v1.2.0 contract fields)', () => {
+    for (const preferredProfile of ['typescript-cli', 'nextjs-app', 'android-compose']) {
+      const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile }));
+      expect(Array.isArray(selection.profile?.setupCommands)).toBe(true);
+      expect(Array.isArray(selection.profile?.validationCommands)).toBe(true);
+    }
+  });
+
+  it('TypeScript CLI setupCommands/validationCommands preserve current implicit behavior', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'typescript-cli' }));
+    expect(selection.profile?.setupCommands).toEqual([
+      { command: 'npm install', purpose: 'Install dependencies.', required: true },
+    ]);
+    expect(selection.profile?.validationCommands.map((c) => c.command)).toEqual([
+      'npm run typecheck',
+      'npm run build',
+      'npm test',
+    ]);
+  });
+
+  it('Next.js app setupCommands/validationCommands preserve current implicit behavior', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'nextjs-app' }));
+    expect(selection.profile?.setupCommands).toEqual([
+      { command: 'npm install', purpose: 'Install dependencies.', required: true },
+    ]);
+    expect(selection.profile?.validationCommands.map((c) => c.command)).toEqual([
+      'npm run typecheck',
+      'npm run build',
+      'npm test',
+    ]);
+  });
+});
+
+describe('resolveGreenfieldProfile - Android Compose aliases (v1.2.0)', () => {
+  it.each([
+    ['android', 'android-compose'],
+    ['Android Compose', 'android-compose'],
+    ['android compose', 'android-compose'],
+    ['kotlin-compose', 'android-compose'],
+    ['kotlin compose', 'android-compose'],
+    ['jetpack-compose', 'android-compose'],
+    ['jetpack compose', 'android-compose'],
+    ['compose android', 'android-compose'],
+  ])('resolves preferredProfile "%s" to %s', (requested, expectedId) => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: requested }));
+    expect(selection.status).toBe('selected');
+    expect(selection.profile?.id).toBe(expectedId);
+  });
+
+  it('does not use fuzzy matching for unrelated words containing partial overlaps', () => {
+    // "androidx" and "androidish" are not android/android-compose and must not resolve.
+    for (const requested of ['androidx', 'androidish', 'kotlin', 'compose']) {
+      const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: requested }));
+      expect(selection.status).not.toBe('selected');
+    }
+  });
+});
+
+describe('resolveGreenfieldProfile - generic mobile ambiguity (v1.2.0)', () => {
+  it.each(['mobile', 'mobile app', 'phone app'])(
+    'returns unresolved (not selected, not unsupported) for explicit preferredProfile "%s"',
+    (requested) => {
+      const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: requested }));
+      expect(selection.status).toBe('unresolved');
+      expect(selection.profile).toBeUndefined();
+      expect(selection.reason).toMatch(/android-compose/i);
+      expect(selection.reason).toMatch(/ios.*flutter.*react native|not supported/i);
+    },
+  );
+
+  it('returns unresolved when platformTarget signals generic mobile without a preferredProfile', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ platformTarget: 'mobile' }));
+    expect(selection.status).toBe('unresolved');
+    expect(selection.profile).toBeUndefined();
+  });
+
+  it('returns unresolved when preferredStack signals "phone app" without a preferredProfile', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredStack: ['phone app'] }));
+    expect(selection.status).toBe('unresolved');
+  });
+
+  it('does not silently select android-compose for generic mobile ambiguity', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'mobile app' }));
+    expect(selection.profile?.id).not.toBe('android-compose');
+    expect(selection.status).not.toBe('selected');
+  });
+});
+
+describe('resolveGreenfieldProfile - unsupported platforms remain unsupported (v1.2.0 regression)', () => {
+  it.each(['ios', 'flutter', 'react-native', 'react native'])(
+    'still returns unsupported for "%s" and never aliases to android-compose',
+    (requested) => {
+      const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: requested }));
+      expect(selection.status).toBe('unsupported');
+      expect(selection.profile).toBeUndefined();
+    },
+  );
 });

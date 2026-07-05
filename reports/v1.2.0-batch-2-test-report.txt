@@ -1,0 +1,65 @@
+Artifact: V120Batch2TestReport
+Batch: v1.2.0 Batch 2
+
+TEST FILES ADDED
+- tests/greenfield/androidComposeProfile.spec.ts -- purpose: dedicated Android Compose profile-shape coverage (existence, required fields, command fields, stack/template/docs/test/unsupported-condition content, no-Gradle-execution claims, no-Play-Store claims, no-unsupported-platform-support claims) plus end-to-end resolution coverage (16 tests)
+
+TEST FILES CHANGED
+- tests/greenfield/profileResolution.spec.ts -- purpose: (a) fixed 2 stale assumptions invalidated by android-compose becoming supported (see implementation report "Stale test assumption fixes"); (b) added alias coverage (8 aliases via `it.each`), no-fuzzy-matching regression coverage, generic-mobile-ambiguity coverage (explicit preferredProfile and fallback-signal forms), unsupported-platform regression coverage (iOS/Flutter/React Native), and existing-profile command-field regression coverage (TypeScript CLI, Next.js) -- net +30 tests (6 -> 36 in this file alone, including the 2 replaced/added in the stale-assumption fix)
+- tests/greenfield/scaffoldPrompt.spec.ts -- purpose: fixed 1 stale assumption (see implementation report); no new test cases added (out of Batch 2 scope; buildScaffoldPlan.ts itself was not modified)
+
+ANDROID COMPOSE PROFILE COVERAGE
+- covered: profile exists; id is android-compose; all required GreenfieldProfile fields present (displayName, category, supportedProjectKind, stackAssumptions, templateTargets, documentationExpectations, testExpectations, validationExpectations, scaffoldPlanningHints, unsupportedConditions, notesForBootstrapBundle); setupCommands present (and specifically empty, per the profile contract); validationCommands present and non-empty; validation commands are Gradle-based (`./gradlew` prefix) and never npm-based; the connectedAndroidTest command is marked `required: false` with a device/emulator environment note; stack assumptions include Kotlin/Jetpack Compose/Gradle/Android app module; template targets include the Gradle files, AndroidManifest, MainActivity, and both test source locations; documentation expectations include Android SDK/environment notes; testing expectations include unit-test/instrumentation-test/Gradle guidance; unsupported conditions include missing SDK/Gradle and iOS/Flutter/React Native; the profile never claims the orchestrator runs Gradle itself; the profile never claims Play Store/release readiness; the profile never claims to support iOS/Flutter/React Native; end-to-end resolution returns the exact profile object; resolution is deterministic.
+- uncovered: the profile's interaction with buildBootstrapBundle.ts/buildScaffoldPlan.ts/validateBootstrapDocs.ts beyond profile resolution itself (e.g. whether a bundle built from this profile produces a sensible stack decision, or whether a scaffold plan built from it uses the new setupCommands/validationCommands fields).
+  reason for uncovered case: explicitly out of Batch 2 scope (section 2.1/11.1); Batch 3 owns bootstrap-bundle/docs/scaffold-plan integration and its own test coverage, per artifacts/v1.2.0-android-compose-test-plan.txt's "Batch 3 tests" section. Testing this now would require either modifying buildScaffoldPlan.ts ahead of schedule or writing tests against not-yet-existing integration behavior.
+
+PROFILE RESOLUTION COVERAGE
+- covered: explicit android-compose (selected); 8 alias variants (android, "Android Compose", "android compose", kotlin-compose, "kotlin compose", jetpack-compose, "jetpack compose", "compose android") all resolve to android-compose; no-fuzzy-matching regression (androidx, androidish, kotlin alone, compose alone all fail to resolve); generic mobile ambiguity via explicit preferredProfile (mobile, "mobile app", "phone app") all return unresolved with a reason naming android-compose as available and iOS/Flutter/React Native as unsupported; generic mobile ambiguity via fallback signals (platformTarget: 'mobile', preferredStack: ['phone app']) with no preferredProfile also return unresolved; explicit confirmation that "mobile app" never silently selects android-compose; iOS/Flutter/React Native (plain and spaced/dashed variants) remain unsupported and never alias to android-compose; TypeScript CLI regression (existing tests unchanged, plus new setupCommands/validationCommands exact-value assertions); Next.js regression (same); default fallback regression (existing "no explicit preference -> typescript-cli" and "web signal -> nextjs-app" tests unchanged, confirmed still passing).
+- uncovered: whether a bare single-technology signal (e.g. `platformTarget: 'android'` alone, no preferredProfile) should auto-select android-compose via the fallback path.
+  reason for uncovered case: this batch deliberately did not implement this behavior (see implementation report "Deferred items" -- the newly-identified, explicitly-deferred design question), since it was not requested by Batch 1's contract or this batch's own section 9.2 (which only asks for generic "mobile"/"mobile app"/"phone app" ambiguity handling, not technology-specific fallback auto-selection). No test was written for behavior that was deliberately not implemented.
+
+EXISTING PROFILE REGRESSION COVERAGE
+- TypeScript CLI: all pre-existing tests pass unchanged; new test confirms `setupCommands`/`validationCommands` equal the exact values matching current (Batch-2-unmodified) `buildScaffoldPlan.ts` output for this profile.
+- Next.js: same.
+- default fallback: pre-existing "applies a deterministic fallback to typescript-cli when no profile preference is given" and "...to nextjs-app when platformTarget signals a web project" tests both pass unchanged, confirming the new mobile-ambiguity branch (checked before the web-hint branch in `resolveFallbackProfile`) does not intercept non-mobile-signaling briefs.
+
+UNSUPPORTED MOBILE COVERAGE
+- generic mobile ambiguity: covered via 4 distinct test cases (explicit "mobile"/"mobile app"/"phone app" via `it.each`, plus separate fallback-signal-only tests for platformTarget and preferredStack) -- all assert `status: 'unresolved'`, never `'selected'` or `'unsupported'`.
+- iOS: covered, remains `'unsupported'` (pre-existing test, still passing) plus a new regression test alongside flutter/react-native/"react native" confirming none alias to android-compose.
+- Flutter: covered, same as iOS.
+- React Native: covered, both `'react-native'` and `'react native'` (spaced) variants, same as iOS.
+
+NO ANDROID TOOLING COVERAGE
+- confirmed tests do not execute Gradle: no test or source file added/changed in this batch calls `child_process`, `execSync`, `spawnSync`, or any shell-out mechanism; `androidComposeProfile.ts`'s validation commands are plain string literals inside a data object, never passed to an execution API. Grep-confirmed absence of any `gradle`/`gradlew` invocation pattern in the diff.
+- confirmed tests do not require Android SDK: the full test suite (`npm test`, 1060 tests) passes in this environment, which has no Android SDK installed, no `ANDROID_HOME` set, and no Gradle on PATH -- their passing here is itself the confirming evidence.
+
+TRACEABILITY
+
+- requirement: androidComposeProfile.ts exists with id "android-compose" and all required fields
+  test file: tests/greenfield/androidComposeProfile.spec.ts
+  test case: "exists and has id \"android-compose\"", "has all required GreenfieldProfile fields present"
+
+- requirement: setupCommands/validationCommands present, Gradle-based, no orchestrator-executed Gradle claim
+  test file: tests/greenfield/androidComposeProfile.spec.ts
+  test case: "declares setupCommands...", "setupCommands is empty...", "validationCommands are Gradle-based, not npm-based", "marks the connected-device instrumentation test command as not required", "does not claim the orchestrator runs Gradle itself"
+
+- requirement: bounded, explicit alias table, no fuzzy matching
+  test file: tests/greenfield/profileResolution.spec.ts
+  test case: "resolves preferredProfile \"%s\" to %s" (8 aliases), "does not use fuzzy matching for unrelated words containing partial overlaps"
+
+- requirement: generic mobile ambiguity returns unresolved, not selected or unsupported
+  test file: tests/greenfield/profileResolution.spec.ts
+  test case: "returns unresolved (not selected, not unsupported) for explicit preferredProfile \"%s\"", "returns unresolved when platformTarget signals generic mobile...", "returns unresolved when preferredStack signals \"phone app\"...", "does not silently select android-compose for generic mobile ambiguity"
+
+- requirement: iOS/Flutter/React Native remain unsupported and unaliased
+  test file: tests/greenfield/profileResolution.spec.ts
+  test case: "still returns unsupported for \"%s\" and never aliases to android-compose"
+
+- requirement: existing TypeScript CLI / Next.js behavior unchanged
+  test file: tests/greenfield/profileResolution.spec.ts
+  test case: all pre-existing tests (unmodified) plus new command-field-value assertions
+
+- requirement: no brief schema changes needed
+  test file: n/a (negative requirement; confirmed by briefTypes.ts/briefSchema.ts remaining unmodified and all existing tests/greenfield/briefNormalization.spec.ts tests continuing to pass unchanged, per the verification report's full-suite run)
+
+STATUS: complete

@@ -17,4 +17,12 @@ export const NEXTJS_APP_PROFILE: GreenfieldProfile = {
   scaffoldPlanningHints: ['app directory routing', 'frontend build step required'],
   unsupportedConditions: ['requires a native mobile shell'],
   notesForBootstrapBundle: 'Frontend-first layout; requires a build step before verification.',
+  setupCommands: [
+    { command: 'npm install', purpose: 'Install dependencies.', required: true },
+  ],
+  validationCommands: [
+    { command: 'npm run typecheck', purpose: 'Type-check the project.', required: true },
+    { command: 'npm run build', purpose: 'Build the project.', required: true },
+    { command: 'npm test', purpose: 'Run the test suite.', required: true },
+  ],
 };

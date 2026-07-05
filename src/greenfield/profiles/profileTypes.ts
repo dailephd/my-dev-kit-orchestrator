@@ -9,7 +9,23 @@
 // artifacts/greenfield-starter-bridge-decision.txt in place of porting
 // my-dev-kit-alpha's StarterConfig.
 
-export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app';
+export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose';
+
+/**
+ * A single setup or validation command a profile recommends, described but
+ * never executed by the orchestrator itself (see buildScaffoldPlan.ts and
+ * artifacts/v1.2.0-android-compose-profile-contract.txt). Kept intentionally
+ * minimal -- command text, why it exists, whether it is required, and an
+ * optional environment caveat -- rather than a general command-execution
+ * model, since the orchestrator never runs these commands.
+ */
+export interface GreenfieldProfileCommand {
+  command: string;
+  purpose: string;
+  required: boolean;
+  /** e.g. "requires a connected device or emulator"; omitted when not applicable. */
+  environmentNotes?: string;
+}
 
 /**
  * A supported starter profile. Describes enough information to guide later
@@ -29,6 +45,20 @@ export interface GreenfieldProfile {
   scaffoldPlanningHints: string[];
   unsupportedConditions: string[];
   notesForBootstrapBundle: string;
+  /**
+   * Recommended setup commands (e.g. dependency installation). Descriptive
+   * only; the orchestrator never executes these (see
+   * artifacts/v1.2.0-android-compose-profile-contract.txt). Batch 3 wires
+   * these into buildScaffoldPlan.ts in place of its current hardcoded
+   * npm-specific logic.
+   */
+  setupCommands: GreenfieldProfileCommand[];
+  /**
+   * Recommended validation commands (e.g. typecheck/build/test). Descriptive
+   * only; the orchestrator never executes these. Batch 3 wires these into
+   * buildScaffoldPlan.ts in place of its current keyword-sniffing logic.
+   */
+  validationCommands: GreenfieldProfileCommand[];
 }
 
 export type GreenfieldProfileResolutionStatus = 'selected' | 'unresolved' | 'unsupported';
