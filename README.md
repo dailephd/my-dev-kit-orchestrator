@@ -6,7 +6,11 @@ It keeps a software change in bounded stages instead of jumping straight from a 
 
 ## Current release
 
-The current published package is `@dailephd/my-dev-kit-orchestrator@1.1.0`.
+The latest published package is `@dailephd/my-dev-kit-orchestrator@1.1.0`. This
+repository's current source additionally includes the Android Compose
+greenfield profile implemented after that release; see
+[CHANGELOG.md](CHANGELOG.md) for what has shipped and what is pending the next
+release.
 
 The CLI command is:
 
@@ -28,7 +32,7 @@ This release includes seven workflow modes:
 
 `greenfield` is the seventh mode. It is for bootstrapping a new project before useful code exists.
 
-The `v1.1.0` foundation is platform-neutral. It supports the `typescript-cli` and `nextjs-app` starter profiles. It does not implement Android or other mobile profiles.
+Greenfield is platform-neutral. It supports three starter profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. Android Compose support is profile-guided planning: stack decisions, prompts, generated docs, scaffold-plan expectations, and validation-command guidance (`./gradlew build`, `./gradlew testDebugUnitTest`, and an optional device/emulator-dependent `./gradlew connectedAndroidTest`). The orchestrator does not run Gradle and does not require the Android SDK. A generic "mobile" or "mobile app" request is ambiguous and is reported as unresolved rather than silently selected; iOS, Flutter, and React Native are not supported profiles.
 
 Greenfield stage order:
 
@@ -107,6 +111,15 @@ my-dev-kit-orchestrator check --artifacts
 my-dev-kit-orchestrator export
 ```
 
+Android Compose greenfield example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator export
+```
+
 ## Validation commands
 
 Useful local checks for release-facing changes:
@@ -127,7 +140,9 @@ npm pack --dry-run
 
 ## Current limitations
 
-- no Android/mobile support in `v1.1.0`
+- Android Compose support is profile-guided planning, not an Android build runner: the orchestrator does not run Gradle, does not require the Android SDK, and does not check for a connected device or emulator
+- generic mobile requests (e.g. "mobile", "mobile app") are ambiguous and reported as unresolved rather than silently mapped to a profile
+- iOS, Flutter, React Native, and a general-purpose mobile mode are not supported
 - the repository still has both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`
 - component docs remain empty until the brief schema adds module/component hints
 - the CLI does not autonomously run coding agents, security validation, or publishing workflows

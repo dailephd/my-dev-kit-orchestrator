@@ -82,6 +82,16 @@ Examples:
 - `extraction` adds source-repository inspection, source workflow mapping, source-to-target porting analysis, a do-not-port gate, a golden behavior contract, and a target architecture proposal before implementation begins
 - `greenfield` guides a new project from an idea brief through a platform-neutral scaffold and first vertical slice to an initial `my-dev-kit` index
 
+## Greenfield profile architecture
+
+Greenfield is profile-driven: `src/greenfield/profiles/resolveGreenfieldProfile.ts` resolves a normalized brief to one of three supported profiles (`typescript-cli`, `nextjs-app`, `android-compose`) using an explicit, bounded alias table with no fuzzy matching. An ambiguous, technology-unspecified "mobile" request resolves to `'unresolved'` rather than being silently defaulted; iOS, Flutter, and React Native fall through to `'unsupported'` like any other unrecognized profile id.
+
+Each `GreenfieldProfile` (`src/greenfield/profiles/profileTypes.ts`) carries stack assumptions, template targets, documentation/testing/validation expectations, and two command fields -- `setupCommands` and `validationCommands` -- that are descriptive data only; the orchestrator never executes them. `buildBootstrapBundle.ts` and `buildScaffoldPlan.ts` both read these fields directly rather than hardcoding profile-specific (e.g. npm-only) assumptions, so a Gradle-based profile like `android-compose` produces Gradle-appropriate guidance without any Android-specific branch in the bundle/scaffold builders themselves.
+
+Validation is profile-conditional in exactly one place: the bootstrap-bundle's validation-rules builder and `validateBootstrapDocs()` both permit Android/Jetpack/Kotlin/Gradle content only when the selected profile is `android-compose`, while unsupported-platform (iOS/React Native/Flutter/multiplatform) and Play Store/release-readiness claims are rejected unconditionally, for every profile.
+
+Profile resolution itself is not wired into the CLI. `start` stores the request as raw text (unchanged since `v1.1.0`, for every profile); `prompt` renders static, mode-and-stage-keyed template text (`src/promptGenerator.ts`, `src/greenfield/scaffold/renderScaffoldPrompt.ts`) that does not read prior artifact content or resolve a profile at render time. A coding agent resolves the profile when it executes the `starter-profile` stage prompt. `check` and `export` remain fully generic across profiles: neither has any Android-specific logic, and `export`'s one real per-run content channel is `verification-report.txt`, echoed verbatim rather than asserted as fact.
+
 ## Run workspace and storage model
 
 Each run lives under a local workspace:

@@ -52,6 +52,17 @@ function extractGreenfieldArtifactPaths(root) {
   }));
 }
 
+// v1.2.0: extracted from source (SUPPORTED_PROFILES) rather than hardcoded,
+// the same way modes and stages already are above -- this is what keeps
+// docs from silently drifting the next time a greenfield profile is added
+// or removed (see docs/DEVELOPMENT.md, "Adding a greenfield profile").
+function extractGreenfieldProfiles(root) {
+  const source = readText(root, 'src/greenfield/profiles/resolveGreenfieldProfile.ts');
+  const match = source.match(/SUPPORTED_PROFILES:\s*Record<GreenfieldProfileId,\s*GreenfieldProfile>\s*=\s*\{([\s\S]*?)\}/);
+  if (!match) throw new Error('Could not extract SUPPORTED_PROFILES from resolveGreenfieldProfile.ts');
+  return extractQuotedItems(match[1]);
+}
+
 function collectDocs(root) {
   const docsDir = path.join(root, 'docs');
   const docs = fs
@@ -65,12 +76,36 @@ function fail(message, failures) {
   failures.push(message);
 }
 
+// Finds claimRegex matches in text and reports true only for matches that are
+// NOT immediately preceded (within `window` characters) by a negation word.
+// This lets docs correctly say "the orchestrator does not run Gradle" or
+// "does not claim Play Store readiness" without a naive substring/regex
+// check treating the negated sentence itself as the violation it is
+// describing -- the exact false-positive trap the old hardcoded
+// "supports android"/"supports mobile" patterns fell into once Android
+// Compose became legitimately supported.
+function containsUnnegatedClaim(text, claimRegex, window = 30) {
+  const flags = claimRegex.flags.includes('g') ? claimRegex.flags : `${claimRegex.flags}g`;
+  const re = new RegExp(claimRegex.source, flags);
+  const negationRe = /\b(not|never|no|n't|without|does not|doesn't|did not|didn't)\b/i;
+  let match;
+  while ((match = re.exec(text))) {
+    const start = Math.max(0, match.index - window);
+    const preceding = text.slice(start, match.index);
+    if (!negationRe.test(preceding)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const { root } = parseArgs(argv);
   const pkg = readJson(root, 'package.json');
   const modes = extractModes(root);
   const greenfieldStages = extractGreenfieldStages(root);
   const greenfieldArtifactPaths = extractGreenfieldArtifactPaths(root);
+  const greenfieldProfiles = extractGreenfieldProfiles(root);
 
   const readme = readText(root, 'README.md');
   const changelog = readText(root, 'CHANGELOG.md');
@@ -122,8 +157,33 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     fail('Docs do not present greenfield as a current mode', failures);
   }
 
-  if (!/supports the\s+`typescript-cli`\s+and\s+`nextjs-app`\s+profiles/i.test(workflows)) {
-    fail('docs/WORKFLOWS.md does not state the current greenfield profile support', failures);
+  // v1.2.0: source-derived profile-list check, replacing the old hardcoded
+  // two-profile regex (`/supports the \`typescript-cli\` and \`nextjs-app\`
+  // profiles/`), which would fail forever once a third profile shipped.
+  for (const profile of greenfieldProfiles) {
+    const token = `\`${profile}\``;
+    if (!readme.includes(token) && !workflows.includes(token)) {
+      fail(`Docs do not mention current greenfield profile ${profile}`, failures);
+    }
+  }
+
+  // A doc that names a fixed, wrong profile count is stale by construction,
+  // independent of which profiles it lists -- catches "only two profiles"
+  // style phrasing even if it happens to also list a since-added profile id
+  // somewhere else in the same document.
+  const profileCountWords = { 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five' };
+  const wrongProfileCountRe = new RegExp(
+    `\\b(${Object.entries(profileCountWords)
+      .filter(([count]) => Number(count) !== greenfieldProfiles.length)
+      .map(([count, word]) => `${count}|${word}`)
+      .join('|')})\\s+(supported\\s+)?(starter\\s+)?profiles\\b`,
+    'i',
+  );
+  if (wrongProfileCountRe.test(workflows) || wrongProfileCountRe.test(readme)) {
+    fail(
+      `Docs state a greenfield profile count that does not match source (source has ${greenfieldProfiles.length}: ${greenfieldProfiles.join(', ')})`,
+      failures,
+    );
   }
 
   for (const stage of greenfieldStages) {
@@ -152,15 +212,56 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     fail('docs/ROADMAP.md still says v1.1.0 is awaiting pre-release', failures);
   }
 
-  const misleadingAndroidClaims = [
-    /v1\.1\.0.{0,80}android profile/i,
-    /v1\.1\.0.{0,80}mobile profile/i,
-    /supports android/i,
-    /supports mobile/i,
+  // Historical v1.1.0-scoped claims (correctly preserved: v1.1.0 truly did
+  // not support Android/mobile) are intentionally not checked here -- only
+  // claims that are wrong about *current* behavior are checked below.
+  // Every pattern here uses containsUnnegatedClaim so that this project's
+  // own correct disclaimers ("does not support...", "does not claim...")
+  // are never themselves flagged as violations.
+  const misleadingClaims = [
+    {
+      kind: 'generic mobile support claim',
+      pattern: /supports?\s+(a\s+)?(generic\s+)?mobile\b(?!\s+compose)/i,
+    },
+    { kind: 'iOS support claim', pattern: /supports?\s+ios\b/i },
+    { kind: 'Flutter support claim', pattern: /supports?\s+flutter\b/i },
+    { kind: 'React Native support claim', pattern: /supports?\s+react[- ]native\b/i },
+    {
+      kind: 'Gradle-execution claim',
+      pattern: /\b(orchestrator|cli|tool)\s+(runs|executes|invokes|ran)\s+gradle\b/i,
+    },
+    { kind: 'Gradle-execution claim', pattern: /\bgradle\s+(ran|succeeded|passed)\b/i },
+    {
+      kind: 'Android SDK requirement claim',
+      pattern: /\b(requires?|needs?)\s+(the\s+)?android sdk\b/i,
+    },
+    { kind: 'Play Store readiness claim', pattern: /play store\s+(ready|readiness)\b/i },
+    { kind: 'release-readiness claim', pattern: /\brelease[- ]ready\b/i },
+    { kind: 'mobile mode existence claim', pattern: /`mobile`/i },
   ];
-  for (const pattern of misleadingAndroidClaims) {
-    if (pattern.test(readme) || pattern.test(workflows) || pattern.test(artifacts)) {
-      fail(`Docs contain a potentially misleading Android/mobile support claim: ${pattern}`, failures);
+  for (const { kind, pattern } of misleadingClaims) {
+    for (const { relPath, content } of docsBundle) {
+      if (containsUnnegatedClaim(content, pattern)) {
+        fail(`${relPath} contains a potentially misleading ${kind}: ${pattern}`, failures);
+      }
+    }
+  }
+
+  // Publication-status claim: only meaningful while pkg.version has not
+  // actually been bumped to the target version, i.e. it is not yet published.
+  const targetVersionMatch = joinedDocs.match(/\bv(1\.2\.0)\b/);
+  if (targetVersionMatch && targetVersionMatch[1] !== pkg.version) {
+    const publishedClaimRe = new RegExp(
+      `v${targetVersionMatch[1].replace(/\./g, '\\.')}\\s+(has been\\s+|is\\s+)?(published|released|tagged)\\b`,
+      'i',
+    );
+    for (const { relPath, content } of docsBundle) {
+      if (containsUnnegatedClaim(content, publishedClaimRe)) {
+        fail(
+          `${relPath} claims v${targetVersionMatch[1]} is published/released/tagged, but package.json version is still ${pkg.version}`,
+          failures,
+        );
+      }
     }
   }
 
@@ -176,7 +277,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   }
 
   console.log(
-    `DOCS_CHECK_PASS: ${pkg.name}@${pkg.version}; ${modes.length} modes; ${greenfieldStages.length} greenfield stages; ${greenfieldArtifactPaths.length + 3} documented greenfield/shared artifact paths`,
+    `DOCS_CHECK_PASS: ${pkg.name}@${pkg.version}; ${modes.length} modes; ${greenfieldStages.length} greenfield stages; ${greenfieldProfiles.length} greenfield profiles; ${greenfieldArtifactPaths.length + 3} documented greenfield/shared artifact paths`,
   );
   return 0;
 }

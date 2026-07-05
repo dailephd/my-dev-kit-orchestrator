@@ -1,0 +1,53 @@
+Artifact: V120DocsCheckReport
+Batch: v1.2.0 Batch 5
+
+DOCS:CHECK CHANGES
+- files changed: scripts/check-docs-consistency.mjs, src/__tests__/docs-consistency.test.ts
+- source-derived facts: modes (src/types.ts VALID_MODES, unchanged from before this batch), greenfield stages (greenfieldStages.ts GREENFIELD_STAGE_NAMES, unchanged), greenfield artifact paths (greenfieldMode.ts, unchanged), and -- new in this batch -- greenfield profiles, extracted from `SUPPORTED_PROFILES` in src/greenfield/profiles/resolveGreenfieldProfile.ts via the same regex-plus-quoted-item-extraction pattern already used for modes/stages
+- hardcoded profile list removed: yes. The old `/supports the \`typescript-cli\` and \`nextjs-app\` profiles/i` regex is gone; docs/WORKFLOWS.md and README.md are now checked for the presence of each source-derived profile id's backtick token, exactly like modes are checked
+- hardcoded two-profile regex removed: yes (same item as above)
+- Android/mobile false-positive fixed: yes. The old `/supports android/i` and `/supports mobile/i` patterns (which would have failed on a correct "supports Android Compose" claim) were replaced with a narrower, negation-aware `generic mobile support claim` check (`/supports?\s+(a\s+)?(generic\s+)?mobile\b(?!\s+compose)/i`) that explicitly excludes "mobile compose" and is evaluated through a new `containsUnnegatedClaim()` helper so correctly-negated sentences ("does not support...") are never flagged
+
+CHECKS INCLUDED
+- modes: unchanged, source-derived, checked for backtick-token presence in README/WORKFLOWS
+- stages: unchanged, source-derived, checked for backtick-token presence in WORKFLOWS
+- profiles: new. Source-derived (SUPPORTED_PROFILES), checked for backtick-token presence in README/WORKFLOWS; plus a new profile-count check that fails if any doc states a specific profile count word/digit ("one"/"1" through "five"/"5" profiles) other than the actual source-derived count, independent of which ids are also listed
+- Android Compose support: checked via the profile-presence check above (fails if `android-compose` is not mentioned) and passes correctly when a doc legitimately says "supports Android Compose" (regression-tested, see below)
+- unsupported mobile platforms: new negation-aware checks for "supports iOS", "supports Flutter", "supports React Native", and generic "supports mobile" claims across every doc in the docs bundle (README, CHANGELOG, all docs/*.md)
+- Gradle execution claims: new negation-aware checks for "<orchestrator|cli|tool> runs/executes/invokes/ran Gradle" and "Gradle ran/succeeded/passed"
+- Android SDK claims: new negation-aware check for "requires/needs the Android SDK"
+- Play Store claims: new negation-aware check for "Play Store ready/readiness" and a separate "release-ready" check
+- publish status claims: new, conditional check -- only active when a doc mentions a "vX.Y.Z" version token that does not match the current package.json version, in which case an unnegated "vX.Y.Z is published/released/tagged" claim fails the check. Inactive today in the ordinary sense (v1.2.0 is not yet mentioned as a version token anywhere outside CHANGELOG/ROADMAP's own accurate "implemented, not yet published" framing, which is itself correctly negated)
+- artifact paths: unchanged from before this batch
+- mode docs match source: unchanged from before this batch
+- stage docs match source: unchanged from before this batch
+- mobile-mode-existence claim: new, checks for a literal backtick-quoted `` `mobile` `` anywhere in the docs bundle, the same way modes/profiles are always backtick-quoted by this project's own convention when referred to as an identifier; a correct doc never quotes "mobile" as if it were a real mode or profile id
+
+TESTS ADDED OR UPDATED
+- src/__tests__/docs-consistency.test.ts (updated):
+  - fixture updated to add src/greenfield/profiles/resolveGreenfieldProfile.ts (with a 3-profile SUPPORTED_PROFILES) and to make the default WORKFLOWS.md fixture mention all 3 profiles, so the pre-existing "stale published-version claim" test continues to test only what it originally tested
+  - new: "passes for a complete, accurate fixture (three source-derived profiles, no stale claims)" -- baseline positive-path proof
+  - new: "fails when docs list only the two pre-v1.2.0 greenfield profiles (the known stale claim)" -- directly proves docs:check catches the exact regression this batch fixed
+  - new: "fails when docs state a fixed profile count that does not match source, even if all profile ids are also present" -- proves the profile-count check is independent of the id-presence check
+  - new: "does not false-positive on a correct 'supports Android Compose' claim (source-derived, not the old hardcoded rejection)" -- proves the old false-positive trap is gone
+  - new: "fails when docs make an unnegated generic mobile/iOS/Flutter/React Native support claim" -- proves the narrowed misleading-claim check still catches real violations
+  - new: "does not false-positive on a correct negated Gradle/Android-SDK/Play-Store disclaimer" -- proves containsUnnegatedClaim correctly exempts this project's own accurate disclaimers
+
+COMMANDS RUN
+- npm run docs:check
+  working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+  exit code: 0
+  output: "DOCS_CHECK_PASS: @dailephd/my-dev-kit-orchestrator@1.1.0; 7 modes; 13 greenfield stages; 3 greenfield profiles; 13 documented greenfield/shared artifact paths"
+  Passed on the first run after all documentation repairs and the script refactor were complete -- no iteration was needed once the docs were fixed and the checker rewritten together.
+
+- npx jest src/__tests__/docs-consistency.test.ts --silent
+  working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+  exit code: 0
+  output: 1 test suite, 7 tests, all passed (1 pre-existing + 6 new)
+
+- npm run lint:docs
+  working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+  exit code: 0
+  output: markdownlint-cli2, 9 files, 0 errors
+
+RESULT: PASS

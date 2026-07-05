@@ -80,17 +80,38 @@ For example:
 my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
 ```
 
-The v1.1.0 greenfield foundation is platform-neutral and does not provide an
-Android or mobile profile. Each generated prompt remains specific to the
-current stage. Paste that bounded prompt into the coding agent, save the
-required artifact in the run folder, and then request the next prompt.
+Next.js example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a Next.js web dashboard"
+```
+
+Android Compose example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
+```
+
+The greenfield foundation supports three starter profiles: `typescript-cli`,
+`nextjs-app`, and `android-compose`. Android Compose support is profile-guided
+planning and prompt support: the generated stack decision, docs, and scaffold
+plan describe a Kotlin/Jetpack Compose/Gradle project, and validation guidance
+lists Gradle commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and an
+optional device/emulator-dependent `./gradlew connectedAndroidTest`) -- the
+orchestrator does not run Gradle itself. `start` does not parse the request
+into a profile; a coding agent resolves the profile later, when it executes
+the `starter-profile` stage prompt. Each generated prompt remains specific to
+the current stage regardless of profile. Paste that bounded prompt into the
+coding agent, save the required artifact in the run folder, and then request
+the next prompt.
 
 `check --artifacts` and `check --all` use the shared artifact and contract
-checkers for greenfield runs. On a newly created run they report missing stage
-artifacts and may exit with code 1; that is a completed check with findings,
-not a CLI crash. `export` produces the same portable run handoff used by other
-modes. Do not rely on `--out` as a complete path-traversal boundary; normalized
-parent paths are a known cross-mode follow-up.
+checkers for greenfield runs, for every profile. On a newly created run they
+report missing stage artifacts and may exit with code 1; that is a completed
+check with findings, not a CLI crash. `export` produces the same portable run
+handoff used by other modes. `--out` rejects raw `..` path-traversal segments
+in the given argument and refuses symlink or directory targets before writing
+anything.
 
 ## Print prompts
 

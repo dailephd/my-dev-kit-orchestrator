@@ -6,7 +6,11 @@ Versions are listed in chronological order.
 `v1.0.0` or `v0.x.0` release.
 
 `v1.0.0` remains the prior stable workflow-contract release.
-Later versions remain planned milestones.
+
+`v1.2.0` is implemented on development branches and is pending the separate
+pre-release readiness workflow (cross-platform CI, `my-dev-kit-lab` security
+validation, `npm pack --dry-run`) before publish, tag, and GitHub release.
+Later versions beyond `v1.2.0` remain planned milestones.
 
 ## Version summary
 
@@ -19,7 +23,7 @@ Later versions remain planned milestones.
 - `v0.6.0` added judge correction routing and trace-aware workflow recovery.
 - `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
 - `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
-- `v1.2.0` will add the Android Compose greenfield profile as the first mobile starter profile, with Android stack defaults, scaffold-plan guidance, docs templates, verification commands, and first vertical slice guidance.
+- `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Implemented v1.2.0" for what shipped versus what was originally planned).
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -349,88 +353,99 @@ Boundary:
   `validateGreenfieldArtifacts.ts` was added.
 - cross-mode export traversal rejection is implemented in the current release.
 
-## Planned milestones
+## Implemented v1.2.0
 
 ### v1.2.0 - Android Compose Greenfield Profile
 
+Status:
+Implemented on development branches (`feature/v1.2.0-android-compose-*`,
+`feature/v1.2.0-documentation-compatibility`). Not yet published, tagged, or
+released; pending the separate pre-release readiness workflow.
+
 Goal:
-Add Android Compose as the first mobile starter profile plugged into the platform-neutral greenfield workflow.
+Add Android Compose as a third greenfield starter profile plugged into the
+platform-neutral greenfield workflow, without a parallel mobile architecture.
 
-Core features:
+Implemented features:
 
-- `android-compose` starter profile
-- Android stack-decision defaults
-- Android scaffold-plan template
-- Android docs template adaptation
-- Android verification command profile
-- Android first vertical slice guidance
-- Android handoff to my-dev-kit indexing
+- `android-compose` starter profile (`src/greenfield/profiles/androidComposeProfile.ts`)
+- required `setupCommands`/`validationCommands` fields on the shared
+  `GreenfieldProfile` contract, backfilled onto `typescript-cli`/`nextjs-app`
+- a small, explicit, bounded profile-resolution alias table (`android`,
+  `kotlin-compose`, `jetpack-compose`, `compose-android`); no fuzzy matching
+- the `'unresolved'` profile-selection status now produced for generic
+  "mobile"/"mobile app"/"phone app" requests, rather than a silent default
+- profile-conditional bootstrap-bundle validation rules and
+  `validateBootstrapDocs()` (optional `selectedProfileId` parameter): Android/
+  Jetpack/Kotlin/Gradle content is permitted only for `android-compose`;
+  unsupported-platform and Play Store/release-readiness claims are rejected
+  for every profile
+- `buildScaffoldPlan()` reading `setupCommands`/`validationCommands` directly
+  from the selected profile instead of a hardcoded npm assumption
+- CLI/check/export regression coverage proving the above works through the
+  full user-facing command surface
+- hardened `scripts/check-docs-consistency.mjs` (source-derived profile list
+  instead of a hardcoded two-profile regex)
 
-Preferred CLI surface:
+Android Compose profile defaults (as implemented):
 
-`npx my-dev-kit-orchestrator@latest start --mode greenfield --profile android-compose "<new project request>"`
-
-Prompt-entry routing:
-
-- a request like "start a new Android app" should route to greenfield mode with `android-compose` profile when Android or Compose signals are present
-
-Android profile defaults:
-
-- project type: Android application
 - language: Kotlin
 - UI: Jetpack Compose
-- build system: Gradle Kotlin DSL
+- build system: Gradle (Kotlin DSL), Gradle wrapper included
 - default module: `app`
-- entry point: `MainActivity`
-- theme: Material 3
-- navigation: optional simple Compose NavHost when needed
-- state owner: ViewModel when behavior needs state
-- persistence: none by default
-- persistence escalation: DataStore or Room only if justified
-- test setup: unit tests first
-- Compose UI tests optional
+- entry point: `MainActivity.kt`
 
-Android verification commands:
+Android Compose validation commands (as implemented):
 
-- `.\gradlew.bat tasks`
-- `.\gradlew.bat assembleDebug`
-- `.\gradlew.bat testDebugUnitTest`
-- `.\gradlew.bat lintDebug`
+- `./gradlew build` (required)
+- `./gradlew testDebugUnitTest` (required; JVM unit tests, no device needed)
+- `./gradlew connectedAndroidTest` (optional; requires a connected device or
+  running emulator, which the orchestrator does not provide or check for)
 
-Optional emulator/device command:
-
-- `.\gradlew.bat connectedDebugAndroidTest`
-
-Android scaffold-plan targets:
+Android Compose scaffold-plan targets (as implemented):
 
 - `settings.gradle.kts`
 - `build.gradle.kts`
 - `app/build.gradle.kts`
 - `app/src/main/AndroidManifest.xml`
-- `app/src/main/java/<package>/MainActivity.kt`
-- `app/src/main/java/<package>/ui/App.kt`
-- `app/src/main/java/<package>/ui/theme/Theme.kt`
-- `app/src/main/java/<package>/feature/<feature>/<Feature>Screen.kt`
-- `app/src/main/java/<package>/feature/<feature>/<Feature>ViewModel.kt` when needed
-- `app/src/test/...` unit tests
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DEVELOPMENT.md`
-- `docs/WORKFLOWS.md`
-- `docs/TESTING.md`
+- `app/src/main/java/MainActivity.kt`
+- `app/src/test/java/ExampleUnitTest.kt`
+- `app/src/androidTest/java/ExampleInstrumentedTest.kt`
 
-Android first vertical slice rule:
+Deviations from the original plan (see the prior "Planned milestones" entry
+this section replaces):
 
-- do not create a huge app skeleton
-- create the smallest runnable app with one useful flow
-- the first app should open, show a first screen, allow one simple action, show a visible state change, and have at least unit-test or smoke-verification evidence
+- no `--profile` CLI flag was added. `start` does not parse the request into
+  a brief or resolve a profile at the CLI layer at all (unchanged from
+  `v1.1.0`); profile selection happens when a coding agent executes the
+  `starter-profile` stage prompt, using `preferredProfile`/`platformTarget`
+  brief fields
+- no automatic signal-based routing to `android-compose` was implemented
+  ("a request like 'start a new Android app' should route to greenfield mode
+  with `android-compose` profile when Android or Compose signals are
+  present" did not ship). This was a deliberate scope decision, not an
+  oversight: an ambiguous, technology-unspecified "mobile" signal returns
+  `'unresolved'` rather than being silently mapped to Android Compose.
+  Whether a specific, unambiguous signal (e.g. a bare `platformTarget:
+  "android"` with no explicit profile request) should auto-select Android
+  Compose remains an open, unresolved design question for a future version
+- the package-per-feature file layout sketched in the original plan (e.g.
+  `ui/App.kt`, `ui/theme/Theme.kt`, `feature/<feature>/<Feature>Screen.kt`)
+  was not implemented; the actual scaffold-plan target list above is flatter
+  and intentionally minimal
+- `docs/TESTING.md` was not added as part of the Android Compose scaffold
+  targets
 
 Boundary:
 
 - mobile support in my-dev-kit-orchestrator means workflow/profile support, not Android static code indexing
 - Android indexing belongs to a future my-dev-kit roadmap, not this orchestrator roadmap
+- the orchestrator does not run Gradle and does not require the Android SDK
 - do not add Play Store release logic
 - do not add Android security validation to my-dev-kit-orchestrator
+- iOS, Flutter, and React Native remain unsupported; no generic mobile mode was added
+
+## Planned milestones
 
 ### v1.3.0 - Mobile Profile Expansion and Scaffold Verification
 

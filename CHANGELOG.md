@@ -2,6 +2,62 @@
 
 ## Unreleased
 
+Implemented on development branches, not yet published, tagged, or released.
+Target version: `v1.2.0 - Android Compose Greenfield Profile`.
+
+- added `android-compose` as a third supported greenfield starter profile,
+  alongside `typescript-cli` and `nextjs-app`
+- added required `setupCommands` and `validationCommands` fields to the
+  `GreenfieldProfile` contract (a minimal, never-executed
+  `{ command, purpose, required, environmentNotes? }` shape); backfilled onto
+  the existing two profiles with no behavior change
+- added a small, explicit, bounded alias table for Android Compose requests
+  (`android`, `kotlin-compose`, `jetpack-compose`, `compose-android`); no
+  fuzzy matching
+- added the first real use of the `'unresolved'` profile-selection status:
+  generic "mobile", "mobile app", or "phone app" requests are reported as
+  unresolved rather than silently mapped to a profile
+- iOS, Flutter, and React Native remain unaliased and unsupported
+- made bootstrap-bundle validation rules and `validateBootstrapDocs()`
+  profile-conditional: Android/Jetpack/Kotlin/Gradle content is permitted
+  only when the selected profile is `android-compose`; iOS/React
+  Native/Flutter/multiplatform and Play Store/release-readiness claims
+  remain rejected for every profile
+- made `buildScaffoldPlan()` read `setupCommands`/`validationCommands`
+  directly from the selected profile instead of a hardcoded npm assumption;
+  Android Compose scaffold plans get an empty setup step and Gradle-based
+  validation commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and
+  an optional device/emulator-dependent `./gradlew connectedAndroidTest`)
+- corrected 6 stale static stage-prompt lines (in `src/promptGenerator.ts`
+  and `src/greenfield/scaffold/renderScaffoldPrompt.ts`) left over from when
+  Android Compose was out of scope, which had blanket-forbidden Android/
+  mobile content or listed only two supported profiles
+- added CLI-level, check-level, and export-level regression coverage proving
+  Android Compose works through the full user-facing command surface, with
+  no Gradle execution and no Android SDK requirement anywhere in the test
+  suite
+- hardened `scripts/check-docs-consistency.mjs` to extract the supported
+  greenfield profile list from source instead of a hardcoded two-profile
+  regex, and to distinguish legitimate "supports Android Compose" claims
+  from misleading generic-mobile/iOS/Flutter/React-Native claims
+- repaired README.md, docs/WORKFLOWS.md, docs/ARTIFACTS.md,
+  docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, and docs/RELEASE_CHECKLIST.md
+  to describe the current three-profile greenfield foundation accurately
+
+Known limitations carried into this unreleased line:
+
+- `platformTarget`-only Android auto-selection (e.g. selecting
+  `android-compose` from a bare `platformTarget: "android"` with no explicit
+  profile request) remains an open, deliberately unimplemented design
+  question, not a silent default
+- component docs remain empty until the brief schema adds module/component
+  hints
+- the repository still has split `src/__tests__/*.test.ts` and
+  `tests/**/*.spec.ts` conventions
+- optional empirical `my-dev-kit` Kotlin-source indexing support has not
+  been checked; this does not block Android Compose profile support, which
+  is planning/prompt guidance only, not indexing
+
 ## v1.1.0 - Greenfield Bootstrap Foundation
 
 Released.

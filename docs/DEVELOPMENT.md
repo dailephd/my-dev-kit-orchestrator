@@ -196,6 +196,60 @@ The repository currently has both `src/__tests__/*.test.ts` and
 `tests/**/*.spec.ts`. This convention split is a maintenance follow-up; do not
 move tests merely while adding a mode.
 
+## Adding a greenfield profile
+
+Android Compose (`src/greenfield/profiles/androidComposeProfile.ts`)
+demonstrates the expected extension pattern for a new greenfield starter
+profile:
+
+- register the new profile id in `GreenfieldProfileId`
+  (`src/greenfield/profiles/profileTypes.ts`)
+- provide every required `GreenfieldProfile` field, including the two command
+  fields:
+  - `setupCommands: GreenfieldProfileCommand[]` -- setup guidance (may be
+    `[]` if the toolchain needs no separate install step, as with Gradle's
+    wrapper); never executed by the orchestrator
+  - `validationCommands: GreenfieldProfileCommand[]` -- validation guidance,
+    each entry `{ command, purpose, required, environmentNotes? }`; mark a
+    command `required: false` with an `environmentNotes` string when it
+    depends on something the orchestrator cannot verify (e.g. a connected
+    device or emulator)
+- register the profile in `SUPPORTED_PROFILES`
+  (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
+- add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the
+  profile has reasonable alternate names -- do not add fuzzy or partial-word
+  matching; a near-miss (e.g. a prefix or substring of a real alias) must not
+  resolve to the new profile
+- do not silently select the new profile from an ambiguous, technology-
+  unspecified signal (e.g. a bare "mobile" request); prefer returning
+  `'unresolved'` and require an explicit request or a recognized alias
+- keep any genuinely unsupported adjacent platform (e.g. a competing
+  framework) unaliased so it continues to fall through to `'unsupported'`
+
+If the new profile's content legitimately mentions a term that would
+otherwise look like a violation for other profiles (as Android/Jetpack/Kotlin
+terms do for `android-compose`), make the check profile-conditional rather
+than removing it globally:
+
+- `buildBootstrapBundle.ts`'s validation-rules builder
+- `validateBootstrapDocs()` (`src/greenfield/bootstrap/validateBootstrapDocs.ts`)
+
+Required tests for a new profile: profile-shape tests (required fields,
+command fields, unsupported conditions), profile-resolution tests (explicit
+id, each alias, near-miss non-matches, regression for existing profiles),
+bootstrap-bundle tests (profile-conditional validation rules), project-docs
+bootstrap tests (profile-aware `validateBootstrapDocs` behavior), and
+scaffold-plan tests (the new profile's `setupCommands`/`validationCommands`
+flow through unchanged, with no hardcoded assumption from another profile
+leaking in).
+
+Do not hardcode a profile list in documentation or in
+`scripts/check-docs-consistency.mjs`; extract supported profile ids from
+`SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts` the same way modes are
+extracted from `VALID_MODES` and greenfield stages from
+`GREENFIELD_STAGE_NAMES`, so docs and the docs-consistency gate cannot drift
+from source when a profile is added or removed.
+
 ## Verification expectations
 
 - Confirm user-facing documentation matches the shipped command behavior.

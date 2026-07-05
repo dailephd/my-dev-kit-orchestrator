@@ -1,6 +1,6 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports seven workflow modes in v1.1.0.
+`my-dev-kit-orchestrator` supports seven workflow modes.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
@@ -320,10 +320,29 @@ Use greenfield mode to start a new project before useful code exists:
 my-dev-kit-orchestrator start --mode greenfield "<project idea>"
 ```
 
-The v1.1.0 foundation is platform-neutral. It supports the
-`typescript-cli` and `nextjs-app` profiles, not Android or other mobile
-profiles. It also excludes security validation, release, and publishing
-workflows.
+The greenfield foundation is platform-neutral. It supports three starter
+profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. It also
+excludes security validation, release, and publishing workflows.
+
+`start` does not parse the request text into a brief or resolve a profile at
+the CLI layer -- that has never been true for any profile, including
+`typescript-cli`/`nextjs-app`. Profile resolution
+(`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
+agent executes the `starter-profile` stage prompt, using the
+`preferredProfile`/`platformTarget` fields from the normalized brief. `prompt`
+itself renders static, mode-and-stage-keyed template text; profile-specific
+correctness is carried through that static wording and the artifacts a coding
+agent produces, not through a separate CLI Android/mobile mode.
+
+Android Compose is profile-guided planning support, not an Android build
+runner: the orchestrator does not run Gradle, does not require the Android
+SDK, and does not check for a connected device or emulator.
+`./gradlew connectedAndroidTest` is optional validation guidance, dependent on
+a device or emulator being available where the generated project is actually
+built -- not something the orchestrator itself runs or verifies. A generic
+"mobile" or "mobile app" request does not silently resolve to
+`android-compose`; it is reported as `unresolved`. iOS, Flutter, and React
+Native remain unsupported profiles.
 
 The 13 stages are:
 

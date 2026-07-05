@@ -379,8 +379,18 @@ The JSON-named brief, profile, and bundle files still participate in the
 shared existence, predecessor, and required-section checks. Bootstrap project
 documentation is structured in-memory runtime output; it does not imply that
 the orchestrator writes template documents. `validateBootstrapDocs` checks
-required content and rejects unsupported Android/mobile and
-release/security/publishing claims.
+required content and is profile-aware: Android/Jetpack/Kotlin/Gradle content
+is permitted only when the selected profile is `android-compose`; iOS/React
+Native/Flutter/multiplatform claims and release/security/publish/Play-Store
+claims are rejected regardless of the selected profile.
+
+`GreenfieldScaffoldPlan`'s `setupCommands` and `validationCommands` fields are
+`GreenfieldProfileCommand[]` (`{ command, purpose, required,
+environmentNotes? }`), sourced directly from the selected profile -- never
+executed by the orchestrator. For `android-compose`, `setupCommands` is `[]`
+(the Gradle wrapper needs no separate install step) and `validationCommands`
+lists `./gradlew build` and `./gradlew testDebugUnitTest` as required, plus an
+optional, device/emulator-dependent `./gradlew connectedAndroidTest`.
 
 ## Extraction mode artifacts
 
