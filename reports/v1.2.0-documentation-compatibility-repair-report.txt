@@ -4,7 +4,7 @@ Batch: v1.2.0 Batch 5
 BRANCH
 - branch name: feature/v1.2.0-documentation-compatibility
 - starting commit: c99edf7 (Batch 4 ending commit)
-- ending commit: recorded in reports/v1.2.0-final-implementation-report.txt after commit
+- ending commit: 7c72876
 
 DOCUMENTS CHANGED
 - README.md -- reason: fix stale two-profile/no-Android claims, add Android Compose example, correct current-limitations

@@ -4,7 +4,7 @@ Version: v1.2.0
 BRANCH
 - branch name: feature/v1.2.0-documentation-compatibility
 - starting commit: c99edf7 (Batch 4 ending commit)
-- ending commit: recorded after this batch's commit (see git log)
+- ending commit: 7c72876 (documentation compatibility commit)
 
 SUMMARY
 
