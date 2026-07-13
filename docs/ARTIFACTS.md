@@ -1,5 +1,14 @@
 # Artifacts
 
+## Preserved artifact contract inventory
+
+Core handoffs are `RequestBrief`, `ArchitectureContextPacket`, `BehaviorModel`,
+`PseudocodePacket`, `TestStrategyPacket`, `ImplementationReport`,
+`TestImplementationReport`, `VerificationReport`, `JudgeReport`, and
+`FinalReport`. Lifecycle values are `incomplete`, `blocked`, and `complete`;
+`mark` records state, while `status`, `check`, progression, and `export`
+consume the run artifacts without autonomous execution.
+
 Artifacts are plain-text handoff files stored in each run folder.
 
 `my-dev-kit-orchestrator` uses artifact file existence and lifecycle state, not schema-heavy validation, to determine workflow progress.

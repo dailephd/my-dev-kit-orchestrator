@@ -1,5 +1,13 @@
 # Development
 
+## Validation categories
+
+Use the repository scripts for typecheck, lint, test, and build. Documentation
+changes additionally run `npm run docs:check` and `npm run lint:docs`.
+The historical source layout includes both `src/__tests__` and later
+`tests/greenfield` coverage; run targeted greenfield tests only when that
+suite is present in the checked-out source.
+
 ## Local setup
 
 Install dependencies:

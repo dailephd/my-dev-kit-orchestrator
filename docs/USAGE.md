@@ -1,5 +1,13 @@
 # Usage
 
+## Complete command surface
+
+The current release family documents `init`, `start`, `prompt`, `status`,
+`list`, `mark`, `check`, and `export`. Use `--root` for workspace resolution,
+`--run` for a selected run, `--name` when starting a named run, and
+`--output-dir` where supported. `check --artifacts` and `check --all` are
+deterministic validation variants; `export` writes or prints a handoff.
+
 This guide covers the CLI command surface and common workflows.
 
 ## Initialize a project workspace

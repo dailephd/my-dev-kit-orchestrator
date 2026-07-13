@@ -1,5 +1,14 @@
 # my-dev-kit-orchestrator
 
+> Release-history recovery note: npm, the `v1.2.0` tag, and the GitHub Release
+> establish `v1.2.0` as the latest published package. This recovery branch is
+> deliberately based on `origin/main` (`1.0.0`) and changes documentation only.
+
+The project is design-first, stage-gated orchestration: it gives coding agents
+bounded stage prompts, inspectable/resumable artifact handoffs, behavior-derived
+test design, verification evidence, and judge review. `my-dev-kit` retrieves
+context; this CLI orchestrates; `my-dev-kit-lab` owns security validation.
+
 `my-dev-kit-orchestrator` is a CLI-first workflow shell for design-first software development with coding agents.
 
 It is for teams or individual developers who want a coding agent to work through a bounded sequence of design, pseudocode, testing, implementation, and verification steps instead of jumping straight from a raw request to code.

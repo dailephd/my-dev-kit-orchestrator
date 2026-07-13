@@ -1,5 +1,13 @@
 # Architecture
 
+## Preservation boundary
+
+The CLI owns parsing, dispatch, project/run resolution, mode and stage
+registries, prompt generation, artifact lifecycle, deterministic checks, and
+export. `my-dev-kit` owns bounded retrieval; `my-dev-kit-lab` owns security
+validation. Greenfield and extraction remain prompt-guided boundaries, not
+autonomous coding or platform build execution.
+
 `my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
 
 `v0.1.0` established the workflow shell. `v0.2.0` added graph-guided architecture context support. `v0.2.1` adds extraction mode and cross-platform validation across Ubuntu, Windows, and macOS.

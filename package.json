@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "docs:check": "node scripts/check-docs-preservation.mjs",
     "build:watch": "tsc --watch",
     "start": "node dist/cli.js",
     "smoke:cli": "node scripts/cli-smoke.mjs",

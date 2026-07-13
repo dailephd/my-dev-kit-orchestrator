@@ -1,5 +1,29 @@
 # Roadmap
 
+## Recovery status and preserved later milestones
+
+Published history includes `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.3.0`, `v0.4.0`,
+`v0.5.0`, `v0.6.0`, `v1.0.0`, `v1.1.0`, and `v1.2.0`. `v1.2.0` is the Android
+Compose greenfield profile release: it is profile-guided planning and
+validation-command guidance, not Gradle execution or Android SDK ownership.
+Generic mobile remains unresolved; iOS, Flutter, React Native, and a generic
+mobile mode remain unsupported.
+
+### v1.3.0
+
+Planned profile-contract and scaffold verification hardening. Do not infer
+implementation or add profiles merely because a later release exists.
+
+### v1.4.0
+
+Planned greenfield-to-feature handoff hardening, including initial-index
+evidence and an explicit next-workflow handoff.
+
+### v1.5.0
+
+Optional mobile-profile candidates remain version-planned evaluation only;
+they are not current support.
+
 ## Implemented
 
 ### v0.1.0

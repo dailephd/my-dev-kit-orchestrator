@@ -1,5 +1,11 @@
 # Changelog
 
+## Recovery publication correction
+
+External release evidence establishes that `v1.1.0` and `v1.2.0` were both
+published. `v1.2.0` shipped the Android Compose greenfield profile; it is not
+an Unreleased item. Earlier entries below remain chronological release history.
+
 ## Unreleased
 
 ## v1.0.0 - Stable Workflow Contract and Portable Run Handoff

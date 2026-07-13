@@ -1,5 +1,16 @@
 # Workflows
 
+## Preserved current-mode inventory
+
+The released workflow inventory is `feature`, `repair`, `test`, `refactor`,
+`harden`, `extraction`, and `greenfield`. Greenfield follows this exact order:
+`idea-brief`, `product-boundary`, `stack-decision`, `starter-profile`,
+`bootstrap-bundle`, `project-docs`, `scaffold-plan`, `scaffold-implementation`,
+`first-vertical-slice`, `verification`, `initial-index`, `judge`, `final-report`.
+It supports `typescript-cli`, `nextjs-app`, and `android-compose`; generic
+mobile is unresolved, not an Android default. Android guidance never runs
+Gradle or requires an Android SDK.
+
 `my-dev-kit-orchestrator` supports six workflow modes in the current release.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).

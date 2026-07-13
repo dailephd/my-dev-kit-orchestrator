@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "removalAuthorizationField": "ALLOWED_DOCUMENT_REMOVALS",
+  "maxPlanningNonblankLineReductionPercent": 15,
+  "documents": {
+    "README.md": ["design-first", "stage", "artifact", "my-dev-kit", "docs/USAGE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/ARCHITECTURE.md", "docs/DEVELOPMENT.md", "CHANGELOG.md", "docs/ROADMAP.md"],
+    "docs/USAGE.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export"],
+    "docs/WORKFLOWS.md": ["feature", "repair", "test", "refactor", "harden", "extraction", "greenfield", "idea-brief", "final-report"],
+    "docs/ARTIFACTS.md": ["RequestBrief", "ArchitectureContextPacket", "BehaviorModel", "PseudocodePacket", "TestStrategyPacket", "ImplementationReport", "VerificationReport", "JudgeReport", "FinalReport", "incomplete", "blocked", "complete"],
+    "docs/ARCHITECTURE.md": ["CLI", "workflow", "artifact", "my-dev-kit"],
+    "docs/DEVELOPMENT.md": ["typecheck", "lint", "test", "build"],
+    "CHANGELOG.md": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0"],
+    "docs/ROADMAP.md": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0", "v1.3.0", "v1.4.0", "v1.5.0"]
+  }
+}
