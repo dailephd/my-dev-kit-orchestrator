@@ -1,5 +1,11 @@
 # Development
 
+## Prerequisites
+
+The package does not declare a Node.js version range in `package.json`. The
+repository's validation workflows currently test Node.js 22 and 24, so use one
+of those versions for contributor work.
+
 ## Local setup
 
 Install dependencies:
@@ -22,6 +28,13 @@ node dist/cli.js --help
 
 ## Common development commands
 
+Documentation checks:
+
+```bash
+npm run docs:check
+npm run lint:docs
+```
+
 Typecheck:
 
 ```bash
@@ -32,6 +45,18 @@ Run tests:
 
 ```bash
 npm test
+```
+
+Run security-focused package checks:
+
+```bash
+npm run test:security
+```
+
+Run the greenfield suites:
+
+```bash
+npx jest tests/greenfield --silent
 ```
 
 Build:
@@ -46,7 +71,7 @@ Lint:
 npm run lint
 ```
 
-## Branch expectations
+## Contribution boundaries
 
 - start from the branch named in the task or release prompt
 - use branch names that describe the task clearly
@@ -58,7 +83,8 @@ npm run lint
 Important implementation files:
 
 - `src/program.ts`: root CLI program, command registration, version
-- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`, `mark`, `check`
+- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`, `mark`, `check`,
+  and `export`
 - `src/workflows.ts`: workflow stage order and artifact mappings
 - `src/promptGenerator.ts`: stage-specific prompt text generation
 - `src/run.ts`: run creation and run metadata handling
@@ -72,7 +98,14 @@ Important implementation files:
 - `src/judgeParser.ts`: judge verdict parser, `JUDGE_VERDICTS`, `parseJudgeReport` (v0.6.0)
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
-- `src/__tests__/`: Jest coverage for CLI behavior and workflow logic
+- `src/greenfield/`: brief, profile, bootstrap, scaffold, and greenfield-mode
+  implementation
+- `src/__tests__/`: Jest coverage for shared CLI behavior and workflow logic
+- `tests/greenfield/`: greenfield and starter-profile regression suites
+- `docs/`: public documentation and release guidance
+- `dist/`: generated build output; do not edit or commit it
+- `.my-dev-kit-orchestrator/` and `.my-dev-kit/`: local generated state; keep
+  both untracked
 
 ## Development notes
 
@@ -258,3 +291,15 @@ from source when a profile is added or removed.
 - Run `npm run lint` when changing TypeScript files.
 - Keep the GitHub Actions OS matrix on `ubuntu-latest`, `windows-latest`, and `macos-15` for release-facing CI work, with Node 22 and Node 24.
 - Report skipped checks and unresolved risks clearly in release work.
+
+## Validation matrix
+
+| Change | Required checks |
+| --- | --- |
+| Documentation only | `npm run docs:check`, `npm run lint:docs` |
+| CLI behavior | Targeted tests, `npx tsc --noEmit`, `npm test`, `npm run build`, CLI smoke |
+| Artifact or check behavior | Targeted checker tests plus the full CLI validation set |
+| Greenfield profile | `npx jest tests/greenfield --silent` plus the full validation set |
+
+Keep contributor validation separate from package publication. Do not bump,
+tag, publish, or create a release as part of an ordinary development change.

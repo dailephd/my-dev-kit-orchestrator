@@ -71,6 +71,40 @@ function makeFixture(
   return root;
 }
 
+function addPreservationManifest(root: string): void {
+  writeFile(
+    root,
+    'docs/documentation-preservation-manifest.json',
+    JSON.stringify({
+      canonicalDocuments: [
+        'README.md',
+        'CHANGELOG.md',
+        'docs/ROADMAP.md',
+        'docs/USAGE.md',
+        'docs/WORKFLOWS.md',
+        'docs/ARTIFACTS.md',
+        'docs/ARCHITECTURE.md',
+        'docs/DEVELOPMENT.md',
+      ],
+      requiredTerms: {
+        'README.md': ['@dailephd/my-dev-kit-orchestrator@1.1.0'],
+        'docs/USAGE.md': ['check --artifacts'],
+        'docs/WORKFLOWS.md': ['greenfield'],
+        'CHANGELOG.md': ['v1.1.0'],
+      },
+      roadmapVersions: ['v1.1.0'],
+      greenfieldStageOrder: [
+        'idea-brief', 'product-boundary', 'stack-decision', 'starter-profile',
+        'bootstrap-bundle', 'project-docs', 'scaffold-plan',
+        'scaffold-implementation', 'first-vertical-slice', 'verification',
+        'initial-index', 'judge', 'final-report',
+      ],
+      starterProfiles: ['typescript-cli', 'nextjs-app', 'android-compose'],
+    }),
+  );
+  writeFile(root, 'docs/ROADMAP.md', '# Roadmap\n\n### v1.1.0\n\nPublished.\n');
+}
+
 describe('docs consistency check script', () => {
   const scriptPath = path.resolve(__dirname, '..', '..', 'scripts', 'check-docs-consistency.mjs');
 
@@ -207,6 +241,30 @@ describe('docs consistency check script', () => {
 
     expect(result.status).toBe(0);
 
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it.each([
+    ['README package identity', 'README.md', '# title\n\n`greenfield`\n'],
+    ['usage command family', 'docs/USAGE.md', 'usage without the required command\n'],
+    ['workflow family', 'docs/WORKFLOWS.md', '`feature` only\n'],
+    ['published release', 'CHANGELOG.md', '# Changelog\n\nNo release heading.\n'],
+  ])('fails when the preservation manifest loses %s', (_label, relPath, replacement) => {
+    const root = makeFixture(
+      '# title\n\n@dailephd/my-dev-kit-orchestrator@1.1.0 `greenfield` ' +
+        '`feature` `repair` `test` `refactor` `harden` `extraction`\n' +
+        '`typescript-cli` `nextjs-app` `android-compose`\n',
+    );
+    addPreservationManifest(root);
+    writeFile(root, relPath, replacement);
+
+    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('DOCS_CHECK_FAIL');
     fs.rmSync(root, { recursive: true, force: true });
   });
 });

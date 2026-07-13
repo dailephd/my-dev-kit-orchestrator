@@ -2,10 +2,9 @@
 
 `my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
 
-`v1.1.0` is the current published release. It preserves the v1.0.0 workflow
-contract, the v0.5.0 Design Trace and DesignMap checks, and the v0.6.0
-correction-routing behavior while adding greenfield workflow support and a
-target-owned package security contract.
+The current published release is `v1.2.0`. It preserves the stable workflow
+contract, Design Trace and DesignMap checks, correction routing, and greenfield
+foundation while adding the Android Compose starter profile.
 
 ## Architecture overview
 
@@ -23,12 +22,13 @@ The CLI is intentionally small. It does not try to become a general automation p
 
 ## Tool responsibilities
 
-The intended design uses four cooperating roles:
+The architecture separates these responsibilities:
 
-- ChatGPT writes task-specific coding-agent prompts for the requested software change
-- `my-dev-kit` performs graph-guided code retrieval and produces retrieval evidence
-- `my-dev-kit-orchestrator` stores synthesized architecture context and manages downstream workflow stages
-- the coding agent executes the prompt, runs commands, writes artifacts, implements changes, and verifies results
+- the user selects and advances workflow runs
+- `my-dev-kit` retrieves bounded codebase context and produces retrieval evidence
+- `my-dev-kit-orchestrator` manages stages, prompts, artifacts, checks, and handoff export
+- the coding agent consumes prompts, writes artifacts, implements changes, and records verification evidence
+- `my-dev-kit-lab` owns experiments, audits, security validation, and release-readiness evidence
 
 This split keeps retrieval, workflow control, and implementation work clearly separated.
 
@@ -81,6 +81,10 @@ Examples:
 - `harden` emphasizes assumptions, failure modes, guards, and resilience testing
 - `extraction` adds source-repository inspection, source workflow mapping, source-to-target porting analysis, a do-not-port gate, a golden behavior contract, and a target architecture proposal before implementation begins
 - `greenfield` guides a new project from an idea brief through a platform-neutral scaffold and first vertical slice to an initial `my-dev-kit` index
+
+The `initial-index` stage is a prompt-guided handoff. It tells the coding agent
+how to invoke `my-dev-kit` after source exists; the orchestrator does not invoke
+the retrieval tool itself.
 
 ## Greenfield profile architecture
 
@@ -323,7 +327,7 @@ The `export` command reads run state and emits a portable plain-text handoff to 
 
 ## Package security contract
 
-The release branch also carries a lightweight target-owned security contract:
+The package includes a lightweight, target-owned security contract:
 
 - `npm run test:security` runs `scripts/test-security.mjs`
 - the script validates package name, semver, CLI bin path, `files` policy, and

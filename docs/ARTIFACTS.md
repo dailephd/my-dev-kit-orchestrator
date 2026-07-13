@@ -4,6 +4,11 @@ Artifacts are plain-text handoff files stored in each run folder.
 
 `my-dev-kit-orchestrator` uses artifact file existence and lifecycle state, not schema-heavy validation, to determine workflow progress.
 
+Use contract names such as `RequestBrief` when discussing an artifact's role,
+and use its exact path, such as `artifacts/request-brief.txt`, when discussing
+storage. See [Workflows](WORKFLOWS.md) for stage procedures and
+[Usage](USAGE.md) for command syntax.
+
 ## Run layout
 
 ```text
@@ -255,13 +260,12 @@ Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifac
 
 `my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. Contract and stage-gate checks inspect the run but do not change lifecycle state or advance stages.
 
-## Not implemented in v0.4.0
+## Current format limitations
 
-- design trace IDs (implemented in v0.5.0)
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting
-- judge correction routing
+- autonomous runtime verification
 
 ## How stage advancement works
 
@@ -277,7 +281,26 @@ Artifact content checks (`check` command) are a separate optional layer. They do
 
 ## Core feature-mode artifact files
 
-Feature mode expects these artifact files in order:
+Feature mode uses these core artifact contracts in order:
+
+| Contract | Producing stage | Preferred path | Primary downstream use |
+| --- | --- | --- | --- |
+| `RequestBrief` | `request-brief` | `artifacts/request-brief.txt` | Architecture context and scope control |
+| `ArchitectureContextPacket` | `architecture-context` | `artifacts/architecture-context-packet.txt` | Behavior, pseudocode, and implementation design |
+| `BehaviorModel` | `behavior-model` | `artifacts/behavior-model.txt` | Pseudocode and behavior-derived tests |
+| `PseudocodePacket` | `pseudocode-packet` | `artifacts/pseudocode-packet.txt` | Implementation and test implementation |
+| `TestStrategyPacket` | `test-strategy` | `artifacts/test-strategy-packet.txt` | Test implementation and verification |
+| `ImplementationReport` | `implementation` | `artifacts/implementation-report.txt` | Verification and judge review |
+| `TestImplementationReport` | `test-implementation` | `artifacts/test-implementation-report.txt` | Verification and judge review |
+| `VerificationReport` | `verification` | `artifacts/verification-report.txt` | Judge review and final report |
+| `JudgeReport` | `judge` | `artifacts/judge-report.txt` | Correction routing and final report |
+| `FinalReport` | `final-report` | `artifacts/final-report.txt` | Completed run handoff |
+
+The producing prompt defines each artifact's required sections. An artifact is
+complete only when its required content is present, its declared status agrees
+with lifecycle metadata, and it is ready for its downstream consumers.
+
+The corresponding files are:
 
 1. `artifacts/request-brief.txt`
 2. `artifacts/architecture-context-packet.txt`
@@ -545,7 +568,7 @@ The GoldenBehaviorContract is mandatory before `pseudocode-packet` and `test-str
 - Source components discarded
 - Architecture guardrails
 
-## Artifact expectations
+## Shared completion expectations
 
 - Artifacts are plain text.
 - The CLI does not validate artifact contents against JSON schemas.

@@ -26,6 +26,16 @@ function readJson(root, relPath) {
   return JSON.parse(readText(root, relPath));
 }
 
+function checkOrderedTokens(text, tokens) {
+  let cursor = -1;
+  for (const token of tokens) {
+    const next = text.indexOf(token, cursor + 1);
+    if (next === -1) return token;
+    cursor = next;
+  }
+  return null;
+}
+
 function extractQuotedItems(tsSource) {
   return [...tsSource.matchAll(/'([^']+)'/g)].map((match) => match[1]);
 }
@@ -121,6 +131,46 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
 
   const failures = [];
 
+  const manifestPath = path.join(root, 'docs', 'documentation-preservation-manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    const manifest = readJson(root, 'docs/documentation-preservation-manifest.json');
+    for (const relPath of manifest.canonicalDocuments) {
+      if (!fs.existsSync(path.join(root, relPath))) {
+        fail(`${relPath}: canonical document is missing`, failures);
+      }
+    }
+    for (const [relPath, terms] of Object.entries(manifest.requiredTerms)) {
+      const content = readText(root, relPath).toLowerCase();
+      for (const term of terms) {
+        if (!content.includes(term.toLowerCase())) {
+          fail(`${relPath}: missing preserved concept "${term}"`, failures);
+        }
+      }
+    }
+
+    const roadmapHeadings = [...roadmap.matchAll(/^### (v\d+\.\d+\.\d+)\b/gm)].map((match) => match[1]);
+    const uniqueRoadmapHeadings = [...new Set(roadmapHeadings)];
+    if (JSON.stringify(uniqueRoadmapHeadings) !== JSON.stringify(manifest.roadmapVersions)) {
+      fail(
+        `docs/ROADMAP.md: version headings differ from preservation manifest; expected ${manifest.roadmapVersions.join(', ')}, actual ${uniqueRoadmapHeadings.join(', ')}`,
+        failures,
+      );
+    }
+
+    const missingStage = checkOrderedTokens(workflows, manifest.greenfieldStageOrder.map((stage) => `\`${stage}\``));
+    if (missingStage) {
+      fail(`docs/WORKFLOWS.md: greenfield stage order is missing or reordered at ${missingStage}`, failures);
+    }
+
+    for (const profile of manifest.starterProfiles) {
+      if (!greenfieldProfiles.includes(profile)) {
+        fail(`docs preservation manifest names unsupported starter profile ${profile}`, failures);
+      }
+    }
+  } else if (root === process.cwd()) {
+    fail('docs/documentation-preservation-manifest.json is missing', failures);
+  }
+
   for (const pattern of [
     /6 modes/i,
     /six modes/i,
@@ -136,6 +186,15 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
 
   if (/v1\.0\.0[^\n]*current published/i.test(readme)) {
     fail('README.md still claims v1.0.0 is the current published release', failures);
+  }
+
+  const publishedPackage = `${pkg.name}@${pkg.version}`;
+  if (fs.existsSync(manifestPath) && !readme.includes(publishedPackage)) {
+    fail(`README.md must identify the current published package as ${publishedPackage}`, failures);
+  }
+
+  if (!new RegExp(`^## v${pkg.version.replace(/\./g, '\\.')}\\b`, 'm').test(changelog)) {
+    fail(`CHANGELOG.md is missing published release heading v${pkg.version}`, failures);
   }
 
   if (readme.includes('my-dev-kit-orchestrator@1.0.0') || readme.includes('my-dev-kit-orchestrator@0')) {

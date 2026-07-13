@@ -2,15 +2,9 @@
 
 Versions are listed in chronological order.
 
-`v1.1.0` is the current published release and is newer than every prior
-`v1.0.0` or `v0.x.0` release.
-
-`v1.0.0` remains the prior stable workflow-contract release.
-
-`v1.2.0` is implemented on development branches and is pending the separate
-pre-release readiness workflow (cross-platform CI, `my-dev-kit-lab` security
-validation, `npm pack --dry-run`) before publish, tag, and GitHub release.
-Later versions beyond `v1.2.0` remain planned milestones.
+`v1.2.0` is the current published release. `v1.1.0`, `v1.0.0`, and the
+`v0.x.0` releases remain part of the published project history. Versions after
+`v1.2.0` are planned milestones.
 
 ## Version summary
 
@@ -23,12 +17,12 @@ Later versions beyond `v1.2.0` remain planned milestones.
 - `v0.6.0` added judge correction routing and trace-aware workflow recovery.
 - `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
 - `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
-- `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Implemented v1.2.0" for what shipped versus what was originally planned).
+- `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
 
-## Implemented
+## Published releases through v1.0.0
 
 ### v0.1.0
 
@@ -214,7 +208,7 @@ Later versions beyond `v1.2.0` remain planned milestones.
 - v0.5.0 Design Trace and DesignMap behavior remains supported
 - v0.6.0 correction routing behavior remains supported
 
-## Implemented v1.1.0
+## Published v1.1.0
 
 ### v1.1.0 - Greenfield Bootstrap Foundation
 
@@ -353,14 +347,12 @@ Boundary:
   `validateGreenfieldArtifacts.ts` was added.
 - cross-mode export traversal rejection is implemented in the current release.
 
-## Implemented v1.2.0
+## Published v1.2.0
 
 ### v1.2.0 - Android Compose Greenfield Profile
 
 Status:
-Implemented on development branches (`feature/v1.2.0-android-compose-*`,
-`feature/v1.2.0-documentation-compatibility`). Not yet published, tagged, or
-released; pending the separate pre-release readiness workflow.
+Published as `1.2.0`.
 
 Goal:
 Add Android Compose as a third greenfield starter profile plugged into the

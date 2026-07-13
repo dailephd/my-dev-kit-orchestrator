@@ -1,24 +1,32 @@
 # my-dev-kit-orchestrator
 
-`my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
+`my-dev-kit-orchestrator` is a CLI-first tool for guiding coding agents through
+design-first software work. It turns a request into a sequence of bounded stage
+prompts, records each stage's artifact on disk, and keeps implementation,
+testing, verification, and judge review connected to the same design.
 
-It keeps a software change in bounded stages instead of jumping straight from a raw request to code. A run moves through promptable stages, writes artifacts to disk, and preserves verification evidence for later review.
+The package is `@dailephd/my-dev-kit-orchestrator`, and the installed executable
+is `my-dev-kit-orchestrator`.
+
+## What it helps you do
+
+- Start and resume inspectable workflow runs.
+- Choose a workflow mode for feature, repair, test, refactor, hardening,
+  extraction, or greenfield work.
+- Generate the prompt for the current stage instead of one large master prompt.
+- Track artifact state and deterministic check results.
+- Route judge findings back to the appropriate correction stage.
+- Export a portable run handoff.
+- Guide a new project from an idea through a first verified vertical slice and
+  an initial `my-dev-kit` indexing handoff.
 
 ## Current release
 
-The latest published package is `@dailephd/my-dev-kit-orchestrator@1.1.0`. This
-repository's current source additionally includes the Android Compose
-greenfield profile implemented after that release; see
-[CHANGELOG.md](CHANGELOG.md) for what has shipped and what is pending the next
-release.
+The latest published package is
+`@dailephd/my-dev-kit-orchestrator@1.2.0`. See [CHANGELOG.md](CHANGELOG.md) for
+release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-The CLI command is:
-
-```bash
-my-dev-kit-orchestrator
-```
-
-This release includes seven workflow modes:
+The release supports seven workflow modes:
 
 - `feature`
 - `repair`
@@ -28,131 +36,100 @@ This release includes seven workflow modes:
 - `extraction`
 - `greenfield`
 
-## Greenfield summary
-
-`greenfield` is the seventh mode. It is for bootstrapping a new project before useful code exists.
-
-Greenfield is platform-neutral. It supports three starter profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. Android Compose support is profile-guided planning: stack decisions, prompts, generated docs, scaffold-plan expectations, and validation-command guidance (`./gradlew build`, `./gradlew testDebugUnitTest`, and an optional device/emulator-dependent `./gradlew connectedAndroidTest`). The orchestrator does not run Gradle and does not require the Android SDK. A generic "mobile" or "mobile app" request is ambiguous and is reported as unresolved rather than silently selected; iOS, Flutter, and React Native are not supported profiles.
-
-Greenfield stage order:
-
-1. `idea-brief`
-2. `product-boundary`
-3. `stack-decision`
-4. `starter-profile`
-5. `bootstrap-bundle`
-6. `project-docs`
-7. `scaffold-plan`
-8. `scaffold-implementation`
-9. `first-vertical-slice`
-10. `verification`
-11. `initial-index`
-12. `judge`
-13. `final-report`
-
-Greenfield is prompt-guided, not autonomous project generation. The CLI generates the current stage prompt, the user gives that prompt to a coding agent, and the returned artifact is saved into the run folder. After code exists, the `initial-index` stage hands the project to `my-dev-kit` for its first index.
-
-## Command surface
-
-```text
-my-dev-kit-orchestrator init
-my-dev-kit-orchestrator start "<request>"
-my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden|extraction|greenfield> "<request>"
-my-dev-kit-orchestrator status
-my-dev-kit-orchestrator prompt
-my-dev-kit-orchestrator prompt <stage>
-my-dev-kit-orchestrator list
-my-dev-kit-orchestrator mark <artifact-name> --state <incomplete|blocked|complete> [--reason "<reason>"]
-my-dev-kit-orchestrator check
-my-dev-kit-orchestrator check --artifacts
-my-dev-kit-orchestrator check --all
-my-dev-kit-orchestrator export
-```
-
-Common flags:
-
-- `--root <path>`
-- `--run <run-id>`
-- `--name <run-name>`
-- `--output-dir <path>`
-
 ## Quick start
 
-Install the published package:
+Prerequisite: a supported Node.js installation with npm.
+
+Run the published package without installing it globally:
 
 ```bash
-npm install @dailephd/my-dev-kit-orchestrator
+npx @dailephd/my-dev-kit-orchestrator init
+npx @dailephd/my-dev-kit-orchestrator start "Add audit logging"
+npx @dailephd/my-dev-kit-orchestrator prompt
 ```
 
-Or use the local build in this repository:
+The CLI creates `.my-dev-kit-orchestrator/` in the project. Each workflow run
+contains its request, metadata, stage prompts, artifacts, and reports. Give the
+generated stage prompt to a coding agent, save the requested artifact, and run
+`prompt` again to continue.
+
+To work from this repository instead:
 
 ```bash
 npm install
 npm run build
-node dist/cli.js --help
+node dist/cli.js init
+node dist/cli.js start "Add audit logging"
+node dist/cli.js prompt
 ```
 
-Typical workflow:
+See [docs/USAGE.md](docs/USAGE.md) for complete command syntax and
+[docs/WORKFLOWS.md](docs/WORKFLOWS.md) for mode selection and stage procedures.
 
-```bash
+## Greenfield starter profiles
+
+The `greenfield` mode supports these starter profiles:
+
+- `typescript-cli`
+- `nextjs-app`
+- `android-compose`
+
+Greenfield remains prompt-guided. The CLI records the selected profile and
+generates planning guidance; it does not generate and build an application on
+its own. After code exists, the `initial-index` stage guides the first
+`my-dev-kit` index.
+
+The Android Compose profile describes Kotlin, Jetpack Compose, Gradle project
+structure, scaffold targets, and validation commands. The orchestrator does
+not run Gradle, require the Android SDK, or check for a device or emulator.
+Generic requests such as "mobile app" remain unresolved instead of defaulting
+to Android Compose. iOS, Flutter, React Native, and a general-purpose mobile
+mode are not supported.
+
+## Command overview
+
+```text
 my-dev-kit-orchestrator init
-my-dev-kit-orchestrator start "add audit logging to the export command"
-my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator start [options] <request>
+my-dev-kit-orchestrator prompt [stage]
 my-dev-kit-orchestrator status
 my-dev-kit-orchestrator list
-```
-
-Greenfield example:
-
-```bash
-my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
-my-dev-kit-orchestrator prompt
-my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator mark <artifact-name> --state <state>
+my-dev-kit-orchestrator check
 my-dev-kit-orchestrator export
 ```
 
-Android Compose greenfield example:
+See [docs/USAGE.md](docs/USAGE.md) for flags, defaults, run selection, check
+variants, export options, and troubleshooting.
 
-```bash
-my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
-my-dev-kit-orchestrator prompt
-my-dev-kit-orchestrator check --artifacts
-my-dev-kit-orchestrator export
-```
+## Tool boundaries
 
-## Validation commands
+- `my-dev-kit` indexes and retrieves bounded context from an existing codebase.
+- `my-dev-kit-orchestrator` manages workflow stages, prompts, artifacts, checks,
+  correction routing, and handoff export.
+- `my-dev-kit-lab` owns experiments, audits, security validation, and
+  release-readiness evidence.
 
-Useful local checks for release-facing changes:
-
-```bash
-npm run docs:check
-npm run lint:docs
-npm run lint
-npm run test:security
-npx jest tests/greenfield --silent
-npx tsc --noEmit
-npm test
-npm run build
-node dist/cli.js --version
-node dist/cli.js --help
-npm pack --dry-run
-```
+These integrations are explicit and prompt-guided. The orchestrator does not
+autonomously run coding agents, `my-dev-kit`, security validation, publishing,
+or release workflows.
 
 ## Current limitations
 
-- Android Compose support is profile-guided planning, not an Android build runner: the orchestrator does not run Gradle, does not require the Android SDK, and does not check for a connected device or emulator
-- generic mobile requests (e.g. "mobile", "mobile app") are ambiguous and reported as unresolved rather than silently mapped to a profile
-- iOS, Flutter, React Native, and a general-purpose mobile mode are not supported
-- the repository still has both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`
-- component docs remain empty until the brief schema adds module/component hints
-- the CLI does not autonomously run coding agents, security validation, or publishing workflows
+- Checks validate artifact structure and trace relationships; they do not prove
+  runtime correctness.
+- Component documents remain empty until the brief schema supplies module or
+  component hints.
+- Tests currently use both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`.
+- The mobile and autonomous-execution boundaries described above remain in
+  effect.
 
 ## Documentation
 
-- [docs/USAGE.md](docs/USAGE.md)
-- [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
-- [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
-- [CHANGELOG.md](CHANGELOG.md)
-- [docs/ROADMAP.md](docs/ROADMAP.md)
+- [Usage and command reference](docs/USAGE.md)
+- [Workflow modes and stage procedures](docs/WORKFLOWS.md)
+- [Artifact contracts and lifecycle](docs/ARTIFACTS.md)
+- [Architecture and subsystem boundaries](docs/ARCHITECTURE.md)
+- [Contributor setup and validation](docs/DEVELOPMENT.md)
+- [Release history](CHANGELOG.md)
+- [Roadmap](docs/ROADMAP.md)

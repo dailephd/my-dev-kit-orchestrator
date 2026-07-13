@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-Implemented on development branches, not yet published, tagged, or released.
-Target version: `v1.2.0 - Android Compose Greenfield Profile`.
+No unreleased user-visible changes are documented.
+
+## v1.2.0 - Android Compose Greenfield Profile
 
 - added `android-compose` as a third supported greenfield starter profile,
   alongside `typescript-cli` and `nextjs-app`
@@ -44,7 +45,7 @@ Target version: `v1.2.0 - Android Compose Greenfield Profile`.
   docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, and docs/RELEASE_CHECKLIST.md
   to describe the current three-profile greenfield foundation accurately
 
-Known limitations carried into this unreleased line:
+Known limitations in `v1.2.0`:
 
 - `platformTarget`-only Android auto-selection (e.g. selecting
   `android-compose` from a bare `platformTarget: "android"` with no explicit

@@ -1,6 +1,8 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports seven workflow modes.
+`my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
+choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
+syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
@@ -314,7 +316,8 @@ Summarize:
 
 ## Greenfield
 
-Use greenfield mode to start a new project before useful code exists:
+Use `greenfield` to start a new project before useful code exists. Do not use
+it to add behavior to an established codebase; use `feature` for that work.
 
 ```bash
 my-dev-kit-orchestrator start --mode greenfield "<project idea>"
@@ -324,9 +327,8 @@ The greenfield foundation is platform-neutral. It supports three starter
 profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. It also
 excludes security validation, release, and publishing workflows.
 
-`start` does not parse the request text into a brief or resolve a profile at
-the CLI layer -- that has never been true for any profile, including
-`typescript-cli`/`nextjs-app`. Profile resolution
+`start` stores the request but does not resolve a profile at the CLI layer.
+Profile resolution
 (`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
 agent executes the `starter-profile` stage prompt, using the
 `preferredProfile`/`platformTarget` fields from the normalized brief. `prompt`
@@ -374,7 +376,7 @@ Project-doc bootstrap returns structured in-memory content rather than writing
 template files. Component documentation remains empty until the brief schema
 has module or component hints.
 
-## Shared workflow rules
+## Shared stage gates and completion rules
 
 - The CLI generates one prompt file per stage when a run starts.
 - `prompt` without a stage selects the first stage whose effective artifact state is not `complete`.

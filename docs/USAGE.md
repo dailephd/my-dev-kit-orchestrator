@@ -1,6 +1,31 @@
 # Usage
 
-This guide covers the CLI command surface and common workflows.
+This guide is the complete user-facing command reference. For exact stage
+procedures, see [Workflows](WORKFLOWS.md). For artifact contracts and paths,
+see [Artifacts](ARTIFACTS.md).
+
+## Install or run the CLI
+
+Run the published package without a global installation:
+
+```bash
+npx @dailephd/my-dev-kit-orchestrator --help
+```
+
+After installing the package, use the executable directly:
+
+```bash
+npm install @dailephd/my-dev-kit-orchestrator
+my-dev-kit-orchestrator --help
+```
+
+From this repository, build and run the local executable:
+
+```bash
+npm install
+npm run build
+node dist/cli.js --help
+```
 
 ## Initialize a project workspace
 
@@ -142,7 +167,7 @@ Behavior notes:
 
 ## Save artifacts between prompts
 
-The CLI does not call a coding agent directly in `v0.1.0`.
+The CLI does not call a coding agent directly.
 
 Expected manual loop:
 
@@ -185,7 +210,7 @@ In that flow, the coding agent should:
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
 
-## Extraction mode (v0.2.1)
+## Start an extraction run
 
 `--mode extraction` is available in v0.2.1.
 
@@ -244,9 +269,10 @@ The current runtime loop is:
 5. implement only in the target repository
 6. verify against the golden behavior contract in the judge stage
 
-### What `--create-target` would do (possible future behavior)
+### Unsupported `--create-target` option
 
-A `--create-target` flag that initializes the target repository before the run is a possible future addition. It is not implemented in the current release. Do not assume this flag exists.
+The CLI does not implement `--create-target`. Create the target repository
+before starting an extraction run.
 
 ---
 
@@ -314,7 +340,7 @@ my-dev-kit-orchestrator status
 my-dev-kit-orchestrator list
 ```
 
-## Mark command (v0.3.0)
+## Mark artifact state
 
 Use `mark` to manually set the lifecycle state of a run artifact.
 
@@ -349,7 +375,7 @@ my-dev-kit-orchestrator mark request-brief.txt --state complete
 my-dev-kit-orchestrator mark pseudocode-packet.txt --state blocked --reason "Need design decision" --run 20260601T120000-add-logging
 ```
 
-## Status with lifecycle states (v0.3.0)
+## Interpret lifecycle state in status output
 
 The `status` command shows the lifecycle state of each artifact:
 
@@ -365,7 +391,7 @@ Artifacts:
                 Reason: Performance test cases not written yet
 ```
 
-## Prompt behavior with lifecycle states (v0.3.0)
+## Continue an incomplete, blocked, or stale stage
 
 When the current artifact is blocked, incomplete, or stale, the `prompt` command prepends a lifecycle context block before the standard stage prompt:
 
@@ -385,7 +411,7 @@ Stage: request-brief
 
 For stale artifacts, the context instructs the agent to reconcile against newer upstream artifacts.
 
-## Backward compatibility (v0.3.0)
+## Runs without lifecycle metadata
 
 Existing runs without an `artifact-state.json` continue to work:
 
@@ -394,7 +420,7 @@ Existing runs without an `artifact-state.json` continue to work:
 
 No migration is required for runs created before v0.3.0.
 
-## Judge correction routing (v0.6.0)
+## Follow judge correction routing
 
 When a run's judge report contains a non-PASS verdict, `status` and `prompt` integrate correction routing automatically.
 
@@ -482,7 +508,7 @@ Suggestions are deterministic - they map trace ID prefixes to owning stages with
 
 After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
 
-## Trace check command (v0.5.0)
+## Check trace links
 
 Use `check --trace` to run deterministic trace link checks on all run artifacts.
 
@@ -547,7 +573,7 @@ Before `check --trace` has been run:
 Trace check: not run  (run: my-dev-kit-orchestrator check --trace)
 ```
 
-## Check command (v0.4.0)
+## Check artifact and prompt content
 
 Use `check` to run deterministic content checks on artifacts and prompts.
 
@@ -642,7 +668,7 @@ Content check: not run  (run: my-dev-kit-orchestrator check)
 
 The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.
 
-## Artifact contract check (v1.0.0)
+## Check artifact contracts and stage gates
 
 Use `check --artifacts` to run the v1.0.0 artifact contract checker across all stages:
 
@@ -677,7 +703,7 @@ my-dev-kit-orchestrator check --all --strict
 - design-map trace check (if design-map.txt exists)
 - correction routing state
 
-## Export command (v1.0.0)
+## Export a run handoff
 
 Use `export` to generate a portable plain-text run handoff for use in another session or agent:
 
@@ -705,5 +731,17 @@ Export behavior:
 - default: print to stdout
 - `--out <file>`: write to file; refuses if file already exists
 - `--overwrite`: allow replacing an existing output file
-- refuses symbolic links and non-existent parent directories; normalized
-  parent traversal remains a known follow-up
+- rejects raw parent-path traversal segments, symbolic-link targets,
+  directory targets, and non-existent parent directories
+
+## Troubleshooting
+
+- If no run exists, start one with `start` before using `prompt`, `status`,
+  `check`, or `export`.
+- If a selected run cannot be found, confirm the value passed to `--run` and
+  the project selected by `--root`.
+- A new run can make `check --artifacts` or `check --all` exit with status 1
+  because required artifacts are missing. The result is a completed structural
+  check with findings, not evidence of a CLI crash.
+- The CLI generates guidance for external tools. It does not run a coding
+  agent, Gradle, `my-dev-kit`, security validation, or publishing commands.
