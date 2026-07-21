@@ -9,7 +9,7 @@ import { STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS } from '../src/instructions/stag
 
 describe('v1.2.1 cross-platform path safety', () => {
   describe('resolveRawEvidencePath', () => {
-    const runFolder = 'Z:\\runs\\run-1';
+    const runFolder = path.join(path.parse(process.cwd()).root, 'runs', 'run-1');
 
     it.each([
       ['drive-letter absolute path', 'C:\\Users\\dev\\evidence\\capsule.json'],
@@ -39,8 +39,9 @@ describe('v1.2.1 cross-platform path safety', () => {
     });
 
     it('normalizes an absolute path without altering runFolder-relative resolution for relative paths', () => {
-      const absolute = resolveRawEvidencePath('C:\\evidence\\capsule.json', runFolder);
-      expect(absolute.resolved).toBe(path.normalize('C:\\evidence\\capsule.json'));
+      const absolutePath = path.join(path.parse(process.cwd()).root, 'evidence', 'capsule.json');
+      const absolute = resolveRawEvidencePath(absolutePath, runFolder);
+      expect(absolute.resolved).toBe(path.normalize(absolutePath));
 
       const relative = resolveRawEvidencePath('evidence/capsule.json', runFolder);
       expect(relative.resolved).toBe(path.resolve(runFolder, 'evidence/capsule.json'));

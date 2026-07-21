@@ -16,7 +16,10 @@ describe('v1.2.1 compatibility manifest', () => {
 
   it('is deterministic: rebuilding in-process matches the fixture on disk byte-for-byte', () => {
     const rebuilt = buildCompatibilityManifest();
-    expect(JSON.stringify(rebuilt, null, 2) + '\n').toBe(fs.readFileSync(path.join(__dirname, 'fixtures', 'v121-compatibility', 'compatibility-manifest.json'), 'utf8'));
+    const fixture = fs
+      .readFileSync(path.join(__dirname, 'fixtures', 'v121-compatibility', 'compatibility-manifest.json'), 'utf8')
+      .replace(/\r\n/g, '\n');
+    expect(JSON.stringify(rebuilt, null, 2) + '\n').toBe(fixture);
   });
 
   it('is deterministic across two independent builds', () => {

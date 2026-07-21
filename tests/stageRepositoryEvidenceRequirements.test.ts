@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { buildInstructionCatalog } from '../src/instructions/catalog';
 import {
   STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS,
@@ -75,16 +76,16 @@ describe('STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS', () => {
 
 describe('supplemental context path helpers', () => {
   it('derive the exact fixed paths under a run folder', () => {
-    const runFolder = 'Z:/runs/run-1';
-    expect(implementationContextPacketPath(runFolder).replace(/\\/g, '/')).toBe(
-      'Z:/runs/run-1/artifacts/implementation-context-packet.txt',
+    const runFolder = path.join(path.parse(process.cwd()).root, 'runs', 'run-1');
+    expect(implementationContextPacketPath(runFolder)).toBe(
+      path.resolve(runFolder, 'artifacts/implementation-context-packet.txt'),
     );
-    expect(implementationContextRetrievalReportPath(runFolder).replace(/\\/g, '/')).toBe(
-      'Z:/runs/run-1/reports/implementation-context-retrieval-report.txt',
+    expect(implementationContextRetrievalReportPath(runFolder)).toBe(
+      path.resolve(runFolder, 'reports/implementation-context-retrieval-report.txt'),
     );
-    expect(testContextPacketPath(runFolder).replace(/\\/g, '/')).toBe('Z:/runs/run-1/artifacts/test-context-packet.txt');
-    expect(testContextRetrievalReportPath(runFolder).replace(/\\/g, '/')).toBe(
-      'Z:/runs/run-1/reports/test-context-retrieval-report.txt',
+    expect(testContextPacketPath(runFolder)).toBe(path.resolve(runFolder, 'artifacts/test-context-packet.txt'));
+    expect(testContextRetrievalReportPath(runFolder)).toBe(
+      path.resolve(runFolder, 'reports/test-context-retrieval-report.txt'),
     );
   });
 });
