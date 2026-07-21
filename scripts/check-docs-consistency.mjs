@@ -356,9 +356,9 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const usage = byPath['docs/USAGE.md'];
   const development = byPath['docs/DEVELOPMENT.md'];
 
-  requireTokens(issues, 'README.md', readme, [pkg.name, 'latest published package', '1.2.0', 'v1.2.1', 'unreleased', 'eight commands', 'seven workflow modes', '79 native stages']);
-  requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.1', 'Implemented in source but not published', 'v1.2.0']);
-  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Implemented, unreleased v1.2.1', 'implementation complete', 'compatibility validation complete']);
+  requireTokens(issues, 'README.md', readme, [pkg.name, 'latest published package', '1.2.1', 'eight commands', 'seven workflow modes', '79 native stages']);
+  requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
+  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages']);
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths]);
@@ -397,12 +397,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   checkWrongCountClaims(issues, currentFactDocs, 'context-sensitive stages', contextFacts.contextSensitiveStages.length, 'context-sensitive\\s+(?:direct\\s+)?stages', 'CONTEXT_STAGE_COUNT_MISMATCH');
   checkWrongCountClaims(issues, currentFactDocs, 'CLI commands', cliCommands.length, '(?:CLI\\s+)?commands', 'CLI_COMMAND_COUNT_MISMATCH');
 
-  if (containsUnnegatedClaim(joinedDocs, /v1\.2\.1[^\n]{0,45}(?:\bpublished\b|\breleased\b|available (?:from|on) npm|npm latest)/i)) {
-    addIssue(issues, 'V121_PUBLICATION_FALSE_CLAIM', 'canonical documentation', 'v1.2.1 implemented and unreleased', 'publication claim found', 'Remove the publication claim and preserve v1.2.0 as latest published.');
-    addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', 'canonical documentation', 'v1.2.1 implemented and unreleased', 'v1.2.1 publication claim found', 'Remove the status contradiction across canonical documents.');
-  }
   if (/v1\.2\.1[\s\S]{0,180}not implemented|not implemented[\s\S]{0,180}v1\.2\.1/i.test(joinedDocs)) {
-    addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', 'canonical documentation', 'v1.2.1 implemented and unreleased', 'v1.2.1 described as not implemented', 'Remove stale planned status and document current source behavior.');
+    addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', 'canonical documentation', 'v1.2.1 implemented and released', 'v1.2.1 described as not implemented', 'Remove stale planned status and document current shipped behavior.');
   }
   const currentTechnicalDocs = ['README.md', 'docs/ARCHITECTURE.md', 'docs/WORKFLOWS.md', 'docs/ARTIFACTS.md', 'docs/USAGE.md', 'docs/DEVELOPMENT.md'];
   for (const documentPath of currentTechnicalDocs) {
@@ -411,22 +407,16 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
       addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'implemented current-source behavior', 'v1.2.1 described as future work', 'Replace planned-future framing with current implemented behavior.');
     }
   }
-  if (!/latest published package[\s\S]{0,100}1\.2\.0/i.test(readme)) {
-    addIssue(issues, 'V120_PUBLISHED_CLAIM_MISSING', 'README.md', 'latest published package v1.2.0', 'missing', 'Restore the verified npm publication state.');
+  if (!/latest published package[\s\S]{0,100}1\.2\.1/i.test(readme)) {
+    addIssue(issues, 'V121_PUBLISHED_CLAIM_MISSING', 'README.md', 'latest published package v1.2.1', 'missing', 'Restore the release-state claim.');
   }
-  if (containsUnnegatedClaim(readme, /v(?!1\.2\.0\b)\d+\.\d+\.\d+[^\n]{0,45}current published/i)) {
-    addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', 'v1.2.0 is the current published version', 'older current-published claim found', 'Historically scope or remove the stale publication claim.');
+  if (containsUnnegatedClaim(readme, /v(?!1\.2\.1\b)\d+\.\d+\.\d+[^\n]{0,45}current published/i)) {
+    addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', 'v1.2.1 is the current published version', 'older current-published claim found', 'Historically scope or remove the stale publication claim.');
   }
-  if (!/v1\.2\.1[\s\S]{0,120}unreleased|unreleased[\s\S]{0,120}v1\.2\.1/i.test(readme + '\n' + changelog + '\n' + roadmap)) {
-    addIssue(issues, 'V121_UNRELEASED_CLAIM_MISSING', 'README.md; CHANGELOG.md; docs/ROADMAP.md', 'v1.2.1 is unreleased', 'missing', 'State the implemented-versus-published distinction.');
-  }
-  for (const [documentPath, content, statusPattern] of [
-    ['README.md', readme, /v1\.2\.1[\s\S]{0,160}unreleased|unreleased[\s\S]{0,160}v1\.2\.1/i],
-    ['CHANGELOG.md', changelog, /v1\.2\.1[\s\S]{0,220}(?:not published|unreleased)/i],
-    ['docs/ROADMAP.md', roadmap, /(?:unreleased[\s\S]{0,80}v1\.2\.1|v1\.2\.1[\s\S]{0,180}(?:unreleased|not yet published))/i],
-  ]) {
-    if (!statusPattern.test(content)) {
-      addIssue(issues, 'V121_UNRELEASED_CLAIM_MISSING', documentPath, 'v1.2.1 implemented but unreleased', 'missing', 'Restore the release-state distinction in this document.');
+  for (const [documentPath, content] of [['README.md', readme], ['CHANGELOG.md', changelog], ['docs/ROADMAP.md', roadmap]]) {
+    if (/v1\.2\.1[\s\S]{0,180}(?:not published|unreleased|not yet published)|(?:not published|unreleased|not yet published)[\s\S]{0,180}v1\.2\.1/i.test(content)) {
+      addIssue(issues, 'V121_RELEASE_STATUS_CONTRADICTION', documentPath, 'v1.2.1 released', 'unreleased claim found', 'Remove the transitional release-state claim.');
+      addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'v1.2.1 released', 'unreleased claim found', 'Keep the current release state consistent.');
     }
   }
 
@@ -476,7 +466,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
 
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['scaffold-plan', 'scaffold-implementation', 'specialized scaffold renderer'], 'SCAFFOLD_EXCEPTION_DISCLOSURE_MISSING');
   const v121Roadmap = section(roadmap, '### v1.2.1', 3);
-  const v121Changelog = section(changelog, '### v1.2.1', 2);
+  const v121Changelog = section(changelog, '## v1.2.1', 2);
   if (/\bBatch\s+[0-9]+\b|candidate implementation batches|files changed|test suites?:\s*\d+/i.test(v121Roadmap)) {
     addIssue(issues, 'ROADMAP_BATCH_LOG_CONTAMINATION', 'docs/ROADMAP.md', 'high-level v1.2.1 milestone only', 'batch/log detail found', 'Move implementation chronology outside the public roadmap.');
   }
@@ -492,7 +482,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     return 1;
   }
 
-  console.log(`DOCS_CHECK_PASS: ${pkg.name}@${pkg.version}; published v${facts.latestPublishedVersion}; implemented-unreleased v${facts.implementedUnreleasedVersion}; ${cliCommands.length} commands; ${modes.length} modes; ${workflowFacts.nativeStageCount} native stages; ${workflowFacts.stageOrderByMode.greenfield.length} greenfield stages; ${greenfieldProfiles.length} greenfield profiles; ${contextFacts.contextSensitiveStages.length} context-sensitive stages; schemas ${[...new Set(Object.values(schemaVersions))].join(', ')}`);
+  console.log(`DOCS_CHECK_PASS: ${pkg.name}@${pkg.version}; published v${facts.latestPublishedVersion}; ${cliCommands.length} commands; ${modes.length} modes; ${workflowFacts.nativeStageCount} native stages; ${workflowFacts.stageOrderByMode.greenfield.length} greenfield stages; ${greenfieldProfiles.length} greenfield profiles; ${contextFacts.contextSensitiveStages.length} context-sensitive stages; schemas ${[...new Set(Object.values(schemaVersions))].join(', ')}`);
   return 0;
 }
 

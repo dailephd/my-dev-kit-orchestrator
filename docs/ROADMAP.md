@@ -2,9 +2,7 @@
 
 Versions are listed in chronological order.
 
-`v1.2.0` is the current published release. `v1.2.1` is implemented and has
-completed compatibility validation, but remains unreleased while documentation
-reconciliation and pre-release review are completed. `v1.1.0`, `v1.0.0`, and
+`v1.2.1` is the current published release. `v1.2.0`, `v1.1.0`, `v1.0.0`, and
 the `v0.x.0` releases remain part of the published project history. Versions
 after `v1.2.1` are planned milestones.
 
@@ -20,7 +18,7 @@ after `v1.2.1` are planned milestones.
 - `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
 - `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
 - `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
-- `v1.2.1` implements a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows. It is not yet published.
+- `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -440,13 +438,12 @@ Boundary:
 - do not add Android security validation to my-dev-kit-orchestrator
 - iOS, Flutter, and React Native remain unsupported; no generic mobile mode was added
 
-## Implemented, unreleased v1.2.1
+## Published v1.2.1
 
 ### v1.2.1 - Workflow Instruction and Context Readiness
 
-Status: implementation complete; compatibility validation complete;
-documentation structural correction complete; pre-release review, versioning,
-and publication not yet completed.
+Published as `1.2.1` on 2026-07-21 after implementation, compatibility,
+documentation, security, package, and cross-platform validation completed.
 
 Goal:
 Give every native stage an exact, deterministic instruction identity and

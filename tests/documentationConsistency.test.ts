@@ -92,9 +92,8 @@ describe('documentation consistency gate', () => {
     ['wrong context-sensitive count', 'docs/WORKFLOWS.md', (text: string) => replace(text, 'exact 11-stage matrix', '10 context-sensitive stages'), 'CONTEXT_STAGE_COUNT_MISMATCH'],
     ['wrong schema version', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| `WorkflowInstructionPacket` | `1.0.0` |', '| `WorkflowInstructionPacket` | `2.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
-    ['false v1.2.1 publication', 'CHANGELOG.md', (text: string) => replace(text, 'Implemented in source but not published.', 'v1.2.1 is published.'), 'V121_PUBLICATION_FALSE_CLAIM'],
-    ['missing v1.2.1 unreleased status', 'README.md', (text: string) => text.replace(/unreleased/gi, 'development'), 'V121_UNRELEASED_CLAIM_MISSING'],
-    ['missing v1.2.0 publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.2.0', '@dailephd/my-dev-kit-orchestrator@1.1.0'), 'V120_PUBLISHED_CLAIM_MISSING'],
+    ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
+    ['missing v1.2.1 publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.2.1', '@dailephd/my-dev-kit-orchestrator@1.1.0'), 'V121_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
     ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
@@ -102,7 +101,7 @@ describe('documentation consistency gate', () => {
     ['native context-stage claim', 'docs/WORKFLOWS.md', (text: string) => `${text}\nThe workflow adds a native context stage.\n`, 'NATIVE_CONTEXT_STAGE_FALSE_CLAIM'],
     ['missing scaffold exception', 'docs/WORKFLOWS.md', (text: string) => replace(text, 'specialized scaffold renderer', 'shared renderer'), 'SCAFFOLD_EXCEPTION_DISCLOSURE_MISSING'],
     ['roadmap batch log', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.2.1 - Workflow Instruction and Context Readiness', '### v1.2.1 - Workflow Instruction and Context Readiness\n\nBatch 6 implementation log.'), 'ROADMAP_BATCH_LOG_CONTAMINATION'],
-    ['changelog batch history', 'CHANGELOG.md', (text: string) => replace(text, '### v1.2.1 - Workflow Instruction and Context Readiness', '### v1.2.1 - Workflow Instruction and Context Readiness\n\nBatch 6 implementation history.'), 'CHANGELOG_BATCH_HISTORY_CONTAMINATION'],
+    ['changelog batch history', 'CHANGELOG.md', (text: string) => replace(text, '## v1.2.1 - Workflow Instruction and Context Readiness', '## v1.2.1 - Workflow Instruction and Context Readiness\n\nBatch 6 implementation history.'), 'DOC_CHANGELOG_BATCH_LOG_CONTAMINATION'],
   ])('detects %s', (_name, relativePath, mutation, issueCode) => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);
   });
@@ -202,7 +201,7 @@ describe('documentation consistency gate', () => {
   it.each([
     ['README', 'README.md', 'Current release', 'Quick start'],
     ['ARCHITECTURE', 'docs/ARCHITECTURE.md', 'System boundaries', 'Core components'],
-    ['ROADMAP', 'docs/ROADMAP.md', 'Published v1.2.0', 'Implemented, unreleased v1.2.1'],
+    ['ROADMAP', 'docs/ROADMAP.md', 'Published v1.2.0', 'Published v1.2.1'],
   ])('rejects invalid %s major heading order', (_name, relativePath, first, second) => {
     expectIssue(
       relativePath,

@@ -21,7 +21,7 @@
       "seven workflow modes",
       "79 native stages",
       "latest published package",
-      "unreleased",
+      "v1.2.1",
       "refresh-only prompt",
       "does not execute `my-dev-kit`",
       "status",
@@ -91,8 +91,7 @@
       "Reconciliation and stop threshold"
     ],
     "docs/RELEASE_CHECKLIST.md": [
-      "latest-published `v1.2.0`",
-      "implemented-unreleased `v1.2.1`",
+      "latest-published `v1.2.1`",
       "79 native stages",
       "eight CLI commands",
       "11 context-sensitive direct stages",
@@ -102,15 +101,14 @@
     ],
     "CHANGELOG.md": [
       "v1.2.1",
-      "Implemented in source but not published",
+      "Release date: 2026-07-21",
       "v1.2.0",
       "v1.1.0",
       "v1.0.0"
     ],
     "docs/ROADMAP.md": [
-      "Implemented, unreleased v1.2.1",
-      "implementation complete",
-      "compatibility validation complete",
+      "Published v1.2.1",
+      "Published as `1.2.1`",
       "Ecosystem responsibility boundaries",
       "Non-goals",
       "Conceptual workflow model"
@@ -154,9 +152,8 @@
   ],
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.2.0",
-    "latestPublishedVersion": "1.2.0",
-    "implementedUnreleasedVersion": "1.2.1",
+    "packageMetadataVersion": "1.2.1",
+    "latestPublishedVersion": "1.2.1",
     "cliCommands": [
       "init",
       "start",
@@ -203,7 +200,7 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.2.0 versus implemented-unreleased v1.2.1",
+    "published v1.2.1 with older releases historically scoped",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -225,7 +222,7 @@
   "documentStructures": {
     "README.md": {
       "purpose": "Public overview, installation, current capabilities, navigation, and concise development status.",
-      "temporalLens": "Latest published release plus a brief implemented-unreleased source note.",
+      "temporalLens": "Latest published release and current shipped capabilities.",
       "planningDetailAllowed": false,
       "requiredTopLevelHeadings": [
         "What it helps you do",
@@ -236,7 +233,7 @@
         "Documentation"
       ],
       "allowedTopLevelHeadingPatterns": [
-        "^(What it helps you do|Current release|Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+ source behavior|Quick start|Greenfield starter profiles|Command overview|Tool boundaries|Current limitations|Documentation)$"
+        "^(What it helps you do|Current release|Workflow instruction and context readiness|Quick start|Greenfield starter profiles|Command overview|Tool boundaries|Current limitations|Documentation)$"
       ],
       "forbiddenTopLevelHeadingPatterns": [
         "^Planned:",
@@ -256,26 +253,26 @@
       "orderedHeadingGroups": [
         ["What it helps you do", "Current release", "Quick start", "Command overview", "Tool boundaries", "Documentation"]
       ],
-      "versionStatusPolicy": "v1.2.0 is latest published; v1.2.1 may appear only as a concise implemented-unreleased source note.",
+      "versionStatusPolicy": "v1.2.1 is latest published; older versions remain historically scoped.",
       "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
       "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
-      "protectedFacts": ["latestPublishedVersion", "implementedUnreleasedVersion", "cliCommands", "workflowModeCount"]
+      "protectedFacts": ["latestPublishedVersion", "cliCommands", "workflowModeCount"]
     },
     "CHANGELOG.md": {
-      "purpose": "Released and implemented-unreleased product changes.",
-      "temporalLens": "Release history plus the implemented unreleased delta.",
+      "purpose": "Released product changes and any future unreleased delta.",
+      "temporalLens": "Release history with the current release first.",
       "planningDetailAllowed": false,
-      "requiredTopLevelHeadings": ["Unreleased", "v1.2.0 - Android Compose Greenfield Profile"],
+      "requiredTopLevelHeadings": ["v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"],
       "allowedTopLevelHeadingPatterns": ["^(Unreleased|v[0-9]+\\.[0-9]+\\.[0-9]+.*)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
       "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
-      "orderedHeadingGroups": [["Unreleased", "v1.2.0 - Android Compose Greenfield Profile"]],
-      "versionStatusPolicy": "v1.2.1 is implemented in source but not published; released entries remain historical.",
+      "orderedHeadingGroups": [["v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
+      "versionStatusPolicy": "v1.2.1 is the current release; older entries remain historical.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
-      "protectedFacts": ["latestPublishedVersion", "implementedUnreleasedVersion"]
+      "protectedFacts": ["latestPublishedVersion"]
     },
     "docs/ARCHITECTURE.md": {
       "purpose": "Current implemented architecture at repository HEAD.",
@@ -342,7 +339,7 @@
     },
     "docs/USAGE.md": {
       "purpose": "Current supported CLI usage and manual procedures.",
-      "temporalLens": "Latest published commands plus implemented-unreleased source behavior where explicitly identified.",
+      "temporalLens": "Current published commands and supported manual procedures.",
       "planningDetailAllowed": false,
       "requiredTopLevelHeadings": ["Install or run the CLI", "Start a run", "Print prompts", "Supply implementation and test context manually", "Check run status", "Mark artifact state", "Export a run handoff", "Troubleshooting"],
       "allowedTopLevelHeadingPatterns": ["^(Install or run the CLI|Initialize a project workspace|Start a run|Start and inspect a greenfield run|Print prompts|Save artifacts between prompts|Example: graph-guided architecture context|Supply implementation and test context manually|Start an extraction run|Check run status|List runs|Common working pattern|Mark artifact state|Interpret lifecycle state in status output|Continue an incomplete, blocked, or stale stage|Runs without lifecycle metadata|Follow judge correction routing|Check trace links|Check artifact and prompt content|Check artifact contracts and stage gates|Export a run handoff|Troubleshooting)$"],
@@ -372,18 +369,18 @@
     },
     "docs/ROADMAP.md": {
       "purpose": "High-level released, current, and future version roadmap.",
-      "temporalLens": "Historical releases, current unreleased status, and high-level future direction.",
+      "temporalLens": "Historical releases, current published status, and high-level future direction.",
       "planningDetailAllowed": "high-level-only",
-      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Implemented, unreleased v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
+      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
       "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Implemented, unreleased v[0-9]+\\.[0-9]+\\.[0-9]+|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
-      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Implemented, unreleased v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.2.1 implemented and unreleased until publication; future versions remain high level.",
+      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
+      "versionStatusPolicy": "Keep v1.2.1 as the current published milestone; future versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],
-      "protectedFacts": ["roadmapVersions", "latestPublishedVersion", "implementedUnreleasedVersion"]
+      "protectedFacts": ["roadmapVersions", "latestPublishedVersion"]
     },
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md": {
       "purpose": "Permanent authority, preservation, and structural rules for committed documentation.",
@@ -413,7 +410,7 @@
       "sourceOfTruthOwners": ["package.json", "scripts/check-docs-consistency.mjs", ".github/workflows"],
       "duplicateFactPolicy": "Reference validation owners and preserve generic gates.",
       "linkInsteadOfDuplicate": ["docs/DEVELOPMENT.md", "docs/DOCUMENTATION_PRESERVATION_POLICY.md"],
-      "protectedFacts": ["latestPublishedVersion", "implementedUnreleasedVersion", "validationCommands"]
+      "protectedFacts": ["latestPublishedVersion", "validationCommands"]
     }
   },
   "localFilePolicies": [

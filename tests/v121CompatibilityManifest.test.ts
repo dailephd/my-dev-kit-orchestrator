@@ -165,11 +165,11 @@ describe('v1.2.1 compatibility manifest', () => {
     }
   });
 
-  it('package identity matches the current (unchanged) package.json', () => {
+  it('package identity matches the current release package.json', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('../package.json');
     expect(manifest.packageName).toBe(pkg.name);
     expect(manifest.currentPackageVersion).toBe(pkg.version);
-    expect(pkg.version).toBe('1.2.0');
+    expect(pkg.version).toBe('1.2.1');
   });
 });

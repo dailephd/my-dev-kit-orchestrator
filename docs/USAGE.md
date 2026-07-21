@@ -212,7 +212,7 @@ The ArchitectureContextPacket should summarize the relevant design context for t
 
 ## Supply implementation and test context manually
 
-Unreleased `v1.2.1` evaluates supplemental repository evidence but does not
+The `v1.2.1` release evaluates supplemental repository evidence but does not
 retrieve it. Use this sequence for `feature`, `repair`, `refactor`, `harden`,
 or `extraction`; test mode uses only the test-context pair.
 
@@ -518,7 +518,7 @@ The correction prompt includes:
 | `NEED_VERIFICATION` | `verification` |
 
 That table remains the default for historical/general correction routing. In
-unreleased `v1.2.1`, a judge prompt blocked by context readiness supplies an
+`v1.2.1`, a judge prompt blocked by context readiness supplies an
 exact valid `Recommended next stage`: `implementation` takes priority when
 implementation context is blocked, otherwise `test-implementation` is used
 (and test mode always uses `test-implementation`). The existing recommended-

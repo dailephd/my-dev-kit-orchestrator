@@ -42,10 +42,10 @@ describe('v1.2.1 CLI command surface', () => {
     expect(names).toEqual(['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status'].sort());
   });
 
-  it('--version reports 1.2.0', () => {
+  it('--version reports 1.2.1', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('../package.json');
-    expect(pkg.version).toBe('1.2.0');
+    expect(pkg.version).toBe('1.2.1');
   });
 
   it('no context-specific command or automatic-retrieval option was added to any command', () => {

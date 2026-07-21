@@ -6,10 +6,8 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The latest published release is `v1.2.0`. Repository source also contains the
-implemented but unreleased instruction and repository-context behavior targeted
-for `v1.2.1`. Architecture is organized by current responsibility rather than
-by release version.
+The latest published release is `v1.2.1`. Architecture is organized by current
+responsibility rather than by release version.
 
 ## System boundaries
 

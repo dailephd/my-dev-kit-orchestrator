@@ -23,14 +23,10 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The latest published package is
-`@dailephd/my-dev-kit-orchestrator@1.2.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.2.1`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-The feature branch implements `v1.2.1`, but that version is unreleased:
-package metadata and the built CLI still report `1.2.0`, and npm installation
-continues to resolve the published `v1.2.0` package.
-
-Both the published release and the unreleased source support seven workflow modes:
+The `v1.2.1` release supports seven workflow modes:
 
 - `feature`
 - `repair`
@@ -40,9 +36,9 @@ Both the published release and the unreleased source support seven workflow mode
 - `extraction`
 - `greenfield`
 
-## Unreleased v1.2.1 source behavior
+## Workflow instruction and context readiness
 
-The implemented `v1.2.1` source adds a typed workflow-instruction catalog with
+The `v1.2.1` release adds a typed workflow-instruction catalog with
 stable workflow, stage, command, rule, and report-contract IDs. Every one of
 the 79 native stages receives an exact, deterministic
 `WorkflowInstructionPacket` and an instruction-packet sidecar. Supplemental

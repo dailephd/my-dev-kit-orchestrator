@@ -1,12 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.2.1 - Workflow Instruction and Context Readiness
 
-### v1.2.1 - Workflow Instruction and Context Readiness
-
-Implemented in source but not published. Package metadata and the built CLI
-remain at `1.2.0`; no release date, tag, GitHub Release, or npm publication is
-claimed.
+Release date: 2026-07-21.
 
 ### Added
 

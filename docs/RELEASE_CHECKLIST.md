@@ -2,18 +2,16 @@
 
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The latest
-published package is `v1.2.0`; `v1.2.1` is implemented in source but remains
-unreleased until its separate pre-release and publication work is completed.
+published package is `v1.2.1`; older releases remain historical baselines.
 
 ## Current release baseline
 
-- [ ] package metadata remains `1.2.0` before the authorized v1.2.1 pre-release version change
-- [ ] `node dist/cli.js --version` prints `1.2.0` before that version change
+- [ ] package metadata and `node dist/cli.js --version` match the target release
 - [ ] docs describe seven modes and list `greenfield` as the seventh
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs distinguish latest-published `v1.2.0` from implemented-unreleased `v1.2.1`
+- [ ] docs identify latest-published `v1.2.1` and scope older versions historically
 
 ## Required local validation
 
