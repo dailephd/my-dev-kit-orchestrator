@@ -54,8 +54,8 @@ unreleased until its separate pre-release and publication work is completed.
 - [ ] docs state that `status` has no JSON option
 - [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
   exact `Recommended next stage` policy are documented
-- [ ] the configured Node 22/24 matrix is described separately from local
-  Node 24.11.0 evidence and any future live CI result
+- [ ] the configured Node.js 24 validation matrix and Node.js 26 pre-release
+  matrix are described separately from local Node.js 24.11.0 evidence
 
 ## Temporary-directory smoke
 
@@ -89,8 +89,9 @@ request, in a separate temporary directory:
 
 ## Cross-platform and security gates
 
-- [ ] configured GitHub Actions matrices cover `windows-latest`, `macos-15`,
-  and `ubuntu-latest` with Node 22 and Node 24
+- [ ] ordinary validation covers `windows-latest`, `macos-15`, and
+  `ubuntu-latest` with Node.js 24
+- [ ] pre-release validation covers the same operating systems with Node.js 26
 - [ ] after the branch is pushed, record the actual live CI result separately
 - [ ] `my-dev-kit-lab` self-validation passes
 - [ ] `my-dev-kit-lab` target security validation passes

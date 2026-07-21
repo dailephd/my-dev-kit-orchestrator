@@ -363,7 +363,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths]);
   requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'no JSON option', 'refresh-only', ...contextFacts.fixedPaths]);
-  requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 22 and 24', 'Node.js 24.11.0', 'Node.js 22 was not run locally', 'no live CI']);
+  requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'Node.js 24.11.0', 'live cross-platform CI evidence']);
   const architectureSchemaLabels = {
     catalogSchema: 'Instruction catalog schema',
     catalogVersion: 'Instruction catalog version',
@@ -469,8 +469,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   }
 
   for (const [relPath, content] of Object.entries(byPath)) {
-    if (/Z:\\Users|Projects_worktrees|Projects\\_worktrees|\bNode(?:\.js)?\s*26\b/i.test(content)) {
-      addIssue(issues, 'LOCAL_OR_UNSUPPORTED_ENVIRONMENT_CLAIM', relPath, 'portable paths and Node 22/24 evidence', 'local path or Node 26 claim found', 'Use generic paths and configured/runtime-verified Node versions.');
+    if (/Z:\\Users|Projects_worktrees|Projects\\_worktrees/i.test(content)) {
+      addIssue(issues, 'LOCAL_OR_UNSUPPORTED_ENVIRONMENT_CLAIM', relPath, 'portable paths and configured Node.js evidence', 'local path claim found', 'Use generic paths and configured/runtime-verified Node versions.');
     }
   }
 

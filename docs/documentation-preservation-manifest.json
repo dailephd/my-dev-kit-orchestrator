@@ -79,9 +79,10 @@
       "docs:check",
       "lint:docs",
       "test:security",
-      "Node.js 22 and 24",
+      "Node.js 24",
+      "Node.js 26",
       "Node.js 24.11.0",
-      "no live CI",
+      "live cross-platform CI evidence",
       "published package labeled `my-dev-kit` 1.10.2"
     ],
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md": [
@@ -96,7 +97,8 @@
       "eight CLI commands",
       "11 context-sensitive direct stages",
       "<MY_DEV_KIT_CLI>",
-      "Node 22 and Node 24"
+      "Node.js 24",
+      "Node.js 26"
     ],
     "CHANGELOG.md": [
       "v1.2.1",
