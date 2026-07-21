@@ -18,6 +18,7 @@ Versions are listed in chronological order.
 - `v1.0.0` stabilizes the workflow contract with artifact quality gates, mode-aware check behavior, stage-gate validation, combined check coverage, portable run handoff export, and preserved v0.5.0/v0.6.0 compatibility.
 - `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
 - `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
+- `v1.2.1` is **planned, not implemented**. It introduces a structured workflow-instruction catalog with stable IDs, deterministic reference resolution, a bounded `WorkflowInstructionPacket` per stage, and manually refreshed implementation/test repository context consumed inside the existing `implementation` and `test-implementation` stages. It preserves the current native stage order, all seven modes, and existing-run compatibility, and it does not add automatic `my-dev-kit` execution or a native context-retrieval stage (see "v1.2.1 (planned)" below).
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -436,6 +437,270 @@ Boundary:
 - do not add Play Store release logic
 - do not add Android security validation to my-dev-kit-orchestrator
 - iOS, Flutter, and React Native remain unsupported; no generic mobile mode was added
+
+## v1.2.1 (planned)
+
+### v1.2.1 - Workflow-Instruction and Context-Refresh Integration
+
+Status:
+**Planned. Not implemented. Not published. No release date assigned.**
+
+This section documents the approved implementation plan so that another
+coding agent or planning session has enough verified context to write and
+execute the `v1.2.1` implementation prompts. It is a bounded patch placed
+immediately after `v1.2.0`. It does not reorder, combine, or move any
+capability into or out of `v1.3.0`, `v1.4.0`, or `v1.5.0` below, and it does
+not introduce any other version number.
+
+#### Problems this patch addresses
+
+**Workflow-instruction overload.** Runtime instructions are currently
+produced by the roughly 3,000-line `src/promptGenerator.ts`, supported by
+this documentation set. That file mixes many instruction categories in one
+place: workflow-selection rules, command references, shared prompt
+invariants, testing methodology, workflow-specific instructions, git-safety
+rules, anti-drift rules, release rules, publication rules, examples, and
+final-report formats. Because there is no structured, ID-addressable
+catalog, unrelated instruction categories can leak between stages -- for
+example, publication rules appearing in an implementation prompt, or release
+steps appearing in a test-writing prompt. This wastes prompt context, makes
+prompts harder to inspect, and makes leakage possible instead of structurally
+prevented.
+
+**Stale repository context.** The architecture-context stage retrieves
+repository context early in a run, but production implementation can
+substantially change the codebase after that point. The original
+`ArchitectureContextPacket` can become stale before test implementation
+begins. Implementation needs a context view that is current at the moment
+of implementation; test implementation needs a context view that reflects
+the actual production changes just made. One early, broad context packet
+cannot honestly satisfy both later roles.
+
+**Incompatible context needs across roles.** Architecture planning needs
+likely owners and extension points. Production implementation needs exact
+current code and contracts. Test implementation needs changed-production
+evidence and current test infrastructure. These are different retrieval
+roles, not different depths of the same retrieval.
+
+**Manual-integration gap.** The orchestrator does not invoke `my-dev-kit`
+automatically today. The architecture-context prompt instructs a coding
+agent to perform retrieval; the implementation and test-implementation
+prompts do not currently require any context refresh. `v1.2.1` adds explicit
+manual refresh requirements to those two existing stages without claiming
+that retrieval happens automatically.
+
+#### Goal
+
+Produce bounded, stage-specific workflow instructions and integrate manually
+refreshed repository evidence into the existing `implementation` and
+`test-implementation` stages, while preserving native stage order, run
+compatibility, lifecycle behavior, judge behavior, and correction routing.
+
+#### Ownership boundaries
+
+- **`my-dev-kit-orchestrator` owns:** workflow modes, workflow pipelines,
+  native stage order, workflow catalog content, workflow/stage selection,
+  stable workflow/stage/command/rule/report-contract IDs, catalog
+  validation, deterministic dependency resolution, the
+  `WorkflowInstructionPacket`, stage prompt assembly, `TaskState`, required
+  upstream artifact selection, the prompt-level `StageContextBundle`, run
+  state, artifact lifecycle, manual context-freshness rules, correction
+  routing, judge-verdict interpretation, and publication authorization.
+- **`my-dev-kit` owns:** repository indexing, architecture/implementation/
+  test-implementation-role repository evidence, `ContextRequest`, context
+  capsules, retrieval-audit records, changed-file/changed-symbol evidence,
+  before/after graph-diff evidence, and repository-evidence adequacy and
+  provenance.
+- **`my-dev-kit-lab` owns:** controlled strategy evaluation, context-size
+  measurement, required-evidence recall, irrelevant-instruction/file
+  inclusion measurement, responsibility-mapping completeness, determinism
+  evaluation, truncation/inadequacy evaluation, target immutability,
+  reports/plots/screenshots, security validation, and code-rot auditing.
+- `my-dev-kit-orchestrator` must not reimplement repository indexing,
+  source ranking, or code-graph traversal; must not generate `my-dev-kit`
+  context capsules itself; must not own retrieval-audit semantics; and must
+  not become `my-dev-kit-lab`.
+- `my-dev-kit` must not decide stage order, select the next workflow,
+  interpret judge verdicts, assemble orchestrator workflow instructions, or
+  authorize publication.
+- `my-dev-kit-lab` must not become a production workflow dependency, assemble
+  normal coding-agent prompts, or control stage progression.
+
+See [docs/ARCHITECTURE.md](ARCHITECTURE.md#v121-planned-workflow-catalog-workflowinstructionpacket-and-stagecontextbundle)
+for the catalog, resolver, packet, and bundle design, and
+[docs/WORKFLOWS.md](WORKFLOWS.md#v121-planned-operational-sequence) for the
+revised operational sequence.
+
+#### In scope
+
+- A structured workflow catalog (new owner: `my-dev-kit-orchestrator`) with
+  typed entries for workflows, stages, commands, rules, and report
+  contracts, each carrying a stable ID (candidate patterns such as
+  `workflow.feature`, `workflow.feature.implementation`,
+  `command.my-dev-kit.context`, `rule.context.refresh-before-implementation`
+  -- exact names are subject to implementation-time source-convention
+  inspection and are not final).
+- Deterministic, exact-ID reference resolution with duplicate-ID rejection,
+  missing-reference rejection, invalid-reference-type rejection, and cycle
+  detection. No fuzzy matching, no semantic retrieval, no LLM-based
+  selection.
+- A `WorkflowInstructionPacket` that bounds one stage's instructions to its
+  primary workflow/stage entry plus only its explicitly referenced
+  commands, rules, and one report contract -- excluding the rest of the
+  catalog, adjacent workflows, and unrelated publication/release/security/
+  documentation instructions.
+- A deterministic budget model for packet contents (entry counts and
+  text-size limits), with explicit truncation and inadequacy signaling
+  instead of silent omission of required content.
+- Stage-specific prompt assembly that consumes the packet inside the
+  existing prompt generator, preserving existing prompt filenames and stage
+  contracts.
+- A prompt-level `StageContextBundle` concept (`TaskState` +
+  `WorkflowInstructionPacket` + a repository-evidence reference + required
+  upstream artifacts + per-section provenance). This is an assembled prompt/
+  in-memory structure in `v1.2.1`, not a native lifecycle stage, not a
+  shared package, and not a `my-dev-kit` artifact.
+- Supplemental, optional context artifacts and reports consumed inside the
+  existing `implementation` and `test-implementation` stages (see
+  [docs/ARTIFACTS.md](ARTIFACTS.md#v121-planned-supplemental-context-artifacts)):
+  `artifacts/implementation-context-packet.txt`,
+  `reports/implementation-context-retrieval-report.txt`,
+  `artifacts/test-context-packet.txt`, and
+  `reports/test-context-retrieval-report.txt`.
+- Manual freshness rules (`fresh` / `stale` / `unknown`, candidate names
+  subject to implementation) recorded in supplemental context metadata, plus
+  stage stop rules for missing, stale, or inadequate context.
+- Verification and judge integration that treats missing/stale/inadequate
+  required context, and unresolved critical test-responsibility mappings, as
+  correction evidence -- using the existing judge and correction-routing
+  architecture, not a second judge.
+
+#### Deferred (explicitly out of scope for v1.2.1)
+
+- Automatic `my-dev-kit` execution or any external-command runtime.
+- A native implementation-context or test-context lifecycle stage (the
+  native stage count for every mode is unchanged in `v1.2.1`).
+- Source or repository watching.
+- Content-hash stale propagation or automatic downstream invalidation by
+  context hash.
+- Fuzzy, semantic, or LLM-based workflow selection.
+- A shared cross-repository schema package or public plugin architecture.
+- A wholesale rewrite of `src/promptGenerator.ts`.
+- A coding-agent runtime, repository indexing, or repository-evidence
+  ranking inside the orchestrator.
+- `my-dev-kit-lab` evaluation logic, security validation, or publication
+  changes.
+
+#### Dependencies
+
+`v1.2.1` depends on stable repository-context contracts from `my-dev-kit
+v1.10.1` (`ContextRequest`, context capsule, and retrieval-audit schema
+additions). Publication of `my-dev-kit v1.10.1` is not required before
+`my-dev-kit-orchestrator v1.2.1` implementation begins; local fixture files
+and configurable paths are acceptable for development and tests. Recommended
+implementation order across the three repositories:
+
+1. `my-dev-kit v1.10.1`
+2. `my-dev-kit-orchestrator v1.2.1`
+3. `my-dev-kit-lab v0.4.3`
+
+`my-dev-kit-lab v0.4.3` evaluates the combined strategy after both
+patches exist; it is never a production runtime dependency of either.
+
+#### Candidate implementation batches
+
+1. **Catalog contracts and resolver** -- verify the `v1.2.0` baseline, define
+   entry types/stable IDs/reference types, implement validation and
+   exact-ID resolution (duplicate/missing-reference/invalid-reference/cycle
+   failures), add the budget model, add unit tests. Does not integrate every
+   stage prompt yet.
+2. **`WorkflowInstructionPacket`** -- assemble one bounded, deterministic
+   packet (one primary entry, resolved commands/rules, one report contract,
+   provenance, budget evidence, truncation/inadequacy, deterministic
+   serialization); integrate one representative stage; add tests.
+3. **Stage-specific prompt integration** -- migrate stage prompts to packet
+   assembly in bounded groups inside the existing prompt generator,
+   preserving filenames and stage order; add prompt-leakage tests; avoid a
+   wholesale prompt-generator rewrite.
+4. **Supplemental context references** -- add optional context-requirement
+   metadata and the four supplemental artifact/report references to the
+   implementation and test-implementation prompts; preserve old-run
+   compatibility; add artifact and prompt tests.
+5. **Freshness, inadequacy, and stop rules** -- add manual freshness states,
+   repository/index identity references, stale/unknown behavior, critical
+   inadequacy rules, and unresolved-responsibility behavior; integrate with
+   the existing lifecycle and correction-routing architecture; add tests.
+6. **Compatibility and regression gate** -- validate every existing mode,
+   artifact, lifecycle behavior, prompt, judge behavior, and package
+   behavior; determinism; cross-platform paths; full test suite; CLI smoke;
+   bounded corrective fixes only.
+7. **Documentation reconciliation and completeness audit** -- reconcile
+   README, CHANGELOG, ROADMAP, and architecture/workflow/artifact/usage/
+   validation docs against the actual implementation; document the manual
+   integration boundary and deferred native automation; full completeness
+   audit; no pre-release or publication work.
+
+#### Acceptance criteria
+
+- Each stage receives exactly one primary workflow/stage entry, its
+  permitted dependencies, and one report contract; unrelated instructions
+  (publication, release, security, unrelated-workflow content) are excluded
+  from every stage prompt.
+- Catalog resolution and packet assembly are deterministic: identical
+  catalog, workflow ID, stage ID, task state, and limits produce identical
+  selected entries, ordering, packet content, warnings, and budget
+  accounting.
+- Every existing mode, stage order, prompt filename, run, artifact file,
+  lifecycle state, judge behavior, and correction route remains compatible;
+  old runs without the new supplemental artifacts remain valid.
+- The implementation and test-implementation prompts accurately describe
+  manual integration; no prompt claims the orchestrator executes
+  `my-dev-kit` automatically or that a native context stage exists.
+- Required content that cannot fit inside a packet's budget produces
+  explicit truncation or inadequacy signaling, never silent omission.
+- Catalog, packet, prompt-leakage, supplemental-artifact, freshness, and
+  full-suite regression tests all pass, and `npm run docs:check` /
+  `npm run lint:docs` pass.
+
+#### Testing and validation requirements
+
+Behavior-derived tests are required for: catalog validity, stable IDs, and
+exact retrieval (including duplicate/missing/invalid/cyclic-reference
+failures and deterministic ordering); packet assembly (inclusion/exclusion
+rules, provenance, budget accounting, truncation, stable serialization);
+prompt-leakage (each stage prompt contains only its permitted instruction
+categories); supplemental-artifact handling (present/missing/stale/
+inadequate/unsupported-schema, old-run compatibility); freshness resolution
+(`fresh`/`stale`/`unknown`, missing-identity handling, critical-stale
+blocking); and full lifecycle/judge/correction/run-loading regression across
+every existing mode, including greenfield.
+
+Actual current validation commands (verified against `package.json`):
+`npm ci`, `npm run typecheck`, `npm test`, `npm run build`,
+`npm run docs:check`, `npm run smoke:cli`, `npm run lint`,
+`npm run lint:docs`, `npm run test:security`, `npm pack --dry-run`. Targeted
+test examples: `npx jest tests/promptGenerator.test.ts`,
+`npx jest tests/artifactLifecycle.test.ts`,
+`npx jest tests/artifactChecker.test.ts`, plus new catalog/resolver/packet/
+context-integration test files added during implementation. This planning
+inspection found no dedicated `verify`, benchmarking, packet-determinism, or
+JSON-validation script in the current repository; do not describe those as
+existing.
+
+See [docs/DEVELOPMENT.md](DEVELOPMENT.md#v121-planned-validation-additions)
+for the full validation plan, including package (`npm pack --dry-run`) and
+cross-platform (Windows/Linux/macOS, Node 22/24) validation.
+
+#### Integration with the wider ecosystem
+
+- `my-dev-kit v1.10.1` establishes the `ContextRequest`, context-capsule, and
+  retrieval-audit contract additions this patch consumes manually.
+- `my-dev-kit-lab v0.4.3` evaluates the combined workflow-instruction and
+  context-refresh strategy after both patches exist. It measures context
+  size, required-evidence recall, irrelevant-content inclusion, and
+  responsibility-mapping completeness; it does not participate in normal
+  runtime execution and is never a production dependency of
+  `my-dev-kit-orchestrator`.
 
 ## Planned milestones
 

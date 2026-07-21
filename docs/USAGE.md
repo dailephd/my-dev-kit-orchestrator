@@ -734,6 +734,58 @@ Export behavior:
 - rejects raw parent-path traversal segments, symbolic-link targets,
   directory targets, and non-existent parent directories
 
+## v1.2.1 (planned): Bounded Instruction and Context References
+
+**Status: planned, not implemented.** No command in this section exists
+today; this is a conceptual illustration of what a generated stage prompt is
+planned to reference once `v1.2.1` ships. See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for the full plan.
+
+A stage prompt is planned to reference, rather than inline, the following
+concepts:
+
+- **`WorkflowInstructionPacket`** -- the bounded instruction set for the
+  current stage only (its workflow/stage ID, resolved commands and rules,
+  one report contract, stop conditions).
+- **Context capsule / retrieval audit** -- `my-dev-kit`-produced repository
+  evidence for the current stage's role, referenced by path rather than
+  pasted in full.
+- **Required upstream artifacts** -- the same prior-stage artifacts the
+  current prompt architecture already lists (for example,
+  `artifacts/pseudocode-packet.txt` before `implementation`).
+- **`TaskState`** -- project, run, mode, stage, and scope information drawn
+  from `run.json` rather than duplicated in prose.
+- **Freshness and adequacy** -- whether the referenced repository evidence
+  is `fresh`, `stale`, or `unknown`, and whether it is adequate for the
+  current stage to proceed.
+
+Conceptual excerpt of a planned `implementation`-stage prompt fragment
+(illustrative only; not current CLI output):
+
+```text
+Stage: implementation
+Workflow instruction packet: workflow.feature.implementation
+Required upstream artifacts:
+  - artifacts/pseudocode-packet.txt
+  - artifacts/test-strategy-packet.txt
+Repository evidence:
+  - role: implementation
+  - source: artifacts/implementation-context-packet.txt
+  - freshness: fresh | stale | unknown
+  - adequacy: adequate | inadequate
+Task: refresh implementation-role repository context, then implement
+  according to the pseudocode packet.
+Stop conditions:
+  - do not implement if repository evidence is stale or inadequate
+  - do not perform test-implementation-stage work here
+```
+
+This is a candidate illustration of the planned prompt shape, not a
+published schema. Do not treat the field names above as final; they are
+subject to implementation-time inspection of `src/promptGenerator.ts` and
+the catalog design in
+[docs/ARCHITECTURE.md](ARCHITECTURE.md#v121-planned-workflow-catalog-workflowinstructionpacket-and-stagecontextbundle).
+
 ## Troubleshooting
 
 - If no run exists, start one with `start` before using `prompt`, `status`,

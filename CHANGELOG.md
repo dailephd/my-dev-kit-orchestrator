@@ -4,6 +4,42 @@
 
 No unreleased user-visible changes are documented.
 
+### v1.2.1 - Workflow-Instruction and Context-Refresh Integration (planning only)
+
+**Status: planned, not implemented, not published. No date is assigned.**
+This entry records the approved documentation plan for `v1.2.1`. It is not a
+record of completed work; see [docs/ROADMAP.md](docs/ROADMAP.md) for the full
+scope, batches, and acceptance criteria.
+
+Planned categories:
+
+- structured workflow catalog: typed entries for workflows, stages,
+  commands, rules, and report contracts, each with a stable ID
+- deterministic reference resolution: exact-ID lookup, duplicate/missing/
+  cyclic reference rejection; no fuzzy or semantic selection
+- `WorkflowInstructionPacket`: one bounded, deterministic instruction packet
+  per stage instead of the current large, hardcoded prompt-generation model
+- stage-specific prompt assembly built from the packet, replacing
+  instruction duplication and cross-stage leakage (for example, publication
+  or release rules appearing in an implementation prompt) with bounded,
+  attributable prompt sections
+- supplemental implementation-context references
+  (`artifacts/implementation-context-packet.txt`,
+  `reports/implementation-context-retrieval-report.txt`) consumed inside the
+  existing `implementation` stage
+- supplemental test-context references
+  (`artifacts/test-context-packet.txt`,
+  `reports/test-context-retrieval-report.txt`) consumed inside the existing
+  `test-implementation` stage, after production changes
+- manual context-freshness and stop rules (`fresh` / `stale` / `unknown`)
+  for the above supplemental artifacts
+- full compatibility with every existing mode, stage order, run, artifact
+  file, lifecycle state, judge behavior, and correction route
+
+This patch does not add a native context-retrieval stage, does not invoke
+`my-dev-kit` automatically, and does not move any feature into or out of the
+existing `v1.3.0`-`v1.5.0` roadmap.
+
 ## v1.2.0 - Android Compose Greenfield Profile
 
 - added `android-compose` as a third supported greenfield starter profile,

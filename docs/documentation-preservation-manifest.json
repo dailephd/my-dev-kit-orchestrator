@@ -22,7 +22,7 @@
     "CHANGELOG.md": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0"],
     "docs/ROADMAP.md": ["Ecosystem responsibility boundaries", "Non-goals", "Conceptual workflow model"]
   },
-  "roadmapVersions": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0", "v1.3.0", "v1.4.0", "v1.5.0"],
+  "roadmapVersions": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0", "v1.2.1", "v1.3.0", "v1.4.0", "v1.5.0"],
   "greenfieldStageOrder": ["idea-brief", "product-boundary", "stack-decision", "starter-profile", "bootstrap-bundle", "project-docs", "scaffold-plan", "scaffold-implementation", "first-vertical-slice", "verification", "initial-index", "judge", "final-report"],
   "starterProfiles": ["typescript-cli", "nextjs-app", "android-compose"]
 }

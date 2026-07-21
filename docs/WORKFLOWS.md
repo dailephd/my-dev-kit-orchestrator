@@ -434,6 +434,117 @@ Existing runs without `artifact-state.json` continue to work:
 
 No migration is needed for runs created before v0.3.0.
 
+## v1.2.1 (planned): Operational Sequence
+
+**Status: planned, not implemented.** See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for scope and batches, and
+[docs/ARCHITECTURE.md](ARCHITECTURE.md#v121-planned-workflow-catalog-workflowinstructionpacket-and-stagecontextbundle)
+for the catalog/packet/bundle design.
+
+### Native stages vs. operational substeps
+
+`v1.2.1` preserves the feature workflow's ten native stages exactly:
+
+1. `request-brief`
+2. `architecture-context`
+3. `behavior-model`
+4. `pseudocode-packet`
+5. `test-strategy`
+6. `implementation`
+7. `test-implementation`
+8. `verification`
+9. `judge`
+10. `final-report`
+
+The revised design adds *operational substeps* inside two of the existing
+stages -- it does not add native stages, and it does not change the stage
+count for `feature`, `repair`, `test`, `refactor`, `harden`, `extraction`,
+or `greenfield`. The planned operational sequence is:
+
+1. RequestBrief
+2. Architecture-context retrieval
+3. ArchitectureContextPacket
+4. BehaviorModel
+5. PseudocodePacket
+6. TestStrategyPacket
+7. **Implementation-context refresh** (operational substep inside stage 6,
+   `implementation`)
+8. ImplementationContextPacket (supplemental artifact)
+9. Production implementation
+10. ImplementationReport
+11. **Post-implementation index refresh** (operational substep inside stage
+    7, `test-implementation`)
+12. TestContextPacket (supplemental artifact)
+13. Test implementation
+14. TestImplementationReport
+15. Verification
+16. Judge
+17. Final report
+
+### Architecture-context stage (unchanged in v1.2.1)
+
+The architecture-context stage continues to use architecture-role
+repository evidence, as it does today. It receives the `RequestBrief`,
+stage-specific instructions, relevant `my-dev-kit` commands, and the
+architecture-context output contract, and it produces the
+`ArchitectureContextPacket` and optional retrieval evidence. It continues to
+exclude implementation-only instructions, test-implementation instructions,
+and release/publication instructions -- the same exclusion the bounded
+`WorkflowInstructionPacket` design formalizes for every stage.
+
+### Implementation stage integration (planned)
+
+The existing `implementation` stage prompt is planned to begin by
+instructing the coding agent to:
+
+1. Verify or refresh the `my-dev-kit` index.
+2. Request implementation-role context.
+3. Save or synthesize `artifacts/implementation-context-packet.txt`.
+4. Save `reports/implementation-context-retrieval-report.txt`.
+5. Inspect adequacy, freshness, and unresolved evidence.
+6. Stop when required contract evidence is missing or ownership is
+   unclear.
+7. Begin production implementation only after context is current and
+   adequate.
+
+These two files are supplemental in `v1.2.1`: they may be required by newly
+selected workflow entries for new runs, but they are never retroactively
+required for `v1.2.0`-era runs, and they are not native stages. See
+[docs/ARTIFACTS.md](ARTIFACTS.md#v121-planned-supplemental-context-artifacts).
+
+### Test-implementation stage integration (planned)
+
+The existing `test-implementation` stage prompt is planned to begin by
+instructing the coding agent to:
+
+1. Refresh the repository index after production changes.
+2. Collect changed files and changed symbols.
+3. Use before/after index or graph-diff evidence when available.
+4. Retrieve test-implementation-role context.
+5. Supply `TestStrategyPacket` responsibility IDs.
+6. Save or synthesize `artifacts/test-context-packet.txt`.
+7. Save `reports/test-context-retrieval-report.txt`.
+8. Inspect responsibility-mapping completeness, adequacy, and freshness.
+9. Stop when critical responsibilities remain unmapped.
+10. Implement tests only against current production evidence.
+
+### Verification and judge (unchanged mechanism, new evidence categories)
+
+Verification is planned to check that required context refresh occurred,
+that context-packet and retrieval-report references exist where required,
+that adequacy is not falsely reported, and that stale warnings are resolved
+or explicitly accepted. The existing judge stage remains authoritative and
+is not duplicated; it may treat missing/stale/unknown-freshness context and
+unresolved critical responsibility mappings as correction evidence, routed
+through the existing correction-routing architecture described above.
+
+### Manual integration boundary
+
+None of this is automatic. The orchestrator does not gain an external-command
+runtime in `v1.2.1`; every retrieval, refresh, and context-file step above is
+something the prompt instructs a coding agent to do, the same way the
+current architecture-context stage already works.
+
 ## Practical architecture-context flow
 
 For an architecture-context stage, a task-specific coding-agent prompt can combine both tools in a bounded sequence:

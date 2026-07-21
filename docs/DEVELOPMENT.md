@@ -303,3 +303,88 @@ from source when a profile is added or removed.
 
 Keep contributor validation separate from package publication. Do not bump,
 tag, publish, or create a release as part of an ordinary development change.
+
+## v1.2.1 (planned): Validation Additions
+
+**Status: planned, not implemented.** See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for full scope and batches. This
+section documents the validation plan only; no `verify`, benchmarking,
+packet-determinism, or JSON-validation script exists in the repository
+today, and this section does not claim otherwise.
+
+### Planned test categories
+
+- **Catalog tests:** valid catalog, stable IDs, exact workflow/stage
+  retrieval, command/rule/report-contract references, duplicate-ID
+  rejection (workflow, command, rule, report), missing-reference rejection,
+  invalid-reference-type rejection, cycle detection, malformed-entry
+  rejection, unknown-workflow/unknown-stage rejection, deterministic
+  ordering, deduplication, and budget-overflow handling.
+- **Packet tests:** one primary entry only, only explicitly referenced
+  commands/rules, one report contract, validation and stop conditions
+  included, provenance included, budget usage included, truncation and
+  inadequacy included, stable serialization, and exclusion of unrelated
+  entries.
+- **Prompt tests:** the architecture prompt uses only architecture-context
+  instructions; the implementation prompt requires implementation-context
+  refresh; the test-implementation prompt requires post-production refresh;
+  publication instructions are excluded from the implementation prompt;
+  release instructions are excluded from the test prompt; security rules
+  are excluded from ordinary coding prompts; existing filenames and modes
+  are preserved.
+- **Supplemental artifact tests:** implementation/test packet and
+  retrieval-report paths; missing optional packet; missing required packet;
+  stale packet; unknown freshness; inadequate packet; unsupported schema;
+  old-run compatibility.
+- **Freshness tests:** matching repository identity; context predating
+  production changes; missing identity; fresh/stale/unknown state; critical
+  stale state blocking progression; old workflows without context
+  requirements remain compatible.
+- **Lifecycle and regression tests:** current artifact checker, lifecycle,
+  stage detection, prompt generation, run loading/resumption, judge
+  parsing, correction routing, final reports, and every existing mode
+  (including greenfield).
+- **Negative tests:** missing catalog, empty catalog, missing report
+  contract, duplicate IDs, cyclic references, packet budget below required
+  content, missing/malformed/unsupported-schema context file, missing
+  adequacy, unresolved critical responsibility, and invalid artifact path
+  where path-boundary validation applies.
+
+Tests should assert selected IDs, resolved dependencies, excluded entries,
+ordering, packet size, warnings, freshness, stop behavior, prompt sections,
+and provenance -- not rely only on snapshot comparisons.
+
+### Actual current validation commands (verified)
+
+`npm ci`, `npm run typecheck`, `npm test`, `npm run build`,
+`npm run docs:check`, `npm run smoke:cli`, `npm run lint`,
+`npm run lint:docs`, `npm run test:security`, `npm pack --dry-run`.
+
+Targeted-test examples: `npx jest tests/promptGenerator.test.ts`,
+`npx jest tests/artifactLifecycle.test.ts`,
+`npx jest tests/artifactChecker.test.ts`, plus new catalog, resolver,
+packet, and context-integration test files added during implementation.
+
+This planning inspection found no dedicated script for `verify`,
+benchmarking, packet determinism, JSON validation, or incremental/
+stale-context validation in the current repository.
+
+### Package and cross-platform validation
+
+- `npm pack --dry-run` should be checked for catalog runtime-data inclusion
+  when the storage format requires it, and for exclusion of local context
+  packets, run outputs, reports, temporary files, local repository paths,
+  private planning reports, and unintended instruction source files.
+- Preserve the current Node 22/24 policy unless `package.json` `engines` or
+  CI change at implementation time; validate on `ubuntu-latest`,
+  `windows-latest`, and `macos-15` (matching current CI), covering catalog
+  loading, path normalization, run artifact paths, prompt generation,
+  deterministic serialization, and package contents.
+
+### Determinism validation
+
+Compare, across repeated runs with identical inputs: catalog resolution,
+packet serialization, prompt generation, warnings, budget use, and
+dependency order. Ignore only fields intentionally variable by current
+conventions (for example, timestamps); do not broadly strip fields to make
+comparisons pass.

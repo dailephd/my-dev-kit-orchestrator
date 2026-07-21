@@ -568,6 +568,69 @@ The GoldenBehaviorContract is mandatory before `pseudocode-packet` and `test-str
 - Source components discarded
 - Architecture guardrails
 
+## v1.2.1 (planned): Supplemental Context Artifacts
+
+**Status: planned, not implemented.** See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for scope and
+[docs/WORKFLOWS.md](WORKFLOWS.md#v121-planned-operational-sequence) for how
+these files fit into the existing `implementation` and `test-implementation`
+stages. None of the paths, fields, or states below exist in the current
+release; treat every name here as a planned candidate, subject to
+implementation-time inspection.
+
+Four candidate supplemental files, none of them native stages:
+
+| File | Producer | Consumer | Status |
+| --- | --- | --- | --- |
+| `artifacts/implementation-context-packet.txt` | Coding agent, from `my-dev-kit` implementation-role evidence | `implementation` stage, verification, judge | Optional/supplemental |
+| `reports/implementation-context-retrieval-report.txt` | Coding agent | `implementation` stage, verification | Optional/supplemental |
+| `artifacts/test-context-packet.txt` | Coding agent, from `my-dev-kit` test-implementation-role evidence and graph-diff | `test-implementation` stage, verification, judge | Optional/supplemental |
+| `reports/test-context-retrieval-report.txt` | Coding agent | `test-implementation` stage, verification | Optional/supplemental |
+
+**Producer:** the coding agent, using `my-dev-kit`-produced repository
+evidence. `my-dev-kit-orchestrator` does not generate this repository
+evidence itself.
+
+**Required or optional:** supplemental in `v1.2.1`. A newly selected
+workflow entry may require them for a new run; they are never retroactively
+required for runs created before this patch exists.
+
+**Old-run compatibility:** runs without these files continue to work exactly
+as they do today. Their absence does not fail the artifact checker for
+pre-existing runs, and `check --artifacts` / `check --all` must not treat
+old runs as invalid solely because these optional files are absent.
+
+**Provenance:** each file should record its role (`implementation` or
+`test-implementation`), the repository/index identity it was produced
+against, and creation or refresh evidence, so downstream consumers know
+whether the evidence is attributable and current.
+
+**Freshness (candidate states):** `fresh`, `stale`, or `unknown` -- exact
+names are subject to implementation. File existence alone does not prove
+freshness; a missing identity produces `unknown`, not `fresh`. Implementation
+context must be refreshed immediately before production implementation;
+test context must be refreshed after production changes. Production changes
+made after a packet's creation should make that packet `stale`.
+
+**Adequacy:** planned content for `artifacts/implementation-context-packet.txt`
+includes the selected owner, direct dependencies, callers/callees,
+validators, constants, defaults, limits, errors, serializers, schemas,
+command parsing, compatibility surfaces, closest tests, adequacy, freshness,
+warnings, and provenance. Planned content for
+`artifacts/test-context-packet.txt` includes changed production files and
+symbols, relevant graph differences, current validators/constants/errors,
+side-effect boundaries, related tests/fixtures/factories/mocks/setup, exact
+test commands, `TestStrategyPacket` responsibility mappings and unresolved
+mappings, adequacy, freshness, and provenance.
+
+**Test-responsibility mapping boundary:** `TestStrategyPacket`
+responsibilities remain owned by orchestrator workflow artifacts;
+repository-evidence mapping is produced by `my-dev-kit`. The orchestrator
+uses mapping status to decide whether test implementation may continue, but
+does not infer missing repository evidence itself. Partial mappings are not
+treated as complete; critical unmapped responsibilities are planned to block
+test implementation when this rule is enabled.
+
 ## Shared completion expectations
 
 - Artifacts are plain text.

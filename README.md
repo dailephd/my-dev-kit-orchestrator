@@ -124,6 +124,38 @@ or release workflows.
 - The mobile and autonomous-execution boundaries described above remain in
   effect.
 
+## Planned: v1.2.1 (workflow-instruction and context-refresh integration)
+
+**Status: planned, not implemented, not published.** `v1.2.1` is a bounded
+patch after the current `1.2.0` release. Nothing described in this section
+exists in the current release; see
+[docs/ROADMAP.md](docs/ROADMAP.md#v121-planned) for the full plan and
+candidate implementation batches.
+
+Planned scope:
+
+- a structured workflow catalog owned by `my-dev-kit-orchestrator`, with
+  stable IDs for workflows, stages, commands, rules, and report contracts
+- deterministic, exact-ID reference resolution (no fuzzy or semantic
+  workflow selection)
+- a `WorkflowInstructionPacket` that bounds each generated stage prompt to
+  only the instructions that stage needs, instead of every instruction
+  category the current prompt generator can produce
+- supplemental, optional implementation-context and test-context artifacts
+  consumed inside the existing `implementation` and `test-implementation`
+  stages
+- manual freshness rules (`fresh` / `stale` / `unknown`) for that
+  supplemental context, since the orchestrator has no automatic
+  `my-dev-kit` invocation or content-hash staleness tracking today
+- full compatibility with existing runs, modes, stage order, artifact
+  files, and lifecycle behavior
+
+`v1.2.1` does not add a native implementation-context or test-context
+stage, does not invoke `my-dev-kit` automatically, and does not change the
+native stage count for any workflow mode. Integration with `my-dev-kit` and
+`my-dev-kit-lab` is planned as a manual, prompt-guided step, the same way
+the existing architecture-context stage works today.
+
 ## Documentation
 
 - [Usage and command reference](docs/USAGE.md)
