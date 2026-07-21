@@ -47,11 +47,11 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-      - name: Full test suite
-        run: npm test
-
       - name: Build
         run: npm run build
+
+      - name: Full test suite
+        run: npm test
 
       - name: CLI version
         run: node dist/cli.js --version
