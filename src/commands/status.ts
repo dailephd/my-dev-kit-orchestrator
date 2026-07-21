@@ -13,6 +13,7 @@ import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
 import { readCorrectionState } from '../correctionState';
+import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -123,7 +124,7 @@ export function makeStatusCommand(): Command {
       lines.push(``);
 
       // Judge correction routing summary
-      const correctionState = readCorrectionState(meta.runFolder);
+      const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
       if (correctionState) {
         if (correctionState.routeStatus === 'pass') {
           lines.push(`Judge correction: PASS - no correction required`);
@@ -146,6 +147,44 @@ export function makeStatusCommand(): Command {
         }
         lines.push(``);
       }
+
+      // Repository context readiness (Batch 5). Read-only: recomputed in
+      // memory from whatever supplemental/raw evidence currently exists on
+      // disk; never written back, never triggers my-dev-kit.
+      const readiness = evaluateRunContextReadiness({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+      });
+      if (readiness.overallDecision === 'not-required') {
+        lines.push(`Repository context: not required`);
+      } else {
+        lines.push(`Repository context readiness: ${readiness.overallDecision}`);
+        if (readiness.implementationContext) {
+          lines.push(
+            `  Implementation context: ${readiness.implementationContext.decision} (${readiness.implementationContext.classification}, freshness: ${readiness.implementationContext.evaluatedFreshness}, adequacy: ${readiness.implementationContext.evaluatedAdequacy})`,
+          );
+          if (readiness.implementationContext.blockingIssueCodes.length > 0) {
+            lines.push(`    Blocking: ${readiness.implementationContext.blockingIssueCodes.join(', ')}`);
+          }
+        }
+        if (readiness.testContext) {
+          lines.push(
+            `  Test context: ${readiness.testContext.decision} (${readiness.testContext.classification}, freshness: ${readiness.testContext.evaluatedFreshness}, adequacy: ${readiness.testContext.evaluatedAdequacy})`,
+          );
+          if (readiness.testContext.criticalResponsibilitySummary) {
+            const s = readiness.testContext.criticalResponsibilitySummary;
+            lines.push(`    Critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} fully mapped`);
+          }
+          if (readiness.testContext.blockingIssueCodes.length > 0) {
+            lines.push(`    Blocking: ${readiness.testContext.blockingIssueCodes.join(', ')}`);
+          }
+        }
+        if (readiness.overallDecision === 'refresh-required' && readiness.recommendedNextStage) {
+          lines.push(`  Recommended next stage: ${readiness.recommendedNextStage}`);
+        }
+      }
+      lines.push(``);
 
       if (nextStage) {
         lines.push(`Next:`);

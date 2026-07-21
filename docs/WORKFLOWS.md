@@ -1,6 +1,8 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports six workflow modes in the current release.
+`my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
+choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
+syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
@@ -161,7 +163,7 @@ This mode is not for normal feature implementation. It is for inspecting an exis
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -170,10 +172,10 @@ npx my-dev-kit-orchestrator start --mode extraction \
 Windows example:
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
-  --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
-  --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
-  "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
+  --source "C:\source-repository" `
+  --target "C:\target-repository" `
+  "Extract a bounded workflow into the target repository."
 ```
 
 ### Stage order
@@ -312,7 +314,127 @@ Summarize:
 
 ---
 
-## Shared workflow rules
+## Greenfield
+
+Use `greenfield` to start a new project before useful code exists. Do not use
+it to add behavior to an established codebase; use `feature` for that work.
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+```
+
+The greenfield foundation is platform-neutral. It supports three starter
+profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. It also
+excludes security validation, release, and publishing workflows.
+
+`start` stores the request but does not resolve a profile at the CLI layer.
+Profile resolution
+(`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
+agent executes the `starter-profile` stage prompt, using the
+`preferredProfile`/`platformTarget` fields from the normalized brief. `prompt`
+itself renders static, mode-and-stage-keyed template text; profile-specific
+correctness is carried through that static wording and the artifacts a coding
+agent produces, not through a separate CLI Android/mobile mode.
+
+Android Compose is profile-guided planning support, not an Android build
+runner: the orchestrator does not run Gradle, does not require the Android
+SDK, and does not check for a connected device or emulator.
+`./gradlew connectedAndroidTest` is optional validation guidance, dependent on
+a device or emulator being available where the generated project is actually
+built -- not something the orchestrator itself runs or verifies. A generic
+"mobile" or "mobile app" request does not silently resolve to
+`android-compose`; it is reported as `unresolved`. iOS, Flutter, and React
+Native remain unsupported profiles.
+
+The 13 stages are:
+
+1. `idea-brief` - capture and normalize the project idea.
+2. `product-boundary` - define goals, users, constraints, and non-goals.
+3. `stack-decision` - record the platform-neutral stack decision.
+4. `starter-profile` - resolve a supported profile and its validation rules.
+5. `bootstrap-bundle` - assemble deterministic brief, profile, template,
+   documentation, scaffold, and validation inputs.
+6. `project-docs` - prepare and validate structured in-memory project
+   documentation content.
+7. `scaffold-plan` - define bounded files, commands, and acceptance criteria.
+8. `scaffold-implementation` - guide a coding agent through the approved
+   scaffold plan.
+9. `first-vertical-slice` - guide the smallest useful runnable behavior.
+10. `verification` - record actual implementation-level evidence.
+11. `initial-index` - hand the now-existing codebase to `my-dev-kit` for its
+    first index and context retrieval.
+12. `judge` - compare implementation and evidence with the greenfield plan.
+13. `final-report` - summarize the run, verdict, risks, and next action.
+
+Scaffold planning and implementation are prompt-guided. The CLI generates a
+bounded prompt for one stage; the user gives that prompt to a coding agent and
+saves the returned artifact. It does not invoke an LLM or autonomously write a
+project.
+
+The bootstrap runtime is deterministic and has no disk I/O or timestamps.
+Project-doc bootstrap returns structured in-memory content rather than writing
+template files. Component documentation remains empty until the brief schema
+has module or component hints.
+
+## Instruction packets and context-sensitive behavior
+
+The seven workflow definitions contain 79 native stages in total. The stage
+orders documented above are the exact `getAllWorkflows()` order and are
+unchanged by the implemented instruction and context integration.
+
+All 79 stages have stable catalog identities and deterministic
+instruction-packet sidecars. Seventy-seven stages use the generalized
+packet-backed prompt rendering path. The greenfield `scaffold-plan` and
+`scaffold-implementation` stages retain their specialized scaffold renderer;
+both exceptions still have catalog entries and sidecars, and their stage
+names, prompt filenames, artifacts, and lifecycle behavior are unchanged.
+
+### Context-sensitive direct stages
+
+Repository evidence is attached only to this exact 11-stage matrix:
+
+| Context kind | Workflow mode | Native stage |
+| --- | --- | --- |
+| Implementation context | `feature` | `implementation` |
+| Implementation context | `repair` | `implementation` |
+| Implementation context | `refactor` | `implementation` |
+| Implementation context | `harden` | `implementation` |
+| Implementation context | `extraction` | `implementation` |
+| Test context | `feature` | `test-implementation` |
+| Test context | `repair` | `test-implementation` |
+| Test context | `test` | `test-implementation` |
+| Test context | `refactor` | `test-implementation` |
+| Test context | `harden` | `test-implementation` |
+| Test context | `extraction` | `test-implementation` |
+
+There are five implementation-context stages and six test-context stages.
+Greenfield requires neither context kind and no native context stage exists.
+
+New context-sensitive runs start with templates, so a direct
+`implementation` or `test-implementation` prompt may initially be a
+refresh-only prompt. It prohibits normal production or test work and directs
+the user to refresh the required evidence. Printing a prompt reevaluates
+readiness but does not write sidecars, generate templates, or mutate run files.
+Normal work resumes after readiness passes.
+
+### Verification, judge, and correction flow
+
+Verification and judge in `feature`, `repair`, `refactor`, `harden`, and
+`extraction` review implementation and test context. In `test`, they review
+test context only. Greenfield performs no repository-context review.
+
+Blocked judge prompts use the existing `NEED_CONTEXT` verdict; no new verdict
+was added. They require a valid exact `Recommended next stage`:
+
+- recommend `implementation` first when implementation context is blocked;
+- recommend `test-implementation` when only test context is blocked;
+- recommend `test-implementation` for test mode.
+
+The recommendation overrides the older default table through existing
+correction routing. There is no correction-specific instruction-packet
+sidecar and no correction-specific context file.
+
+## Shared stage gates and completion rules
 
 - The CLI generates one prompt file per stage when a run starts.
 - `prompt` without a stage selects the first stage whose effective artifact state is not `complete`.
@@ -365,8 +487,8 @@ When an artifact is blocked:
 
 Existing runs without `artifact-state.json` continue to work:
 
-- file present → `complete`
-- file missing → `missing`
+- file present -> `complete`
+- file missing -> `missing`
 
 No migration is needed for runs created before v0.3.0.
 

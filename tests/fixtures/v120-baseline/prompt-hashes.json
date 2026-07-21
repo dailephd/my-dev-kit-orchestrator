@@ -1,0 +1,482 @@
+{
+  "baselineCommit": "983a476da2d483f76f92fef73a0b324c9ed77ea7",
+  "packageVersion": "1.2.0",
+  "generationMethod": "Rendered every mode/stage prompt via generateStagePrompt() using a fixed synthetic RunMetadata (runId, projectRoot, runFolder, and for extraction sourceRepoRoot/targetRepoRoot all held constant across generations, matching the fixture pattern already used by src/__tests__/prompt-generation.test.ts). No further normalization was required because every dynamic field was already fixed at generation time. Each entry records a sha256 hex digest of the exact prompt text for that mode/stage pair.",
+  "hashAlgorithm": "sha256",
+  "entries": [
+    {
+      "mode": "feature",
+      "stage": "request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "hash": "802edd446163b5707ae9319da398ed6ab51c4b33dfdf4d6e5aaf14a498af4653"
+    },
+    {
+      "mode": "feature",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "hash": "7bda202b313a3e452e6f936575e77ea71bd003c668f3e6e3d2d29f4b1c128c7e"
+    },
+    {
+      "mode": "feature",
+      "stage": "behavior-model",
+      "promptFile": "prompts/03-behavior-model.prompt.txt",
+      "hash": "5f80c87e33bcebab25dd326eabe205344b5cbf6eeac9a65034935efcf1a38459"
+    },
+    {
+      "mode": "feature",
+      "stage": "pseudocode-packet",
+      "promptFile": "prompts/04-pseudocode-packet.prompt.txt",
+      "hash": "9e9dd163375cacba4ee0193c991b934465c18961a18198b7885783dc7412ebc5"
+    },
+    {
+      "mode": "feature",
+      "stage": "test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "hash": "d735773079a9a68cff13b57b45b3d8207b4ed774115c98b6c124e3c2595f5499"
+    },
+    {
+      "mode": "feature",
+      "stage": "implementation",
+      "promptFile": "prompts/06-implementation.prompt.txt",
+      "hash": "7b0e4633c89c8cbd7ea7d6dda4d9a8880a7240ae9a215eb5dd2e412abc73eaca"
+    },
+    {
+      "mode": "feature",
+      "stage": "test-implementation",
+      "promptFile": "prompts/07-test-implementation.prompt.txt",
+      "hash": "1e3bdaaf28c258711c2023fafc4ac003db53c6feed33e12728be6dc870157a32"
+    },
+    {
+      "mode": "feature",
+      "stage": "verification",
+      "promptFile": "prompts/08-verification.prompt.txt",
+      "hash": "a34d898635caced7c40039cd91e1ef462330e7c0ecc5df1fabef29f05e266864"
+    },
+    {
+      "mode": "feature",
+      "stage": "judge",
+      "promptFile": "prompts/09-judge.prompt.txt",
+      "hash": "8592ea35492d951862d40840fa4e2333ae2987e70c254bd73dfbaa6b9c1ea7fd"
+    },
+    {
+      "mode": "feature",
+      "stage": "final-report",
+      "promptFile": "prompts/10-final-report.prompt.txt",
+      "hash": "99fe4a03254b6a2e40258034e5167c132300c83febd6e3f22a393602a3c9865c"
+    },
+    {
+      "mode": "repair",
+      "stage": "observed-behavior-report",
+      "promptFile": "prompts/01-observed-behavior-report.prompt.txt",
+      "hash": "ecf4e281fba46c68c8d0e4821bd674a400de2a69cd2f29593603b364557440c5"
+    },
+    {
+      "mode": "repair",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "hash": "ea123f88f757638fbaf2c6a7b8926f55da94ff01ee6cf1bc5144d17f7b75dcb1"
+    },
+    {
+      "mode": "repair",
+      "stage": "behavior-trace",
+      "promptFile": "prompts/03-behavior-trace.prompt.txt",
+      "hash": "a32c3008a34c8a127602539bc74d82dfb55981c7e2a55e89de82f6d67e2b614f"
+    },
+    {
+      "mode": "repair",
+      "stage": "divergence-report",
+      "promptFile": "prompts/04-divergence-report.prompt.txt",
+      "hash": "f12090a614f2220c521582761bf897c03d86f51c8d62b6c8935e9625ae32d40c"
+    },
+    {
+      "mode": "repair",
+      "stage": "correction-design",
+      "promptFile": "prompts/05-correction-design.prompt.txt",
+      "hash": "72c8ad39afebec072ec05b3f459f747b3736ecaa31f34567395ce2d2820967ab"
+    },
+    {
+      "mode": "repair",
+      "stage": "regression-test-strategy",
+      "promptFile": "prompts/06-regression-test-strategy.prompt.txt",
+      "hash": "778da1f5357172f85c4b64a6b5d13e8a9979cb944a4a7fc87effafe0a021f33e"
+    },
+    {
+      "mode": "repair",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "hash": "7ccc66d6f4a9a863042836300a9dc9ecf042e9bae8d1b9a945af7fad2ab5712f"
+    },
+    {
+      "mode": "repair",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "hash": "21c02d9c2111982702e039041b7a3b3c2fe066d61528f8404089ee8ad887d663"
+    },
+    {
+      "mode": "repair",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "hash": "0f4895af4a55a2b1334a1aec6bb7056b1ba8cd416c694cc88b7d748c77dcc5e2"
+    },
+    {
+      "mode": "repair",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "hash": "bdd2369832a4c66265d5bc702675235d2d85bedbbf17e534145a6694f3de1464"
+    },
+    {
+      "mode": "repair",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "hash": "19b76d6acd6f207cf81e669fbc65890864c46aa43ededaa02b8cad1e38031850"
+    },
+    {
+      "mode": "test",
+      "stage": "test-target-brief",
+      "promptFile": "prompts/01-test-target-brief.prompt.txt",
+      "hash": "34e5bd844f0793b51ed86566523f15adb65d457c28e797b4f28e8cb0b95acfb9"
+    },
+    {
+      "mode": "test",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "hash": "486b3aca95da2d564c8a3118cda89eaea3b202dbcc8897553ef1b04dd486acc0"
+    },
+    {
+      "mode": "test",
+      "stage": "behavior-reconstruction",
+      "promptFile": "prompts/03-behavior-reconstruction.prompt.txt",
+      "hash": "5118941e942dd7cfbf6131b26389ac37b2bf9091e2780b63589672b22f8f97ab"
+    },
+    {
+      "mode": "test",
+      "stage": "pseudocode-summary",
+      "promptFile": "prompts/04-pseudocode-summary.prompt.txt",
+      "hash": "f417c533f493feb608c3525c5c5604ab1f2c4b13b4f3ecff4ecde4f05f595fec"
+    },
+    {
+      "mode": "test",
+      "stage": "test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "hash": "4bfd69c9b765320ba4eb3712a8195fff0c1a39b1183474af17e6f3d583100cea"
+    },
+    {
+      "mode": "test",
+      "stage": "test-implementation",
+      "promptFile": "prompts/06-test-implementation.prompt.txt",
+      "hash": "c6fa685d4374d670f5a02626ef2f2753b66a77c0087844d272f1ad453f233bd9"
+    },
+    {
+      "mode": "test",
+      "stage": "verification",
+      "promptFile": "prompts/07-verification.prompt.txt",
+      "hash": "bd81b3d6ba6c06aad38d09f6dd8e60c1f46a543d58d2a64962038d0b9cf98ac5"
+    },
+    {
+      "mode": "test",
+      "stage": "judge",
+      "promptFile": "prompts/08-judge.prompt.txt",
+      "hash": "b6ed704ff1fcca747e25c4d21113d9a01cd60e10fdd928fe505c6d582c35e184"
+    },
+    {
+      "mode": "test",
+      "stage": "final-report",
+      "promptFile": "prompts/09-final-report.prompt.txt",
+      "hash": "739a7ab403b0a6bf63a569d0083535d937c3dada705d48b8e19b8b052bfd267b"
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-brief",
+      "promptFile": "prompts/01-refactor-brief.prompt.txt",
+      "hash": "116088bf561251b4f39eff21d75adb2908cc3c170ba12bd34c78955a368fc4ff"
+    },
+    {
+      "mode": "refactor",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "hash": "ffea79eb0035951637955490eb24af4c925f214b7f1619291acf3b15100d6bea"
+    },
+    {
+      "mode": "refactor",
+      "stage": "existing-behavior-map",
+      "promptFile": "prompts/03-existing-behavior-map.prompt.txt",
+      "hash": "c5b72c9c62e7d0369b8335a1808c7c9cd5db4b6c0302a31ec777ca14bf856a84"
+    },
+    {
+      "mode": "refactor",
+      "stage": "preserved-invariant-list",
+      "promptFile": "prompts/04-preserved-invariant-list.prompt.txt",
+      "hash": "acd32c9ead092bd3d68d7e622fa953fd2da56202c6b1952432e127256de0d35e"
+    },
+    {
+      "mode": "refactor",
+      "stage": "compatibility-test-strategy",
+      "promptFile": "prompts/05-compatibility-test-strategy.prompt.txt",
+      "hash": "2658b922e0fd9b3f9c104b2eedd18a48b6b820c0a37478b0a23b08202cfa9852"
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-pseudocode-packet",
+      "promptFile": "prompts/06-refactor-pseudocode-packet.prompt.txt",
+      "hash": "517078c5ef91d2a98e1ef1399aebc7cb88e94911e016841669a7cc9e25f76345"
+    },
+    {
+      "mode": "refactor",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "hash": "b8ecf93678fe03a252e61a1f4c62b770c834bc5fb258d152e56ed4181bbd6cb9"
+    },
+    {
+      "mode": "refactor",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "hash": "c40925048f13b3e54aabefd8148d21fe8a953390479d1cdce8134cf616618e0d"
+    },
+    {
+      "mode": "refactor",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "hash": "97ad5ec039eeeac8ee11b046a05184bc57a07b6aa453b68523731cf16b35777d"
+    },
+    {
+      "mode": "refactor",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "hash": "2a2baddd7894c6febe477f5f2212008024b7f0d4780c53589279179b18bb5659"
+    },
+    {
+      "mode": "refactor",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "hash": "d5d7c5dbfd14e14f8ad2645576daf1670750989e9059ea6714e496461686a6c5"
+    },
+    {
+      "mode": "harden",
+      "stage": "hardening-brief",
+      "promptFile": "prompts/01-hardening-brief.prompt.txt",
+      "hash": "072ba99f57de65a361c53af7e17d536da60bc5e395fad23aa101fa0a57a42f55"
+    },
+    {
+      "mode": "harden",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "hash": "93dbdec77a0181c735a836039526632cc0ba7fb357b6782ebb442d2c04b16903"
+    },
+    {
+      "mode": "harden",
+      "stage": "assumption-report",
+      "promptFile": "prompts/03-assumption-report.prompt.txt",
+      "hash": "b0a18659b283f54ccc5bc7330a1cb386c7cce05472b0fe7e2023f3e77936b507"
+    },
+    {
+      "mode": "harden",
+      "stage": "failure-mode-matrix",
+      "promptFile": "prompts/04-failure-mode-matrix.prompt.txt",
+      "hash": "da436b38ef9775228bf1c5e3eb44ce0560d791794df7997294d27e30dc3fb56c"
+    },
+    {
+      "mode": "harden",
+      "stage": "guard-pseudocode-packet",
+      "promptFile": "prompts/05-guard-pseudocode-packet.prompt.txt",
+      "hash": "6ec04fe80cbbf6bc63f5a22237bd9bc23760522192a927831bdd2b986439f90f"
+    },
+    {
+      "mode": "harden",
+      "stage": "resilience-test-strategy",
+      "promptFile": "prompts/06-resilience-test-strategy.prompt.txt",
+      "hash": "ac33fa1a3867e94b34cd3f278c64dc26ad0e4dcc616ea05e626db7869d61963d"
+    },
+    {
+      "mode": "harden",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "hash": "dce9f680434fa9f7767ef4bdaa52666101fd82970a30dda6d8f0e3ac251f99df"
+    },
+    {
+      "mode": "harden",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "hash": "ab0b8f6b7f864aa588f725c8534695902bc230a8b6d440ff05a091c918b79aec"
+    },
+    {
+      "mode": "harden",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "hash": "1968e5758e967671da97f5edb2dbd965b845d2965cfbcd9b7d31bad8f649aa01"
+    },
+    {
+      "mode": "harden",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "hash": "335a977526647f6475017423069a23927b78b2406d34fae2f70e628597c319a5"
+    },
+    {
+      "mode": "harden",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "hash": "79ee4910f7abe4565fcef6224c9996df3ceebcc054c56e6dc4fbcb043b217196"
+    },
+    {
+      "mode": "extraction",
+      "stage": "request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "hash": "43a4017ad66bdafce21bceab3ccd1484264b3f8e79cd912547d494a843f2196b"
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-architecture-context",
+      "promptFile": "prompts/02-source-architecture-context.prompt.txt",
+      "hash": "74e7f1d9e31e5be1b28d7449ecb2f1c570d54c125f3772950067814234b1dbfc"
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-workflow-map",
+      "promptFile": "prompts/03-source-workflow-map.prompt.txt",
+      "hash": "0d10a853bc36819364c4999d5416dc584fb262e70a917f4e0b5057250e52ae4b"
+    },
+    {
+      "mode": "extraction",
+      "stage": "porting-map",
+      "promptFile": "prompts/04-porting-map.prompt.txt",
+      "hash": "85ce2a5845883ba2743448f792eaac7327bc98152c129a0a20cc5346bfbacc59"
+    },
+    {
+      "mode": "extraction",
+      "stage": "golden-behavior-contract",
+      "promptFile": "prompts/05-golden-behavior-contract.prompt.txt",
+      "hash": "f6c3defe29a9a740880b3413c64e1d76dc761ab5d058eead7611b254b45c856e"
+    },
+    {
+      "mode": "extraction",
+      "stage": "target-architecture",
+      "promptFile": "prompts/06-target-architecture.prompt.txt",
+      "hash": "6348c5c013ec9288f36b44e197436ebc5bb56d64ec8afd22dc39ebc0a0d03eab"
+    },
+    {
+      "mode": "extraction",
+      "stage": "behavior-model",
+      "promptFile": "prompts/07-behavior-model.prompt.txt",
+      "hash": "8445e9bead719adcedc39cf7f02b3d222505a8328eba6e8b192b6f821029f3b1"
+    },
+    {
+      "mode": "extraction",
+      "stage": "pseudocode-packet",
+      "promptFile": "prompts/08-pseudocode-packet.prompt.txt",
+      "hash": "2ca542c17c8fd0b0ea3e4ce1f5b89d8637f43b9df0ca00118e549c1760427f3d"
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-strategy",
+      "promptFile": "prompts/09-test-strategy.prompt.txt",
+      "hash": "326f15987eadcc631070142092ce4dc5e21b50addd55d985d39b34e956b3fc41"
+    },
+    {
+      "mode": "extraction",
+      "stage": "implementation",
+      "promptFile": "prompts/10-implementation.prompt.txt",
+      "hash": "b6ae63cb9c9de4bbecbbcda29897a1a386cb9e10b515c2bce08d9c7c768151bb"
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-implementation",
+      "promptFile": "prompts/11-test-implementation.prompt.txt",
+      "hash": "b3f0f3f5050c82d45a37ee7f08f5a006a47bed45cd2872cf360b32b847ad5e97"
+    },
+    {
+      "mode": "extraction",
+      "stage": "verification",
+      "promptFile": "prompts/12-verification.prompt.txt",
+      "hash": "e657d0d39c16274e78448a29fc7b01b7ac064f5bd2b3e36b9a9fec6302092ea5"
+    },
+    {
+      "mode": "extraction",
+      "stage": "judge",
+      "promptFile": "prompts/13-judge.prompt.txt",
+      "hash": "304d45e5ba5d44576ce418d640b4328f382185d25a0ed65c18041e486ff72fb9"
+    },
+    {
+      "mode": "extraction",
+      "stage": "final-report",
+      "promptFile": "prompts/14-final-report.prompt.txt",
+      "hash": "29adef41c4bbd30f598d54a6b5ba18664dae41db1ddfbef5dfd9532b9660b243"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "idea-brief",
+      "promptFile": "prompts/01-idea-brief.prompt.txt",
+      "hash": "722adbc1e60bc713b8708349e44327b99f26873cbb11cb9ec61fa1e57d571ed3"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "product-boundary",
+      "promptFile": "prompts/02-product-boundary.prompt.txt",
+      "hash": "0c043014a0e6089d930ac673ad803238be1b33851bc9359c730e584cbe3941f3"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "stack-decision",
+      "promptFile": "prompts/03-stack-decision.prompt.txt",
+      "hash": "5371a88573fe60f81ee4e4b5f9e0667ba73d03e2135df5421d45eca54755e427"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "starter-profile",
+      "promptFile": "prompts/04-starter-profile.prompt.txt",
+      "hash": "06e34e55b194d61b32a52b7c55928ae92b61352f9c4672d63450aec8e10f191c"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "bootstrap-bundle",
+      "promptFile": "prompts/05-bootstrap-bundle.prompt.txt",
+      "hash": "c1beda645e7d733b56ce8f90b37e6307e97fe27eb3511f677cac26ccf20bc786"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "project-docs",
+      "promptFile": "prompts/06-project-docs.prompt.txt",
+      "hash": "64e6e6454e508ab82316a29f114ba4389af761bdd7093937d912835df0edfc1f"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-plan",
+      "promptFile": "prompts/07-scaffold-plan.prompt.txt",
+      "hash": "a4cbfd391c4f64ae894a1ca8ea763713dc23bb4477387ea4a28415f623823377"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-implementation",
+      "promptFile": "prompts/08-scaffold-implementation.prompt.txt",
+      "hash": "84c091c1b1f7ad6b57a0c150bfa7bc024d9d1b5431786c5fd293c1e8836fd4c4"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "first-vertical-slice",
+      "promptFile": "prompts/09-first-vertical-slice.prompt.txt",
+      "hash": "6da60709896d9cebd26249263fd82422007c375bed945e856d168a844e56d513"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "verification",
+      "promptFile": "prompts/10-verification.prompt.txt",
+      "hash": "14c8ae30a2fd87972d917fa3e9ce766b7c9cd00a7944312cb8c00e9b6cb56c2f"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "initial-index",
+      "promptFile": "prompts/11-initial-index.prompt.txt",
+      "hash": "2814c944c92b615bdb0e9fc438fd17af6aba190707c7d1868725f252136594be"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "judge",
+      "promptFile": "prompts/12-judge.prompt.txt",
+      "hash": "ce0d0647649b8e12495e2c1a3d982822c72054aea64ea3559a38e1eb6ae49f0c"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "final-report",
+      "promptFile": "prompts/13-final-report.prompt.txt",
+      "hash": "cacf521445f855b5e4cbb3e8dcfa1a957b6e6508abd5d6b0e4ed688f0e3e50b4"
+    }
+  ]
+}

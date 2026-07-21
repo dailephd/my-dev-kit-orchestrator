@@ -1,0 +1,639 @@
+{
+  "baselineCommit": "983a476da2d483f76f92fef73a0b324c9ed77ea7",
+  "description": "Batch 4 normalized prompt hashes for all 79 native stages, captured after repository-evidence rendering was added to the 11 context-sensitive stages.",
+  "entryCount": 79,
+  "entries": [
+    {
+      "mode": "extraction",
+      "stage": "behavior-model",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.behavior-model",
+      "promptFile": "prompts/07-behavior-model.prompt.txt",
+      "normalizedSha256": "eba9146fc9211b2514ecc4e226182707e982c7b4922fef338754a789c663dc3d"
+    },
+    {
+      "mode": "extraction",
+      "stage": "final-report",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.final-report",
+      "promptFile": "prompts/14-final-report.prompt.txt",
+      "normalizedSha256": "ceddd02f2f8da347221faa11a253ea1e2106e34794d490ac558bcd7c7ab4bda6"
+    },
+    {
+      "mode": "extraction",
+      "stage": "golden-behavior-contract",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.golden-behavior-contract",
+      "promptFile": "prompts/05-golden-behavior-contract.prompt.txt",
+      "normalizedSha256": "5be0c50c12341aaaed12736de9f58247308a81d6b2b9b6027ed3ae6488517ce1"
+    },
+    {
+      "mode": "extraction",
+      "stage": "implementation",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.implementation",
+      "promptFile": "prompts/10-implementation.prompt.txt",
+      "normalizedSha256": "bc34c8faea4b62d9b3f2238aba702129f333396e9d72e7136f249629159227e3"
+    },
+    {
+      "mode": "extraction",
+      "stage": "judge",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.judge",
+      "promptFile": "prompts/13-judge.prompt.txt",
+      "normalizedSha256": "d3859a41961aaccaf9933142138932c7aa7e8993d679227a02b387e7da809add"
+    },
+    {
+      "mode": "extraction",
+      "stage": "porting-map",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.porting-map",
+      "promptFile": "prompts/04-porting-map.prompt.txt",
+      "normalizedSha256": "b6794f0a02260bb3478cbfc78cf6cbe414aa212e2a0ca6b58e05bdb87655b23c"
+    },
+    {
+      "mode": "extraction",
+      "stage": "pseudocode-packet",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.pseudocode-packet",
+      "promptFile": "prompts/08-pseudocode-packet.prompt.txt",
+      "normalizedSha256": "b5c15e4288e0523233e9cc9c2789fa20d1b4831c23f2c619f7d80afce59785ed"
+    },
+    {
+      "mode": "extraction",
+      "stage": "request-brief",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "normalizedSha256": "a30ab244edf81c05870bf5722cfce496c6078e58179d19b52fe6cc2113868bcc"
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-architecture-context",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.source-architecture-context",
+      "promptFile": "prompts/02-source-architecture-context.prompt.txt",
+      "normalizedSha256": "80da5d7115c952840155272a2ff61a893734a1f4f319e2a29ee14916fbc9c805"
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-workflow-map",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.source-workflow-map",
+      "promptFile": "prompts/03-source-workflow-map.prompt.txt",
+      "normalizedSha256": "52f09ff3b3ed1791ee52a861314522dedf81c0fb35dcd94567a89c01392c9c42"
+    },
+    {
+      "mode": "extraction",
+      "stage": "target-architecture",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.target-architecture",
+      "promptFile": "prompts/06-target-architecture.prompt.txt",
+      "normalizedSha256": "eb428f3de257b2523aa2bb21452e27cc6bbec310efe5e35e70743e4fe0038587"
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-implementation",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.test-implementation",
+      "promptFile": "prompts/11-test-implementation.prompt.txt",
+      "normalizedSha256": "c8faa579d06767b4b6d925a1b0e07c99cf378fff64533ef37afb06a0e2206449"
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-strategy",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.test-strategy",
+      "promptFile": "prompts/09-test-strategy.prompt.txt",
+      "normalizedSha256": "a482b8f0edc1997dcebb7f98767d2593a664091a9edec67936424a2f0ce7edd9"
+    },
+    {
+      "mode": "extraction",
+      "stage": "verification",
+      "workflowId": "workflow.extraction",
+      "stageId": "stage.extraction.verification",
+      "promptFile": "prompts/12-verification.prompt.txt",
+      "normalizedSha256": "f0f56c4abc502fd43f5c0c73f1a0beb59a8af4cdf5ae8d2d698896f42ec109ed"
+    },
+    {
+      "mode": "feature",
+      "stage": "architecture-context",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "normalizedSha256": "1b7a419acb3c950ce250b590120cc49b9c4dc8ab7cde39cc74e73b5d9026a502"
+    },
+    {
+      "mode": "feature",
+      "stage": "behavior-model",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.behavior-model",
+      "promptFile": "prompts/03-behavior-model.prompt.txt",
+      "normalizedSha256": "973356f896ef46ef8d4d646e5a0894e99feed426b4542291cab6d4591647f4fc"
+    },
+    {
+      "mode": "feature",
+      "stage": "final-report",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.final-report",
+      "promptFile": "prompts/10-final-report.prompt.txt",
+      "normalizedSha256": "8bda5f3b9beca566ccaf1c6098080da24e9958e0ae7d26ead80929d32dceec51"
+    },
+    {
+      "mode": "feature",
+      "stage": "implementation",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.implementation",
+      "promptFile": "prompts/06-implementation.prompt.txt",
+      "normalizedSha256": "6b2683a68b35b5a49a75570b7bf70d128e2f379feee8160f1d6946e49b3ff8e0"
+    },
+    {
+      "mode": "feature",
+      "stage": "judge",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.judge",
+      "promptFile": "prompts/09-judge.prompt.txt",
+      "normalizedSha256": "26dd0684b044f82a3ef479dd4640d4fb2405d6db0112c35d64d73302247d2a24"
+    },
+    {
+      "mode": "feature",
+      "stage": "pseudocode-packet",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.pseudocode-packet",
+      "promptFile": "prompts/04-pseudocode-packet.prompt.txt",
+      "normalizedSha256": "190a59fce518573c2678821a1e832a108b81c1ff73abec728e6658fb091ac626"
+    },
+    {
+      "mode": "feature",
+      "stage": "request-brief",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "normalizedSha256": "eb68882c28f6c0df5a6bbaa22cfeadff1d6d3e7219d5c3d47a6bfb2b7cf56af6"
+    },
+    {
+      "mode": "feature",
+      "stage": "test-implementation",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.test-implementation",
+      "promptFile": "prompts/07-test-implementation.prompt.txt",
+      "normalizedSha256": "5dc96a1ff7a27ae5f544c29800cd54e59dafbddb343da24b7ddec00858200bb8"
+    },
+    {
+      "mode": "feature",
+      "stage": "test-strategy",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "normalizedSha256": "c33a0cb6ef2419cfdb489a499775255cd1c162c0b8c19f17201cd8a3b4c537ed"
+    },
+    {
+      "mode": "feature",
+      "stage": "verification",
+      "workflowId": "workflow.feature",
+      "stageId": "stage.feature.verification",
+      "promptFile": "prompts/08-verification.prompt.txt",
+      "normalizedSha256": "059aeb351c8be4f53bc827625ec5c363c2add54e3e1bcbfb56bc798d35017abd"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "bootstrap-bundle",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.bootstrap-bundle",
+      "promptFile": "prompts/05-bootstrap-bundle.prompt.txt",
+      "normalizedSha256": "b8bd5ce0b2bb745e23160271fb577b5b8aa1d290d8072288998d2e5b4371aa66"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "final-report",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.final-report",
+      "promptFile": "prompts/13-final-report.prompt.txt",
+      "normalizedSha256": "64870b975b9c1f9de1825fe775d9cc8e61a1c303820ad30be4619d3dcdf23b13"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "first-vertical-slice",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.first-vertical-slice",
+      "promptFile": "prompts/09-first-vertical-slice.prompt.txt",
+      "normalizedSha256": "040676dc9c810585721c48715bae50e805096b32d7e299d62d9117a55952ddf8"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "idea-brief",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.idea-brief",
+      "promptFile": "prompts/01-idea-brief.prompt.txt",
+      "normalizedSha256": "3b46e4404ff06755d310143884aefb8f8b04b2e74182eb5671039cf907fca483"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "initial-index",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.initial-index",
+      "promptFile": "prompts/11-initial-index.prompt.txt",
+      "normalizedSha256": "b410bba90a49223817518c0220f5db2973f6f1d998c1bbaf4976feb35751f5f6"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "judge",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.judge",
+      "promptFile": "prompts/12-judge.prompt.txt",
+      "normalizedSha256": "1c81f6b547d932766483c7e9da739da0d735357fe8321c84727b18e2472f1855"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "product-boundary",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.product-boundary",
+      "promptFile": "prompts/02-product-boundary.prompt.txt",
+      "normalizedSha256": "04e0f6fa0479ffcb240a37e3acb26c5fc2b8900c52a25b4187612b354c588693"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "project-docs",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.project-docs",
+      "promptFile": "prompts/06-project-docs.prompt.txt",
+      "normalizedSha256": "bdfa52585d2509467241afde184df78f17fef74613a2ee3ea59ceeb5a59da8ab"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-implementation",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.scaffold-implementation",
+      "promptFile": "prompts/08-scaffold-implementation.prompt.txt",
+      "normalizedSha256": "633a3a69f7c107f0e33de3ddd6966ce32a696961de55a3e3331bd4ccf9e71707"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-plan",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.scaffold-plan",
+      "promptFile": "prompts/07-scaffold-plan.prompt.txt",
+      "normalizedSha256": "93d557bc860eede1a9f33f1dc2fedf7c66a968bf5431aaea0595f22cc3e2d167"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "stack-decision",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.stack-decision",
+      "promptFile": "prompts/03-stack-decision.prompt.txt",
+      "normalizedSha256": "c76d636346045e4a0bf05e6cc3648dda00016a3d5acb3b3451e7737101bcf809"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "starter-profile",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.starter-profile",
+      "promptFile": "prompts/04-starter-profile.prompt.txt",
+      "normalizedSha256": "d9adcaf34f6f058e1cc628c045ee4648f33d6d6050421cc9d0bbd099076f7fb7"
+    },
+    {
+      "mode": "greenfield",
+      "stage": "verification",
+      "workflowId": "workflow.greenfield",
+      "stageId": "stage.greenfield.verification",
+      "promptFile": "prompts/10-verification.prompt.txt",
+      "normalizedSha256": "0464f8605f456fb01ad7a611405d3b04b5ad88fb303879016ecdef3ec666753b"
+    },
+    {
+      "mode": "harden",
+      "stage": "architecture-context",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "normalizedSha256": "3aafb9f01051d0b02d6f91df6577aee1b8fdfc834c0e13b1a562c01d6a4e2f31"
+    },
+    {
+      "mode": "harden",
+      "stage": "assumption-report",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.assumption-report",
+      "promptFile": "prompts/03-assumption-report.prompt.txt",
+      "normalizedSha256": "55709959213efdb08f4e4933af8007c4807fa5c3062df583ea4f7bb579e1c459"
+    },
+    {
+      "mode": "harden",
+      "stage": "failure-mode-matrix",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.failure-mode-matrix",
+      "promptFile": "prompts/04-failure-mode-matrix.prompt.txt",
+      "normalizedSha256": "2f0de56959a6a8749b56fc8b1cdb023d1457549e2417a2cd3801f7dafae49c13"
+    },
+    {
+      "mode": "harden",
+      "stage": "final-report",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "normalizedSha256": "14f2ba16ed95820176fd2fdf8cf4eba09d3c5fb98d11f71b32170055adaca06e"
+    },
+    {
+      "mode": "harden",
+      "stage": "guard-pseudocode-packet",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.guard-pseudocode-packet",
+      "promptFile": "prompts/05-guard-pseudocode-packet.prompt.txt",
+      "normalizedSha256": "92c5b962f45d4456ba21421f602ca486ca3e150e6da01f34683865917ecfc928"
+    },
+    {
+      "mode": "harden",
+      "stage": "hardening-brief",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.hardening-brief",
+      "promptFile": "prompts/01-hardening-brief.prompt.txt",
+      "normalizedSha256": "5f6f20d255cfd791ab6c0fa96931d21eeede07c61d0744467d31eacab0e0d036"
+    },
+    {
+      "mode": "harden",
+      "stage": "implementation",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "normalizedSha256": "90597516645b8d44176142097c294b17fc600455d6d2a25ee93b640415b6fbb0"
+    },
+    {
+      "mode": "harden",
+      "stage": "judge",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "normalizedSha256": "c599994e120dbe10ed48fe965b08f998144d01ddd29f0eaa9c7099a3e13691ca"
+    },
+    {
+      "mode": "harden",
+      "stage": "resilience-test-strategy",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.resilience-test-strategy",
+      "promptFile": "prompts/06-resilience-test-strategy.prompt.txt",
+      "normalizedSha256": "7feb7658d17c58abfd730facda461f1cd586579e5f0287d29476d4b526b031ca"
+    },
+    {
+      "mode": "harden",
+      "stage": "test-implementation",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "normalizedSha256": "ef71f0edc76186bbbb31b6df4e41544e397c73020a9b6a1df8a89072e8077bb4"
+    },
+    {
+      "mode": "harden",
+      "stage": "verification",
+      "workflowId": "workflow.harden",
+      "stageId": "stage.harden.verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "normalizedSha256": "e507096b376e9a4d0c9c6b7fefabe8a8ad90a535845b4befe7031ab3bb993eea"
+    },
+    {
+      "mode": "refactor",
+      "stage": "architecture-context",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "normalizedSha256": "cd4e05fd12e199407c1c7a61949ca563f5f8b73ae109426f9512739d3d8a53b4"
+    },
+    {
+      "mode": "refactor",
+      "stage": "compatibility-test-strategy",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.compatibility-test-strategy",
+      "promptFile": "prompts/05-compatibility-test-strategy.prompt.txt",
+      "normalizedSha256": "70e7646e904b693488a3e548c028a7f26970bf60ebef6bf8d03b789d620dae37"
+    },
+    {
+      "mode": "refactor",
+      "stage": "existing-behavior-map",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.existing-behavior-map",
+      "promptFile": "prompts/03-existing-behavior-map.prompt.txt",
+      "normalizedSha256": "2204240af922a6d52915e66b3060d7830bbadbc0261d735e5963bf7c40439726"
+    },
+    {
+      "mode": "refactor",
+      "stage": "final-report",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "normalizedSha256": "16af29bd7526baab344c77fe9d22f693c1fa7df848c9cdc7d1d956b48cfd84a8"
+    },
+    {
+      "mode": "refactor",
+      "stage": "implementation",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "normalizedSha256": "7dbbd3455669057ba732fee0c34d15cad12519496b63096c44565b09683cb098"
+    },
+    {
+      "mode": "refactor",
+      "stage": "judge",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "normalizedSha256": "df897a05d2534b6c6a83fadd73bef4cb9ce307ba0aff603ad26147327a43ca54"
+    },
+    {
+      "mode": "refactor",
+      "stage": "preserved-invariant-list",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.preserved-invariant-list",
+      "promptFile": "prompts/04-preserved-invariant-list.prompt.txt",
+      "normalizedSha256": "55af45ddb254f997bab9a439c2f95d8b6df51a3e3f444cba4a82707b8d4a50bb"
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-brief",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.refactor-brief",
+      "promptFile": "prompts/01-refactor-brief.prompt.txt",
+      "normalizedSha256": "6c3101066a8fc795c30b0b090aa49b8a00d734e5e9a38a2164425e25c3b4279b"
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-pseudocode-packet",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.refactor-pseudocode-packet",
+      "promptFile": "prompts/06-refactor-pseudocode-packet.prompt.txt",
+      "normalizedSha256": "7ac1a9bca8bf45fe9e1fcc11ddf5eef2ab04e0e1c0606f2399e0af4ce08237f1"
+    },
+    {
+      "mode": "refactor",
+      "stage": "test-implementation",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "normalizedSha256": "7a4ad48e7ca85ab33ec888970f143662459d7c76acc0c9af3e5db9a552f5d8dd"
+    },
+    {
+      "mode": "refactor",
+      "stage": "verification",
+      "workflowId": "workflow.refactor",
+      "stageId": "stage.refactor.verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "normalizedSha256": "aba5a2a6a378ac4cfb22198fe3f6f55701fc738e9d15656fd0dc91669934a3a1"
+    },
+    {
+      "mode": "repair",
+      "stage": "architecture-context",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "normalizedSha256": "a1455df0f48a94e8f7a66519839a62ce75adf352472cfff0a398f39ec7c86c42"
+    },
+    {
+      "mode": "repair",
+      "stage": "behavior-trace",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.behavior-trace",
+      "promptFile": "prompts/03-behavior-trace.prompt.txt",
+      "normalizedSha256": "9bf0bc067778c733a78b27e220393a573ec2432bf96c0391d20be0d1cc45967c"
+    },
+    {
+      "mode": "repair",
+      "stage": "correction-design",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.correction-design",
+      "promptFile": "prompts/05-correction-design.prompt.txt",
+      "normalizedSha256": "590ff7259d660afd650205b461c5dbea73bed8ee3768844357cb3508e9349b85"
+    },
+    {
+      "mode": "repair",
+      "stage": "divergence-report",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.divergence-report",
+      "promptFile": "prompts/04-divergence-report.prompt.txt",
+      "normalizedSha256": "d7713ffecd2724c1bf6d31816b2dcf3df5a071fd97d5070317b2eaff1d0f201d"
+    },
+    {
+      "mode": "repair",
+      "stage": "final-report",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "normalizedSha256": "3cb80971bc16b29e1471ce465a3db9be3245b83728730b639504a0a953601132"
+    },
+    {
+      "mode": "repair",
+      "stage": "implementation",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "normalizedSha256": "d189f5db3bc1770d121cb819668f232c4e968f3fea806586535760f0997b3565"
+    },
+    {
+      "mode": "repair",
+      "stage": "judge",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "normalizedSha256": "818339e22399de8b64ef2ffe37ab7fcae8d8ee9b337e59245e80e6714344f05f"
+    },
+    {
+      "mode": "repair",
+      "stage": "observed-behavior-report",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.observed-behavior-report",
+      "promptFile": "prompts/01-observed-behavior-report.prompt.txt",
+      "normalizedSha256": "fc02b4bbd3168f2496bb2cf1accf39fce0bd08062c66031775e1560525b463ef"
+    },
+    {
+      "mode": "repair",
+      "stage": "regression-test-strategy",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.regression-test-strategy",
+      "promptFile": "prompts/06-regression-test-strategy.prompt.txt",
+      "normalizedSha256": "e166f0605c3153d806d7bc581219eda9aaa1a6e65988f640031997da3bc79c4f"
+    },
+    {
+      "mode": "repair",
+      "stage": "test-implementation",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "normalizedSha256": "b64f853d2696cd924deec145abac4efe2dabec4cef8fd25b96db1afb519cfe4d"
+    },
+    {
+      "mode": "repair",
+      "stage": "verification",
+      "workflowId": "workflow.repair",
+      "stageId": "stage.repair.verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "normalizedSha256": "d76260735b8ea128e30067957ed86afba98e7b8447e634df0a031d6b1a144c28"
+    },
+    {
+      "mode": "test",
+      "stage": "architecture-context",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "normalizedSha256": "2d27886224b20cb515cccf8b8981d460fcdcc47efe502ecbf9253593a438d6e4"
+    },
+    {
+      "mode": "test",
+      "stage": "behavior-reconstruction",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.behavior-reconstruction",
+      "promptFile": "prompts/03-behavior-reconstruction.prompt.txt",
+      "normalizedSha256": "8f085486708d4e416c8d0ea45505c877f0c29bd8eef3be042ac9f844836b4678"
+    },
+    {
+      "mode": "test",
+      "stage": "final-report",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.final-report",
+      "promptFile": "prompts/09-final-report.prompt.txt",
+      "normalizedSha256": "4b645ac8982c20aeb56a3b2eaf3d98f2a5adc93f061898ad1e8c80335b6287a4"
+    },
+    {
+      "mode": "test",
+      "stage": "judge",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.judge",
+      "promptFile": "prompts/08-judge.prompt.txt",
+      "normalizedSha256": "ec42dae296feddf6a0883ad3a41d4b5b1a18342e2c3cad6faba8cdf68f1547e0"
+    },
+    {
+      "mode": "test",
+      "stage": "pseudocode-summary",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.pseudocode-summary",
+      "promptFile": "prompts/04-pseudocode-summary.prompt.txt",
+      "normalizedSha256": "4b3f5f9116db6c292f968136ed12b6b75568670b35f5d264f0b99474ffca7b73"
+    },
+    {
+      "mode": "test",
+      "stage": "test-implementation",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.test-implementation",
+      "promptFile": "prompts/06-test-implementation.prompt.txt",
+      "normalizedSha256": "89c21e60e1b24ca0720b0d4bbb4c2a64b002b715783ca5fe80f5e7c7b25433a8"
+    },
+    {
+      "mode": "test",
+      "stage": "test-strategy",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "normalizedSha256": "2dd49e784a1d992402b76a71f33935653cbe99bac997733206ef1b427fe579ec"
+    },
+    {
+      "mode": "test",
+      "stage": "test-target-brief",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.test-target-brief",
+      "promptFile": "prompts/01-test-target-brief.prompt.txt",
+      "normalizedSha256": "59fe9ccd4ea70f40ce49496914ea64c5541b7fe9c5e782fb67d6144008c5ceed"
+    },
+    {
+      "mode": "test",
+      "stage": "verification",
+      "workflowId": "workflow.test",
+      "stageId": "stage.test.verification",
+      "promptFile": "prompts/07-verification.prompt.txt",
+      "normalizedSha256": "6e0c08cc741eca07bfe363ce9e18479266fc1d316fa17add63bdb0289ab6cc38"
+    }
+  ]
+}

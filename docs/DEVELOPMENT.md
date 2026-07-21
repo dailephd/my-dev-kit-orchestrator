@@ -1,11 +1,20 @@
 # Development
 
+## Prerequisites
+
+The package does not declare a Node.js version range in `package.json`. The
+ordinary validation workflow runs on Node.js 24, while the pre-release matrix
+uses Node.js 26 to check the latest supported runtime before publication. Both
+workflows cover `ubuntu-latest`, `windows-latest`, and `macos-15`. Local
+compatibility validation used Node.js 24.11.0. The completed feature branch also
+has live cross-platform CI evidence from its validation checkpoint.
+
 ## Local setup
 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Build the CLI:
@@ -22,16 +31,35 @@ node dist/cli.js --help
 
 ## Common development commands
 
+Documentation checks:
+
+```bash
+npm run docs:check
+npm run lint:docs
+```
+
 Typecheck:
 
 ```bash
-npx tsc --noEmit
+npm run typecheck
 ```
 
 Run tests:
 
 ```bash
-npm test
+npm test -- --runInBand
+```
+
+Run security-focused package checks:
+
+```bash
+npm run test:security
+```
+
+Run the greenfield suites:
+
+```bash
+npx jest tests/greenfield --silent
 ```
 
 Build:
@@ -46,13 +74,11 @@ Lint:
 npm run lint
 ```
 
-## Branch expectations
+## Contribution boundaries
 
-For `v0.1.0` work:
-
-- start from `feature/v0.1.0-workflow-shell` unless a task says otherwise
-- use professional branch names that describe the task clearly
-- merge task branches back into `feature/v0.1.0-workflow-shell`
+- start from the branch named in the task or release prompt
+- use branch names that describe the task clearly
+- keep documentation-only work scoped to documentation and validation changes
 - do not push, tag, or publish unless explicitly asked
 
 ## Source layout
@@ -60,7 +86,8 @@ For `v0.1.0` work:
 Important implementation files:
 
 - `src/program.ts`: root CLI program, command registration, version
-- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`, `mark`, `check`
+- `src/commands/`: `init`, `start`, `status`, `prompt`, `list`, `mark`, `check`,
+  and `export`
 - `src/workflows.ts`: workflow stage order and artifact mappings
 - `src/promptGenerator.ts`: stage-specific prompt text generation
 - `src/run.ts`: run creation and run metadata handling
@@ -74,15 +101,104 @@ Important implementation files:
 - `src/judgeParser.ts`: judge verdict parser, `JUDGE_VERDICTS`, `parseJudgeReport` (v0.6.0)
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
-- `src/__tests__/`: Jest coverage for CLI behavior and workflow logic
+- `src/greenfield/`: brief, profile, bootstrap, scaffold, and greenfield-mode
+  implementation
+- `src/__tests__/`: Jest coverage for shared CLI behavior and workflow logic
+- `tests/greenfield/`: greenfield and starter-profile regression suites
+- `docs/`: public documentation and release guidance
+- `dist/`: generated build output; do not edit or commit it
+- `.my-dev-kit-orchestrator/` and `.my-dev-kit/`: local generated state; keep
+  both untracked
 
 ## Development notes
 
-- Keep the command surface small. `v0.1.0` is a workflow shell, not a large automation platform.
-- Do not add direct LLM execution or automatic `my-dev-kit` execution in `v0.1.0`.
+- Keep the command surface small. The project is a workflow shell, not a large automation platform.
+- Do not add direct LLM execution or automatic `my-dev-kit` execution.
 - Prefer edits that preserve the existing workflow architecture instead of introducing parallel systems.
 - Keep run folders local and untracked.
-- When behavior changes, keep docs aligned with the real CLI output and stage definitions.
+- When behavior changes, keep docs aligned with real CLI output, stage definitions, artifact paths, and package metadata.
+- Run `npm run docs:check` when changing user-facing documentation.
+
+## Instruction and context source ownership
+
+- `src/workflows.ts`: workflow stage order and prompt/artifact filenames
+- `src/instructions/catalog.ts`, `catalogIds.ts`, and `catalogTypes.ts`:
+  instruction entries, stable IDs, and schema/version constants
+- `src/instructions/catalogValidation.ts`: exact catalog validation
+- `src/instructions/catalogResolver.ts`: exact-ID dependency resolution
+- `src/instructions/workflowInstructionPacket.ts`: packet assembly
+- `src/instructions/workflowInstructionPacketSerialization.ts`: canonical
+  packet serialization and sidecar path/content
+- `src/instructions/workflowInstructionPacketRenderer.ts`: generalized packet
+  rendering
+- `src/instructions/taskState.ts`: in-memory `TaskState`
+- `src/instructions/stageContextBundle.ts`: in-memory `StageContextBundle`
+- `src/instructions/supplementalContextTypes.ts` and
+  `supplementalContextContracts.ts`: supplemental schemas and contracts
+- `src/instructions/supplementalContextParser.ts`: bounded document parser
+- `src/instructions/stageRepositoryEvidenceRequirements.ts`: exact 11-stage
+  requirement registry and four fixed paths
+- `src/instructions/repositoryEvidenceReference.ts`: structural evidence
+  reference assembly
+- `src/instructions/myDevKitEvidenceSummary.ts`: raw capsule/audit projection
+- `src/instructions/testResponsibilityCriticality.ts`: criticality and mapping
+  parsing
+- `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
+- `src/instructions/runContextReadiness.ts`: mode-level aggregation and
+  deterministic recommendation
+- `src/promptGenerator.ts`: packet/context prompt integration and refresh-only
+  rendering
+- `src/commands/status.ts`, `check.ts`, and `export.ts`: readiness presentation,
+  validation, and portable summary
+
+## Validation and compatibility fixtures
+
+Run the release-facing validation set from a clean dependency installation:
+
+```bash
+npm ci
+npm run typecheck
+npm test -- --runInBand
+npm run build
+npm run docs:check
+npm run smoke:cli
+npm run lint
+npm run lint:docs
+npm run test:security
+node dist/cli.js --version
+node dist/cli.js --help
+npm pack --dry-run
+git diff --check
+```
+
+The compatibility manifest is derived from runtime workflow, CLI, schema, and
+verdict owners. The v1.2.0 baseline inventory and prompt hashes protect
+unchanged contracts; v1.2.1 prompt hashes protect intentional packet/context
+structure. Ready-context helpers, legacy-run fixtures, and deterministic
+generators cover readiness and compatibility. Two fixture-generator tests are
+intentionally skipped during an ordinary suite and run only when regenerating
+fixtures. Tests and fixtures are excluded from npm package output because the
+package `files` policy includes only `dist`.
+
+### Manual my-dev-kit integration caveat
+
+The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
+and run manually. During the initial integration investigation, the published package labeled `my-dev-kit` 1.10.2 reported a mismatched CLI identity and
+lacked the verified role-aware context command. Fixtures and implementation
+therefore use the verified 1.10.2 source contract. This remains an upstream
+integration risk and no local worktree path is part of the public contract.
+
+### Known instruction and context limitations
+
+- `scaffold-plan` and `scaffold-implementation` retain the specialized
+  greenfield scaffold renderer.
+- Extraction command examples are not fully promoted into command catalog
+  entries.
+- Extraction has no generic `architecture-context` stage; exact
+  `NEED_CONTEXT` recommendations are safe, but generic non-`NEED_CONTEXT`
+  architecture routing remains a pre-existing edge case.
+- There is no automatic retrieval, status JSON option, shared schema package,
+  or `my-dev-kit-lab` runtime integration.
 
 ## Extraction mode implementation (v0.2.1)
 
@@ -110,7 +226,7 @@ Important implementation files:
 - `VERDICT_ROUTE_TABLE`: maps non-PASS verdicts to default correction stages
 - `routeJudgeVerdict(parsed, options)`: pure routing function, no file I/O
 - `parseAndRoute(content, options)`: convenience wrapper
-- conflict detection: recommended stage vs. routing table → warning in normal mode, `strictFail` + error in strict mode
+- conflict detection: recommended stage vs. routing table -> warning in normal mode, `strictFail` + error in strict mode
 - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status
 
 `src/correctionState.ts` wires the parser and router to the run folder:
@@ -174,11 +290,100 @@ To add required sections for a new artifact kind:
 
 `status` command reads `artifact-check-results.json` via `readCheckResults` to render the content check summary line.
 
+## Adding a workflow mode
+
+Greenfield demonstrates the expected extension pattern. A new mode extends
+the existing shared registries instead of introducing a parallel workflow or
+artifact subsystem:
+
+- `VALID_MODES` in `src/types.ts`
+- `WORKFLOW_DEFINITIONS` and `ARTIFACT_MAP` in `src/workflows.ts`
+- `STAGE_TO_KIND` and `SECTION_REGISTRY` in `src/artifactChecker.ts`
+
+Mode-local constants may be spread into those registries, as greenfield does,
+but the shared registries remain authoritative. Reuse existing stage names
+and artifact paths when the stage semantics are shared.
+
+Tests for a mode addition should cover its exact stage order, artifact paths,
+required artifact sections, prompt generation, lifecycle progression,
+`start`, `prompt`, `status`, and `list`. Also cover `check --artifacts`,
+`check --all`, and `export`, plus regression coverage for existing modes.
+
+The repository currently has both `src/__tests__/*.test.ts` and
+`tests/**/*.spec.ts`. This convention split is a maintenance follow-up; do not
+move tests merely while adding a mode.
+
+## Adding a greenfield profile
+
+Android Compose (`src/greenfield/profiles/androidComposeProfile.ts`)
+demonstrates the expected extension pattern for a new greenfield starter
+profile:
+
+- register the new profile id in `GreenfieldProfileId`
+  (`src/greenfield/profiles/profileTypes.ts`)
+- provide every required `GreenfieldProfile` field, including the two command
+  fields:
+  - `setupCommands: GreenfieldProfileCommand[]` -- setup guidance (may be
+    `[]` if the toolchain needs no separate install step, as with Gradle's
+    wrapper); never executed by the orchestrator
+  - `validationCommands: GreenfieldProfileCommand[]` -- validation guidance,
+    each entry `{ command, purpose, required, environmentNotes? }`; mark a
+    command `required: false` with an `environmentNotes` string when it
+    depends on something the orchestrator cannot verify (e.g. a connected
+    device or emulator)
+- register the profile in `SUPPORTED_PROFILES`
+  (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
+- add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the
+  profile has reasonable alternate names -- do not add fuzzy or partial-word
+  matching; a near-miss (e.g. a prefix or substring of a real alias) must not
+  resolve to the new profile
+- do not silently select the new profile from an ambiguous, technology-
+  unspecified signal (e.g. a bare "mobile" request); prefer returning
+  `'unresolved'` and require an explicit request or a recognized alias
+- keep any genuinely unsupported adjacent platform (e.g. a competing
+  framework) unaliased so it continues to fall through to `'unsupported'`
+
+If the new profile's content legitimately mentions a term that would
+otherwise look like a violation for other profiles (as Android/Jetpack/Kotlin
+terms do for `android-compose`), make the check profile-conditional rather
+than removing it globally:
+
+- `buildBootstrapBundle.ts`'s validation-rules builder
+- `validateBootstrapDocs()` (`src/greenfield/bootstrap/validateBootstrapDocs.ts`)
+
+Required tests for a new profile: profile-shape tests (required fields,
+command fields, unsupported conditions), profile-resolution tests (explicit
+id, each alias, near-miss non-matches, regression for existing profiles),
+bootstrap-bundle tests (profile-conditional validation rules), project-docs
+bootstrap tests (profile-aware `validateBootstrapDocs` behavior), and
+scaffold-plan tests (the new profile's `setupCommands`/`validationCommands`
+flow through unchanged, with no hardcoded assumption from another profile
+leaking in).
+
+Do not hardcode a profile list in documentation or in
+`scripts/check-docs-consistency.mjs`; extract supported profile ids from
+`SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts` the same way modes are
+extracted from `VALID_MODES` and greenfield stages from
+`GREENFIELD_STAGE_NAMES`, so docs and the docs-consistency gate cannot drift
+from source when a profile is added or removed.
+
 ## Verification expectations
 
 - Confirm user-facing documentation matches the shipped command behavior.
 - Verify changes with the narrowest relevant checks first, then broader ones when needed.
 - Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
 - Run `npm run lint` when changing TypeScript files.
-- Keep the GitHub Actions OS matrix on `ubuntu-latest`, `windows-latest`, and `macos-latest` for release-facing CI work.
+- Keep ordinary validation on Node.js 24 and the pre-release matrix on Node.js 26 across `ubuntu-latest`, `windows-latest`, and `macos-15`.
 - Report skipped checks and unresolved risks clearly in release work.
+
+## Validation matrix
+
+| Change | Required checks |
+| --- | --- |
+| Documentation only | `npm run docs:check`, `npm run lint:docs` |
+| CLI behavior | Targeted tests, `npx tsc --noEmit`, `npm test`, `npm run build`, CLI smoke |
+| Artifact or check behavior | Targeted checker tests plus the full CLI validation set |
+| Greenfield profile | `npx jest tests/greenfield --silent` plus the full validation set |
+
+Keep contributor validation separate from package publication. Do not bump,
+tag, publish, or create a release as part of an ordinary development change.

@@ -1,5 +1,6 @@
 import { createProgram } from '../program';
 import { VALID_MODES, isValidMode } from '../types';
+import packageJson from '../../package.json';
 
 describe('CLI program', () => {
   it('has the correct name', () => {
@@ -7,9 +8,9 @@ describe('CLI program', () => {
     expect(program.name()).toBe('my-dev-kit-orchestrator');
   });
 
-  it('has version 1.0.0', () => {
+  it('has the package version', () => {
     const program = createProgram();
-    expect(program.version()).toBe('1.0.0');
+    expect(program.version()).toBe(packageJson.version);
   });
 
   it('registers init command', () => {
@@ -124,12 +125,16 @@ describe('mode validation', () => {
     expect(isValidMode('feat')).toBe(false);
   });
 
-  it('VALID_MODES contains exactly six modes', () => {
-    expect(VALID_MODES).toHaveLength(6);
+  it('VALID_MODES contains exactly seven modes', () => {
+    expect(VALID_MODES).toHaveLength(7);
   });
 
   it('accepts extraction', () => {
     expect(isValidMode('extraction')).toBe(true);
+  });
+
+  it('accepts greenfield', () => {
+    expect(isValidMode('greenfield')).toBe(true);
   });
 });
 

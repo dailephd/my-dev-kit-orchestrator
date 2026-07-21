@@ -1,5 +1,110 @@
 # Release Checklist
 
+Use this checklist for release-readiness work. This file is a checklist
+template, not evidence that the listed steps have already run. The latest
+published package is `v1.2.1`; older releases remain historical baselines.
+
+## Current release baseline
+
+- [ ] package metadata and `node dist/cli.js --version` match the target release
+- [ ] docs describe seven modes and list `greenfield` as the seventh
+- [ ] docs describe 79 native stages and preserve exact stage order
+- [ ] docs describe the 13 greenfield stages and implemented artifact paths
+- [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
+- [ ] docs identify latest-published `v1.2.1` and scope older versions historically
+
+## Required local validation
+
+- [ ] `npm run docs:check`
+- [ ] `npm run lint:docs`
+- [ ] `npm run lint`
+- [ ] `npm run test:security`
+- [ ] `npx jest tests/documentationConsistency.test.ts --runInBand`
+- [ ] `npm run typecheck`
+- [ ] `npm test -- --runInBand`
+- [ ] `npm run build`
+- [ ] `node dist/cli.js --version`
+- [ ] `node dist/cli.js --help`
+- [ ] `npm pack --dry-run`
+- [ ] `git diff --check`
+
+## Documentation and context-readiness audit
+
+- [ ] if a local project plan exists, confirm it is untracked, ignored, absent
+  from package output, and not linked as public documentation
+- [ ] public technical documents contain no detailed planning chapters,
+  candidate architecture, implementation-batch tracking, or contradictory
+  current-version status
+- [ ] required headings, forbidden headings, and major heading order satisfy
+  the preservation manifest
+- [ ] all eight CLI commands and seven workflow modes match built `--help`
+- [ ] all 79 native stages have catalog identities and instruction-packet sidecars
+- [ ] the two specialized greenfield scaffold-renderer exceptions are disclosed
+- [ ] the exact 11 context-sensitive direct stages are documented (five
+  implementation context and six test context)
+- [ ] all instruction/context schemas are documented as `1.0.0`
+- [ ] all four fixed supplemental context paths match source constants
+- [ ] docs state that repository retrieval is manual and use
+  `<MY_DEV_KIT_CLI>` rather than guaranteeing a mismatched published executable
+- [ ] docs state that supplemental context files and sidecars are not native
+  lifecycle artifacts
+- [ ] docs state that `TaskState` and `StageContextBundle` are not persisted
+- [ ] docs state that `status` has no JSON option
+- [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
+  exact `Recommended next stage` policy are documented
+- [ ] the configured Node.js 24 validation matrix and Node.js 26 pre-release
+  matrix are described separately from local Node.js 24.11.0 evidence
+
+## Temporary-directory smoke
+
+- [ ] run `init`
+- [ ] run `start --mode greenfield "<project idea>"`
+- [ ] run `prompt`
+- [ ] run `status`
+- [ ] run `list`
+- [ ] run `check --artifacts` and record expected missing-artifact findings
+- [ ] run `check --all` and record expected missing-artifact findings
+- [ ] run `export --out greenfield-export.txt`
+- [ ] run `export --out ../unsafe-export.txt` and confirm rejection
+- [ ] remove the temporary directory
+
+## v1.2.0 Android Compose greenfield smoke
+
+Repeat the temporary-directory smoke above with an explicit Android Compose
+request, in a separate temporary directory:
+
+- [ ] run `init`
+- [ ] run `start --mode greenfield "Create an Android Compose habit tracker app"`
+- [ ] run `prompt` (confirm the run stays `mode: greenfield`, never a separate mobile/Android mode)
+- [ ] run `status`
+- [ ] run `list`
+- [ ] run `check --artifacts` and record expected missing-artifact findings
+- [ ] run `check --all` and record expected missing-artifact findings
+- [ ] run `export --out android-compose-export.txt`
+- [ ] run `export --out ../unsafe-export.txt` and confirm rejection
+- [ ] confirm no Gradle command was executed and no Android SDK was required anywhere in this smoke pass
+- [ ] remove the temporary directory
+
+## Cross-platform and security gates
+
+- [ ] ordinary validation covers `windows-latest`, `macos-15`, and
+  `ubuntu-latest` with Node.js 24
+- [ ] pre-release validation covers the same operating systems with Node.js 26
+- [ ] after the branch is pushed, record the actual live CI result separately
+- [ ] `my-dev-kit-lab` self-validation passes
+- [ ] `my-dev-kit-lab` target security validation passes
+
+## Scope and limitations audit
+
+- [ ] Android Compose support is profile-guided planning only: the orchestrator does not run Gradle and does not require the Android SDK
+- [ ] generic mobile requests remain ambiguous/unresolved rather than silently selecting a profile; iOS, Flutter, and React Native remain unsupported; no mobile mode exists
+- [ ] shared artifact checking is used; no `validateGreenfieldArtifacts.ts` exists
+- [ ] component docs remain empty until brief schema module/component hints exist
+- [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
+- [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
+- [ ] release notes disclose manual `my-dev-kit` execution and the published
+  1.10.2 CLI mismatch risk
+
 ## v1.0.0 checklist
 
 ### Artifact contract check verification
@@ -37,7 +142,7 @@
 - [ ] `export --out <existing>` exits 1 with message about --overwrite
 - [ ] `export --out <existing> --overwrite` succeeds
 - [ ] export refuses symlink output path
-- [ ] export refuses path traversal (..) in output path
+- [ ] export traversal-guard gap is tracked as a separate cross-mode follow-up
 - [ ] export text contains no em dash, en dash, smart quotes, or ellipsis
 
 ### Version verification
@@ -332,7 +437,7 @@ Expected: no matches.
 ### Lifecycle model verification
 
 - [ ] `artifact-state.json` is created in the run folder on first `mark` command
-- [ ] `artifact-state.json` absent → file-existence-only fallback works (backward compat)
+- [ ] `artifact-state.json` absent -> file-existence-only fallback works (backward compat)
 - [ ] `mark <artifact> --state blocked --reason "..."` writes state file
 - [ ] `mark <artifact> --state incomplete --reason "..."` writes state file
 - [ ] `mark <artifact> --state complete` writes state file (no reason required)

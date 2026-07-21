@@ -19,6 +19,8 @@ import {
   StageGateViolation,
 } from '../contractChecker';
 import { readCorrectionState } from '../correctionState';
+import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
+import { ContextReadinessResult } from '../instructions/contextReadiness';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -122,6 +124,43 @@ function formatGateViolation(v: StageGateViolation): string[] {
     `  [fail] ${v.gateName}: ${v.message}`,
     `         Fix: ${v.suggestedFix}`,
   ];
+}
+
+function formatContextReadinessResult(kind: string, result: ContextReadinessResult): string[] {
+  const lines = [`  [${result.decision === 'ready' ? 'pass' : 'fail'}] ${kind} context: ${result.classification}`];
+  for (const issue of result.issues.filter((i) => i.severity === 'error')) {
+    lines.push(`         ${issue.code}: ${issue.message}`);
+  }
+  return lines;
+}
+
+// Batch 5: evaluates repository-context readiness once per run (not once
+// per stage, so the same context-kind problem is reported a single time --
+// see AGENTS.txt Batch 5 section 20.3) and formats it deterministically for
+// both `check` and `check --all`. Read-only: never writes context files,
+// never marks a stage blocked, never executes my-dev-kit.
+function formatContextReadinessCheck(summary: RunContextReadinessSummary): { lines: string[]; hasFail: boolean } {
+  const lines: string[] = ['=== Repository context readiness ==='];
+  if (summary.overallDecision === 'not-required') {
+    lines.push('  not required for this mode');
+    lines.push('');
+    return { lines, hasFail: false };
+  }
+  let hasFail = false;
+  if (summary.implementationContext) {
+    if (summary.implementationContext.decision === 'refresh-required') hasFail = true;
+    lines.push(...formatContextReadinessResult('implementation', summary.implementationContext));
+  }
+  if (summary.testContext) {
+    if (summary.testContext.decision === 'refresh-required') hasFail = true;
+    lines.push(...formatContextReadinessResult('test', summary.testContext));
+  }
+  if (summary.overallDecision === 'refresh-required') {
+    lines.push(`  Recommended next stage: ${summary.recommendedNextStage ?? '(none)'}`);
+    lines.push(`  Affected stages: ${summary.affectedStages.join(', ')}`);
+  }
+  lines.push('');
+  return { lines, hasFail };
 }
 
 function resolveArtifactTarget(
@@ -251,7 +290,15 @@ export function makeCheckCommand(): Command {
           const dmTraceResult = hasDesignMap ? checkDesignMapTrace(meta.runFolder) : null;
 
           // Correction routing check
-          const correctionState = readCorrectionState(meta.runFolder);
+          const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
+
+          // Repository context readiness check
+          const contextReadiness = evaluateRunContextReadiness({
+            mode: meta.mode,
+            runFolder: meta.runFolder,
+            workflowStageNames: meta.stages.map((s) => s.name),
+          });
+          const contextCheck = formatContextReadinessCheck(contextReadiness);
 
           const lines: string[] = [`Full check for run: ${meta.runId}`, ``];
 
@@ -325,6 +372,9 @@ export function makeCheckCommand(): Command {
           }
           lines.push('');
 
+          // Repository context readiness
+          lines.push(...contextCheck.lines);
+
           // Persist trace results
           try {
             writeTraceCheckResults(meta.runFolder, {
@@ -354,6 +404,7 @@ export function makeCheckCommand(): Command {
             `  Stage gates: ${gateViolations.length} violation${gateViolations.length === 1 ? '' : 's'}`,
           );
           lines.push(...summarizeTrace(traceResults));
+          lines.push(`  Repository context: ${contextCheck.hasFail ? 'fail' : 'pass'}`);
 
           console.log(lines.join('\n'));
 
@@ -370,7 +421,7 @@ export function makeCheckCommand(): Command {
           );
           const hasGateViolations = gateViolations.length > 0;
 
-          const hasFail = anyContractFail || anyTraceFail || hasGateViolations;
+          const hasFail = anyContractFail || anyTraceFail || hasGateViolations || contextCheck.hasFail;
           const hasWarn = anyContractWarn || anyTraceWarn;
 
           if (hasFail || (options.strict && hasWarn)) {
@@ -500,6 +551,21 @@ export function makeCheckCommand(): Command {
           promptResults.push(...checkAllPrompts(meta));
         }
 
+        // Repository context readiness applies only to the full (no
+        // --artifact/--prompts filter) invocation of the default mode --
+        // matching the existing convention that --artifact/--prompts narrow
+        // to exactly what was requested.
+        const runContextCheck =
+          !options.artifact && !options.prompts
+            ? formatContextReadinessCheck(
+                evaluateRunContextReadiness({
+                  mode: meta.mode,
+                  runFolder: meta.runFolder,
+                  workflowStageNames: meta.stages.map((s) => s.name),
+                }),
+              )
+            : null;
+
         const lines: string[] = [`Check results for run: ${meta.runId}`, ``];
 
         if (artifactResults.length > 0) {
@@ -516,6 +582,10 @@ export function makeCheckCommand(): Command {
             lines.push(...formatPromptResult(result));
           }
           lines.push('');
+        }
+
+        if (runContextCheck) {
+          lines.push(...runContextCheck.lines);
         }
 
         lines.push(...summarize(artifactResults, promptResults));
@@ -546,7 +616,7 @@ export function makeCheckCommand(): Command {
           r.issues.some((i) => i.severity === 'warn'),
         );
 
-        const hasFail = anyArtifactFail || anyPromptFail;
+        const hasFail = anyArtifactFail || anyPromptFail || Boolean(runContextCheck?.hasFail);
         const hasWarn = anyArtifactWarn || anyPromptWarn;
 
         if (hasFail || (options.strict && hasWarn)) {

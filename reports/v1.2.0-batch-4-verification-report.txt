@@ -1,0 +1,158 @@
+Artifact: V120Batch4VerificationReport
+Batch: v1.2.0 Batch 4
+
+COMMANDS RUN
+
+1. command: npx jest tests/greenfield --silent
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: 16 test suites, 248 tests, all passed on first run (no stale-assumption regressions this batch, since no pre-existing test asserted the exact wording that was corrected).
+
+2. command: npx tsc --noEmit
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: no output, no type errors.
+
+3. command: npm test
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: 44 test suites, 1123 tests, all passed.
+
+4. command: npm run build
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: tsc compiled cleanly to dist/.
+
+5. command: npm run lint
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: eslint src --ext .ts, no output (0 issues).
+
+6. command: npm run lint:docs
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: markdownlint-cli2, 9 files linted, 0 errors (no doc content changed in this batch).
+
+7. command: npm run test:security
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: "SECURITY_CONTRACT_PASS: package metadata and tarball contents are safe".
+
+OPTIONAL/INFORMATIONAL COMMANDS
+
+8. command: npm run docs:check
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass (informational, per section 15.2)
+   output summary: "DOCS_CHECK_PASS: @dailephd/my-dev-kit-orchestrator@1.1.0; 7 modes; 13 greenfield stages; 13 documented greenfield/shared artifact paths" -- passes because no user-facing doc content changed in this batch. No script repair was needed (scripts/check-docs-consistency.mjs was not touched); the source-derived profile-list refactor remains deferred to Batch 5 as planned.
+
+9. command: npm pack --dry-run
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: 198 files, 116.4 kB packed / 569.8 kB unpacked, version 1.1.0 (unchanged; no version bump in this batch). No unexpected files included.
+
+CLI SMOKE COMMANDS (after build, in a dedicated temp directory outside the repository)
+
+Working directory for all smoke commands below: the repository root (Z:\Users\newuser\Projects\my-dev-kit-orchestrator), invoking the built CLI via its absolute path against a separate temp project root (--root <tmpdir>). Node version: v24.11.0 throughout.
+
+10. command: node dist/cli.js --version
+    exit code: 0
+    status: pass
+    output summary: "1.1.0"
+
+11. command: node dist/cli.js --help
+    exit code: 0
+    status: pass
+    output summary: printed the existing command list, unchanged.
+
+12. command: node dist/cli.js start --mode greenfield --root <tmp> "Create an Android Compose habit tracker app"
+    exit code: 0
+    status: pass
+    output summary: "Created workflow run: ...\nMode:\ngreenfield\nNext:\n  my-dev-kit-orchestrator prompt"
+
+13. command: node dist/cli.js prompt --root <tmp>
+    exit code: 0
+    status: pass
+    output summary: printed the idea-brief stage prompt, including the corrected stop condition "do not silently choose a mobile/Android profile as a default when the request is ambiguous...".
+
+14. command: node dist/cli.js status --root <tmp>
+    exit code: 0
+    status: pass
+    output summary: printed run identity, mode: greenfield, current stage idea-brief, 0/13 present artifacts, all 13 stage names listed.
+
+15. command: node dist/cli.js list --root <tmp>
+    exit code: 0
+    status: pass
+    output summary: printed the one run, Mode: greenfield, Total: 1 run(s).
+
+16. command: node dist/cli.js check --artifacts --root <tmp>
+    exit code: 1 (expected)
+    status: pass (expected nonzero -- see "Expected nonzero exits" below)
+    output summary: 0 pass, 13 fail, 0 warn -- every stage's artifact is correctly reported missing for a fresh run.
+
+17. command: node dist/cli.js check --all --root <tmp>
+    exit code: 1 (expected)
+    status: pass (expected nonzero -- see below)
+    output summary: "=== Artifact contracts ===" (0 pass/13 fail), "=== Stage gates ===" (all pass), "=== Trace checks ===" (no issues), "=== Correction routing ===" (no judge report), "=== Summary ===".
+
+18. command: node dist/cli.js export --root <tmp> --out <tmp>/android-compose-export.txt
+    exit code: 0
+    status: pass
+    output summary: "Export written to: <tmp>/android-compose-export.txt"; directory listing confirmed exactly one new file created (android-compose-export.txt) alongside the pre-existing .my-dev-kit-orchestrator folder.
+
+19. command: node dist/cli.js export --root <tmp> --out ../unsafe-export.txt
+    exit code: 1 (expected)
+    status: pass (expected nonzero -- see below)
+    output summary: "Error: output path rejected: output path contains path traversal (..)"; confirmed via directory listing of the parent of <tmp> that no file named unsafe-export.txt was created there.
+
+Temp directory removed after validation (rm -rf).
+
+EXPECTED NONZERO EXITS
+- command: check --artifacts --root <tmp> (fresh run)
+  expected reason: all 13 stage artifacts are missing on a fresh run, matching existing, documented v1.1.0 check semantics (unchanged by this batch); the CLI is designed to fail loudly rather than silently pass an incomplete run.
+  confirmed yes: yes, both via jest (`greenfieldCliRegression.spec.ts`'s pre-existing test and this batch's new equivalent) and the real CLI smoke run.
+- command: check --all --root <tmp> (fresh run)
+  expected reason: same as above (the artifact-contracts section drives the same 0/13 result within the combined report).
+  confirmed yes: yes, same evidence.
+- command: export --out ../unsafe-export.txt
+  expected reason: path-traversal rejection is deliberate, pre-existing security behavior (src/commands/export.ts's isSafePath), unchanged by this batch; the nonzero exit is the correct, desired outcome, not a failure.
+  confirmed yes: yes, both via jest and the real CLI smoke run, with explicit confirmation that no file was written outside the temp directory in either case.
+
+EXPLICIT NON-RUN COMMANDS
+- Gradle / ./gradlew / gradlew.bat: never invoked, anywhere, in this batch's test code, smoke commands, or source changes.
+- Android SDK commands: not invoked; not installed in this environment.
+- emulator commands: not invoked.
+- connectedAndroidTest: referenced only as fixture/prompt string data; never executed.
+
+SKIPPED CHECKS
+- none. Every command listed in section 21 of this batch's instructions was run, including the optional docs:check and npm pack --dry-run.
+
+FAILED CHECKS
+- none. All required and optional commands passed on the first run; no stale-assumption regressions occurred in this batch (unlike Batches 2 and 3), since the wording corrections did not intersect with any existing test's literal assertions.
+
+REMAINING VERIFICATION GAPS
+- gap: no empirical check of my-dev-kit's Kotlin-source indexing support was performed (optional per section 14, explicitly not required).
+  next batch impact: unchanged from Batches 1-3's framing; remains a deferred empirical item for a later batch or pre-release check, not a blocker for v1.2.0 Batch 4/5.
+- gap: docs:check's profile-list check is still not self-updating (still hardcoded to a 2-profile sentence match against unchanged doc content).
+  next batch impact: unchanged from Batch 2/3's assessment; Batch 5 must refactor it per artifacts/v1.2.0-documentation-compatibility-plan.txt.
+- gap: no test exercises what happens if a coding agent actually follows the corrected prompts to produce a real android-compose starter-profile.json/scaffold-plan.txt (see test report "Android Compose CLI coverage - uncovered").
+  next batch impact: none expected; this is out of scope for this project's testing paradigm entirely (no stage's prompt-compliance is agent-tested, not just Android Compose's), not a batch-specific gap.
+
+STATUS: complete

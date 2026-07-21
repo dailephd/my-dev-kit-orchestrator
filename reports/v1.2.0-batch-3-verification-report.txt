@@ -1,0 +1,98 @@
+Artifact: V120Batch3VerificationReport
+Batch: v1.2.0 Batch 3
+
+COMMANDS RUN
+
+1. command: npx jest tests/greenfield --silent
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0 (after fixing 2 stale test assumptions; see notes)
+   status: pass
+   output summary: first run: 9/11 suites passed, 2 failed (bootstrapBundle.spec.ts, scaffoldPrompt.spec.ts) -- both failing because they asserted the pre-Batch-3 shape of validationRules/setupCommands-validationCommands, which intentionally changed in this batch. Fixed both (test-file-only changes). Re-ran: 14 suites, 222 tests, all passed.
+
+2. command: npx tsc --noEmit
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: no output, no type errors, including the changed GreenfieldScaffoldPlan.setupCommands/validationCommands types and the new validateBootstrapDocs/buildValidationRules signatures.
+
+3. command: npm test
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: 42 test suites, 1097 tests, all passed.
+
+4. command: npm run build
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: tsc compiled cleanly to dist/.
+
+5. command: npm run lint
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: eslint src --ext .ts, no output (0 issues), including the removed dead `buildValidationCommands()` helper (no unused-code lint warnings triggered, since it was fully removed rather than left unused).
+
+6. command: npm run lint:docs
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: markdownlint-cli2, 9 files linted, 0 errors (expected: no doc content changed in this batch).
+
+7. command: npm run test:security
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass
+   output summary: "SECURITY_CONTRACT_PASS: package metadata and tarball contents are safe".
+
+OPTIONAL/INFORMATIONAL COMMANDS
+
+8. command: npm run docs:check
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   Node version: v24.11.0
+   exit code: 0
+   status: pass (informational, per section 12.2)
+   output summary: "DOCS_CHECK_PASS: @dailephd/my-dev-kit-orchestrator@1.1.0; 7 modes; 13 greenfield stages; 13 documented greenfield/shared artifact paths" -- passes because no doc content changed in this batch, same reasoning as Batch 2's verification report. No script repair was needed in Batch 3, since Batch 3 touched no documentation-facing code (scripts/check-docs-consistency.mjs was not modified). The recommended source-derived profile-list refactor remains deferred to Batch 5, as planned.
+
+EXPLICIT NON-RUN COMMANDS
+- Gradle / ./gradlew / gradlew.bat: never invoked, anywhere, by this batch's source or test code. Confirmed by source inspection of every file changed in this batch (no `child_process`, `execSync`, or `spawnSync` usage was added).
+- Android SDK commands: not invoked; not installed in this environment.
+- emulator commands: not invoked.
+- connectedAndroidTest: referenced only as a string literal inside `androidComposeProfile.ts`'s `validationCommands` data (from Batch 2, unmodified) and asserted against as plain string data in tests; never executed.
+
+CLI CHECKS (after build)
+
+9. command: node dist/cli.js --version
+   working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+   exit code: 0
+   status: pass
+   output summary: printed "1.1.0" (unchanged; version bump is not part of this batch).
+
+10. command: node dist/cli.js --help
+    working directory: Z:\Users\newuser\Projects\my-dev-kit-orchestrator
+    exit code: 0
+    status: pass
+    output summary: printed the existing command list unchanged (Batch 3 touches no CLI/command files).
+
+SKIPPED CHECKS
+- none. Every command listed in section 18 of this batch's instructions was run.
+
+FAILED CHECKS
+- none remaining. 2 pre-existing tests failed on first run due to stale assumptions about the pre-Batch-3 validationRules/setupCommands/validationCommands shape; both were fixed within Batch 3 scope (test-file-only changes) and confirmed passing on re-run.
+
+REMAINING VERIFICATION GAPS
+- gap: no dedicated bundle-level test for the `'unresolved'` profile-selection status flowing into `buildUnresolvedDecisions()`'s widened condition (see test report "Bootstrap bundle coverage" for full reasoning).
+  next batch impact: low risk, no impact expected; could be added as a small follow-up in Batch 4 if convenient, not required.
+- gap: no CLI-level exercise of android-compose (start --mode greenfield with an Android-oriented idea, through prompt/status/check/export).
+  next batch impact: Batch 4 owns this per artifacts/v1.2.0-android-compose-test-plan.txt's "Batch 4 tests" section.
+- gap: docs:check's profile-list check is still not self-updating.
+  next batch impact: unchanged from Batch 2's assessment; Batch 5 must refactor it per artifacts/v1.2.0-documentation-compatibility-plan.txt.
+
+STATUS: complete

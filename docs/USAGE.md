@@ -1,6 +1,31 @@
 # Usage
 
-This guide covers the CLI command surface and common workflows.
+This guide is the complete user-facing command reference. For exact stage
+procedures, see [Workflows](WORKFLOWS.md). For artifact contracts and paths,
+see [Artifacts](ARTIFACTS.md).
+
+## Install or run the CLI
+
+Run the published package without a global installation:
+
+```bash
+npx @dailephd/my-dev-kit-orchestrator --help
+```
+
+After installing the package, use the executable directly:
+
+```bash
+npm install @dailephd/my-dev-kit-orchestrator
+my-dev-kit-orchestrator --help
+```
+
+From this repository, build and run the local executable:
+
+```bash
+npm install
+npm run build
+node dist/cli.js --help
+```
 
 ## Initialize a project workspace
 
@@ -59,6 +84,60 @@ Result:
 - writes `run.json`
 - writes all prompt files for the chosen workflow
 
+## Start and inspect a greenfield run
+
+Greenfield mode bootstraps a project before useful code exists:
+
+```bash
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator list
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator check --all
+my-dev-kit-orchestrator export
+```
+
+For example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
+```
+
+Next.js example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a Next.js web dashboard"
+```
+
+Android Compose example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
+```
+
+The greenfield foundation supports three starter profiles: `typescript-cli`,
+`nextjs-app`, and `android-compose`. Android Compose support is profile-guided
+planning and prompt support: the generated stack decision, docs, and scaffold
+plan describe a Kotlin/Jetpack Compose/Gradle project, and validation guidance
+lists Gradle commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and an
+optional device/emulator-dependent `./gradlew connectedAndroidTest`) -- the
+orchestrator does not run Gradle itself. `start` does not parse the request
+into a profile; a coding agent resolves the profile later, when it executes
+the `starter-profile` stage prompt. Each generated prompt remains specific to
+the current stage regardless of profile. Paste that bounded prompt into the
+coding agent, save the required artifact in the run folder, and then request
+the next prompt.
+
+`check --artifacts` and `check --all` use the shared artifact and contract
+checkers for greenfield runs, for every profile. On a newly created run they
+report missing stage artifacts and may exit with code 1; that is a completed
+check with findings, not a CLI crash. `export` produces the same portable run
+handoff used by other modes. `--out` rejects raw `..` path-traversal segments
+in the given argument and refuses symlink or directory targets before writing
+anything.
+
 ## Print prompts
 
 Print the next prompt for the most recent run:
@@ -88,7 +167,7 @@ Behavior notes:
 
 ## Save artifacts between prompts
 
-The CLI does not call a coding agent directly in `v0.1.0`.
+The CLI does not call a coding agent directly.
 
 Expected manual loop:
 
@@ -110,11 +189,11 @@ The architecture-context stage can be handled as a task-specific prompt that use
 Typical command sequence:
 
 ```bash
-npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
-npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task term>" --limit 20 --json
-npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<node-id>" --depth 1 --json
-npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<node-id>" --depth 2 --direction both --json
-npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
+<MY_DEV_KIT_CLI> index --root . --src src --out .my-dev-kit --call-graph --json
+<MY_DEV_KIT_CLI> search --index .my-dev-kit --query "<task term>" --limit 20 --json
+<MY_DEV_KIT_CLI> lookup --index .my-dev-kit --node "<node-id>" --depth 1 --json
+<MY_DEV_KIT_CLI> slice --index .my-dev-kit --node "<node-id>" --depth 2 --direction both --json
+<MY_DEV_KIT_CLI> source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
 my-dev-kit-orchestrator init
 my-dev-kit-orchestrator start --mode feature "<request>"
 my-dev-kit-orchestrator prompt architecture-context
@@ -131,7 +210,44 @@ In that flow, the coding agent should:
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
 
-## Extraction mode (v0.2.1)
+## Supply implementation and test context manually
+
+The `v1.2.1` release evaluates supplemental repository evidence but does not
+retrieve it. Use this sequence for `feature`, `repair`, `refactor`, `harden`,
+or `extraction`; test mode uses only the test-context pair.
+
+1. Create or start a run.
+2. Inspect the generated supplemental templates in `artifacts/` and `reports/`.
+3. Run a verified CLI manually, using `<MY_DEV_KIT_CLI>` as the executable
+   selected for your environment.
+4. Populate the packet and retrieval-report metadata and required sections.
+5. Reference the raw context-capsule, retrieval-audit, and after-index evidence
+   files; do not paste their full contents into the supplemental documents.
+6. Run `my-dev-kit-orchestrator status`.
+7. Run `my-dev-kit-orchestrator check` or
+   `my-dev-kit-orchestrator check --all`.
+8. Print the target prompt again.
+9. Proceed with implementation or test work only when readiness is `ready`.
+
+The published package labeled `my-dev-kit` 1.10.2 showed a CLI mismatch from
+the verified role-aware source contract used by this integration. Do not assume
+a particular published executable provides the required commands; select and
+verify `<MY_DEV_KIT_CLI>` manually.
+
+The fixed files are:
+
+- `artifacts/implementation-context-packet.txt`
+- `reports/implementation-context-retrieval-report.txt`
+- `artifacts/test-context-packet.txt`
+- `reports/test-context-retrieval-report.txt`
+
+When readiness is blocked, a direct `implementation` or
+`test-implementation` prompt is refresh-only and prohibits normal work. A
+ready direct stage renders its normal task. `prompt` display is read-only: it
+does not create sidecars or templates and does not alter `run.json`,
+`artifact-state.json`, or supplemental files.
+
+## Start an extraction run
 
 `--mode extraction` is available in v0.2.1.
 
@@ -146,7 +262,7 @@ Extraction mode transfers a bounded feature, workflow, subsystem, or behavior fr
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -155,10 +271,10 @@ npx my-dev-kit-orchestrator start --mode extraction \
 ### Windows example
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
-  --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
-  --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
-  "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
+  --source "C:\source-repository" `
+  --target "C:\target-repository" `
+  "Extract a bounded workflow into the target repository."
 ```
 
 ### Source and target index separation
@@ -168,13 +284,13 @@ Each repository uses its own `.my-dev-kit` index directory. The coding agent ind
 Source repository index:
 
 ```bash
-npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
+<MY_DEV_KIT_CLI> index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
 ```
 
 Target repository index (if the target already has source to inspect):
 
 ```bash
-npx @dailephd/my-dev-kit index --root <target-repo-root> --out <target-repo-root>/.my-dev-kit
+<MY_DEV_KIT_CLI> index --root <target-repo-root> --out <target-repo-root>/.my-dev-kit
 ```
 
 Do not mix source and target retrieval results. Mixing them would undermine the porting analysis.
@@ -190,9 +306,10 @@ The current runtime loop is:
 5. implement only in the target repository
 6. verify against the golden behavior contract in the judge stage
 
-### What `--create-target` would do (possible future behavior)
+### Unsupported `--create-target` option
 
-A `--create-target` flag that initializes the target repository before the run is a possible future addition. It is not implemented in the current release. Do not assume this flag exists.
+The CLI does not implement `--create-target`. Create the target repository
+before starting an extraction run.
 
 ---
 
@@ -220,7 +337,11 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 - available prompts
 - present and missing artifacts
 - supporting reports (for example, the architecture-context retrieval report)
+- implementation and test context decisions, freshness, adequacy, blocking
+  issue summaries, and the recommended next stage when applicable
 - suggested next command
+
+`status` is human-readable. The current CLI has no JSON option.
 
 ## List runs
 
@@ -260,7 +381,7 @@ my-dev-kit-orchestrator status
 my-dev-kit-orchestrator list
 ```
 
-## Mark command (v0.3.0)
+## Mark artifact state
 
 Use `mark` to manually set the lifecycle state of a run artifact.
 
@@ -295,7 +416,7 @@ my-dev-kit-orchestrator mark request-brief.txt --state complete
 my-dev-kit-orchestrator mark pseudocode-packet.txt --state blocked --reason "Need design decision" --run 20260601T120000-add-logging
 ```
 
-## Status with lifecycle states (v0.3.0)
+## Interpret lifecycle state in status output
 
 The `status` command shows the lifecycle state of each artifact:
 
@@ -311,7 +432,7 @@ Artifacts:
                 Reason: Performance test cases not written yet
 ```
 
-## Prompt behavior with lifecycle states (v0.3.0)
+## Continue an incomplete, blocked, or stale stage
 
 When the current artifact is blocked, incomplete, or stale, the `prompt` command prepends a lifecycle context block before the standard stage prompt:
 
@@ -331,16 +452,16 @@ Stage: request-brief
 
 For stale artifacts, the context instructs the agent to reconcile against newer upstream artifacts.
 
-## Backward compatibility (v0.3.0)
+## Runs without lifecycle metadata
 
 Existing runs without an `artifact-state.json` continue to work:
 
-- artifact file present → `complete`
-- artifact file missing → `missing`
+- artifact file present -> `complete`
+- artifact file missing -> `missing`
 
 No migration is required for runs created before v0.3.0.
 
-## Judge correction routing (v0.6.0)
+## Follow judge correction routing
 
 When a run's judge report contains a non-PASS verdict, `status` and `prompt` integrate correction routing automatically.
 
@@ -349,7 +470,7 @@ When a run's judge report contains a non-PASS verdict, `status` and `prompt` int
 After `judge-report.txt` is saved, `status` shows a Judge correction section:
 
 ```text
-Judge correction: IMPLEMENTATION_MISMATCH → correction required
+Judge correction: IMPLEMENTATION_MISMATCH -> correction required
   Routed stage: implementation
 ```
 
@@ -366,7 +487,7 @@ Judge correction: SCOPE_VIOLATION - run is blocked
   This run requires external resolution before it can continue.
 ```
 
-No judge report → the section is omitted (backward compatible with pre-v0.6.0 runs).
+No judge report -> the section is omitted (backward compatible with pre-v0.6.0 runs).
 
 ### Prompt prints the correction stage
 
@@ -395,6 +516,13 @@ The correction prompt includes:
 | `TEST_COVERAGE_INCOMPLETE` | `test-strategy` |
 | `ARCHITECTURE_MISMATCH` | `architecture-context` |
 | `NEED_VERIFICATION` | `verification` |
+
+That table remains the default for historical/general correction routing. In
+`v1.2.1`, a judge prompt blocked by context readiness supplies an
+exact valid `Recommended next stage`: `implementation` takes priority when
+implementation context is blocked, otherwise `test-implementation` is used
+(and test mode always uses `test-implementation`). The existing recommended-
+stage override honors that value; no new verdict or correction file is added.
 | `SCOPE_VIOLATION` | blocked (no correction stage) |
 | `BLOCKED` | blocked (no correction stage) |
 | `PASS` | no correction (run continues normally) |
@@ -413,11 +541,11 @@ Correction suggestions:
 
 Suggestions are deterministic - they map trace ID prefixes to owning stages without any LLM inference:
 
-- missing `BEH-NNN` link target → suggest `behavior-model`
-- missing `PSE-NNN` link target → suggest `pseudocode-packet`
-- missing `TST-NNN` link target → suggest `test-strategy`
-- malformed trace ID → suggest `design-map`
-- orphan ID → suggest `design-map`
+- missing `BEH-NNN` link target -> suggest `behavior-model`
+- missing `PSE-NNN` link target -> suggest `pseudocode-packet`
+- missing `TST-NNN` link target -> suggest `test-strategy`
+- malformed trace ID -> suggest `design-map`
+- orphan ID -> suggest `design-map`
 
 ### What correction routing does not do
 
@@ -428,7 +556,7 @@ Suggestions are deterministic - they map trace ID prefixes to owning stages with
 
 After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
 
-## Trace check command (v0.5.0)
+## Check trace links
 
 Use `check --trace` to run deterministic trace link checks on all run artifacts.
 
@@ -493,7 +621,7 @@ Before `check --trace` has been run:
 Trace check: not run  (run: my-dev-kit-orchestrator check --trace)
 ```
 
-## Check command (v0.4.0)
+## Check artifact and prompt content
 
 Use `check` to run deterministic content checks on artifacts and prompts.
 
@@ -584,11 +712,14 @@ Content check: not run  (run: my-dev-kit-orchestrator check)
 | `warn` | Possible problem | exits 0 (exits 1 with `--strict`) |
 | `fail` | Definite problem | exits 1 |
 
-### Content checks do not affect stage advancement
+### Content checks do not mutate lifecycle state
 
-The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.
+The `check` command is read-only and does not advance stages or mutate
+lifecycle state. Context readiness is included: blocking context issues make
+the command exit nonzero, while warning-only context conditions do not fail.
+Duplicate failures for the same context kind are suppressed.
 
-## Artifact contract check (v1.0.0)
+## Check artifact contracts and stage gates
 
 Use `check --artifacts` to run the v1.0.0 artifact contract checker across all stages:
 
@@ -622,8 +753,10 @@ my-dev-kit-orchestrator check --all --strict
 - trace checks (all artifacts)
 - design-map trace check (if design-map.txt exists)
 - correction routing state
+- implementation/test context readiness, with duplicate context-kind failures
+  suppressed
 
-## Export command (v1.0.0)
+## Export a run handoff
 
 Use `export` to generate a portable plain-text run handoff for use in another session or agent:
 
@@ -644,6 +777,7 @@ The export includes:
 - correction state
 - verification evidence excerpt
 - content check and trace check summaries
+- structured implementation/test context-readiness summary
 - next command (with correction context if correction is active)
 
 Export behavior:
@@ -651,4 +785,19 @@ Export behavior:
 - default: print to stdout
 - `--out <file>`: write to file; refuses if file already exists
 - `--overwrite`: allow replacing an existing output file
-- refuses symbolic links, path traversal, non-existent parent directories
+- rejects raw parent-path traversal segments, symbolic-link targets,
+  directory targets, and non-existent parent directories
+- does not embed full raw capsule/audit contents or copy referenced external
+  evidence files
+
+## Troubleshooting
+
+- If no run exists, start one with `start` before using `prompt`, `status`,
+  `check`, or `export`.
+- If a selected run cannot be found, confirm the value passed to `--run` and
+  the project selected by `--root`.
+- A new run can make `check --artifacts` or `check --all` exit with status 1
+  because required artifacts are missing. The result is a completed structural
+  check with findings, not evidence of a CLI crash.
+- The CLI generates guidance for external tools. It does not run a coding
+  agent, Gradle, `my-dev-kit`, security validation, or publishing commands.

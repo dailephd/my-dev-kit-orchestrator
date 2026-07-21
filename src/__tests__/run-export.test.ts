@@ -3,6 +3,9 @@ import * as os from 'os';
 import * as path from 'path';
 import { buildExportText } from '../commands/export';
 import { RunMetadata } from '../run';
+import { createProgram } from '../program';
+import { createRun } from '../run';
+import { initWorkspace } from '../workspace';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -247,5 +250,170 @@ describe('export path safety via file write', () => {
     // Generated timestamp differs; check structural sections are stable
     expect(text1.includes('=== Request ===')).toBe(text2.includes('=== Request ==='));
     expect(text1.includes('[present] artifacts/request-brief.txt')).toBe(true);
+  });
+});
+
+// ─── Path safety via real CLI dispatch (export --out path traversal) ──────────
+//
+// Regression coverage for a fixed bug: isSafePath() used to be called with the
+// already-path.resolve()d output path, which never contains ".." segments
+// after normalization, so the traversal check could never fire. The fix
+// checks the raw --out argument before resolution. These tests exercise the
+// real CLI command (not just buildExportText) so the fix's actual wiring is
+// verified, not just the isolated helper.
+
+function runCliCaptured(args: string[]): { output: string; exitCode: number | undefined } {
+  const lines: string[] = [];
+  const origLog = console.log;
+  const origErr = console.error;
+  const origWrite = process.stdout.write.bind(process.stdout);
+  const origExit = process.exit;
+  let exitCode: number | undefined;
+  console.log = (msg: string) => lines.push(msg);
+  console.error = (msg: string) => lines.push(msg);
+  process.stdout.write = ((chunk: string) => {
+    lines.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  process.exit = ((code?: number) => {
+    exitCode = code;
+    throw new Error('mdko-test-exit');
+  }) as never;
+
+  try {
+    createProgram().parse(['node', 'cli', ...args]);
+  } catch (e) {
+    if ((e as Error).message !== 'mdko-test-exit') throw e;
+  } finally {
+    console.log = origLog;
+    console.error = origErr;
+    process.stdout.write = origWrite;
+    process.exit = origExit;
+  }
+
+  return { output: lines.join('\n'), exitCode };
+}
+
+describe('export --out path traversal rejection (CLI-level regression)', () => {
+  function makeRun(root: string, mode: 'feature' | 'greenfield' = 'feature') {
+    initWorkspace(root);
+    return createRun({ request: `test export traversal (${mode})`, mode, projectRoot: root });
+  }
+
+  it.each([
+    ['../escaped.txt', 'unix-style relative traversal'],
+    ['..\\escaped.txt', 'windows-style relative traversal'],
+    ['nested/../../escaped.txt', 'nested unix-style traversal'],
+    ['nested\\..\\..\\escaped.txt', 'nested windows-style traversal'],
+  ])('rejects %s (%s) for feature mode', (unsafeOut) => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-traversal-'));
+    try {
+      makeRun(tmp, 'feature');
+      const before = fs.existsSync(path.join(path.dirname(tmp), 'escaped.txt'));
+      const { output, exitCode } = runCliCaptured(['export', '--root', tmp, '--out', unsafeOut]);
+      expect(exitCode).toBe(1);
+      expect(output).toMatch(/path traversal/);
+      // Confirm nothing was actually written outside the temp dir.
+      expect(fs.existsSync(path.join(path.dirname(tmp), 'escaped.txt'))).toBe(before);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects traversal for greenfield mode identically to feature mode', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-traversal-gf-'));
+    try {
+      makeRun(tmp, 'greenfield');
+      const { output, exitCode } = runCliCaptured(['export', '--root', tmp, '--out', '../escaped-gf.txt']);
+      expect(exitCode).toBe(1);
+      expect(output).toMatch(/path traversal/);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  // A relative --out path resolves against process.cwd(), same as any CLI
+  // tool (not against --root), so these tests chdir into the temp run
+  // directory first to exercise a realistic "user is standing in their
+  // project directory" scenario, then restore the original cwd afterward.
+  function withCwd<T>(dir: string, fn: () => T): T {
+    const originalCwd = process.cwd();
+    process.chdir(dir);
+    try {
+      return fn();
+    } finally {
+      process.chdir(originalCwd);
+    }
+  }
+
+  it('allows a safe relative output path and writes the file', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-safe-'));
+    try {
+      makeRun(tmp, 'feature');
+      const { output, exitCode } = withCwd(tmp, () =>
+        runCliCaptured(['export', '--root', tmp, '--out', 'safe-export.txt']),
+      );
+      expect(exitCode).toBeUndefined();
+      expect(output).toContain('Export written to:');
+      expect(fs.existsSync(path.join(tmp, 'safe-export.txt'))).toBe(true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('allows a safe nested relative output path (subdirectory)', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-safe-nested-'));
+    try {
+      makeRun(tmp, 'feature');
+      fs.mkdirSync(path.join(tmp, 'reports'));
+      const { exitCode } = withCwd(tmp, () =>
+        runCliCaptured(['export', '--root', tmp, '--out', 'reports/export.txt']),
+      );
+      expect(exitCode).toBeUndefined();
+      expect(fs.existsSync(path.join(tmp, 'reports', 'export.txt'))).toBe(true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('allows a safe "./" prefixed relative output path', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-safe-dotslash-'));
+    try {
+      makeRun(tmp, 'feature');
+      const { exitCode } = withCwd(tmp, () =>
+        runCliCaptured(['export', '--root', tmp, '--out', './safe-dotslash.txt']),
+      );
+      expect(exitCode).toBeUndefined();
+      expect(fs.existsSync(path.join(tmp, 'safe-dotslash.txt'))).toBe(true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('still rejects an existing directory as the output path (pre-existing safety check, unaffected by the fix)', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-dir-'));
+    try {
+      makeRun(tmp, 'feature');
+      const dirOut = path.join(tmp, 'a-directory');
+      fs.mkdirSync(dirOut);
+      const { output, exitCode } = runCliCaptured(['export', '--root', tmp, '--out', dirOut]);
+      expect(exitCode).toBe(1);
+      expect(output).toMatch(/output path rejected/);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('does not regress export behavior for other modes (repair)', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-repair-'));
+    try {
+      initWorkspace(tmp);
+      createRun({ request: 'test export traversal (repair)', mode: 'repair', projectRoot: tmp });
+      const { output, exitCode } = runCliCaptured(['export', '--root', tmp, '--out', '../escaped-repair.txt']);
+      expect(exitCode).toBe(1);
+      expect(output).toMatch(/path traversal/);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

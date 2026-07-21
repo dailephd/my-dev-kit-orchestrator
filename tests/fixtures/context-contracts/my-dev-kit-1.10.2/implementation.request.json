@@ -1,0 +1,54 @@
+{
+  "auditOutput": "<FIXTURE_AUDIT_PATH>",
+  "focusFiles": [
+    "src/types.ts",
+    "src/workflows.ts",
+    "src/promptGenerator.ts",
+    "src/run.ts",
+    "src/commands/prompt.ts",
+    "src/commands/status.ts",
+    "src/commands/check.ts",
+    "src/commands/export.ts",
+    "src/stageDetector.ts",
+    "src/artifactLifecycle.ts",
+    "src/judgeParser.ts",
+    "src/correctionRouter.ts"
+  ],
+  "focusSymbols": [
+    "symbol:src/workflows.ts#getAllWorkflows",
+    "symbol:src/promptGenerator.ts#generateStagePrompt",
+    "symbol:src/run.ts#createRun"
+  ],
+  "index": "<ORCHESTRATOR_INDEX_ROOT>",
+  "limits": {
+    "candidates": 80,
+    "characters": 80000,
+    "evidenceGroupEntries": 20,
+    "files": 40,
+    "fullFileFallbacks": 2,
+    "graphDepth": 2,
+    "responsibilityMappings": 20,
+    "sourceLinesPerRange": 80,
+    "sourceRanges": 24,
+    "symbols": 80
+  },
+  "mode": "general",
+  "output": "<FIXTURE_OUTPUT_PATH>",
+  "query": "Retrieve pre-implementation owner, dependency, contract, validator, constant, error, schema, caller, callee, closest-test, and backward-compatibility evidence for the anticipated v1.2.1 workflow catalog, resolver, packet assembly, and bounded prompt integration surfaces. No production changes exist yet.",
+  "requestedEvidenceKinds": [
+    "owner",
+    "dependencies",
+    "contracts",
+    "validators",
+    "constants",
+    "errors",
+    "schemas",
+    "callers",
+    "callees",
+    "closest-tests",
+    "test-infrastructure",
+    "test-commands"
+  ],
+  "role": "implementation",
+  "schemaVersion": "1.0.0"
+}

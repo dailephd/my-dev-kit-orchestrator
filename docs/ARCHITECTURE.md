@@ -1,58 +1,60 @@
 # Architecture
 
-`my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
+## Purpose
 
-`v0.1.0` established the workflow shell. `v0.2.0` added graph-guided architecture context support. `v0.2.1` adds extraction mode and cross-platform validation across Ubuntu, Windows, and macOS.
+`my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first
+software development with coding agents. This document describes the
+architecture implemented at repository HEAD.
 
-## Architecture overview
-
-The released architecture has five main responsibilities:
-
-- define the workflow mode and ordered stages for each run
-- create and manage the local run workspace
-- generate stage-specific prompt files
-- detect workflow progress from expected artifact files
-- keep source-repository evidence and target-repository implementation responsibilities separate in extraction mode
-
-The CLI is intentionally small. It does not try to become a general automation platform, a task runner, or an autonomous multi-agent system.
-
-## Tool responsibilities
-
-The intended design uses four cooperating roles:
-
-- ChatGPT writes task-specific coding-agent prompts for the requested software change
-- `my-dev-kit` performs graph-guided code retrieval and produces retrieval evidence
-- `my-dev-kit-orchestrator` stores synthesized architecture context and manages downstream workflow stages
-- the coding agent executes the prompt, runs commands, writes artifacts, implements changes, and verifies results
-
-This split keeps retrieval, workflow control, and implementation work clearly separated.
+The latest published release is `v1.2.1`. Architecture is organized by current
+responsibility rather than by release version.
 
 ## System boundaries
 
-The system boundary is straightforward:
+The user starts and advances workflow runs. The CLI owns mode selection, run
+metadata, native stage ordering, prompt generation, artifact naming, lifecycle
+inspection, deterministic checks, and portable export. A coding agent works
+outside the CLI by consuming prompts, inspecting repositories, writing the
+requested artifacts, implementing changes, and recording verification evidence.
 
-- the user starts and advances workflow runs
-- the CLI owns mode selection, run metadata, stage ordering, prompt generation, artifact naming, and next-stage detection
-- a coding agent works outside the CLI by consuming the generated prompt, using `my-dev-kit` when needed, and writing the requested artifacts
-- artifacts carry context from one stage to the next
+The surrounding tools retain separate responsibilities:
 
-Some generated prompts may recommend using `my-dev-kit` for graph-guided architecture context acquisition when that tool is available. `my-dev-kit-orchestrator` does not execute `my-dev-kit` automatically.
+- `my-dev-kit` owns repository indexing, bounded retrieval, and evidence
+  classification.
+- `my-dev-kit-orchestrator` owns workflow instructions, stage requirements,
+  readiness evaluation, and routing policy for supplied evidence.
+- `my-dev-kit-lab` owns evaluation and experiments; it is not part of the
+  orchestrator's production runtime.
 
-## CLI command layer
+Repository retrieval is manual. The orchestrator does not execute `my-dev-kit`
+and does not automatically retrieve evidence, run a coding agent, edit
+source code, execute tests, or publish packages.
 
-The public command surface is:
+## Core components
 
-- `init`
-- `start`
-- `status`
-- `prompt`
-- `list`
+The CLI command layer exposes exactly eight commands: `init`, `start`,
+`status`, `prompt`, `list`, `mark`, `check`, and `export`. Those commands create
+and inspect local runs; they do not form a general task-running platform.
 
-These commands cover workspace setup, run creation, prompt retrieval, run inspection, and run listing. The release does not expose a larger set of low-level workflow management commands.
+The core architecture consists of:
 
-## Workflow mode layer
+- workflow definitions and ordered native stages
+- a typed instruction catalog with exact stable identifiers
+- deterministic `WorkflowInstructionPacket` assembly and sidecars
+- stage prompt assembly from catalog instructions and in-memory run context
+- plain-text native artifacts and supplemental repository-evidence files
+- deterministic context-readiness evaluation
+- lifecycle, status, check, export, judge, and correction integration
 
-`my-dev-kit-orchestrator` ships with six workflow modes:
+Android Compose support already shipped in `v1.2.0` as the explicit
+`android-compose` greenfield starter profile alongside `typescript-cli` and
+`nextjs-app`. It remains prompt and scaffold guidance only. The orchestrator
+does not run Gradle, require an Android SDK, or detect an emulator or device.
+
+## Workflow definitions
+
+The Workflow mode layer is owned by `src/workflows.ts`. It defines the seven
+workflow modes, native stage order, artifact filenames, and prompt filenames:
 
 - `feature`
 - `repair`
@@ -60,250 +62,241 @@ These commands cover workspace setup, run creation, prompt retrieval, run inspec
 - `refactor`
 - `harden`
 - `extraction`
-
-Each mode has a fixed stage sequence and a corresponding ordered list of expected artifact files. The CLI uses those definitions as the source of truth for prompt generation and stage advancement.
-
-Examples:
-
-- `feature` moves from request framing through architecture context, behavior modeling, pseudocode, test strategy, implementation, test implementation, verification, judge, and final report
-- `repair` adds divergence analysis and correction design before implementation
-- `test` focuses on behavior reconstruction and test implementation without a production implementation stage
-- `refactor` preserves behavior through invariant and compatibility stages
-- `harden` emphasizes assumptions, failure modes, guards, and resilience testing
-- `extraction` adds source-repository inspection, source workflow mapping, source-to-target porting analysis, a do-not-port gate, a golden behavior contract, and a target architecture proposal before implementation begins
-
-## Run workspace and storage model
-
-Each run lives under a local workspace:
-
-```text
-.my-dev-kit-orchestrator/
-  config.json
-  runs/
-    <run-id>/
-      00-request.txt
-      run.json
-      prompts/
-      artifacts/
-      reports/
-```
-
-Important files and folders:
-
-- `00-request.txt` stores the original request passed to `start`
-- `run.json` stores run metadata, selected mode, and ordered stage definitions
-- `prompts/` contains generated stage prompt files
-- `artifacts/` contains the plain-text outputs produced for each stage
-- `reports/` is reserved for report-oriented outputs and supporting retrieval evidence
-
-For non-extraction modes, the workspace lives under the selected project root. For extraction mode, the workspace lives under the target repository by default:
-
-```text
-<target-repo-root>/.my-dev-kit-orchestrator/runs/<run-id>/
-```
-
-This storage model is local by design. Run workspaces are meant to support an iterative development flow without adding generated workflow state to the source repository.
-
-## Prompt generation architecture
-
-Prompt generation is stage-specific.
-
-Instead of producing one large master prompt, the CLI generates one prompt per stage. Each prompt is scoped to the current stage and includes the information needed to complete only that stage. That typically means:
-
-- the current stage name
-- the required inputs from prior artifacts
-- the task to perform now
-- the expected output artifact
-- stop conditions
-- the required return format
-
-This design helps enforce workflow gates. A prompt tells the coding agent what belongs in the current stage and what should wait for a later stage. That prevents early implementation, premature test claims, or mixed-stage outputs from becoming the default workflow behavior.
-
-For architecture-context work, the prompt guides the coding agent through graph-guided context acquisition with `my-dev-kit`. The prompt includes the full retrieval sequence, a retrieval evidence report template, and an ArchitectureContextPacket template. It instructs the coding agent to synthesize retrieval evidence into the artifact rather than dumping raw output. If `my-dev-kit` is unavailable, the prompt guides the coding agent to use focused manual inspection instead.
-
-Extraction mode extends that architecture with extraction-specific prompt families for all 14 stages, including source-repository evidence gathering, source-to-target porting analysis, and target-side implementation guardrails.
-
-## Graph-guided architecture context
-
-The architecture-context stage is the main point where `my-dev-kit` and `my-dev-kit-orchestrator` meet.
-
-When `my-dev-kit` is available, the stage should use retrieval evidence from indexing, search, lookup, slice generation, source retrieval, and optional semantic inspection to build a bounded architecture view for the requested change.
-
-This stage has two outputs:
-
-- supporting report: `reports/architecture-context-retrieval-report.txt`
-- required workflow artifact: `artifacts/architecture-context-packet.txt`
-
-The retrieval report records what was retrieved and how that context was gathered. The ArchitectureContextPacket is the synthesized design input that later stages consume.
-
-Extraction mode uses the same pattern for `source-architecture-context`, with:
-
-- supporting report: `reports/source-architecture-context-retrieval-report.txt`
-- required workflow artifact: `artifacts/source-architecture-context-packet.txt`
-
-## Artifact handoff architecture
-
-Artifacts are plain-text files.
-
-Each stage produces one expected artifact file, except `porting-map`, which produces both:
-
-- `artifacts/source-to-target-porting-map.txt`
-- `artifacts/do-not-port-list.txt`
-
-The next stage consumes the request, prior artifacts, or both. The CLI does not parse a heavy structured schema to decide whether a stage is complete. It uses required artifact existence at the expected paths.
-
-That handoff model keeps the workflow simple:
-
-- stage output is saved to `artifacts/<name>.txt`
-- supporting retrieval evidence can be saved to `reports/<name>.txt`
-- the next stage prompt is generated from the workflow definition and prior context
-- the CLI advances when the expected artifact files exist
-
-Two artifact relationships matter especially in the current release:
-
-- the ArchitectureContextPacket is the synthesized downstream input for behavior modeling and later design stages
-- the SourceWorkflowMap and SourceToTargetPortingMap are evidence and scoping inputs for extraction-mode design
-- the GoldenBehaviorContract is the required target behavior source of truth before pseudocode and test strategy
-- the TargetArchitectureProposal defines the clean target structure before implementation begins
-- the pseudocode packet is the shared design source for implementation and test implementation
-- the test strategy packet is the source for test implementation
-
-Verification and final report artifacts are expected to include command evidence and unresolved risks, but the CLI does not enforce content validation automatically.
-
-## Stage gate model
-
-The workflow definitions establish practical gates between design, implementation, and verification work.
-
-Important gates include:
-
-- no architecture-context packet without synthesizing the available retrieval evidence
-- no pseudocode before a behavior model or equivalent behavior analysis stage exists
-- no production implementation before the pseudocode packet or mode-specific implementation design exists
-- no test implementation before the test strategy packet or mode-specific test strategy exists
-- no completion claim without verification evidence
-- no `PASS` outcome without judge support
-
-Extraction mode adds additional pre-implementation gates:
-
-- no implementation before `source-architecture-context-packet.txt` exists
-- no implementation before `source-workflow-map.txt` exists
-- no implementation before both `source-to-target-porting-map.txt` and `do-not-port-list.txt` exist
-- no implementation before `golden-behavior-contract.txt` exists
-- no implementation before `target-architecture-proposal.txt` exists
-
-These gates are enforced through ordered stages, expected artifact names, and stage-specific prompt instructions rather than through a large validation engine.
-
-## Extraction mode architecture
-
-Extraction mode is implemented in `v0.2.1`.
-
-### Why extraction mode is different from feature mode
-
-`feature` mode assumes one project. The coding agent inspects the current project, models behavior, writes pseudocode, and implements the change in the same repository.
-
-`extraction` mode assumes two project roles. The coding agent inspects an existing source repository for evidence, decides what behavior to port and what to discard, and implements the extracted workflow in a separate target repository.
-
-The key constraint: the orchestrator must not assume that the target repository should inherit the source architecture wholesale. The purpose is to extract desired behavior into a clean target implementation.
-
-### Two-repo model
-
-In extraction mode, the user provides two repository paths:
-
-- `--source <source-repo-root>`: the existing project used for inspection and porting analysis. Treated as read-only evidence by default.
-- `--target <target-repo-root>`: the project where the extracted workflow will be implemented, tested, verified, and reported.
-
-All implementation work happens in the target repository. The source repository is used only for graph-guided workflow inspection and porting analysis.
-
-### Source repository as read-only evidence
-
-The source repository should not be modified during an extraction run unless the user explicitly overrides that restriction.
-
-Its role is to:
-
-- provide source context through graph-guided workflow inspection
-- supply evidence for the SourceWorkflowMap and SourceToTargetPortingMap
-- feed the GoldenBehaviorContract via behavior analysis
-
-The coding agent should index the source repository into its own `.my-dev-kit` directory and use retrieval results as evidence, not as a design template to copy.
-
-### Target repository as implementation destination
-
-The target repository is where all implementation, testing, verification, and reporting happens.
-
-The orchestrator run workspace lives under the target repository by default:
-
-```text
-<target-repo-root>/.my-dev-kit-orchestrator/runs/<run-id>/
-```
-
-If the target repository does not exist yet, the orchestrator requires the user to initialize it before starting an extraction run. Automatic target creation is not implemented in the current release.
-
-### Source and target index separation
-
-Source and target repositories each use their own `.my-dev-kit` index directory.
-
-```text
-<source-repo-root>/.my-dev-kit
-<target-repo-root>/.my-dev-kit
-```
-
-The coding agent must index the source repository separately from the target repository. Mixing source and target retrieval results would undermine the porting analysis.
-
-### Extraction artifacts as pre-implementation gates
-
-Six extraction-specific artifacts must be produced before any production implementation can begin in the target repository:
-
-1. `SourceArchitectureContextPacket`
-2. `SourceWorkflowMap`
-3. `SourceToTargetPortingMap`
-4. `DoNotPortList`
-5. `GoldenBehaviorContract`
-6. `TargetArchitectureProposal`
-
-No production implementation should start before all six artifacts are complete.
-
-### Golden behavior contract as target behavior source of truth
-
-The GoldenBehaviorContract is the central gate in the extraction workflow. It defines the behavior the target implementation must satisfy, independently of how the source implementation achieved that behavior.
-
-The judge stage at the end of the extraction workflow compares the target implementation against the GoldenBehaviorContract, not against the source implementation directly.
-
-## Relationship to my-dev-kit
-
-`my-dev-kit` and `my-dev-kit-orchestrator` solve different problems.
-
-`my-dev-kit` is intended for code indexing, symbol lookup, and graph-guided retrieval. `my-dev-kit-orchestrator` is responsible for workflow orchestration, stage prompting, and artifact handoff between bounded stages of work.
-
-In the intended design, a task-specific prompt directs the coding agent to use `my-dev-kit` for context acquisition, record supporting retrieval evidence, and synthesize the downstream architecture packet. `my-dev-kit-orchestrator` then manages the downstream workflow through behavior modeling, pseudocode, testing, implementation, verification, judging, and final reporting.
-
-That relationship is still prompt-driven rather than automatic. The CLI does not invoke `my-dev-kit` directly.
+- `greenfield`
+
+There are 79 native stages in total. Stage definitions remain the source of
+truth for prompt generation, stage detection, and lifecycle progression.
+
+Extraction mode separates source-repository evidence from target-repository
+implementation. Its run workspace lives under the target repository; source
+and target indexes remain separate. The source is read-only evidence by
+default, while implementation, testing, verification, and reporting occur in
+the target. Automatic target creation is not implemented.
+
+Greenfield profile resolution uses an explicit bounded alias table. Generic
+mobile requests remain unresolved, and unsupported platforms are not silently
+mapped to Android Compose. Profile setup and validation commands are descriptive
+prompt data and are never executed by the orchestrator.
+
+## Instruction catalog and exact resolution
+
+`src/instructions/catalog.ts` owns instruction identity and references. Stable
+workflow, stage, command, rule, and report-contract IDs are declared in the
+catalog ID and type modules. Catalog schema and catalog version are both
+`1.0.0`.
+
+Catalog validation rejects malformed entries, duplicate IDs, incompatible
+references, and incomplete native-stage coverage. The resolver uses exact IDs
+only. It performs no fuzzy matching, semantic selection, or LLM selection.
+
+The catalog does not replace workflow definitions. `src/workflows.ts` continues
+to own stage order and filenames; the catalog owns the instruction content and
+references associated with those stages.
+
+The implemented deterministic contract versions are:
+
+| Contract | Version |
+| --- | --- |
+| Instruction catalog schema | `1.0.0` |
+| Instruction catalog version | `1.0.0` |
+| `WorkflowInstructionPacket` | `1.0.0` |
+| `TaskState` | `1.0.0` |
+| `StageContextBundle` | `1.0.0` |
+| Supplemental context packet | `1.0.0` |
+| Supplemental context retrieval report | `1.0.0` |
+| `ContextReadiness` | `1.0.0` |
+
+## WorkflowInstructionPacket
+
+`src/instructions/workflowInstructionPacket.ts` assembles the exact instruction
+content for one native stage. A packet includes resolved rules and commands,
+the report contract, validation and stop conditions, provenance, budget,
+adequacy, and truncation information. The schema version is `1.0.0`.
+
+Packet serialization applies canonical JSON key ordering and stable arrays.
+Run creation writes one deterministic `*.instruction-packet.json` sidecar next
+to every native `*.prompt.txt` file. All 79 native stages receive a catalog
+entry and sidecar; 77 use the generalized packet-backed rendering path, while
+`scaffold-plan` and `scaffold-implementation` retain their specialized
+greenfield renderer.
+
+A packet contains no repository evidence, run-specific paths, readiness state,
+or timestamps. Required instruction content is retained when over budget and
+reported as inadequate rather than silently removed. Optional content can be
+omitted only with an explicit deterministic truncation record.
+
+## Prompt assembly
+
+Prompt generation remains stage-specific. The renderer combines the current
+stage contract with the exact packet and applicable in-memory context. Prompts
+identify required inputs, current work, expected output, validation, stop
+conditions, and the required return format.
+
+Context-sensitive implementation and test-implementation stages render normal
+work only when their required repository evidence is ready. When readiness is
+blocked, the direct-stage prompt is refresh-only and prohibits normal
+implementation or test work. Printing a prompt reevaluates readiness but does
+not create sidecars or templates and does not mutate `run.json` or
+`artifact-state.json`.
+
+The two greenfield scaffold stages keep their specialized renderer without
+changing their stage names, prompt filenames, sidecars, or lifecycle behavior.
+
+## TaskState and StageContextBundle
+
+`TaskState` schema `1.0.0` projects the selected run-specific state needed for
+prompt assembly. `StageContextBundle` schema `1.0.0` combines the exact packet,
+`TaskState`, upstream artifact references, and applicable
+`RepositoryEvidenceReference` values.
+
+Both structures are assembled in memory and are never persisted. A
+`StageContextBundle` does not redefine native artifacts or lifecycle state, and
+`TaskState` is not a second run metadata file.
+
+## Supplemental repository evidence
+
+Mode-appropriate runs create fixed supplemental templates:
+
+- `artifacts/implementation-context-packet.txt`
+- `reports/implementation-context-retrieval-report.txt`
+- `artifacts/test-context-packet.txt`
+- `reports/test-context-retrieval-report.txt`
+
+The supplemental context packet and supplemental context retrieval report use
+schema `1.0.0`. They record bounded identity, status, freshness, adequacy,
+truncation, provenance, raw capsule and audit references, and required evidence
+sections. Raw `my-dev-kit` capsule and audit JSON are parsed into bounded
+projections; full raw documents are not embedded in the instruction packet or
+stage bundle.
+
+`RepositoryEvidenceReference` describes evidence that is applicable to a stage.
+The exact requirement registry contains five implementation-context direct
+stages and six test-context direct stages. Greenfield requires no repository
+context. Verification and judge review mode-level context requirements rather
+than adding native context stages.
+
+## Context readiness
+
+`ContextReadiness` schema `1.0.0` evaluates one repository-evidence requirement.
+Run-level readiness aggregates the implementation and test decisions required
+by the selected mode.
+
+Evaluation checks:
+
+- document structure and schema identity
+- workflow, stage, run, and repository identity
+- source references and provenance
+- declared freshness and after-index evidence
+- role-specific adequacy
+- required-evidence truncation
+- critical test-responsibility mappings
+
+Freshness is supplied by verified external evidence; the orchestrator does not
+independently compute repository freshness. Missing, stale, inadequate,
+truncated, or critically unmapped required evidence produces deterministically
+ordered issues and a blocked decision.
+
+## Lifecycle boundaries
+
+Each native stage produces its expected artifact file. Lifecycle progression
+uses artifact existence and artifact state; explicit content and dependency
+checks do not replace that mechanism.
+
+Instruction-packet sidecars are inspection aids, not native lifecycle artifacts.
+They are absent from `run.json` and `artifact-state.json`, are not mark targets,
+and cannot advance a run.
+
+Supplemental context packets and retrieval reports are run files, not native
+stage artifacts. Editing or deleting them creates no artifact-state transition.
+They can affect readiness, rendered prompts, checks, and exported readiness
+summaries without changing the native lifecycle graph.
+
+## Status, check, and export
+
+`status` reports human-readable implementation and test readiness, freshness,
+adequacy, blocking issues, and the recommended next stage. The current CLI has
+no status JSON option.
+
+`check` evaluates context readiness together with its selected existing checks.
+Blocking context issues fail the command, warning-only conditions do not, and
+duplicate failures for the same context kind are suppressed. `check` and
+`check --all` are read-only.
+
+`export` includes a structured readiness summary and preserves an honest blocked
+state. It does not embed full raw capsule or audit content and does not copy
+external evidence merely because a supplemental file references it. Existing
+path-safety checks remain in effect.
+
+## Judge and correction routing
+
+Verification and judge prompts review the context kinds required by their mode.
+Feature, repair, refactor, harden, and extraction review implementation and test
+context; test mode reviews test context only; greenfield reviews neither.
+
+A blocked judge uses the existing `NEED_CONTEXT` verdict and includes an exact
+`Recommended next stage`. Recommendation priority is implementation first when
+implementation context is blocked, then `test-implementation` when only test
+context is blocked. Test mode recommends `test-implementation`.
+
+Existing correction routing honors a valid recommendation override. There is no
+new verdict, correction-specific sidecar, correction-specific context file, or
+automatic correction execution.
+
+## Determinism
+
+Equivalent inputs produce stable catalog resolution, packet serialization,
+sidecar bytes, readiness issues, and recommended stages. Determinism relies on:
+
+- exact stable IDs
+- canonical JSON key ordering
+- stable sorted arrays
+- schemas without timestamps
+- preservation of required content
+- explicit optional-content truncation records
+- deterministic issue and recommendation ordering
+
+Prompt filenames, native artifact filenames, workflow order, and old-run
+interpretation remain compatible with `v1.2.0`.
+
+## Security boundaries
+
+Run storage is local. The CLI rejects unsafe export traversal and symlink
+targets, does not call external services, and does not execute agents or
+repository tools. `npm run test:security` validates package identity, semver,
+CLI bin policy, package-file policy, and dry-run package contents; it does not
+replace broader evaluation owned by `my-dev-kit-lab`.
+
+Repository evidence is treated as supplied data. Parsing is bounded, raw
+external files are referenced rather than embedded, and prompt rendering does
+not grant evidence authority beyond the explicit stage requirements.
+
+## Known limitations
+
+- `scaffold-plan` and `scaffold-implementation` retain the specialized
+  greenfield renderer.
+- Extraction command examples are not fully promoted into command catalog
+  entries.
+- Extraction has no generic architecture-context stage; exact `NEED_CONTEXT`
+  recommendations use implementation or test-implementation, while generic
+  non-`NEED_CONTEXT` architecture routing retains a pre-existing edge case.
+- Repository evidence retrieval remains manual.
+- The current CLI has no status JSON output.
+- There is no shared cross-repository schema package or lab runtime integration.
+- A verified `my-dev-kit` CLI must be selected manually because the published
+  package labeled 1.10.2 showed a CLI mismatch from the verified source contract.
 
 ## Non-goals
 
-The current release does not include:
+The architecture intentionally excludes:
 
-- direct LLM execution
-- automatic `my-dev-kit` execution
-- automatic provider integration
-- full JSON schema validation
-- automatic judge routing
-- design-map generation
-- autonomous multi-agent execution
-- a large low-level command surface
-- low-level retrieval commands inside `my-dev-kit-orchestrator`
-- `--create-target`
-
-Those exclusions are intentional. The release is designed to keep workflow logic clear, local, and easy to inspect.
-
-## Future architecture direction
-
-Possible future extensions:
-
-- stronger artifact validation
-- design-map generation
-- deeper `my-dev-kit` integration
-- optional provider integrations
-- CI-friendly verification summaries
-- richer run status and judge-outcome routing
-
-These are possible directions, not current features.
+- direct LLM or autonomous multi-agent execution
+- automatic `my-dev-kit` execution or repository indexing
+- automatic source editing, test generation, or test execution
+- Gradle execution, Android SDK validation, and device or emulator detection
+- fuzzy, semantic, or LLM catalog selection
+- on-disk `TaskState` or `StageContextBundle`
+- native context stages
+- automatic target-repository creation
+- a wholesale prompt-generator rewrite
+- evaluation logic from `my-dev-kit-lab`
+- release automation or package publication

@@ -1,0 +1,57 @@
+{
+  "auditOutput": "<FIXTURE_AUDIT_PATH>",
+  "focusFiles": [
+    "src/types.ts",
+    "src/workflows.ts",
+    "src/promptGenerator.ts",
+    "src/run.ts",
+    "src/commands/prompt.ts",
+    "src/commands/status.ts",
+    "src/commands/check.ts",
+    "src/commands/export.ts",
+    "src/stageDetector.ts",
+    "src/artifactLifecycle.ts",
+    "src/artifactChecker.ts",
+    "src/contractChecker.ts",
+    "src/judgeParser.ts",
+    "src/correctionRouter.ts",
+    "src/correctionState.ts"
+  ],
+  "focusSymbols": [
+    "symbol:src/workflows.ts#getAllWorkflows",
+    "symbol:src/promptGenerator.ts#generateStagePrompt",
+    "symbol:src/artifactLifecycle.ts#resolveArtifactState"
+  ],
+  "index": "<ORCHESTRATOR_INDEX_ROOT>",
+  "limits": {
+    "candidates": 80,
+    "characters": 80000,
+    "evidenceGroupEntries": 20,
+    "files": 40,
+    "fullFileFallbacks": 2,
+    "graphDepth": 2,
+    "responsibilityMappings": 20,
+    "sourceLinesPerRange": 80,
+    "sourceRanges": 24,
+    "symbols": 80
+  },
+  "mode": "general",
+  "output": "<FIXTURE_OUTPUT_PATH>",
+  "query": "Identify the v1.2.0 workflow, prompt-generation, lifecycle, correction-routing, command, and compatibility owners required to design a structured workflow-instruction catalog and packet assembly without changing native stage order or production behavior.",
+  "requestedEvidenceKinds": [
+    "owner",
+    "dependencies",
+    "contracts",
+    "validators",
+    "constants",
+    "errors",
+    "schemas",
+    "callers",
+    "callees",
+    "closest-tests",
+    "test-infrastructure",
+    "test-commands"
+  ],
+  "role": "architecture",
+  "schemaVersion": "1.0.0"
+}

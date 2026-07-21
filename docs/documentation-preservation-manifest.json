@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 1,
+  "removalAuthorizationField": "ALLOWED_DOCUMENT_REMOVALS",
+  "maxPlanningNonblankLineReductionPercent": 15,
+  "canonicalDocuments": [
+    "README.md",
+    "docs/USAGE.md",
+    "docs/WORKFLOWS.md",
+    "docs/ARTIFACTS.md",
+    "docs/ARCHITECTURE.md",
+    "docs/DEVELOPMENT.md",
+    "docs/DOCUMENTATION_PRESERVATION_POLICY.md",
+    "docs/RELEASE_CHECKLIST.md",
+    "CHANGELOG.md",
+    "docs/ROADMAP.md"
+  ],
+  "requiredTerms": {
+    "README.md": [
+      "design-first",
+      "eight-command CLI surface",
+      "seven workflow modes",
+      "79 native stages",
+      "latest published package",
+      "v1.2.1",
+      "refresh-only prompt",
+      "does not execute `my-dev-kit`",
+      "status",
+      "check",
+      "export"
+    ],
+    "docs/USAGE.md": [
+      "init",
+      "start",
+      "prompt",
+      "status",
+      "list",
+      "mark",
+      "check",
+      "export",
+      "<MY_DEV_KIT_CLI>",
+      "no JSON option",
+      "refresh-only"
+    ],
+    "docs/WORKFLOWS.md": [
+      "feature",
+      "repair",
+      "test",
+      "refactor",
+      "harden",
+      "extraction",
+      "greenfield",
+      "79 native stages",
+      "Seventy-seven stages",
+      "11-stage matrix",
+      "Recommended next stage"
+    ],
+    "docs/ARTIFACTS.md": [
+      "RequestBrief",
+      "ArchitectureContextPacket",
+      "WorkflowInstructionPacket",
+      "instruction-packet sidecars",
+      "not native artifacts",
+      "artifacts/implementation-context-packet.txt",
+      "reports/implementation-context-retrieval-report.txt",
+      "artifacts/test-context-packet.txt",
+      "reports/test-context-retrieval-report.txt"
+    ],
+    "docs/ARCHITECTURE.md": [
+      "CLI command layer",
+      "Workflow mode layer",
+      "WorkflowInstructionPacket",
+      "TaskState",
+      "StageContextBundle",
+      "ContextReadiness",
+      "never persisted",
+      "does not automatically retrieve"
+    ],
+    "docs/DEVELOPMENT.md": [
+      "docs:check",
+      "lint:docs",
+      "test:security",
+      "Node.js 24",
+      "Node.js 26",
+      "Node.js 24.11.0",
+      "live cross-platform CI evidence",
+      "published package labeled `my-dev-kit` 1.10.2"
+    ],
+    "docs/DOCUMENTATION_PRESERVATION_POLICY.md": [
+      "Document classes and authority",
+      "Protected structure",
+      "Reconciliation and stop threshold"
+    ],
+    "docs/RELEASE_CHECKLIST.md": [
+      "latest-published `v1.2.1`",
+      "79 native stages",
+      "eight CLI commands",
+      "11 context-sensitive direct stages",
+      "<MY_DEV_KIT_CLI>",
+      "Node.js 24",
+      "Node.js 26"
+    ],
+    "CHANGELOG.md": [
+      "v1.2.1",
+      "Release date: 2026-07-21",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ],
+    "docs/ROADMAP.md": [
+      "Published v1.2.1",
+      "Published as `1.2.1`",
+      "Ecosystem responsibility boundaries",
+      "Non-goals",
+      "Conceptual workflow model"
+    ]
+  },
+  "roadmapVersions": [
+    "v0.1.0",
+    "v0.2.0",
+    "v0.2.1",
+    "v0.3.0",
+    "v0.4.0",
+    "v0.5.0",
+    "v0.6.0",
+    "v1.0.0",
+    "v1.1.0",
+    "v1.2.0",
+    "v1.2.1",
+    "v1.3.0",
+    "v1.4.0",
+    "v1.5.0"
+  ],
+  "greenfieldStageOrder": [
+    "idea-brief",
+    "product-boundary",
+    "stack-decision",
+    "starter-profile",
+    "bootstrap-bundle",
+    "project-docs",
+    "scaffold-plan",
+    "scaffold-implementation",
+    "first-vertical-slice",
+    "verification",
+    "initial-index",
+    "judge",
+    "final-report"
+  ],
+  "starterProfiles": [
+    "typescript-cli",
+    "nextjs-app",
+    "android-compose"
+  ],
+  "protectedFacts": {
+    "packageName": "@dailephd/my-dev-kit-orchestrator",
+    "packageMetadataVersion": "1.2.1",
+    "latestPublishedVersion": "1.2.1",
+    "cliCommands": [
+      "init",
+      "start",
+      "status",
+      "prompt",
+      "list",
+      "mark",
+      "check",
+      "export"
+    ],
+    "workflowModeCount": 7,
+    "nativeStageCount": 79,
+    "greenfieldStageCount": 13,
+    "greenfieldProfileCount": 3,
+    "contextSensitiveStageCount": 11,
+    "implementationContextStageCount": 5,
+    "testContextStageCount": 6,
+    "schemaVersions": {
+      "catalogSchema": "1.0.0",
+      "catalogVersion": "1.0.0",
+      "workflowInstructionPacket": "1.0.0",
+      "taskState": "1.0.0",
+      "stageContextBundle": "1.0.0",
+      "supplementalContextPacket": "1.0.0",
+      "supplementalContextRetrievalReport": "1.0.0",
+      "contextReadiness": "1.0.0"
+    },
+    "fixedContextPaths": [
+      "artifacts/implementation-context-packet.txt",
+      "reports/implementation-context-retrieval-report.txt",
+      "artifacts/test-context-packet.txt",
+      "reports/test-context-retrieval-report.txt"
+    ],
+    "manualRepositoryRetrieval": true,
+    "nativeContextStages": false,
+    "taskStatePersisted": false,
+    "stageContextBundlePersisted": false,
+    "statusJsonSupported": false,
+    "generalizedPacketRendererStageCount": 77,
+    "specializedRendererStages": [
+      "stage.greenfield.scaffold-plan",
+      "stage.greenfield.scaffold-implementation"
+    ]
+  },
+  "requiredDocsCheckAssertions": [
+    "implementation-derived command, mode, stage, profile, context, path, and schema facts",
+    "published v1.2.1 with older releases historically scoped",
+    "manual my-dev-kit execution boundary",
+    "non-persisted TaskState and StageContextBundle",
+    "non-native context files and packet sidecars",
+    "no status JSON option",
+    "two specialized greenfield scaffold renderer exceptions",
+    "roadmap and changelog remain free of implementation-batch chronology"
+  ],
+  "crossDocumentConsistency": [
+    "version state",
+    "CLI commands",
+    "workflow modes and stage counts",
+    "greenfield profiles",
+    "schema versions",
+    "fixed context paths and context-sensitive stage matrix",
+    "manual retrieval and lifecycle boundaries",
+    "readiness, judge, and correction behavior",
+    "Node and CI evidence"
+  ],
+  "documentStructures": {
+    "README.md": {
+      "purpose": "Public overview, installation, current capabilities, navigation, and concise development status.",
+      "temporalLens": "Latest published release and current shipped capabilities.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": [
+        "What it helps you do",
+        "Current release",
+        "Quick start",
+        "Command overview",
+        "Tool boundaries",
+        "Documentation"
+      ],
+      "allowedTopLevelHeadingPatterns": [
+        "^(What it helps you do|Current release|Workflow instruction and context readiness|Quick start|Greenfield starter profiles|Command overview|Tool boundaries|Current limitations|Documentation)$"
+      ],
+      "forbiddenTopLevelHeadingPatterns": [
+        "^Planned:",
+        "^v[0-9]+\\.[0-9]+\\.[0-9]+.*\\(planned\\)",
+        "^Migration strategy$",
+        "^Candidate architecture$",
+        "^Implementation batches$"
+      ],
+      "forbiddenContentPatterns": [
+        "Status:\\s*planned,\\s*not implemented",
+        "candidate implementation batches",
+        "conceptual and non-final",
+        "subject to implementation-time",
+        "planned fields",
+        "planned scope"
+      ],
+      "orderedHeadingGroups": [
+        ["What it helps you do", "Current release", "Quick start", "Command overview", "Tool boundaries", "Documentation"]
+      ],
+      "versionStatusPolicy": "v1.2.1 is latest published; older versions remain historically scoped.",
+      "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
+      "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
+      "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
+      "protectedFacts": ["latestPublishedVersion", "cliCommands", "workflowModeCount"]
+    },
+    "CHANGELOG.md": {
+      "purpose": "Released product changes and any future unreleased delta.",
+      "temporalLens": "Release history with the current release first.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"],
+      "allowedTopLevelHeadingPatterns": ["^(Unreleased|v[0-9]+\\.[0-9]+\\.[0-9]+.*)$"],
+      "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
+      "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
+      "orderedHeadingGroups": [["v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
+      "versionStatusPolicy": "v1.2.1 is the current release; older entries remain historical.",
+      "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
+      "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
+      "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
+      "protectedFacts": ["latestPublishedVersion"]
+    },
+    "docs/ARCHITECTURE.md": {
+      "purpose": "Current implemented architecture at repository HEAD.",
+      "temporalLens": "Current source implementation.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": [
+        "Purpose",
+        "System boundaries",
+        "Core components",
+        "Workflow definitions",
+        "Instruction catalog and exact resolution",
+        "WorkflowInstructionPacket",
+        "Prompt assembly",
+        "TaskState and StageContextBundle",
+        "Supplemental repository evidence",
+        "Context readiness",
+        "Lifecycle boundaries",
+        "Status, check, and export",
+        "Judge and correction routing",
+        "Determinism",
+        "Security boundaries",
+        "Known limitations",
+        "Non-goals"
+      ],
+      "allowedTopLevelHeadingPatterns": ["^(Purpose|System boundaries|Core components|Workflow definitions|Instruction catalog and exact resolution|WorkflowInstructionPacket|Prompt assembly|TaskState and StageContextBundle|Supplemental repository evidence|Context readiness|Lifecycle boundaries|Status, check, and export|Judge and correction routing|Determinism|Security boundaries|Known limitations|Non-goals)$"],
+      "forbiddenTopLevelHeadingPatterns": ["planned", "^Planned:", "^Migration strategy$", "^Candidate architecture$", "^Proposed architecture$", "^Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+.*architecture$", "^Current v[0-9]+\\.[0-9]+\\.[0-9]+.*architecture$", "^Implemented v[0-9]+\\.[0-9]+\\.[0-9]+.*architecture$"],
+      "forbiddenContentPatterns": ["Status:\\s*planned,\\s*not implemented", "candidate logical entry types", "conceptual and non-final", "subject to implementation-time naming", "storage format is an implementation decision", "current source owners this patch extends"],
+      "orderedHeadingGroups": [["Purpose", "System boundaries", "Core components", "Workflow definitions", "Instruction catalog and exact resolution", "WorkflowInstructionPacket", "Prompt assembly", "TaskState and StageContextBundle", "Supplemental repository evidence", "Context readiness", "Lifecycle boundaries", "Status, check, and export", "Judge and correction routing", "Determinism", "Security boundaries", "Known limitations", "Non-goals"]],
+      "versionStatusPolicy": "Describe current HEAD directly; mention release state only in the concise introduction.",
+      "sourceOfTruthOwners": ["src/workflows.ts", "src/promptGenerator.ts", "src/instructions", "src/commands", "src/judgeParser.ts", "src/correctionRouter.ts"],
+      "duplicateFactPolicy": "Own component responsibilities and data flow; link to workflow, artifact, and usage detail.",
+      "linkInsteadOfDuplicate": ["docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md"],
+      "protectedFacts": ["schemaVersions", "fixedContextPaths", "nativeContextStages", "taskStatePersisted", "stageContextBundlePersisted"]
+    },
+    "docs/WORKFLOWS.md": {
+      "purpose": "Current workflow modes, stages, transitions, and operational behavior.",
+      "temporalLens": "Current source implementation and preserved historical lifecycle notes.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Feature", "Repair", "Test", "Refactor", "Harden", "Extraction", "Greenfield", "Instruction packets and context-sensitive behavior", "Shared stage gates and completion rules"],
+      "allowedTopLevelHeadingPatterns": ["^(Content check layer.*|Feature|Repair|Test|Refactor|Harden|Extraction|Greenfield|Instruction packets and context-sensitive behavior|Shared stage gates and completion rules|Lifecycle-aware progression.*|Practical architecture-context flow)$"],
+      "forbiddenTopLevelHeadingPatterns": ["planned", "^Planned:", "^Workflow migration plan$", "^Implementation batches$", "^Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+"],
+      "forbiddenContentPatterns": ["planned operational sequence", "candidate stage order", "workflow migration plan", "implementation batches"],
+      "orderedHeadingGroups": [["Feature", "Repair", "Test", "Refactor", "Harden", "Extraction", "Greenfield", "Instruction packets and context-sensitive behavior", "Shared stage gates and completion rules"]],
+      "versionStatusPolicy": "Describe current mode and stage behavior without a current-version implementation chapter.",
+      "sourceOfTruthOwners": ["src/workflows.ts", "src/promptGenerator.ts", "src/instructions/stageRepositoryEvidenceRequirements.ts"],
+      "duplicateFactPolicy": "Own stage order and operational flow; link to file contracts and command procedures.",
+      "linkInsteadOfDuplicate": ["docs/ARTIFACTS.md", "docs/USAGE.md"],
+      "protectedFacts": ["workflowModeCount", "nativeStageCount", "contextSensitiveStageCount", "specializedRendererStages"]
+    },
+    "docs/ARTIFACTS.md": {
+      "purpose": "Current file, schema, lifecycle, and export contracts.",
+      "temporalLens": "Current run-file and lifecycle implementation with historically labeled artifact formats.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Run layout", "How stage advancement works", "Instruction packets and supplemental context files", "Shared completion expectations"],
+      "allowedTopLevelHeadingPatterns": ["^(Run layout|artifact-state.json.*|Artifact lifecycle states.*|artifact-check-results.json.*|Judge correction routing.*|trace-check-results.json.*|DesignMap artifact.*|Artifact contract checks.*|Current format limitations|How stage advancement works|Core feature-mode artifact files|Mode-specific artifact files|Greenfield mode artifacts|Extraction mode artifacts|Instruction packets and supplemental context files|Shared completion expectations)$"],
+      "forbiddenTopLevelHeadingPatterns": ["planned", "^Planned:", "^Future schema$", "^Migration plan$", "^Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+"],
+      "forbiddenContentPatterns": ["planned artifact contract", "candidate path", "future schema", "migration plan"],
+      "orderedHeadingGroups": [["Run layout", "How stage advancement works", "Instruction packets and supplemental context files", "Shared completion expectations"]],
+      "versionStatusPolicy": "Describe actual files and lifecycle boundaries; historical schema labels remain scoped.",
+      "sourceOfTruthOwners": ["src/workflows.ts", "src/artifactLifecycle.ts", "src/instructions/workflowInstructionPacketSerialization.ts", "src/instructions/supplementalContextContracts.ts", "src/commands/export.ts"],
+      "duplicateFactPolicy": "Own path, schema, persistence, and lifecycle boundaries.",
+      "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/USAGE.md"],
+      "protectedFacts": ["fixedContextPaths", "schemaVersions", "nativeContextStages"]
+    },
+    "docs/USAGE.md": {
+      "purpose": "Current supported CLI usage and manual procedures.",
+      "temporalLens": "Current published commands and supported manual procedures.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Install or run the CLI", "Start a run", "Print prompts", "Supply implementation and test context manually", "Check run status", "Mark artifact state", "Export a run handoff", "Troubleshooting"],
+      "allowedTopLevelHeadingPatterns": ["^(Install or run the CLI|Initialize a project workspace|Start a run|Start and inspect a greenfield run|Print prompts|Save artifacts between prompts|Example: graph-guided architecture context|Supply implementation and test context manually|Start an extraction run|Check run status|List runs|Common working pattern|Mark artifact state|Interpret lifecycle state in status output|Continue an incomplete, blocked, or stale stage|Runs without lifecycle metadata|Follow judge correction routing|Check trace links|Check artifact and prompt content|Check artifact contracts and stage gates|Export a run handoff|Troubleshooting)$"],
+      "forbiddenTopLevelHeadingPatterns": ["planned", "^Planned:", "^Future CLI$", "^Candidate usage$", "^Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+"],
+      "forbiddenContentPatterns": ["planned command", "future CLI", "candidate usage", "unimplemented procedure"],
+      "orderedHeadingGroups": [["Install or run the CLI", "Start a run", "Print prompts", "Supply implementation and test context manually", "Check run status", "Mark artifact state", "Export a run handoff", "Troubleshooting"]],
+      "versionStatusPolicy": "Document supported commands and current manual workflows only.",
+      "sourceOfTruthOwners": ["src/program.ts", "src/commands", "src/promptGenerator.ts", "src/instructions/runContextReadiness.ts"],
+      "duplicateFactPolicy": "Own executable procedures and examples; link to architecture and artifact contracts.",
+      "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ARTIFACTS.md"],
+      "protectedFacts": ["cliCommands", "statusJsonSupported", "fixedContextPaths"]
+    },
+    "docs/DEVELOPMENT.md": {
+      "purpose": "Current source ownership, tests, validation, contributor rules, and limitations.",
+      "temporalLens": "Current repository source and verified development evidence.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Prerequisites", "Local setup", "Source layout", "Instruction and context source ownership", "Validation and compatibility fixtures", "Verification expectations", "Validation matrix"],
+      "allowedTopLevelHeadingPatterns": ["^(Prerequisites|Local setup|Common development commands|Contribution boundaries|Source layout|Development notes|Instruction and context source ownership|Validation and compatibility fixtures|Extraction mode implementation.*|Judge correction routing implementation.*|Trace checker implementation.*|Artifact content checker implementation.*|Adding a workflow mode|Adding a greenfield profile|Verification expectations|Validation matrix)$"],
+      "forbiddenTopLevelHeadingPatterns": ["planned", "^Planned:", "^Future module plan$", "^Implementation batch tracking$", "^Unreleased v[0-9]+\\.[0-9]+\\.[0-9]+"],
+      "forbiddenContentPatterns": ["candidate owner", "future module plan", "implementation batch tracking", "planned migration"],
+      "orderedHeadingGroups": [["Prerequisites", "Local setup", "Source layout", "Instruction and context source ownership", "Validation and compatibility fixtures", "Verification expectations", "Validation matrix"]],
+      "versionStatusPolicy": "Describe current owners and executed/configured validation evidence without implementation tracking.",
+      "sourceOfTruthOwners": ["src", "tests", "package.json", ".github/workflows"],
+      "duplicateFactPolicy": "Own contributor source maps, fixtures, commands, and limitations.",
+      "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/RELEASE_CHECKLIST.md"],
+      "protectedFacts": ["schemaVersions", "NodeSupport", "knownLimitations"]
+    },
+    "docs/ROADMAP.md": {
+      "purpose": "High-level released, current, and future version roadmap.",
+      "temporalLens": "Historical releases, current published status, and high-level future direction.",
+      "planningDetailAllowed": "high-level-only",
+      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
+      "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Implemented, unreleased v[0-9]+\\.[0-9]+\\.[0-9]+|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
+      "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
+      "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
+      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
+      "versionStatusPolicy": "Keep v1.2.1 as the current published milestone; future versions remain high level.",
+      "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
+      "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
+      "linkInsteadOfDuplicate": ["project-local planning records are not public links"],
+      "protectedFacts": ["roadmapVersions", "latestPublishedVersion"]
+    },
+    "docs/DOCUMENTATION_PRESERVATION_POLICY.md": {
+      "purpose": "Permanent authority, preservation, and structural rules for committed documentation.",
+      "temporalLens": "Current documentation governance.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Document classes and authority", "Protected structure", "Reorganization and relocation", "Reconciliation and stop threshold"],
+      "allowedTopLevelHeadingPatterns": ["^(Document classes and authority|Protected structure|Reorganization and relocation|Reconciliation and stop threshold)$"],
+      "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Implementation batches$"],
+      "forbiddenContentPatterns": ["candidate implementation batches"],
+      "orderedHeadingGroups": [["Document classes and authority", "Protected structure", "Reorganization and relocation", "Reconciliation and stop threshold"]],
+      "versionStatusPolicy": "Define governance rather than version implementation plans.",
+      "sourceOfTruthOwners": ["docs/documentation-preservation-manifest.json", "scripts/check-docs-consistency.mjs"],
+      "duplicateFactPolicy": "State policy without exposing local plan content.",
+      "linkInsteadOfDuplicate": ["docs/RELEASE_CHECKLIST.md"],
+      "protectedFacts": ["canonicalDocuments", "structuralContracts"]
+    },
+    "docs/RELEASE_CHECKLIST.md": {
+      "purpose": "Generic committed release validation process.",
+      "temporalLens": "Current release process plus historically scoped checklists.",
+      "planningDetailAllowed": false,
+      "requiredTopLevelHeadings": ["Current release baseline", "Required local validation", "Documentation and context-readiness audit", "Cross-platform and security gates", "Scope and limitations audit"],
+      "allowedTopLevelHeadingPatterns": ["^(Current release baseline|Required local validation|Documentation and context-readiness audit|Temporary-directory smoke|v[0-9]+\\.[0-9]+\\.[0-9]+.*|Cross-platform and security gates|Scope and limitations audit)$"],
+      "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Implementation batches$"],
+      "forbiddenContentPatterns": ["candidate implementation batches"],
+      "orderedHeadingGroups": [["Current release baseline", "Required local validation", "Documentation and context-readiness audit", "Cross-platform and security gates", "Scope and limitations audit"]],
+      "versionStatusPolicy": "Validate release-state consistency without becoming a version implementation tracker.",
+      "sourceOfTruthOwners": ["package.json", "scripts/check-docs-consistency.mjs", ".github/workflows"],
+      "duplicateFactPolicy": "Reference validation owners and preserve generic gates.",
+      "linkInsteadOfDuplicate": ["docs/DEVELOPMENT.md", "docs/DOCUMENTATION_PRESERVATION_POLICY.md"],
+      "protectedFacts": ["latestPublishedVersion", "validationCommands"]
+    }
+  },
+  "localFilePolicies": [
+    {
+      "filename": "project_plan.txt",
+      "tracking": "prohibited",
+      "publicLinking": "prohibited",
+      "format": "plain text",
+      "existence": "optional for clones; required for the active development worktree"
+    }
+  ]
+}

@@ -50,6 +50,9 @@ jobs:
       - name: Lint docs
         run: npm run lint:docs
 
+      - name: Security contract check
+        run: npm run test:security
+
       - name: CLI help
         run: node dist/cli.js --help
 
@@ -76,3 +79,6 @@ jobs:
 
       - name: CLI export smoke
         run: npm run smoke:cli -- export
+
+      - name: CLI greenfield smoke
+        run: npm run smoke:cli -- greenfield

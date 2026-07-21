@@ -10,6 +10,7 @@ import { generateStagePrompt } from '../promptGenerator';
 import { getNextStage, isRunComplete, getArtifactStatuses, getSupportingReportStatuses } from '../stageDetector';
 import { getWorkflow } from '../workflows';
 import { VALID_MODES } from '../types';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-int-'));
@@ -318,6 +319,7 @@ describe('audit: v0.1.0 scope compliance', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      makeReadyRunFolder(meta.runFolder, 'feature');
       const implPrompt = generateStagePrompt(meta, 'implementation');
       expect(implPrompt).not.toMatch(/verification.*passed/i);
       expect(implPrompt).not.toMatch(/tests.*passed/i);
@@ -440,7 +442,8 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
   });
 
   it('non-extraction modes include architecture-context supporting report entry', () => {
-    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction');
+    // greenfield (v1.1.0) has its own stage vocabulary and has no architecture-context stage.
+    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction' && m !== 'greenfield');
     for (const mode of nonExtractionModes) {
       const tmp = makeTempDir();
       try {

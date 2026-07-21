@@ -4,13 +4,18 @@ Artifacts are plain-text handoff files stored in each run folder.
 
 `my-dev-kit-orchestrator` uses artifact file existence and lifecycle state, not schema-heavy validation, to determine workflow progress.
 
+Use contract names such as `RequestBrief` when discussing an artifact's role,
+and use its exact path, such as `artifacts/request-brief.txt`, when discussing
+storage. See [Workflows](WORKFLOWS.md) for stage procedures and
+[Usage](USAGE.md) for command syntax.
+
 ## Run layout
 
 ```text
 .my-dev-kit-orchestrator/runs/<run-id>/
   00-request.txt
   run.json
-  artifact-state.json   ← added in v0.3.0
+  artifact-state.json   <- added in v0.3.0
   prompts/
   artifacts/
   reports/
@@ -66,11 +71,11 @@ Each required artifact has an effective lifecycle state:
 
 ### State resolution rules (in priority order)
 
-1. If state is `blocked` → `blocked` (even without artifact file)
-2. If artifact file does not exist → `missing`
-3. If state is `incomplete` → `incomplete`
-4. If an upstream artifact was completed or modified after this artifact → `stale`
-5. Otherwise → `complete`
+1. If state is `blocked` -> `blocked` (even without artifact file)
+2. If artifact file does not exist -> `missing`
+3. If state is `incomplete` -> `incomplete`
+4. If an upstream artifact was completed or modified after this artifact -> `stale`
+5. Otherwise -> `complete`
 
 ### Stale detection
 
@@ -222,7 +227,7 @@ Trace IDs are optional in artifacts. The trace checker skips artifacts with no t
 
 **Path:** `artifacts/design-map.txt`
 
-**Produced by:** `design-map` stage
+**Produced by:** the workflow participant when a consolidated trace registry is needed. DesignMap is not a registered workflow stage.
 
 **Purpose:** Maps trace IDs across all run artifacts into a single registry. Records requirement links, behavior links, invariant links, and orphan or missing links.
 
@@ -249,13 +254,18 @@ Trace IDs are optional in artifacts. The trace checker skips artifacts with no t
 
 Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifact has all required sections and no trace link issues.
 
-## Not implemented in v0.4.0
+## Artifact contract checks (v1.0.0)
 
-- design trace IDs (implemented in v0.5.0)
+`my-dev-kit-orchestrator check --artifacts` checks every stage artifact against its mode-aware plain-text contract. It reports missing or empty files, required sections, placeholder or blank content, missing predecessor artifacts, and unsupported modes or stages. Warnings remain warnings in normal mode and cause exit code 1 with `--strict`.
+
+`my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. Contract and stage-gate checks inspect the run but do not change lifecycle state or advance stages.
+
+## Current format limitations
+
 - full JSON schema validation or Zod/AJV enforcement
 - LLM-based artifact judging or semantic artifact grading
 - automatic artifact rewriting
-- judge correction routing
+- autonomous runtime verification
 
 ## How stage advancement works
 
@@ -271,7 +281,26 @@ Artifact content checks (`check` command) are a separate optional layer. They do
 
 ## Core feature-mode artifact files
 
-Feature mode expects these artifact files in order:
+Feature mode uses these core artifact contracts in order:
+
+| Contract | Producing stage | Preferred path | Primary downstream use |
+| --- | --- | --- | --- |
+| `RequestBrief` | `request-brief` | `artifacts/request-brief.txt` | Architecture context and scope control |
+| `ArchitectureContextPacket` | `architecture-context` | `artifacts/architecture-context-packet.txt` | Behavior, pseudocode, and implementation design |
+| `BehaviorModel` | `behavior-model` | `artifacts/behavior-model.txt` | Pseudocode and behavior-derived tests |
+| `PseudocodePacket` | `pseudocode-packet` | `artifacts/pseudocode-packet.txt` | Implementation and test implementation |
+| `TestStrategyPacket` | `test-strategy` | `artifacts/test-strategy-packet.txt` | Test implementation and verification |
+| `ImplementationReport` | `implementation` | `artifacts/implementation-report.txt` | Verification and judge review |
+| `TestImplementationReport` | `test-implementation` | `artifacts/test-implementation-report.txt` | Verification and judge review |
+| `VerificationReport` | `verification` | `artifacts/verification-report.txt` | Judge review and final report |
+| `JudgeReport` | `judge` | `artifacts/judge-report.txt` | Correction routing and final report |
+| `FinalReport` | `final-report` | `artifacts/final-report.txt` | Completed run handoff |
+
+The producing prompt defines each artifact's required sections. An artifact is
+complete only when its required content is present, its declared status agrees
+with lifecycle metadata, and it is ready for its downstream consumers.
+
+The corresponding files are:
 
 1. `artifacts/request-brief.txt`
 2. `artifacts/architecture-context-packet.txt`
@@ -339,6 +368,52 @@ Feature mode expects these artifact files in order:
 - `artifacts/verification-report.txt`
 - `artifacts/judge-report.txt`
 - `artifacts/final-report.txt`
+
+## Greenfield mode artifacts
+
+Greenfield uses the same `ARTIFACT_MAP`, stage-kind registry, section
+registry, artifact checker, and contract checker as every other mode. It does
+not have a parallel artifact engine or a
+`validateGreenfieldArtifacts.ts` module.
+
+The 13 stage outputs are:
+
+| Stage | Implemented path |
+| --- | --- |
+| `idea-brief` | `artifacts/idea-brief.json` |
+| `product-boundary` | `artifacts/product-boundary.txt` |
+| `stack-decision` | `artifacts/stack-decision.txt` |
+| `starter-profile` | `artifacts/starter-profile.json` |
+| `bootstrap-bundle` | `artifacts/bootstrap-bundle.json` |
+| `project-docs` | `artifacts/project-docs-report.txt` |
+| `scaffold-plan` | `artifacts/scaffold-plan.txt` |
+| `scaffold-implementation` | `reports/scaffold-implementation-report.txt` |
+| `first-vertical-slice` | `artifacts/first-vertical-slice.txt` |
+| `verification` | `artifacts/verification-report.txt` |
+| `initial-index` | `reports/initial-index-report.txt` |
+| `judge` | `artifacts/judge-report.txt` |
+| `final-report` | `artifacts/final-report.txt` |
+
+`verification`, `judge`, and `final-report` deliberately reuse the shared
+`artifacts/*.txt` paths because `ARTIFACT_MAP` is keyed by stage name across
+all modes. They do not use greenfield-only `reports/*.txt` alternatives.
+
+The JSON-named brief, profile, and bundle files still participate in the
+shared existence, predecessor, and required-section checks. Bootstrap project
+documentation is structured in-memory runtime output; it does not imply that
+the orchestrator writes template documents. `validateBootstrapDocs` checks
+required content and is profile-aware: Android/Jetpack/Kotlin/Gradle content
+is permitted only when the selected profile is `android-compose`; iOS/React
+Native/Flutter/multiplatform claims and release/security/publish/Play-Store
+claims are rejected regardless of the selected profile.
+
+`GreenfieldScaffoldPlan`'s `setupCommands` and `validationCommands` fields are
+`GreenfieldProfileCommand[]` (`{ command, purpose, required,
+environmentNotes? }`), sourced directly from the selected profile -- never
+executed by the orchestrator. For `android-compose`, `setupCommands` is `[]`
+(the Gradle wrapper needs no separate install step) and `validationCommands`
+lists `./gradlew build` and `./gradlew testDebugUnitTest` as required, plus an
+optional, device/emulator-dependent `./gradlew connectedAndroidTest`.
 
 ## Extraction mode artifacts
 
@@ -493,7 +568,62 @@ The GoldenBehaviorContract is mandatory before `pseudocode-packet` and `test-str
 - Source components discarded
 - Architecture guardrails
 
-## Artifact expectations
+## Instruction packets and supplemental context files
+
+### Instruction-packet sidecars
+
+Every native stage prompt has one sibling `*.instruction-packet.json` file.
+The path is derived by replacing the `*.prompt.txt` suffix with
+`*.instruction-packet.json`. Each sidecar uses
+`WorkflowInstructionPacket` schema `1.0.0` and deterministic canonical JSON.
+
+Sidecars contain catalog-owned instruction content only. They contain no
+run-specific paths, repository context, context-readiness state, or timestamps.
+They are not native artifacts, do not appear in `run.json` or
+`artifact-state.json`, are not mark targets, and do not participate in
+lifecycle progression.
+
+### Fixed supplemental context files
+
+Context-sensitive modes create these fixed run files as templates:
+
+- `artifacts/implementation-context-packet.txt`
+- `reports/implementation-context-retrieval-report.txt`
+- `artifacts/test-context-packet.txt`
+- `reports/test-context-retrieval-report.txt`
+
+The mode matrix is:
+
+| Mode | Implementation packet/report | Test packet/report |
+| --- | --- | --- |
+| `feature` | yes | yes |
+| `repair` | yes | yes |
+| `test` | no | yes |
+| `refactor` | yes | yes |
+| `harden` | yes | yes |
+| `extraction` | yes, with source-target scope | yes, with source-target scope |
+| `greenfield` | no | no |
+
+Supplemental context packets and retrieval reports each use schema `1.0.0`.
+Their required metadata identifies schema version, document kind, role,
+template/populated status, repository scope, freshness, adequacy, truncation,
+tool/index identity, and raw-evidence references. Populated documents use
+required headings for bounded repository evidence, warnings, gaps, and
+responsibility mappings where applicable. References identify the raw
+context-capsule, raw retrieval-audit record, and after-index evidence; full raw
+evidence is not copied into the supplemental document model.
+
+These supplemental files are run files, not native stage artifacts. They are
+not mark targets and do not affect native lifecycle state: editing them does
+not mark artifacts stale, deletion creates no artifact-state transition, and
+they do not appear as lifecycle stages. They can affect context readiness,
+prompt rendering, `check` results, and exported readiness summaries.
+
+`export` includes a structured readiness summary. It does not embed complete
+raw capsule or audit contents and does not copy referenced external evidence
+files merely because a supplemental document names them.
+
+## Shared completion expectations
 
 - Artifacts are plain text.
 - The CLI does not validate artifact contents against JSON schemas.

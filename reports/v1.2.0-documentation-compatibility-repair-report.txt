@@ -1,0 +1,100 @@
+Artifact: V120DocumentationCompatibilityRepairReport
+Batch: v1.2.0 Batch 5
+
+BRANCH
+- branch name: feature/v1.2.0-documentation-compatibility
+- starting commit: c99edf7 (Batch 4 ending commit)
+- ending commit: 7c72876
+
+DOCUMENTS CHANGED
+- README.md -- reason: fix stale two-profile/no-Android claims, add Android Compose example, correct current-limitations
+- CHANGELOG.md -- reason: add an "Unreleased" v1.2.0 entry (accurate, unpublished status)
+- docs/ROADMAP.md -- reason: convert the "Planned v1.2.0" entry to "Implemented v1.2.0" with an explicit plan-vs-actual deviations subsection; update version-summary bullet
+- docs/USAGE.md -- reason: fix stale profile claim, add Android Compose and Next.js usage examples, correct the export path-safety disclaimer to match actually-shipped (and Batch-4-tested) behavior
+- docs/WORKFLOWS.md -- reason: fix the exact stale two-profile sentence flagged since Batch 1; document CLI static-prompt/profile-resolution architecture; remove version pin from mode-count sentence
+- docs/ARTIFACTS.md -- reason: correct the validateBootstrapDocs description to be profile-conditional; document GreenfieldProfileCommand[]/setupCommands/validationCommands
+- docs/DEVELOPMENT.md -- reason: add required "Adding a greenfield profile" guidance
+- docs/ARCHITECTURE.md -- reason: add required "Greenfield profile architecture" section
+- docs/RELEASE_CHECKLIST.md -- reason: fix stale scope bullet, add required v1.2.0 Android Compose smoke checklist, generalize version-specific bullets
+- scripts/check-docs-consistency.mjs -- reason: remove hardcoded two-profile regex and hardcoded misleading-claim patterns; add source-derived profile extraction and negation-aware claim checks
+- src/__tests__/docs-consistency.test.ts -- reason: update fixture to include the new source file docs:check now reads; add 6 new tests proving the stale two-profile claim is caught and legitimate Android Compose claims are not false-positived
+
+STALE CLAIMS FIXED
+- file: README.md
+  stale claim: "supports the `typescript-cli` and `nextjs-app` starter profiles. It does not implement Android or other mobile profiles."
+  replacement summary: now states 3 profiles (typescript-cli, nextjs-app, android-compose), describes Android Compose's actual scope (profile-guided planning, no Gradle execution, no SDK requirement), and states generic mobile is unresolved and iOS/Flutter/React Native are unsupported
+
+- file: README.md
+  stale claim: "no Android/mobile support in `v1.1.0`" (Current limitations)
+  replacement summary: replaced with the real, current limitations (Android Compose scope boundaries, generic-mobile ambiguity, unsupported platforms)
+
+- file: docs/WORKFLOWS.md
+  stale claim: "The v1.1.0 foundation is platform-neutral. It supports the `typescript-cli` and `nextjs-app` profiles, not Android or other mobile profiles."
+  replacement summary: replaced with the 3-profile statement, plus a new paragraph explaining that `start`/`prompt` never resolve a profile at the CLI layer (true for every profile) and that Android Compose is planning/prompt guidance, not a build runner
+
+- file: docs/USAGE.md
+  stale claim: "does not provide an Android or mobile profile" + the undersold export-traversal disclaimer
+  replacement summary: replaced with the 3-profile statement and Android Compose/Next.js usage examples; the traversal sentence now accurately states `--out` rejects raw `..` traversal, symlink, and directory targets before writing anything (matching the CHANGELOG's own "fixed" claim and Batch 4's tested behavior)
+
+- file: docs/ARTIFACTS.md
+  stale claim: "`validateBootstrapDocs` checks required content and rejects unsupported Android/mobile and release/security/publishing claims" (stated unconditionally)
+  replacement summary: now states the profile-conditional behavior (Android/Jetpack permitted only for android-compose; unsupported-platform and release/security/publish/Play-Store claims rejected for every profile), plus new GreenfieldProfileCommand[] documentation
+
+- file: docs/RELEASE_CHECKLIST.md
+  stale claim: "Android/mobile support remains deferred beyond `v1.1.0`"
+  replacement summary: replaced with accurate current-scope bullets; added a dedicated "v1.2.0 Android Compose greenfield smoke" checklist section
+
+- file: docs/ROADMAP.md
+  stale claim: the "Planned v1.2.0" entry's `--profile` CLI flag and Android/Compose-signal auto-routing description
+  replacement summary: moved into a new "Implemented v1.2.0" section (mirroring "Implemented v1.1.0") stating what was actually built, with an explicit "Deviations from the original plan" subsection naming exactly what was planned-but-not-built and why (a deliberate scope decision, documented since Batch 2, not an oversight)
+
+- file: scripts/check-docs-consistency.mjs
+  stale claim (as code, not prose): hardcoded two-profile regex; `/supports android/i` and `/supports mobile/i` patterns that would false-positive on a correct "supports Android Compose" claim
+  replacement summary: see reports/v1.2.0-docs-check-report.txt for full detail
+
+README REPAIR
+- profile list correction: typescript-cli, nextjs-app, android-compose (was: typescript-cli, nextjs-app only)
+- Android Compose support scope: stated as profile-guided planning (stack decisions, prompts, docs, scaffold-plan expectations, validation-command guidance); explicitly states no Gradle execution and no Android SDK requirement
+- generic mobile limitation: stated as ambiguous/unresolved, not silently selected
+- unsupported platforms: iOS, Flutter, React Native explicitly named as unsupported
+- versioning simplification: "Current release" section now distinguishes the latest *published* package (1.1.0) from what the *current repository source* additionally includes (Android Compose, implemented after that release), deferring version-history detail to CHANGELOG.md rather than narrating it in README
+
+CHANGELOG REPAIR
+- v1.2.0 entry status: added under "## Unreleased" (not a versioned "## v1.2.0" heading, since it is not released), listing every implemented feature from Batches 2-4 plus this batch's documentation hardening
+- publish status wording: explicitly states "Implemented on development branches, not yet published, tagged, or released" -- no publish/tag/release claim made
+- historical preservation: the v1.1.0 entry and all earlier entries were not modified
+
+ROADMAP REPAIR
+- v1.2.0 status: "Implemented on development branches...pending the separate pre-release readiness workflow"
+- future plan preservation: v1.3.0/v1.4.0/v1.5.0 sections were not touched, moved, or reorganized
+- no roadmap drift confirmation: the only structural change was moving the v1.2.0 entry from "Planned milestones" to a new "Implemented v1.2.0" section (mirroring the existing v1.1.0 pattern) with an explicit plan-vs-actual deviations note; no feature was moved between version numbers, no future version was invented or marked complete
+
+DOCS/WORKFLOWS REPAIR
+- two-profile claim fixed: yes
+- Android Compose profile flow documented: yes (references starter-profile resolution, and clarifies Android Compose is planning/prompt guidance, not a build runner)
+- CLI static prompt behavior documented: yes, per section 14.3 -- explicitly states `start` never resolves a profile and `prompt` renders static, mode+stage-keyed text
+
+DOCS/ARTIFACTS REPAIR
+- artifact path compatibility: unchanged (already correct; no artifact path changed in Batches 2-4)
+- setupCommands/validationCommands documented: yes, including the GreenfieldProfileCommand shape and android-compose's specific values
+
+DOCS/DEVELOPMENT REPAIR
+- profile extension guidance: added a full "Adding a greenfield profile" section (required GreenfieldProfile fields, setupCommands/validationCommands, alias/resolver guidance, no-fuzzy-matching requirement, required test categories)
+- docs consistency guidance: added explicit instruction to extract profile ids from SUPPORTED_PROFILES rather than hardcoding a list in docs or the docs-check script
+
+DOCS/ARCHITECTURE REPAIR
+- profile-driven architecture: added a new "Greenfield profile architecture" section describing resolution, the profile contract's command fields, profile-conditional validation, and the CLI's static-prompt/generic-check-export architecture
+- check/export generic behavior: already documented accurately in the pre-existing "Check and export boundaries" section; no change was needed there
+
+DOCS/RELEASE_CHECKLIST REPAIR
+- v1.2.0 validation commands: the existing "Required local validation" list already matched Batch 4's exact command set; no change needed there
+- Android Compose smoke checks: added a dedicated "v1.2.0 Android Compose greenfield smoke" section with the explicit Android Compose request and a no-Gradle-execution/no-SDK-requirement confirmation line
+
+SCOPE CONTROL
+- no runtime feature changes: confirmed. Every source file touched in this batch (scripts/check-docs-consistency.mjs, src/__tests__/docs-consistency.test.ts) is docs-tooling/test-only; zero files under src/greenfield/, src/commands/, src/promptGenerator.ts, or any other runtime path were modified in this batch.
+- no Gradle execution: confirmed, no command in this batch's validation or smoke run invoked Gradle.
+- no Android SDK requirement: confirmed, full suite and CLI smoke both pass without one installed.
+- no unsupported mobile platform claims: confirmed, docs:check itself now actively checks for and rejects these (see docs-check report).
+- no publish/tag/release claims: confirmed, CHANGELOG/ROADMAP both explicitly state v1.2.0 is unpublished and pending the pre-release workflow; no version bump was made to package.json.
+
+STATUS: complete

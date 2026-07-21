@@ -1,6 +1,6 @@
 {
-  "name": "my-dev-kit-orchestrator",
-  "version": "1.0.0",
+  "name": "@dailephd/my-dev-kit-orchestrator",
+  "version": "1.2.1",
   "description": "CLI-first workflow tool for design-first software development with coding agents",
   "main": "dist/index.js",
   "repository": {
@@ -11,6 +11,9 @@
     "url": "https://github.com/dailephd/my-dev-kit-orchestrator/issues"
   },
   "homepage": "https://github.com/dailephd/my-dev-kit-orchestrator#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "my-dev-kit-orchestrator": "dist/cli.js"
   },
@@ -18,8 +21,10 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "start": "node dist/cli.js",
+    "docs:check": "node scripts/check-docs-consistency.mjs",
     "smoke:cli": "node scripts/cli-smoke.mjs",
     "test": "jest",
+    "test:security": "node scripts/test-security.mjs",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
@@ -41,7 +46,6 @@
     "commander": "^11.1.0"
   },
   "overrides": {
-    "js-yaml": "^4.2.0",
     "markdown-it": "^14.2.0"
   },
   "devDependencies": {
@@ -51,7 +55,7 @@
     "@typescript-eslint/parser": "^8.62.0",
     "eslint": "^8.55.0",
     "jest": "^30.4.2",
-    "markdownlint-cli2": "^0.22.1",
+    "markdownlint-cli2": "0.23.1",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.4.11",
     "typescript": "^5.3.3"

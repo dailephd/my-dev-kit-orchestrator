@@ -1,0 +1,66 @@
+name: Pre-release matrix
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  workflow_dispatch:
+
+jobs:
+  pre_release_validate:
+    name: Pre-release (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15, ubuntu-latest]
+        node-version: ['26']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Documentation consistency
+        run: npm run docs:check
+
+      - name: Documentation lint
+        run: npm run lint:docs
+
+      - name: Source lint
+        run: npm run lint
+
+      - name: Security contract check
+        run: npm run test:security
+
+      - name: Greenfield tests
+        run: npx jest tests/greenfield --silent
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Full test suite
+        run: npm test
+
+      - name: CLI version
+        run: node dist/cli.js --version
+
+      - name: CLI help
+        run: node dist/cli.js --help
+
+      - name: Package dry-run
+        run: npm pack --dry-run
+
+      - name: Android Compose greenfield smoke
+        run: npm run smoke:cli -- greenfield
