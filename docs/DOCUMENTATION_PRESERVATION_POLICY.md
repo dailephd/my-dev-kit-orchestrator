@@ -16,6 +16,18 @@ deletion, compression, and status drift.
 Implementation may change a planned version's status. It must not erase future
 scope or unrelated plans.
 
+Committed technical documentation describes the current repository: public
+usage, implemented architecture, workflow behavior, file contracts,
+contributor guidance, release history, and current limitations. Detailed
+version planning, implementation tracking, pending decisions, and publication
+tracking belong in a local untracked plain-text plan. The committed roadmap is
+the sole planning exception and remains high level.
+
+The local plan is not canonical documentation, is not linked from public
+documents, is not required in ordinary clones, and is not included in package
+output. Its content never overrides implementation, tests, package metadata,
+or compatibility fixtures.
+
 ## Protected structure
 
 Documentation work must preserve:
@@ -53,3 +65,15 @@ Before commit, stop when protected structure disappears, a deletion lacks
 authorization, or a planning document loses more than 15 percent of its
 nonblank lines without a documented relocation. Review before-and-after
 inventories and the complete diff before staging documentation changes.
+
+Run `npm run docs:check` after reconciliation. The checker must derive stable
+public facts from implementation owners where practical, compare them with the
+preservation manifest and canonical documents, and emit actionable stable
+issue codes for contradictions. It complements review; it does not make
+existing prose authoritative over current implementation.
+
+Each canonical document also has a structural contract covering purpose,
+temporal lens, planning policy, required and forbidden headings, forbidden
+content, major heading order, version-status policy, source owners, and
+duplication boundaries. The documentation gate validates required claims and
+the absence of contradictory or structurally invalid planning material.

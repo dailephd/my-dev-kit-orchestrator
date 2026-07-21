@@ -189,11 +189,11 @@ The architecture-context stage can be handled as a task-specific prompt that use
 Typical command sequence:
 
 ```bash
-npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
-npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task term>" --limit 20 --json
-npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<node-id>" --depth 1 --json
-npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<node-id>" --depth 2 --direction both --json
-npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
+<MY_DEV_KIT_CLI> index --root . --src src --out .my-dev-kit --call-graph --json
+<MY_DEV_KIT_CLI> search --index .my-dev-kit --query "<task term>" --limit 20 --json
+<MY_DEV_KIT_CLI> lookup --index .my-dev-kit --node "<node-id>" --depth 1 --json
+<MY_DEV_KIT_CLI> slice --index .my-dev-kit --node "<node-id>" --depth 2 --direction both --json
+<MY_DEV_KIT_CLI> source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
 my-dev-kit-orchestrator init
 my-dev-kit-orchestrator start --mode feature "<request>"
 my-dev-kit-orchestrator prompt architecture-context
@@ -209,6 +209,43 @@ In that flow, the coding agent should:
 - continue the orchestrator workflow from the next stage
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
+
+## Supply implementation and test context manually
+
+Unreleased `v1.2.1` evaluates supplemental repository evidence but does not
+retrieve it. Use this sequence for `feature`, `repair`, `refactor`, `harden`,
+or `extraction`; test mode uses only the test-context pair.
+
+1. Create or start a run.
+2. Inspect the generated supplemental templates in `artifacts/` and `reports/`.
+3. Run a verified CLI manually, using `<MY_DEV_KIT_CLI>` as the executable
+   selected for your environment.
+4. Populate the packet and retrieval-report metadata and required sections.
+5. Reference the raw context-capsule, retrieval-audit, and after-index evidence
+   files; do not paste their full contents into the supplemental documents.
+6. Run `my-dev-kit-orchestrator status`.
+7. Run `my-dev-kit-orchestrator check` or
+   `my-dev-kit-orchestrator check --all`.
+8. Print the target prompt again.
+9. Proceed with implementation or test work only when readiness is `ready`.
+
+The published package labeled `my-dev-kit` 1.10.2 showed a CLI mismatch from
+the verified role-aware source contract used by this integration. Do not assume
+a particular published executable provides the required commands; select and
+verify `<MY_DEV_KIT_CLI>` manually.
+
+The fixed files are:
+
+- `artifacts/implementation-context-packet.txt`
+- `reports/implementation-context-retrieval-report.txt`
+- `artifacts/test-context-packet.txt`
+- `reports/test-context-retrieval-report.txt`
+
+When readiness is blocked, a direct `implementation` or
+`test-implementation` prompt is refresh-only and prohibits normal work. A
+ready direct stage renders its normal task. `prompt` display is read-only: it
+does not create sidecars or templates and does not alter `run.json`,
+`artifact-state.json`, or supplemental files.
 
 ## Start an extraction run
 
@@ -235,9 +272,9 @@ npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
 
 ```powershell
 npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
-  --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
-  --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
-  "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
+  --source "C:\source-repository" `
+  --target "C:\target-repository" `
+  "Extract a bounded workflow into the target repository."
 ```
 
 ### Source and target index separation
@@ -247,13 +284,13 @@ Each repository uses its own `.my-dev-kit` index directory. The coding agent ind
 Source repository index:
 
 ```bash
-npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
+<MY_DEV_KIT_CLI> index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
 ```
 
 Target repository index (if the target already has source to inspect):
 
 ```bash
-npx @dailephd/my-dev-kit index --root <target-repo-root> --out <target-repo-root>/.my-dev-kit
+<MY_DEV_KIT_CLI> index --root <target-repo-root> --out <target-repo-root>/.my-dev-kit
 ```
 
 Do not mix source and target retrieval results. Mixing them would undermine the porting analysis.
@@ -300,7 +337,11 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 - available prompts
 - present and missing artifacts
 - supporting reports (for example, the architecture-context retrieval report)
+- implementation and test context decisions, freshness, adequacy, blocking
+  issue summaries, and the recommended next stage when applicable
 - suggested next command
+
+`status` is human-readable. The current CLI has no JSON option.
 
 ## List runs
 
@@ -475,6 +516,13 @@ The correction prompt includes:
 | `TEST_COVERAGE_INCOMPLETE` | `test-strategy` |
 | `ARCHITECTURE_MISMATCH` | `architecture-context` |
 | `NEED_VERIFICATION` | `verification` |
+
+That table remains the default for historical/general correction routing. In
+unreleased `v1.2.1`, a judge prompt blocked by context readiness supplies an
+exact valid `Recommended next stage`: `implementation` takes priority when
+implementation context is blocked, otherwise `test-implementation` is used
+(and test mode always uses `test-implementation`). The existing recommended-
+stage override honors that value; no new verdict or correction file is added.
 | `SCOPE_VIOLATION` | blocked (no correction stage) |
 | `BLOCKED` | blocked (no correction stage) |
 | `PASS` | no correction (run continues normally) |
@@ -664,9 +712,12 @@ Content check: not run  (run: my-dev-kit-orchestrator check)
 | `warn` | Possible problem | exits 0 (exits 1 with `--strict`) |
 | `fail` | Definite problem | exits 1 |
 
-### Content checks do not affect stage advancement
+### Content checks do not mutate lifecycle state
 
-The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.
+The `check` command is read-only and does not advance stages or mutate
+lifecycle state. Context readiness is included: blocking context issues make
+the command exit nonzero, while warning-only context conditions do not fail.
+Duplicate failures for the same context kind are suppressed.
 
 ## Check artifact contracts and stage gates
 
@@ -702,6 +753,8 @@ my-dev-kit-orchestrator check --all --strict
 - trace checks (all artifacts)
 - design-map trace check (if design-map.txt exists)
 - correction routing state
+- implementation/test context readiness, with duplicate context-kind failures
+  suppressed
 
 ## Export a run handoff
 
@@ -724,6 +777,7 @@ The export includes:
 - correction state
 - verification evidence excerpt
 - content check and trace check summaries
+- structured implementation/test context-readiness summary
 - next command (with correction context if correction is active)
 
 Export behavior:
@@ -733,6 +787,8 @@ Export behavior:
 - `--overwrite`: allow replacing an existing output file
 - rejects raw parent-path traversal segments, symbolic-link targets,
   directory targets, and non-existent parent directories
+- does not embed full raw capsule/audit contents or copy referenced external
+  evidence files
 
 ## Troubleshooting
 

@@ -568,6 +568,61 @@ The GoldenBehaviorContract is mandatory before `pseudocode-packet` and `test-str
 - Source components discarded
 - Architecture guardrails
 
+## Instruction packets and supplemental context files
+
+### Instruction-packet sidecars
+
+Every native stage prompt has one sibling `*.instruction-packet.json` file.
+The path is derived by replacing the `*.prompt.txt` suffix with
+`*.instruction-packet.json`. Each sidecar uses
+`WorkflowInstructionPacket` schema `1.0.0` and deterministic canonical JSON.
+
+Sidecars contain catalog-owned instruction content only. They contain no
+run-specific paths, repository context, context-readiness state, or timestamps.
+They are not native artifacts, do not appear in `run.json` or
+`artifact-state.json`, are not mark targets, and do not participate in
+lifecycle progression.
+
+### Fixed supplemental context files
+
+Context-sensitive modes create these fixed run files as templates:
+
+- `artifacts/implementation-context-packet.txt`
+- `reports/implementation-context-retrieval-report.txt`
+- `artifacts/test-context-packet.txt`
+- `reports/test-context-retrieval-report.txt`
+
+The mode matrix is:
+
+| Mode | Implementation packet/report | Test packet/report |
+| --- | --- | --- |
+| `feature` | yes | yes |
+| `repair` | yes | yes |
+| `test` | no | yes |
+| `refactor` | yes | yes |
+| `harden` | yes | yes |
+| `extraction` | yes, with source-target scope | yes, with source-target scope |
+| `greenfield` | no | no |
+
+Supplemental context packets and retrieval reports each use schema `1.0.0`.
+Their required metadata identifies schema version, document kind, role,
+template/populated status, repository scope, freshness, adequacy, truncation,
+tool/index identity, and raw-evidence references. Populated documents use
+required headings for bounded repository evidence, warnings, gaps, and
+responsibility mappings where applicable. References identify the raw
+context-capsule, raw retrieval-audit record, and after-index evidence; full raw
+evidence is not copied into the supplemental document model.
+
+These supplemental files are run files, not native stage artifacts. They are
+not mark targets and do not affect native lifecycle state: editing them does
+not mark artifacts stale, deletion creates no artifact-state transition, and
+they do not appear as lifecycle stages. They can affect context readiness,
+prompt rendering, `check` results, and exported readiness summaries.
+
+`export` includes a structured readiness summary. It does not embed complete
+raw capsule or audit contents and does not copy referenced external evidence
+files merely because a supplemental document names them.
+
 ## Shared completion expectations
 
 - Artifacts are plain text.

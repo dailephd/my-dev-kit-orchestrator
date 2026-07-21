@@ -173,9 +173,9 @@ Windows example:
 
 ```powershell
 npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
-  --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
-  --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
-  "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
+  --source "C:\source-repository" `
+  --target "C:\target-repository" `
+  "Extract a bounded workflow into the target repository."
 ```
 
 ### Stage order
@@ -375,6 +375,64 @@ The bootstrap runtime is deterministic and has no disk I/O or timestamps.
 Project-doc bootstrap returns structured in-memory content rather than writing
 template files. Component documentation remains empty until the brief schema
 has module or component hints.
+
+## Instruction packets and context-sensitive behavior
+
+The seven workflow definitions contain 79 native stages in total. The stage
+orders documented above are the exact `getAllWorkflows()` order and are
+unchanged by the implemented instruction and context integration.
+
+All 79 stages have stable catalog identities and deterministic
+instruction-packet sidecars. Seventy-seven stages use the generalized
+packet-backed prompt rendering path. The greenfield `scaffold-plan` and
+`scaffold-implementation` stages retain their specialized scaffold renderer;
+both exceptions still have catalog entries and sidecars, and their stage
+names, prompt filenames, artifacts, and lifecycle behavior are unchanged.
+
+### Context-sensitive direct stages
+
+Repository evidence is attached only to this exact 11-stage matrix:
+
+| Context kind | Workflow mode | Native stage |
+| --- | --- | --- |
+| Implementation context | `feature` | `implementation` |
+| Implementation context | `repair` | `implementation` |
+| Implementation context | `refactor` | `implementation` |
+| Implementation context | `harden` | `implementation` |
+| Implementation context | `extraction` | `implementation` |
+| Test context | `feature` | `test-implementation` |
+| Test context | `repair` | `test-implementation` |
+| Test context | `test` | `test-implementation` |
+| Test context | `refactor` | `test-implementation` |
+| Test context | `harden` | `test-implementation` |
+| Test context | `extraction` | `test-implementation` |
+
+There are five implementation-context stages and six test-context stages.
+Greenfield requires neither context kind and no native context stage exists.
+
+New context-sensitive runs start with templates, so a direct
+`implementation` or `test-implementation` prompt may initially be a
+refresh-only prompt. It prohibits normal production or test work and directs
+the user to refresh the required evidence. Printing a prompt reevaluates
+readiness but does not write sidecars, generate templates, or mutate run files.
+Normal work resumes after readiness passes.
+
+### Verification, judge, and correction flow
+
+Verification and judge in `feature`, `repair`, `refactor`, `harden`, and
+`extraction` review implementation and test context. In `test`, they review
+test context only. Greenfield performs no repository-context review.
+
+Blocked judge prompts use the existing `NEED_CONTEXT` verdict; no new verdict
+was added. They require a valid exact `Recommended next stage`:
+
+- recommend `implementation` first when implementation context is blocked;
+- recommend `test-implementation` when only test context is blocked;
+- recommend `test-implementation` for test mode.
+
+The recommendation overrides the older default table through existing
+correction routing. There is no correction-specific instruction-packet
+sidecar and no correction-specific context file.
 
 ## Shared stage gates and completion rules
 

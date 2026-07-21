@@ -102,7 +102,13 @@ describe('start --mode greenfield creates a run', () => {
       mode: 'greenfield',
       projectRoot: tmp,
     });
-    const promptFiles = fs.readdirSync(path.join(meta.runFolder, 'prompts')).sort();
+    // Batch 3 also writes one *.instruction-packet.json sidecar per stage
+    // alongside each *.prompt.txt file in the same prompts/ directory (see
+    // src/promptGenerator.ts#writeStagePrompts); filter to prompt files only.
+    const promptFiles = fs
+      .readdirSync(path.join(meta.runFolder, 'prompts'))
+      .filter((f) => f.endsWith('.prompt.txt'))
+      .sort();
     expect(promptFiles.length).toBe(EXPECTED_GREENFIELD_STAGES.length);
   });
 

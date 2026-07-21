@@ -1,0 +1,1354 @@
+{
+  "baselineCommit": "983a476da2d483f76f92fef73a0b324c9ed77ea7",
+  "packageVersion": "1.2.0",
+  "generationMethod": "Extracted the pristine v1.2.0 src/promptGenerator.ts blob directly via `git show HEAD:src/promptGenerator.ts` (HEAD was 983a476... and untouched at extraction time) into a temporary same-directory module so its relative imports (./run, ./types, ./workflows, ./correctionRouter, ./greenfield/...) resolved against the unchanged v1.2.0 sources. Rendered every mode/stage prompt with the same fixed synthetic RunMetadata used for tests/fixtures/v120-baseline/prompt-hashes.json, then extracted normalized structural fields. The temporary module was deleted after generation and is not part of the repository.",
+  "normalization": "All dynamic fields (runId, projectRoot, runFolder, source/target repo) were held constant via a fixed synthetic RunMetadata, so no additional text substitution was required.",
+  "hashAlgorithm": "sha256",
+  "entries": [
+    {
+      "mode": "feature",
+      "stage": "request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "artifactFile": "artifacts/request-brief.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "fcf8156d95ea24c8d817108502fd5415fb0ac7fcaa3c7e82293bbccadfe6dcc8",
+      "inputsBlockHash": "546bf80c0f92fe6f97354797e712907a5f26e49ad48fe22206e30c2214a78aa4",
+      "requiredOutputArtifactLine": "Required output artifact: RequestBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/request-brief.txt",
+      "returnFormatHash": "d1341cc1b7d1219181692128b2fdb5769c8617ee36d0b96122c5d1b627f1745c",
+      "baselinePromptHash": "802edd446163b5707ae9319da398ed6ab51c4b33dfdf4d6e5aaf14a498af4653",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "32d20ccc30cd506644c11dabe2c8b2f0c2ee5679f4c33d48b1a0bfe66fe6326a",
+      "inputsBlockHash": "de443aa43a58ecc44ba249b850406e034829784b5f4b84b97e89e7a5f4a2a845",
+      "requiredOutputArtifactLine": "Required output artifact: ArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/architecture-context-packet.txt",
+      "returnFormatHash": "d8e78dbe692c9bfff6eb7e655c37601382683dc394b5ca3b694500f035033449",
+      "baselinePromptHash": "7bda202b313a3e452e6f936575e77ea71bd003c668f3e6e3d2d29f4b1c128c7e",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "behavior-model",
+      "promptFile": "prompts/03-behavior-model.prompt.txt",
+      "artifactFile": "artifacts/behavior-model.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "a4c15879f19616aa101283f76a3a1c0b25152f65bed949786e55aea632169c8a",
+      "inputsBlockHash": "6b335cbb0a18db8d929e9f950114c14ae6af1e13d8ddeaa079e511dede65fb8a",
+      "requiredOutputArtifactLine": "Required output artifact: BehaviorModel",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/behavior-model.txt",
+      "returnFormatHash": "a72ea5df950528b8b07dc3aebb1679c16ad4f843764b66d1e15e97942b1505c3",
+      "baselinePromptHash": "5f80c87e33bcebab25dd326eabe205344b5cbf6eeac9a65034935efcf1a38459",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "pseudocode-packet",
+      "promptFile": "prompts/04-pseudocode-packet.prompt.txt",
+      "artifactFile": "artifacts/pseudocode-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "78e9175288dbe3b88e680517110391b9c637771850d194a5decf3f2aa220b4b9",
+      "inputsBlockHash": "ca1d762fd7eb5b95bd1df0cfe5d69c1e49b8286a548eb2a70bcf06e4cb64582b",
+      "requiredOutputArtifactLine": "Required output artifact: PseudocodePacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/pseudocode-packet.txt",
+      "returnFormatHash": "11d0666a19eb66d2e7d083ee118348634fd3826d6cf33aec997c4db8483f3fbc",
+      "baselinePromptHash": "9e9dd163375cacba4ee0193c991b934465c18961a18198b7885783dc7412ebc5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "7329173666bcd2ba8c12b16a2e1d9c1c19d15f6f9de57c738417edde2cd30b20",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: TestStrategyPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-strategy-packet.txt",
+      "returnFormatHash": "ce371c92c8df4c4d0df323b8f3cdcdb42db854063685ecab0d9858519382ac91",
+      "baselinePromptHash": "d735773079a9a68cff13b57b45b3d8207b4ed774115c98b6c124e3c2595f5499",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "implementation",
+      "promptFile": "prompts/06-implementation.prompt.txt",
+      "artifactFile": "artifacts/implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "58f0a9da32bbc50c6376553d21db6cbe95b7f47a1aadeed22438d5a5e4e2210d",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: ImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/implementation-report.txt",
+      "returnFormatHash": "3ff8a69fccb6420c76c3efcfc353c2d65567bc28d53a6ac1b948d1bd9be3de98",
+      "baselinePromptHash": "7b0e4633c89c8cbd7ea7d6dda4d9a8880a7240ae9a215eb5dd2e412abc73eaca",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "test-implementation",
+      "promptFile": "prompts/07-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "95a36077d842d9e395e94bb4dc69e9b8c929af912fe5547cb3d25519355cebdb",
+      "inputsBlockHash": "6f8c3da5927cd824749203141e8d6fae175f4f80967ce68dd016fd1ac14afc77",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "d50c7bbdfe83ecd9040c22fa3f9a7e7edf12920573d33f727257967ea430363c",
+      "baselinePromptHash": "1e3bdaaf28c258711c2023fafc4ac003db53c6feed33e12728be6dc870157a32",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "verification",
+      "promptFile": "prompts/08-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "ee7a9d07181210866eeeccac210fcd4e68934337cea3ccbe73679ea2ef767aeb",
+      "inputsBlockHash": "e5c697f3df8bec5b4c849b84b1c3efa245e656a4610dcd7a49d03f2c17b07742",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "622313090dbd76580eeda859da509bd2f07623dec0113f4f03d2d4ac56125832",
+      "baselinePromptHash": "a34d898635caced7c40039cd91e1ef462330e7c0ecc5df1fabef29f05e266864",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "judge",
+      "promptFile": "prompts/09-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "23d65cafbd1e2de370bcf58d4802e4756323a5da2e56a83d55499f56e73ca4a2",
+      "inputsBlockHash": "c64e897044aedb8edb0fc84a84905510bab0069d2b7ee2065b80affe64f0a11d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "4e84456d5e754ffefd0fb9460114ffc7f10e6ce9db62743541370b891ae71b5d",
+      "baselinePromptHash": "8592ea35492d951862d40840fa4e2333ae2987e70c254bd73dfbaa6b9c1ea7fd",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "feature",
+      "stage": "final-report",
+      "promptFile": "prompts/10-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "9b376174aa66906ff9f4bb7efda651581436df78e14138386ffe36d995ad051e",
+      "inputsBlockHash": "585ff28f0fa6723cb86645d11d1e0a9338747136cde85c0bf814fbc1343aba0a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "c8d2561501d3e01a88f568a3cf234fe39bdbf4dd072747df2ea4858f975cb056",
+      "baselinePromptHash": "99fe4a03254b6a2e40258034e5167c132300c83febd6e3f22a393602a3c9865c",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "observed-behavior-report",
+      "promptFile": "prompts/01-observed-behavior-report.prompt.txt",
+      "artifactFile": "artifacts/observed-behavior-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "8f34b37831e079de0d2980fd72528e8a545d373553104c32a18d945d3ca32f63",
+      "inputsBlockHash": "cb7838735dc8ec0feee58949646f91ee1f475eb6b3cf5d73e88c4697e25e7d8a",
+      "requiredOutputArtifactLine": "Required output artifact: ObservedBehaviorReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/observed-behavior-report.txt",
+      "returnFormatHash": "ed50dcf60fd3e2d2282bf2b8c873a5b2c43f38c5e0266bcb36eb6777d3791613",
+      "baselinePromptHash": "ecf4e281fba46c68c8d0e4821bd674a400de2a69cd2f29593603b364557440c5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "c0d194c03341c6e54e38dc2917a1dca2e66386a95902f7e3167703ce006a5427",
+      "inputsBlockHash": "de443aa43a58ecc44ba249b850406e034829784b5f4b84b97e89e7a5f4a2a845",
+      "requiredOutputArtifactLine": "Required output artifact: ArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/architecture-context-packet.txt",
+      "returnFormatHash": "d8e78dbe692c9bfff6eb7e655c37601382683dc394b5ca3b694500f035033449",
+      "baselinePromptHash": "ea123f88f757638fbaf2c6a7b8926f55da94ff01ee6cf1bc5144d17f7b75dcb1",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "behavior-trace",
+      "promptFile": "prompts/03-behavior-trace.prompt.txt",
+      "artifactFile": "artifacts/behavior-trace.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "53c5f843d26a0732901d161f4652562ec7ff298b968d192fc06e4c1c49e290a8",
+      "inputsBlockHash": "feb86cb9158525548a38529a41a54be77f83062819d3c10882a3cd6afd27b4e0",
+      "requiredOutputArtifactLine": "Required output artifact: BehaviorTrace",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/behavior-trace.txt",
+      "returnFormatHash": "a30d8b91e4ecc2d898e23cdee04212a4ead7603f5d1b6b511b581a2e12a3e905",
+      "baselinePromptHash": "a32c3008a34c8a127602539bc74d82dfb55981c7e2a55e89de82f6d67e2b614f",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "divergence-report",
+      "promptFile": "prompts/04-divergence-report.prompt.txt",
+      "artifactFile": "artifacts/divergence-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "5e7cf12de8f593c31bcd2a92d6454f45685a2c1cb041e83bb15a1315ef067da7",
+      "inputsBlockHash": "a4f3dc28dd2b5f180456e6894ccfa26ffefd45280dbd3cd25f23c400718dd9fb",
+      "requiredOutputArtifactLine": "Required output artifact: DivergenceReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/divergence-report.txt",
+      "returnFormatHash": "ac36707e4eac7c6abb94dd4f4727996a827eaf726552a1c5ac576e38599cad22",
+      "baselinePromptHash": "f12090a614f2220c521582761bf897c03d86f51c8d62b6c8935e9625ae32d40c",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "correction-design",
+      "promptFile": "prompts/05-correction-design.prompt.txt",
+      "artifactFile": "artifacts/correction-design.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "ce932f202c1488d6e26000389583a1cafeaa3ebde9ed079334cb07fd84611b01",
+      "inputsBlockHash": "466006f07e9972c96fe09684a786359e85c486a0f9af45a502e07bc249ab4a11",
+      "requiredOutputArtifactLine": "Required output artifact: CorrectionDesign",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/correction-design.txt",
+      "returnFormatHash": "395b98324f2c172b739cefc89b6a588b946ced08a1680b019babb1a672ef40f1",
+      "baselinePromptHash": "72c8ad39afebec072ec05b3f459f747b3736ecaa31f34567395ce2d2820967ab",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "regression-test-strategy",
+      "promptFile": "prompts/06-regression-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/regression-test-strategy.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "12f673b3d9b5f8988681a07a7361008fe9933ffc15aeee33c59d5d9f12aa00b5",
+      "inputsBlockHash": "f2baee3e97a987452b039cf66419fe65f806831b51f90580bbfd2810ed2c12ec",
+      "requiredOutputArtifactLine": "Required output artifact: RegressionTestStrategy",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/regression-test-strategy.txt",
+      "returnFormatHash": "0a68cd85ddcbfe878532ed18b4d4d3903c5d7d4c14a5c6aee770ac32daaceca8",
+      "baselinePromptHash": "778da1f5357172f85c4b64a6b5d13e8a9979cb944a4a7fc87effafe0a021f33e",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "artifactFile": "artifacts/implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "baea689078e47c63a25db5ee9b5f8b3ddfd2ef63ee8c46534648caaeb4c17103",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: ImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/implementation-report.txt",
+      "returnFormatHash": "3ff8a69fccb6420c76c3efcfc353c2d65567bc28d53a6ac1b948d1bd9be3de98",
+      "baselinePromptHash": "7ccc66d6f4a9a863042836300a9dc9ecf042e9bae8d1b9a945af7fad2ab5712f",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "b394650123421f238d056dbc62c9d94fd00bc20c7b26649201a62fe7ccd29104",
+      "inputsBlockHash": "6f8c3da5927cd824749203141e8d6fae175f4f80967ce68dd016fd1ac14afc77",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "d50c7bbdfe83ecd9040c22fa3f9a7e7edf12920573d33f727257967ea430363c",
+      "baselinePromptHash": "21c02d9c2111982702e039041b7a3b3c2fe066d61528f8404089ee8ad887d663",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "d151ccfc2b949c88297ead36d8a0bf849685ad48d17975769d4a7b3463183525",
+      "inputsBlockHash": "e5c697f3df8bec5b4c849b84b1c3efa245e656a4610dcd7a49d03f2c17b07742",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "622313090dbd76580eeda859da509bd2f07623dec0113f4f03d2d4ac56125832",
+      "baselinePromptHash": "0f4895af4a55a2b1334a1aec6bb7056b1ba8cd416c694cc88b7d748c77dcc5e2",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "e81a26bcc39521eaf74739c13acd3abcba231f84354dea55538ea80b209656e6",
+      "inputsBlockHash": "c64e897044aedb8edb0fc84a84905510bab0069d2b7ee2065b80affe64f0a11d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "4e84456d5e754ffefd0fb9460114ffc7f10e6ce9db62743541370b891ae71b5d",
+      "baselinePromptHash": "bdd2369832a4c66265d5bc702675235d2d85bedbbf17e534145a6694f3de1464",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "29dfbf24d84ce4e43c16db1d68f524359a17bced4afe6e8b2cd0c1b735f79748",
+      "inputsBlockHash": "585ff28f0fa6723cb86645d11d1e0a9338747136cde85c0bf814fbc1343aba0a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "c8d2561501d3e01a88f568a3cf234fe39bdbf4dd072747df2ea4858f975cb056",
+      "baselinePromptHash": "19b76d6acd6f207cf81e669fbc65890864c46aa43ededaa02b8cad1e38031850",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "test-target-brief",
+      "promptFile": "prompts/01-test-target-brief.prompt.txt",
+      "artifactFile": "artifacts/test-target-brief.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "a48b8972c441e97fdafd07542d09bbdb28e1d7bd055dc4af1e12b20d38d727bf",
+      "inputsBlockHash": "066078308db16147312b17c4956fd8562be6593e69fff5f31f3406d903253bde",
+      "requiredOutputArtifactLine": "Required output artifact: TestTargetBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-target-brief.txt",
+      "returnFormatHash": "7535b0b364d8cf18ea37382b7b0cb805def89940addc7d81248ecf7e54ab955c",
+      "baselinePromptHash": "34e5bd844f0793b51ed86566523f15adb65d457c28e797b4f28e8cb0b95acfb9",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "59c1a87928282c0fca26896995d84f006476b9a248d5d5ff57ba187bf0c490eb",
+      "inputsBlockHash": "de443aa43a58ecc44ba249b850406e034829784b5f4b84b97e89e7a5f4a2a845",
+      "requiredOutputArtifactLine": "Required output artifact: ArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/architecture-context-packet.txt",
+      "returnFormatHash": "d8e78dbe692c9bfff6eb7e655c37601382683dc394b5ca3b694500f035033449",
+      "baselinePromptHash": "486b3aca95da2d564c8a3118cda89eaea3b202dbcc8897553ef1b04dd486acc0",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "behavior-reconstruction",
+      "promptFile": "prompts/03-behavior-reconstruction.prompt.txt",
+      "artifactFile": "artifacts/behavior-reconstruction.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "eaba2e4db03968b7bf0e941e314a7963a35dc69353f706c428af0bbc6a11a43e",
+      "inputsBlockHash": "6b30ad6ddfdcd09f536c65959adf8cb10e03eb4d9f2210bcaa28e6a228cdbd12",
+      "requiredOutputArtifactLine": "Required output artifact: BehaviorReconstruction",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/behavior-reconstruction.txt",
+      "returnFormatHash": "afa42012a3b866f83d7a722209b15d474b922ef56fd14242d12b3bf2f3e830da",
+      "baselinePromptHash": "5118941e942dd7cfbf6131b26389ac37b2bf9091e2780b63589672b22f8f97ab",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "pseudocode-summary",
+      "promptFile": "prompts/04-pseudocode-summary.prompt.txt",
+      "artifactFile": "artifacts/pseudocode-summary.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "9b8b753a354432f967e493c185745efdd55fac69839160727e189d3b38a7011c",
+      "inputsBlockHash": "0ea111a0806cd1bc7f64eef5eb009dee5aa42760665cdfeb591a5c2880cdf1d8",
+      "requiredOutputArtifactLine": "Required output artifact: PseudocodeSummary",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/pseudocode-summary.txt",
+      "returnFormatHash": "bdbb689153f3387766eeeb60bb2b2d74137f24a9324cac6fe07d7e4b048742e5",
+      "baselinePromptHash": "f417c533f493feb608c3525c5c5604ab1f2c4b13b4f3ecff4ecde4f05f595fec",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "test-strategy",
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "b8e8901370e1469f04637a8874f998a200111938b0db6465e82be11dc0c6a7c3",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: TestStrategyPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-strategy-packet.txt",
+      "returnFormatHash": "ce371c92c8df4c4d0df323b8f3cdcdb42db854063685ecab0d9858519382ac91",
+      "baselinePromptHash": "4bfd69c9b765320ba4eb3712a8195fff0c1a39b1183474af17e6f3d583100cea",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "test-implementation",
+      "promptFile": "prompts/06-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "530f20c3d74c01eac7dc435f328a5f8c1c4c886b4ed5c26858043401e9009f6f",
+      "inputsBlockHash": "6f8c3da5927cd824749203141e8d6fae175f4f80967ce68dd016fd1ac14afc77",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "d50c7bbdfe83ecd9040c22fa3f9a7e7edf12920573d33f727257967ea430363c",
+      "baselinePromptHash": "c6fa685d4374d670f5a02626ef2f2753b66a77c0087844d272f1ad453f233bd9",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "verification",
+      "promptFile": "prompts/07-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "8d315fdad174eee7a5e2a7cda61537dadc9fbd1ad3912353c0a62c9b66092591",
+      "inputsBlockHash": "e5c697f3df8bec5b4c849b84b1c3efa245e656a4610dcd7a49d03f2c17b07742",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "622313090dbd76580eeda859da509bd2f07623dec0113f4f03d2d4ac56125832",
+      "baselinePromptHash": "bd81b3d6ba6c06aad38d09f6dd8e60c1f46a543d58d2a64962038d0b9cf98ac5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "judge",
+      "promptFile": "prompts/08-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "a03f8254bf5da97146af565cb1496e636865c226154848f7039284d35b6f687d",
+      "inputsBlockHash": "c64e897044aedb8edb0fc84a84905510bab0069d2b7ee2065b80affe64f0a11d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "4e84456d5e754ffefd0fb9460114ffc7f10e6ce9db62743541370b891ae71b5d",
+      "baselinePromptHash": "b6ed704ff1fcca747e25c4d21113d9a01cd60e10fdd928fe505c6d582c35e184",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "test",
+      "stage": "final-report",
+      "promptFile": "prompts/09-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "67a6ae3e92dd875ff6c9b94d6b1c10a324b04c165cf7721cc72af8af8508306d",
+      "inputsBlockHash": "585ff28f0fa6723cb86645d11d1e0a9338747136cde85c0bf814fbc1343aba0a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "c8d2561501d3e01a88f568a3cf234fe39bdbf4dd072747df2ea4858f975cb056",
+      "baselinePromptHash": "739a7ab403b0a6bf63a569d0083535d937c3dada705d48b8e19b8b052bfd267b",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-brief",
+      "promptFile": "prompts/01-refactor-brief.prompt.txt",
+      "artifactFile": "artifacts/refactor-brief.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "fe7fdacfacfaae3e10cd23b31e5055b04c5282c6ab950d59dfd9b3e4d95fdd20",
+      "inputsBlockHash": "92f369a610e44f7632acb3b4a41a9393b3c5ebafc995d694b2d5aee9d279938e",
+      "requiredOutputArtifactLine": "Required output artifact: RefactorBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/refactor-brief.txt",
+      "returnFormatHash": "f6b372af0c3ae08208c6159c2e614045d553078058bd8983857320295c41ab2d",
+      "baselinePromptHash": "116088bf561251b4f39eff21d75adb2908cc3c170ba12bd34c78955a368fc4ff",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "cd2b849abbd2ccf3f5a8acfbffc445e95f2595e77218257c6786c23b035a3dcf",
+      "inputsBlockHash": "de443aa43a58ecc44ba249b850406e034829784b5f4b84b97e89e7a5f4a2a845",
+      "requiredOutputArtifactLine": "Required output artifact: ArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/architecture-context-packet.txt",
+      "returnFormatHash": "d8e78dbe692c9bfff6eb7e655c37601382683dc394b5ca3b694500f035033449",
+      "baselinePromptHash": "ffea79eb0035951637955490eb24af4c925f214b7f1619291acf3b15100d6bea",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "existing-behavior-map",
+      "promptFile": "prompts/03-existing-behavior-map.prompt.txt",
+      "artifactFile": "artifacts/existing-behavior-map.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "8e4384b3bb7313081d0d61070d723b8358fe9ce1e9d2575ddccf62c421bd8665",
+      "inputsBlockHash": "0e2c16ad8e0e4ee1fc783352f5d5599e18798b144785c253fd88711ec4334edb",
+      "requiredOutputArtifactLine": "Required output artifact: ExistingBehaviorMap",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/existing-behavior-map.txt",
+      "returnFormatHash": "18c40125d34fa725c8dc67edfa8dcce3ce700cf3d119e46ddaadddd88d2e2449",
+      "baselinePromptHash": "c5b72c9c62e7d0369b8335a1808c7c9cd5db4b6c0302a31ec777ca14bf856a84",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "preserved-invariant-list",
+      "promptFile": "prompts/04-preserved-invariant-list.prompt.txt",
+      "artifactFile": "artifacts/preserved-invariant-list.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "dcf4c11ed6285eb13aedcf6df0d285871f9e749dd203a613f68fcda113028327",
+      "inputsBlockHash": "cf058d198c420054aec7cebacfbcdfb20dbf0de5381731c666713345363a691a",
+      "requiredOutputArtifactLine": "Required output artifact: PreservedInvariantList",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/preserved-invariant-list.txt",
+      "returnFormatHash": "e8779263bcda48f4e432c40eb3e4bdf62e6d2c63c0b261f9733cb0ee6f909024",
+      "baselinePromptHash": "acd32c9ead092bd3d68d7e622fa953fd2da56202c6b1952432e127256de0d35e",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "compatibility-test-strategy",
+      "promptFile": "prompts/05-compatibility-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/compatibility-test-strategy.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "6c2cc338070ae8de63892dc5ee8df8e065f5f02fff901d29c7d660e09408c888",
+      "inputsBlockHash": "f92d9177f1f5d879d8469ab91f9f710ccba970b1ecf2fc1e2e9aad38bf6ae26e",
+      "requiredOutputArtifactLine": "Required output artifact: CompatibilityTestStrategy",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/compatibility-test-strategy.txt",
+      "returnFormatHash": "708daf5c9c315318f529c014908d25c574f6314280275d2a6d5730e1d7def716",
+      "baselinePromptHash": "2658b922e0fd9b3f9c104b2eedd18a48b6b820c0a37478b0a23b08202cfa9852",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "refactor-pseudocode-packet",
+      "promptFile": "prompts/06-refactor-pseudocode-packet.prompt.txt",
+      "artifactFile": "artifacts/refactor-pseudocode-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "ffd79677551d57d3b5d638162695c7be0607f8f3fc8863e4388edfbc34036443",
+      "inputsBlockHash": "685e51da7168b464da865f859841da25daaee6b189a7d27882ecfcbac10777ab",
+      "requiredOutputArtifactLine": "Required output artifact: RefactorPseudocodePacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/refactor-pseudocode-packet.txt",
+      "returnFormatHash": "14c4bf60a711a7ca7d1c77b69a11280a087fa9fe89fea95686ff84745c9ddf22",
+      "baselinePromptHash": "517078c5ef91d2a98e1ef1399aebc7cb88e94911e016841669a7cc9e25f76345",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "artifactFile": "artifacts/implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "f9248beed343c69f3955b7f9f0fc1778c617ab22b9d649113ba7774200e6f02a",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: ImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/implementation-report.txt",
+      "returnFormatHash": "3ff8a69fccb6420c76c3efcfc353c2d65567bc28d53a6ac1b948d1bd9be3de98",
+      "baselinePromptHash": "b8ecf93678fe03a252e61a1f4c62b770c834bc5fb258d152e56ed4181bbd6cb9",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "fa0095e17800c15f0ced6bcacd819aee10ca1ac8e2ea26322ed7844bed43565c",
+      "inputsBlockHash": "6f8c3da5927cd824749203141e8d6fae175f4f80967ce68dd016fd1ac14afc77",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "d50c7bbdfe83ecd9040c22fa3f9a7e7edf12920573d33f727257967ea430363c",
+      "baselinePromptHash": "c40925048f13b3e54aabefd8148d21fe8a953390479d1cdce8134cf616618e0d",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "5f463cf2578a203200010a6fb3e56317b4a34b9caca0fea748309f476182dad3",
+      "inputsBlockHash": "e5c697f3df8bec5b4c849b84b1c3efa245e656a4610dcd7a49d03f2c17b07742",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "622313090dbd76580eeda859da509bd2f07623dec0113f4f03d2d4ac56125832",
+      "baselinePromptHash": "97ad5ec039eeeac8ee11b046a05184bc57a07b6aa453b68523731cf16b35777d",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "85f44fd87ca89c1593240419922243273d087c06d5e21fad38252aa35663d821",
+      "inputsBlockHash": "c64e897044aedb8edb0fc84a84905510bab0069d2b7ee2065b80affe64f0a11d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "4e84456d5e754ffefd0fb9460114ffc7f10e6ce9db62743541370b891ae71b5d",
+      "baselinePromptHash": "2a2baddd7894c6febe477f5f2212008024b7f0d4780c53589279179b18bb5659",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "e244b084f7da80048fa6f70d71234ddcf90bf0307c55f17af6da3e3e3e0a7137",
+      "inputsBlockHash": "585ff28f0fa6723cb86645d11d1e0a9338747136cde85c0bf814fbc1343aba0a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "c8d2561501d3e01a88f568a3cf234fe39bdbf4dd072747df2ea4858f975cb056",
+      "baselinePromptHash": "d5d7c5dbfd14e14f8ad2645576daf1670750989e9059ea6714e496461686a6c5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "hardening-brief",
+      "promptFile": "prompts/01-hardening-brief.prompt.txt",
+      "artifactFile": "artifacts/hardening-brief.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "e5110673e7892c85702042ab54a8947862761e8efc240b82efc0ee7c0618976d",
+      "inputsBlockHash": "9ae9156bd11f55a6fcf012eb0db736f5e560db5863f7af8b9a9d711cd5a6f8ac",
+      "requiredOutputArtifactLine": "Required output artifact: HardeningBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/hardening-brief.txt",
+      "returnFormatHash": "6b14600dbcb4e22749047e17febb62afc6a414e69e3f8998c9c56011db146bd9",
+      "baselinePromptHash": "072ba99f57de65a361c53af7e17d536da60bc5e395fad23aa101fa0a57a42f55",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "architecture-context",
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "82886055ea9a8561d002c6f3345c3594816d3a3e7ff0cfacb3a76ac2845adaa0",
+      "inputsBlockHash": "de443aa43a58ecc44ba249b850406e034829784b5f4b84b97e89e7a5f4a2a845",
+      "requiredOutputArtifactLine": "Required output artifact: ArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/architecture-context-packet.txt",
+      "returnFormatHash": "d8e78dbe692c9bfff6eb7e655c37601382683dc394b5ca3b694500f035033449",
+      "baselinePromptHash": "93dbdec77a0181c735a836039526632cc0ba7fb357b6782ebb442d2c04b16903",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "assumption-report",
+      "promptFile": "prompts/03-assumption-report.prompt.txt",
+      "artifactFile": "artifacts/assumption-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "5cc68a381e949a361213d08d8d0df8d5b2293c9d6e799f73cca24adb1effa8b5",
+      "inputsBlockHash": "f647f66b2350bb333440f4a41f6e484a428efa21a0076e5bd7cc3648f9c5a45c",
+      "requiredOutputArtifactLine": "Required output artifact: AssumptionReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/assumption-report.txt",
+      "returnFormatHash": "8161af879adf40990931f07ea4020b3c626643fc06018186a54f578bfab5c810",
+      "baselinePromptHash": "b0a18659b283f54ccc5bc7330a1cb386c7cce05472b0fe7e2023f3e77936b507",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "failure-mode-matrix",
+      "promptFile": "prompts/04-failure-mode-matrix.prompt.txt",
+      "artifactFile": "artifacts/failure-mode-matrix.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "e1a5c7953887cd5c14a95a9d0170db3912548f13816e5880f14452d017d24f49",
+      "inputsBlockHash": "3d3f7b4a62b1133eae928fd03c60ceea1533b3fa5898ba4447fbf07f0139f710",
+      "requiredOutputArtifactLine": "Required output artifact: FailureModeMatrix",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/failure-mode-matrix.txt",
+      "returnFormatHash": "5d06f406bf1c067b0940a56c4b042ac8d42721e19a42690add976e598cc999dc",
+      "baselinePromptHash": "da436b38ef9775228bf1c5e3eb44ce0560d791794df7997294d27e30dc3fb56c",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "guard-pseudocode-packet",
+      "promptFile": "prompts/05-guard-pseudocode-packet.prompt.txt",
+      "artifactFile": "artifacts/guard-pseudocode-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "22eb5418b8216c094ded90ca092e0f4cfd27941db5d925969fcd14473e61d01b",
+      "inputsBlockHash": "118265d2aceda44a3116939dd9406bc1231f831e5695432598907c152370fd28",
+      "requiredOutputArtifactLine": "Required output artifact: GuardPseudocodePacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/guard-pseudocode-packet.txt",
+      "returnFormatHash": "b6d1c916d27b209c90bfd4c45b06b1d7bbea6ac16c6c5a0530c73297592f6b6d",
+      "baselinePromptHash": "6ec04fe80cbbf6bc63f5a22237bd9bc23760522192a927831bdd2b986439f90f",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "resilience-test-strategy",
+      "promptFile": "prompts/06-resilience-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/resilience-test-strategy.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "de98ee4d21bc5fbdd20da252346a03c51ed72e16a11df92a0508273674de17e3",
+      "inputsBlockHash": "a3ce3d02275bb8393b9f830954ffb506ee54518458cd8c56df8242bb22660c99",
+      "requiredOutputArtifactLine": "Required output artifact: ResilienceTestStrategy",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/resilience-test-strategy.txt",
+      "returnFormatHash": "477a7a4770d638fe09b2aba458a0c14241ddee095c0ec108b4bb6a6996984be7",
+      "baselinePromptHash": "ac33fa1a3867e94b34cd3f278c64dc26ad0e4dcc616ea05e626db7869d61963d",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "implementation",
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "artifactFile": "artifacts/implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "cf4af0cc6224665632167e6370d0f58042882b2cef3670644ea6c3d843dfc266",
+      "inputsBlockHash": "0dac7d391767240d8868d3d55b852b95905cba84d140a7145542d6e31e2af0c4",
+      "requiredOutputArtifactLine": "Required output artifact: ImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/implementation-report.txt",
+      "returnFormatHash": "3ff8a69fccb6420c76c3efcfc353c2d65567bc28d53a6ac1b948d1bd9be3de98",
+      "baselinePromptHash": "dce9f680434fa9f7767ef4bdaa52666101fd82970a30dda6d8f0e3ac251f99df",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "test-implementation",
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "5c99715814e84e401ef205a136d5c2d3760616dc93289a3007ca0a377220ac8b",
+      "inputsBlockHash": "6f8c3da5927cd824749203141e8d6fae175f4f80967ce68dd016fd1ac14afc77",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "d50c7bbdfe83ecd9040c22fa3f9a7e7edf12920573d33f727257967ea430363c",
+      "baselinePromptHash": "ab0b8f6b7f864aa588f725c8534695902bc230a8b6d440ff05a091c918b79aec",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "verification",
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "40a757a104bd19a08ef98baebed57f79bcabb048fb334d686d87c95b23ff099a",
+      "inputsBlockHash": "e5c697f3df8bec5b4c849b84b1c3efa245e656a4610dcd7a49d03f2c17b07742",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "622313090dbd76580eeda859da509bd2f07623dec0113f4f03d2d4ac56125832",
+      "baselinePromptHash": "1968e5758e967671da97f5edb2dbd965b845d2965cfbcd9b7d31bad8f649aa01",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "judge",
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "3203dafc4e84f55d097223c32119521808e8e8c084063876e6f0f1705827b83a",
+      "inputsBlockHash": "c64e897044aedb8edb0fc84a84905510bab0069d2b7ee2065b80affe64f0a11d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "4e84456d5e754ffefd0fb9460114ffc7f10e6ce9db62743541370b891ae71b5d",
+      "baselinePromptHash": "335a977526647f6475017423069a23927b78b2406d34fae2f70e628597c319a5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stage": "final-report",
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "f9a76bf2c2157638424b96aab49649f611bb121e22ebb3c2492e2669824943a4",
+      "inputsBlockHash": "585ff28f0fa6723cb86645d11d1e0a9338747136cde85c0bf814fbc1343aba0a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "c8d2561501d3e01a88f568a3cf234fe39bdbf4dd072747df2ea4858f975cb056",
+      "baselinePromptHash": "79ee4910f7abe4565fcef6224c9996df3ceebcc054c56e6dc4fbcb043b217196",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "request-brief",
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "artifactFile": "artifacts/request-brief.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "0a100d194e8114ab3f73fe3143af4e5081436f36b8303dca4113b46deb637613",
+      "inputsBlockHash": "d10aa788357213257245717cef7b54166e59bca306e1daa55fdd84faef292c8a",
+      "requiredOutputArtifactLine": "Required output artifact: ExtractionRequestBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/request-brief.txt",
+      "returnFormatHash": "2932592abb6bea9eb39de3117a729be62e982a8148d1280066255a05de955f30",
+      "baselinePromptHash": "43a4017ad66bdafce21bceab3ccd1484264b3f8e79cd912547d494a843f2196b",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-architecture-context",
+      "promptFile": "prompts/02-source-architecture-context.prompt.txt",
+      "artifactFile": "artifacts/source-architecture-context-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "485e928ccdc9e193491bcb3e1126ac76a6657784964bc78af1415ac239e9a5ec",
+      "inputsBlockHash": "19ff441aef83de50aa7c33ae8a6e0a5b2a508852d95da6729a728dcf7a4a453c",
+      "requiredOutputArtifactLine": "Required output artifact: SourceArchitectureContextPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/source-architecture-context-packet.txt",
+      "returnFormatHash": "c483b94131c76f0580fff0140618301d6c87b4fafe9b378ebcfdd481c0210464",
+      "baselinePromptHash": "74e7f1d9e31e5be1b28d7449ecb2f1c570d54c125f3772950067814234b1dbfc",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "source-workflow-map",
+      "promptFile": "prompts/03-source-workflow-map.prompt.txt",
+      "artifactFile": "artifacts/source-workflow-map.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "b32fcf029cebee0b853f4d7e789de6cfa46bdc1923b497484fa9cdacdb69d9e0",
+      "inputsBlockHash": "3d843831773e1b68f2be3e62f2f775636ba8771c0bd0dda000320957be726fc1",
+      "requiredOutputArtifactLine": "Required output artifact: SourceWorkflowMap",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/source-workflow-map.txt",
+      "returnFormatHash": "05d434b3ae4fb619c5dc669398e4c947d1b472d582fafd1af6854de757b59177",
+      "baselinePromptHash": "0d10a853bc36819364c4999d5416dc584fb262e70a917f4e0b5057250e52ae4b",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "porting-map",
+      "promptFile": "prompts/04-porting-map.prompt.txt",
+      "artifactFile": "artifacts/source-to-target-porting-map.txt",
+      "additionalArtifactFiles": [
+        "artifacts/do-not-port-list.txt"
+      ],
+      "normalizedHeaderHash": "37d021e7ed71c8e475f8b969e9e7e7ebb9216d2675eb1ad6b1d31fe4709d8e54",
+      "inputsBlockHash": "545df1505d06514c4fad256410b792d7839cccee374d95c39fee95d88056483c",
+      "requiredOutputArtifactLine": "Required output artifact: SourceToTargetPortingMap",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/source-to-target-porting-map.txt",
+      "returnFormatHash": "bae12312e9fa1e3d33cfe6ea5c9232672a1c45b44865f7a9b8e0350453f9af83",
+      "baselinePromptHash": "85ce2a5845883ba2743448f792eaac7327bc98152c129a0a20cc5346bfbacc59",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "golden-behavior-contract",
+      "promptFile": "prompts/05-golden-behavior-contract.prompt.txt",
+      "artifactFile": "artifacts/golden-behavior-contract.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "bbc452002dcee0dc81da1343709550ee1c556b4244ec921ceff84c166d95bf1b",
+      "inputsBlockHash": "7f2e77a1050049d3d5e052abee4fafbd1e982400f5a8ba8d5055184096d8a20c",
+      "requiredOutputArtifactLine": "Required output artifact: GoldenBehaviorContract",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/golden-behavior-contract.txt",
+      "returnFormatHash": "62cdc4dfef64fd8a9d2cb3c28a615b2fe4379db1729a7a6ac08bdc148c33443e",
+      "baselinePromptHash": "f6c3defe29a9a740880b3413c64e1d76dc761ab5d058eead7611b254b45c856e",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "target-architecture",
+      "promptFile": "prompts/06-target-architecture.prompt.txt",
+      "artifactFile": "artifacts/target-architecture-proposal.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "8fc129aba03744ba342addebd7ddbe9d9902c8fb0ff4694a1cd61215ea774aa6",
+      "inputsBlockHash": "b7be1815c7b05d8759f677b80feb9b7f0b4d8963b0c8539a0da49b3295042cf4",
+      "requiredOutputArtifactLine": "Required output artifact: TargetArchitectureProposal",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/target-architecture-proposal.txt",
+      "returnFormatHash": "21631940439fba2b9fe2465fc5dee4aa1938cbc478c0f0d08431f96e0ac354aa",
+      "baselinePromptHash": "6348c5c013ec9288f36b44e197436ebc5bb56d64ec8afd22dc39ebc0a0d03eab",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "behavior-model",
+      "promptFile": "prompts/07-behavior-model.prompt.txt",
+      "artifactFile": "artifacts/behavior-model.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "33b579b7a5491ed1312c5cab9605be583b8407bd821fa41511795c326847a399",
+      "inputsBlockHash": "75c2c1f2e9adfdb4bae2e6b4b66ec424557f2414a35082ab0875f3c7df68b326",
+      "requiredOutputArtifactLine": "Required output artifact: BehaviorModel",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/behavior-model.txt",
+      "returnFormatHash": "43485c8bc27b4b1fbdd5ca976f2a2869c16480c921502f0e5361262882f7e378",
+      "baselinePromptHash": "8445e9bead719adcedc39cf7f02b3d222505a8328eba6e8b192b6f821029f3b1",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "pseudocode-packet",
+      "promptFile": "prompts/08-pseudocode-packet.prompt.txt",
+      "artifactFile": "artifacts/pseudocode-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "ffed0ed60428ad294901cebb091488850e8a452b0fa2cbf925976649ae896dc5",
+      "inputsBlockHash": "dc840ed8e42f311e5385f533587329f79452b297acd4cb33f7bd6056ca2e2036",
+      "requiredOutputArtifactLine": "Required output artifact: PseudocodePacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/pseudocode-packet.txt",
+      "returnFormatHash": "a8dec68f8f76c436d046da85cdd6f9f5d602c973044cb06465ad52debb3661f6",
+      "baselinePromptHash": "2ca542c17c8fd0b0ea3e4ce1f5b89d8637f43b9df0ca00118e549c1760427f3d",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-strategy",
+      "promptFile": "prompts/09-test-strategy.prompt.txt",
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "1df3b45a1980ea9eede7d4fffc3bbe94f1ad7e4bd4573ba78e17136540e41b21",
+      "inputsBlockHash": "dbde1858e63c32efd380f4c685eaa1d54ffd083fecdbea02a857066f62c1bfce",
+      "requiredOutputArtifactLine": "Required output artifact: TestStrategyPacket",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-strategy-packet.txt",
+      "returnFormatHash": "31d01b942fde7b2f9fac3d6ea96a91fbcc0805f644e12dd407c84a92584f76cb",
+      "baselinePromptHash": "326f15987eadcc631070142092ce4dc5e21b50addd55d985d39b34e956b3fc41",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "implementation",
+      "promptFile": "prompts/10-implementation.prompt.txt",
+      "artifactFile": "artifacts/implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "6ddc97a7cc1b749bcc51d1c082a999f4fd505ee36447f52bd599900286c8c0c8",
+      "inputsBlockHash": "25024ec6a791ec6c294913c793def333d38026f0f3d2a5f2ed708a827f55d9e8",
+      "requiredOutputArtifactLine": "Required output artifact: ImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/implementation-report.txt",
+      "returnFormatHash": "76d1058773aa348056ac816a67323220e37bef7cf0958067a46b2d1edeb06e8f",
+      "baselinePromptHash": "b6ae63cb9c9de4bbecbbcda29897a1a386cb9e10b515c2bce08d9c7c768151bb",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "test-implementation",
+      "promptFile": "prompts/11-test-implementation.prompt.txt",
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "c63864cfad81a799d8154e5c86ca8eaeee821e23faf488796bb4d47ae18f1d3c",
+      "inputsBlockHash": "80334de23ffb03b1f8e83671353adc0ae17c88ccd37e14d19dce13322d7f8a66",
+      "requiredOutputArtifactLine": "Required output artifact: TestImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/test-implementation-report.txt",
+      "returnFormatHash": "b295e1dc98b48cd4712968733b0b0f6a0f8d7bd8941476024b0ad239a423ad37",
+      "baselinePromptHash": "b3f0f3f5050c82d45a37ee7f08f5a006a47bed45cd2872cf360b32b847ad5e97",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "verification",
+      "promptFile": "prompts/12-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "6cfb739576da91767254877245f65991e929d389426b558ea2a5dd43d7719452",
+      "inputsBlockHash": "9a1d0454eac4e0fdbeeb17e6a5204877ba3f81e1879623c9b48b5abb2c42c51b",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/verification-report.txt",
+      "returnFormatHash": "f237d06a0c1d3a0a37b251df16773d95328968041aa3159edf09e5d337436fac",
+      "baselinePromptHash": "e657d0d39c16274e78448a29fc7b01b7ac064f5bd2b3e36b9a9fec6302092ea5",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "judge",
+      "promptFile": "prompts/13-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "33b4b6522e96ca37e1749883d719fb389578f80eb33b7b5b3f1e3a9047f0d5c3",
+      "inputsBlockHash": "762bb1e355f7bf6f91d03d1e47c687396b2f4730249b82310f89ecf62aebc32d",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/judge-report.txt",
+      "returnFormatHash": "7a390071b550acd2997c8563fb58f2348a53ed5d599875904a03060739f3b291",
+      "baselinePromptHash": "304d45e5ba5d44576ce418d640b4328f382185d25a0ed65c18041e486ff72fb9",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stage": "final-report",
+      "promptFile": "prompts/14-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "95cd10b68267b6380620e15663c56863af780f2ddcc5284be96af0ec5da33260",
+      "inputsBlockHash": "f06e9776613a5a6af519e17114fabe50703bd59e2d75660c10e7a296b246931a",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/final-report.txt",
+      "returnFormatHash": "e33fdc1a43934aaec7e3d58aeb7790d584ff272003758593a4fc3412e29d2ec9",
+      "baselinePromptHash": "29adef41c4bbd30f598d54a6b5ba18664dae41db1ddfbef5dfd9532b9660b243",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "idea-brief",
+      "promptFile": "prompts/01-idea-brief.prompt.txt",
+      "artifactFile": "artifacts/idea-brief.json",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "78d3aa03cdb0e8505a6919dc068aa38ac30877917530aece49dabbaac813da6a",
+      "inputsBlockHash": "6628fdd8733dd1269a519d81db4f11d8fac689d7e18156b1cc225f7f47de5e4e",
+      "requiredOutputArtifactLine": "Required output artifact: IdeaBrief",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/idea-brief.json",
+      "returnFormatHash": "9f41af6b9179e4dfa15da86b12ffa61a48cb341588866eadae123688bae6b712",
+      "baselinePromptHash": "722adbc1e60bc713b8708349e44327b99f26873cbb11cb9ec61fa1e57d571ed3",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "product-boundary",
+      "promptFile": "prompts/02-product-boundary.prompt.txt",
+      "artifactFile": "artifacts/product-boundary.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "4c39ccaff03517686638c45668a7cffa0b400d3af8a8abccdc85b4a9c0ed01b1",
+      "inputsBlockHash": "87abffc8b1de94d2eb6d5f0418ed3ac426e393940c5c3b6269035a08b7390275",
+      "requiredOutputArtifactLine": "Required output artifact: ProductBoundary",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/product-boundary.txt",
+      "returnFormatHash": "87d1c00a10aea091b823217cda0b93f14920f1861478a1039a4152febac107bc",
+      "baselinePromptHash": "0c043014a0e6089d930ac673ad803238be1b33851bc9359c730e584cbe3941f3",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "stack-decision",
+      "promptFile": "prompts/03-stack-decision.prompt.txt",
+      "artifactFile": "artifacts/stack-decision.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "636ea0fcd0fd2437db53e9d8b01f607f91cf12a4cd78855ebc25b4467b1df51f",
+      "inputsBlockHash": "df8215b61db6fbe15c9c127d0ea35de382838ebf87e7d4a0db6443822620e902",
+      "requiredOutputArtifactLine": "Required output artifact: StackDecision",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/stack-decision.txt",
+      "returnFormatHash": "6da7604e47075e4866efef7629d27ea8fb430b5843297fbe46397b5fa9d6a00a",
+      "baselinePromptHash": "5371a88573fe60f81ee4e4b5f9e0667ba73d03e2135df5421d45eca54755e427",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "starter-profile",
+      "promptFile": "prompts/04-starter-profile.prompt.txt",
+      "artifactFile": "artifacts/starter-profile.json",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "d611bbd62ce52b0f082ee3fa632c5d3d9f6c80463cb0604d952a2f97ac190a25",
+      "inputsBlockHash": "0e8e06c7dc45277d11f0a4ae903f2f09d408dafd980605d2e03fdd16297b8b28",
+      "requiredOutputArtifactLine": "Required output artifact: StarterProfile",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/starter-profile.json",
+      "returnFormatHash": "10f88d0246ff3d2cb18ee33a1c1fefb4241980b325ab6a53b44759cdf73cf4d9",
+      "baselinePromptHash": "06e34e55b194d61b32a52b7c55928ae92b61352f9c4672d63450aec8e10f191c",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "bootstrap-bundle",
+      "promptFile": "prompts/05-bootstrap-bundle.prompt.txt",
+      "artifactFile": "artifacts/bootstrap-bundle.json",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "f4808ef83ccdae46b26e6ab5b69d1484b43ecc566fac2245362c39ef434bdc77",
+      "inputsBlockHash": "d0e055cd4d9e5959472bb526eb9a0e266b3a75300508f7bc7264b153221dc51e",
+      "requiredOutputArtifactLine": "Required output artifact: GreenfieldBootstrapBundleArtifact",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/bootstrap-bundle.json",
+      "returnFormatHash": "6f02a412105f46bb74a208a2d21e2c80afb474363f4b5dd9088d1d8c527ea97c",
+      "baselinePromptHash": "c1beda645e7d733b56ce8f90b37e6307e97fe27eb3511f677cac26ccf20bc786",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "project-docs",
+      "promptFile": "prompts/06-project-docs.prompt.txt",
+      "artifactFile": "artifacts/project-docs-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "ba82ad9e86ebdaab5f6c1082f625b628263aa804db6cbad7ab7b7a1b69828d28",
+      "inputsBlockHash": "c6c1687b439d407ea36f6abf0759d9dc339f4d0d1136000fd2690025f9dc7031",
+      "requiredOutputArtifactLine": "Required output artifact: ProjectDocsReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/project-docs-report.txt",
+      "returnFormatHash": "f213ad57f095fbfd7e8209daadbd5dac45ca503910277e0bba9732822cd092a2",
+      "baselinePromptHash": "64e6e6454e508ab82316a29f114ba4389af761bdd7093937d912835df0edfc1f",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-plan",
+      "promptFile": "prompts/07-scaffold-plan.prompt.txt",
+      "artifactFile": "artifacts/scaffold-plan.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "f186dfe905a84f54dd68291777d79550a13559a4d598c6ce5b16070d50fa43eb",
+      "inputsBlockHash": "d0d1ef3ae6e9ed2f0b6ee91cf5760324ff2b00b875d93256aed52929477415b4",
+      "requiredOutputArtifactLine": "Required output artifact: ScaffoldPlan",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/scaffold-plan.txt",
+      "returnFormatHash": "61d63ca11ae013dc7524a083a7b4cb01f825a3edfa04aad04558335f8f0bbd44",
+      "baselinePromptHash": "a4cbfd391c4f64ae894a1ca8ea763713dc23bb4477387ea4a28415f623823377",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "scaffold-implementation",
+      "promptFile": "prompts/08-scaffold-implementation.prompt.txt",
+      "artifactFile": "reports/scaffold-implementation-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "9e5c2bcfb884a94993dc5f9e4e138630aa92d4111d56b58c726f95c62d936db7",
+      "inputsBlockHash": "bbef7a5a5f34a514a952539eafa383dfb7f6362eea02d724583f8dbfe98586e6",
+      "requiredOutputArtifactLine": "Required output artifact: ScaffoldImplementationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/reports/scaffold-implementation-report.txt",
+      "returnFormatHash": "e3e5f52ccbd2c242f0673e52066463e5d07f2108b2c0d9da3547cc8dc9179336",
+      "baselinePromptHash": "84c091c1b1f7ad6b57a0c150bfa7bc024d9d1b5431786c5fd293c1e8836fd4c4",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "first-vertical-slice",
+      "promptFile": "prompts/09-first-vertical-slice.prompt.txt",
+      "artifactFile": "artifacts/first-vertical-slice.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "dbc3f7887239f09b3c833050b198e16000a1f031fc48d0bd0f49d0dd891d1d4f",
+      "inputsBlockHash": "2025af75832f6c6a250f85a620f0ecdd9cf56a33710544c2eca0e6ca0c76fae7",
+      "requiredOutputArtifactLine": "Required output artifact: FirstVerticalSlice",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/artifacts/first-vertical-slice.txt",
+      "returnFormatHash": "21a9f7acbe7f1651b193d8fbae997c8f99d6b4ce88cea5a26471eae47bace543",
+      "baselinePromptHash": "6da60709896d9cebd26249263fd82422007c375bed945e856d168a844e56d513",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "verification",
+      "promptFile": "prompts/10-verification.prompt.txt",
+      "artifactFile": "artifacts/verification-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "2331e0704aa36e29012d03a1f30815b8c6f5b8bafd7ef5694f7cbd5c1120593e",
+      "inputsBlockHash": "8f38557d0284ce44ba391d092c7e29faeb89a0977ac67fb92975b6af6178a445",
+      "requiredOutputArtifactLine": "Required output artifact: VerificationReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/reports/verification-report.txt",
+      "returnFormatHash": "2f01d41bbf9c5b1aa0dff3e820931692cc0a83ebbf51b232e40297969c785104",
+      "baselinePromptHash": "14c8ae30a2fd87972d917fa3e9ce766b7c9cd00a7944312cb8c00e9b6cb56c2f",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "initial-index",
+      "promptFile": "prompts/11-initial-index.prompt.txt",
+      "artifactFile": "reports/initial-index-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "23f3b4565e9b3fe59a2b1031c6db31a2f1883cac3102bfd0662cc9a3cb604f1a",
+      "inputsBlockHash": "988f3bdd8d519d2ec8b7866669b403edac0916d8845b675693d2a5d499826647",
+      "requiredOutputArtifactLine": "Required output artifact: InitialIndexReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/reports/initial-index-report.txt",
+      "returnFormatHash": "e131d5a5380e5c0253c05a9583323d2c10ca9aafea14563ca9bb35b8e74e036e",
+      "baselinePromptHash": "2814c944c92b615bdb0e9fc438fd17af6aba190707c7d1868725f252136594be",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "judge",
+      "promptFile": "prompts/12-judge.prompt.txt",
+      "artifactFile": "artifacts/judge-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "2975d9ae5265606f3b49514babb4dfc2caf7ef430729d76af75f79f2a4137fe0",
+      "inputsBlockHash": "41a4c117a542174448cffb917a17df4af51b96c7c8d17f60bc1b0a75274a2cdd",
+      "requiredOutputArtifactLine": "Required output artifact: JudgeReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/reports/judge-report.txt",
+      "returnFormatHash": "e309612afddacf9e8196ac635a8b915edde7d6e1a5c62a926bf723b69d23690a",
+      "baselinePromptHash": "ce0d0647649b8e12495e2c1a3d982822c72054aea64ea3559a38e1eb6ae49f0c",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stage": "final-report",
+      "promptFile": "prompts/13-final-report.prompt.txt",
+      "artifactFile": "artifacts/final-report.txt",
+      "additionalArtifactFiles": [],
+      "normalizedHeaderHash": "60ddfdac65d2f11b929c710a62a7fa411f9d5f944c76466d845f3918c17d4454",
+      "inputsBlockHash": "7aa03c73bbff0da89f338a4a8a5ba46feca6b54b991315b0b0698c77f8355e76",
+      "requiredOutputArtifactLine": "Required output artifact: FinalReport",
+      "outputFileLine": "Output file: /fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-baseline-run/reports/final-report.txt",
+      "returnFormatHash": "56a09f55f3e3f90e279567064651ad76de47b6b089a85f860ee748ba44dc3eac",
+      "baselinePromptHash": "cacf521445f855b5e4cbb3e8dcfa1a957b6e6508abd5d6b0e4ed688f0e3e50b4",
+      "fieldsAllowedToMigrateIntoPacket": [
+        "Task:",
+        "Stop conditions:"
+      ]
+    }
+  ]
+}

@@ -5,6 +5,8 @@ import { getMostRecentRun, loadRun, getRunFolder } from '../run';
 import { readCorrectionState } from '../correctionState';
 import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
+import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
+import type { WorkflowMode } from '../types';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
@@ -59,8 +61,8 @@ function artifactChecklist(
   return lines.join('\n');
 }
 
-function formatCorrectionState(runFolder: string): string {
-  const state = readCorrectionState(runFolder);
+function formatCorrectionState(runFolder: string, mode: WorkflowMode): string {
+  const state = readCorrectionState(runFolder, { workflowMode: mode });
   if (!state) return '  no judge report';
   if (state.routeStatus === 'pass') return '  PASS -- no correction required';
   if (state.routeStatus === 'correction_required') {
@@ -72,10 +74,10 @@ function formatCorrectionState(runFolder: string): string {
   return `  ${state.routeStatus}`;
 }
 
-function readJudgeVerdict(runFolder: string): string {
+function readJudgeVerdict(runFolder: string, mode: WorkflowMode): string {
   const p = path.join(runFolder, 'artifacts', 'judge-report.txt');
   if (!fs.existsSync(p)) return '  no judge report';
-  const state = readCorrectionState(runFolder);
+  const state = readCorrectionState(runFolder, { workflowMode: mode });
   if (!state || !state.verdict) return '  judge report present but verdict not parsed';
   return `  ${state.verdict}`;
 }
@@ -122,12 +124,57 @@ function listMissingArtifacts(
   return missing.map((s) => `  missing: ${s.artifactFile} (${s.name})`).join('\n');
 }
 
+// Batch 5 section 21: structured, deterministic (aside from re-reading
+// current disk state) repository-context readiness summary. Metadata and
+// readiness only -- never embeds raw supplemental packet/report/capsule/
+// audit text, and never copies an externally referenced file.
+function formatContextReadinessSummary(meta: {
+  mode: string;
+  runFolder: string;
+  stages: Array<{ name: string }>;
+}): string {
+  const summary = evaluateRunContextReadiness({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+  });
+
+  const lines: string[] = [
+    `  schemaVersion: 1.0.0`,
+    `  mode: ${summary.mode}`,
+    `  overallDecision: ${summary.overallDecision}`,
+    `  recommendedNextStage: ${summary.recommendedNextStage ?? '(none)'}`,
+  ];
+
+  for (const [label, result] of [
+    ['implementationContext', summary.implementationContext],
+    ['testContext', summary.testContext],
+  ] as const) {
+    if (!result) continue;
+    lines.push(`  ${label}:`);
+    lines.push(`    decision: ${result.decision}`);
+    lines.push(`    classification: ${result.classification}`);
+    lines.push(`    packetPath: ${result.packetPath}`);
+    lines.push(`    reportPath: ${result.reportPath}`);
+    lines.push(`    evaluatedFreshness: ${result.evaluatedFreshness}`);
+    lines.push(`    evaluatedAdequacy: ${result.evaluatedAdequacy}`);
+    lines.push(`    readyWithAssumptions: ${result.readyWithAssumptions}`);
+  }
+
+  lines.push(`  blockingIssueCodes: ${summary.blockingIssueCodes.length > 0 ? summary.blockingIssueCodes.join(', ') : '(none)'}`);
+  lines.push(`  warnings: ${summary.warnings.length > 0 ? summary.warnings.join('; ') : '(none)'}`);
+  lines.push(`  affectedStages: ${summary.affectedStages.length > 0 ? summary.affectedStages.join(', ') : '(none)'}`);
+
+  return lines.join('\n');
+}
+
 function formatNextCommand(meta: {
   runId: string;
+  mode: WorkflowMode;
   currentStage: string;
   runFolder: string;
 }): string {
-  const correctionState = readCorrectionState(meta.runFolder);
+  const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
   if (correctionState && correctionState.routeStatus === 'correction_required') {
     return `  my-dev-kit-orchestrator prompt --run ${meta.runId}  # correction: ${correctionState.routedStage}`;
   }
@@ -141,7 +188,7 @@ function formatNextCommand(meta: {
 
 export function buildExportText(meta: {
   runId: string;
-  mode: string;
+  mode: WorkflowMode;
   request: string;
   currentStage: string;
   status: string;
@@ -172,10 +219,10 @@ export function buildExportText(meta: {
   parts.push(listMissingArtifacts(meta.runFolder, meta.stages));
 
   parts.push(sectionHeader('Judge verdict'));
-  parts.push(readJudgeVerdict(meta.runFolder));
+  parts.push(readJudgeVerdict(meta.runFolder, meta.mode));
 
   parts.push(sectionHeader('Correction state'));
-  parts.push(formatCorrectionState(meta.runFolder));
+  parts.push(formatCorrectionState(meta.runFolder, meta.mode));
 
   parts.push(sectionHeader('Verification evidence'));
   parts.push(readVerificationEvidence(meta.runFolder));
@@ -183,6 +230,9 @@ export function buildExportText(meta: {
   parts.push(sectionHeader('Check summaries'));
   parts.push(formatCheckResultsSummary(meta.runFolder));
   parts.push(formatTraceCheckSummary(meta.runFolder));
+
+  parts.push(sectionHeader('Repository context readiness'));
+  parts.push(formatContextReadinessSummary(meta));
 
   parts.push(sectionHeader('Next command'));
   parts.push(formatNextCommand(meta));

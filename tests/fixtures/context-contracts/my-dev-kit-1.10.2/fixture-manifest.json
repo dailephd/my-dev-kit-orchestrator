@@ -1,0 +1,95 @@
+{
+  "contextCapsuleSchemaVersion": "1.0.0",
+  "controlledSyntheticInputs": {
+    "test-implementation": {
+      "changedFiles": [
+        "src/promptGenerator.ts",
+        "src/workflows.ts"
+      ],
+      "changedSymbols": [
+        "symbol:src/promptGenerator.ts#generateStagePrompt",
+        "symbol:src/workflows.ts#getAllWorkflows"
+      ],
+      "description": "Controlled planned-owner inputs only; they are not actual Git changes.",
+      "responsibilityIds": [
+        "TST-V121-001",
+        "TST-V121-002",
+        "TST-V121-003",
+        "TST-V121-004"
+      ]
+    }
+  },
+  "determinismResult": {
+    "architecture": {
+      "auditSha256": "761a23886249597d1495eaf2e3cbf5d545a19462f8b7db473d94d3309346fc8f",
+      "capsuleSha256": "c5e5d0fbe6beb43742a2c9372c2cfc2e0b6bafc26c6f9f4ea301f5642669aac9",
+      "normalizedRunsIdentical": true
+    },
+    "implementation": {
+      "auditSha256": "477ab44fd38a3b4e8fb489826fba0011843c4eae045e10ca8c2fe8dc9a24e58f",
+      "capsuleSha256": "d813a85985a6ddde09d21cceb1a7596718484a884d08cded290ee4917801d6ea",
+      "normalizedRunsIdentical": true
+    },
+    "test-implementation": {
+      "auditSha256": "d77d88f4a101c2c1e67becf3cd73302a9bc18537add1d69aa697a4d42efb26d8",
+      "capsuleSha256": "edeea8bc35e98b62274cd83a4f068434d143295acf8c31409dcad861f8d8d688",
+      "normalizedRunsIdentical": true
+    }
+  },
+  "fixtureSchemaVersion": "1.0.0",
+  "fixtures": [
+    {
+      "auditOutputFile": "architecture.retrieval-audit-record.json",
+      "command": "node <MY_DEV_KIT_WORKTREE>/dist/cli.js context --request <FIXTURE_REQUEST_PATH> --json",
+      "outputFile": "architecture.context-capsule.json",
+      "query": "Identify the v1.2.0 workflow, prompt-generation, lifecycle, correction-routing, command, and compatibility owners required to design a structured workflow-instruction catalog and packet assembly without changing native stage order or production behavior.",
+      "requestFile": "architecture.request.json",
+      "role": "architecture"
+    },
+    {
+      "auditOutputFile": "implementation.retrieval-audit-record.json",
+      "command": "node <MY_DEV_KIT_WORKTREE>/dist/cli.js context --request <FIXTURE_REQUEST_PATH> --json",
+      "outputFile": "implementation.context-capsule.json",
+      "query": "Retrieve pre-implementation owner, dependency, contract, validator, constant, error, schema, caller, callee, closest-test, and backward-compatibility evidence for the anticipated v1.2.1 workflow catalog, resolver, packet assembly, and bounded prompt integration surfaces. No production changes exist yet.",
+      "requestFile": "implementation.request.json",
+      "role": "implementation"
+    },
+    {
+      "auditOutputFile": "test-implementation.retrieval-audit-record.json",
+      "command": "node <MY_DEV_KIT_WORKTREE>/dist/cli.js context --request <FIXTURE_REQUEST_PATH> --json",
+      "outputFile": "test-implementation.context-capsule.json",
+      "query": "Retrieve controlled pre-implementation test context for planned v1.2.1 owner surfaces, including changed-surface evidence, production symbols, contracts, validators, errors, test infrastructure, test commands, responsibility mappings, freshness, adequacy, budget, truncation, and provenance. Changed inputs are synthetic fixture data, not Git changes.",
+      "requestFile": "test-implementation.request.json",
+      "role": "test-implementation"
+    }
+  ],
+  "intentionallyExcludedFields": [],
+  "limitations": [
+    "The published 1.10.2 package installs a CLI that reports 1.0.0 and lacks the role-aware context command; the verified clean local 1.10.2 build produced these fixtures.",
+    "Requests use index without root because the verified normalizer rejects root with an external index unless it is exactly root/.my-dev-kit; generated indexes were required to stay outside repositories.",
+    "upstreamArtifactRefs is accepted and validated but is deferred and does not affect retrieval.",
+    "Jest configuration is detected but only Vitest configuration discovery is implemented.",
+    "Freshness is unknown because the fixture has one active index and no before/after index identity.",
+    "The request-level string-array responsibility shape cannot carry orchestrator-owned criticality."
+  ],
+  "normalizationRules": [
+    "replace generatedAt with 2000-01-01T00:00:00.000Z",
+    "replace the absolute orchestrator worktree with <ORCHESTRATOR_REPO_ROOT>",
+    "replace the index root with <ORCHESTRATOR_INDEX_ROOT>",
+    "replace request, output, and audit paths with their fixture placeholders",
+    "replace remaining Batch 0 temporary-root paths with <BATCH0_TEMP_ROOT>",
+    "normalize path separators to forward slashes",
+    "recursively sort object keys while preserving array order",
+    "serialize as UTF-8, two-space JSON, with one final newline"
+  ],
+  "orchestratorBaselineCommit": "983a476da2d483f76f92fef73a0b324c9ed77ea7",
+  "producingPackageName": "@dailephd/my-dev-kit",
+  "producingPackageVersion": "1.10.2",
+  "producingRepositoryCommit": "1496ff426f1d4dbc662a2257fcf43d3754c4407d",
+  "requestSchemaVersion": "1.0.0",
+  "retrievalAuditSchemaVersion": "1.0.0",
+  "warnings": [
+    "Orchestrator criticality in test-strategy-sample.txt is intentionally not represented by my-dev-kit mappings, which default these request IDs to noncritical.",
+    "Implementation and test-implementation role adequacy record required evidence-group truncation; the contextAdequacy conclusion remains sufficient with listed assumptions."
+  ]
+}

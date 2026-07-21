@@ -3,15 +3,17 @@
 ## Prerequisites
 
 The package does not declare a Node.js version range in `package.json`. The
-repository's validation workflows currently test Node.js 22 and 24, so use one
-of those versions for contributor work.
+repository's configured validation matrices cover Node.js 22 and 24. Local
+compatibility validation used Node.js 24.11.0; Node.js 22 was not run locally.
+Because the feature branch has not been pushed, there is no live CI result for
+it.
 
 ## Local setup
 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Build the CLI:
@@ -38,13 +40,13 @@ npm run lint:docs
 Typecheck:
 
 ```bash
-npx tsc --noEmit
+npm run typecheck
 ```
 
 Run tests:
 
 ```bash
-npm test
+npm test -- --runInBand
 ```
 
 Run security-focused package checks:
@@ -115,6 +117,87 @@ Important implementation files:
 - Keep run folders local and untracked.
 - When behavior changes, keep docs aligned with real CLI output, stage definitions, artifact paths, and package metadata.
 - Run `npm run docs:check` when changing user-facing documentation.
+
+## Instruction and context source ownership
+
+- `src/workflows.ts`: workflow stage order and prompt/artifact filenames
+- `src/instructions/catalog.ts`, `catalogIds.ts`, and `catalogTypes.ts`:
+  instruction entries, stable IDs, and schema/version constants
+- `src/instructions/catalogValidation.ts`: exact catalog validation
+- `src/instructions/catalogResolver.ts`: exact-ID dependency resolution
+- `src/instructions/workflowInstructionPacket.ts`: packet assembly
+- `src/instructions/workflowInstructionPacketSerialization.ts`: canonical
+  packet serialization and sidecar path/content
+- `src/instructions/workflowInstructionPacketRenderer.ts`: generalized packet
+  rendering
+- `src/instructions/taskState.ts`: in-memory `TaskState`
+- `src/instructions/stageContextBundle.ts`: in-memory `StageContextBundle`
+- `src/instructions/supplementalContextTypes.ts` and
+  `supplementalContextContracts.ts`: supplemental schemas and contracts
+- `src/instructions/supplementalContextParser.ts`: bounded document parser
+- `src/instructions/stageRepositoryEvidenceRequirements.ts`: exact 11-stage
+  requirement registry and four fixed paths
+- `src/instructions/repositoryEvidenceReference.ts`: structural evidence
+  reference assembly
+- `src/instructions/myDevKitEvidenceSummary.ts`: raw capsule/audit projection
+- `src/instructions/testResponsibilityCriticality.ts`: criticality and mapping
+  parsing
+- `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
+- `src/instructions/runContextReadiness.ts`: mode-level aggregation and
+  deterministic recommendation
+- `src/promptGenerator.ts`: packet/context prompt integration and refresh-only
+  rendering
+- `src/commands/status.ts`, `check.ts`, and `export.ts`: readiness presentation,
+  validation, and portable summary
+
+## Validation and compatibility fixtures
+
+Run the release-facing validation set from a clean dependency installation:
+
+```bash
+npm ci
+npm run typecheck
+npm test -- --runInBand
+npm run build
+npm run docs:check
+npm run smoke:cli
+npm run lint
+npm run lint:docs
+npm run test:security
+node dist/cli.js --version
+node dist/cli.js --help
+npm pack --dry-run
+git diff --check
+```
+
+The compatibility manifest is derived from runtime workflow, CLI, schema, and
+verdict owners. The v1.2.0 baseline inventory and prompt hashes protect
+unchanged contracts; v1.2.1 prompt hashes protect intentional packet/context
+structure. Ready-context helpers, legacy-run fixtures, and deterministic
+generators cover readiness and compatibility. Two fixture-generator tests are
+intentionally skipped during an ordinary suite and run only when regenerating
+fixtures. Tests and fixtures are excluded from npm package output because the
+package `files` policy includes only `dist`.
+
+### Manual my-dev-kit integration caveat
+
+The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
+and run manually. During the initial integration investigation, the published package labeled `my-dev-kit` 1.10.2 reported a mismatched CLI identity and
+lacked the verified role-aware context command. Fixtures and implementation
+therefore use the verified 1.10.2 source contract. This remains an upstream
+integration risk and no local worktree path is part of the public contract.
+
+### Known instruction and context limitations
+
+- `scaffold-plan` and `scaffold-implementation` retain the specialized
+  greenfield scaffold renderer.
+- Extraction command examples are not fully promoted into command catalog
+  entries.
+- Extraction has no generic `architecture-context` stage; exact
+  `NEED_CONTEXT` recommendations are safe, but generic non-`NEED_CONTEXT`
+  architecture routing remains a pre-existing edge case.
+- There is no automatic retrieval, status JSON option, shared schema package,
+  or `my-dev-kit-lab` runtime integration.
 
 ## Extraction mode implementation (v0.2.1)
 

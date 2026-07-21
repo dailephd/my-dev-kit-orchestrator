@@ -1,4 +1,5 @@
 import { JudgeVerdict, ParsedJudgeReport, parseJudgeReport } from './judgeParser';
+import type { WorkflowMode } from './types';
 
 // The set of stage names that correction routing can target.
 // These are the canonical stage names as used in workflow stage definitions.
@@ -12,7 +13,16 @@ export const CORRECTABLE_STAGES = [
   'verification',
 ] as const;
 
-export type CorrectableStage = (typeof CORRECTABLE_STAGES)[number];
+const MODE_SPECIFIC_CORRECTABLE_STAGES = ['target-architecture'] as const;
+
+export type CorrectableStage =
+  | (typeof CORRECTABLE_STAGES)[number]
+  | (typeof MODE_SPECIFIC_CORRECTABLE_STAGES)[number];
+
+export interface CorrectionRouteOptions {
+  strict?: boolean;
+  workflowMode?: WorkflowMode;
+}
 
 export type RouteStatus =
   | 'pass'
@@ -50,7 +60,21 @@ const VERDICT_ROUTE_TABLE: Partial<Record<JudgeVerdict, CorrectableStage>> = {
 const BLOCKED_VERDICTS = new Set<JudgeVerdict>(['SCOPE_VIOLATION', 'BLOCKED']);
 
 export function isCorrectableStage(s: string): s is CorrectableStage {
-  return (CORRECTABLE_STAGES as readonly string[]).includes(s);
+  return (
+    (CORRECTABLE_STAGES as readonly string[]).includes(s) ||
+    (MODE_SPECIFIC_CORRECTABLE_STAGES as readonly string[]).includes(s)
+  );
+}
+
+function defaultRouteForVerdict(
+  verdict: JudgeVerdict,
+  workflowMode: WorkflowMode | undefined,
+): CorrectableStage | null {
+  if (workflowMode === 'extraction') {
+    if (verdict === 'ARCHITECTURE_MISMATCH') return 'target-architecture';
+    if (verdict === 'NEED_CONTEXT') return 'implementation';
+  }
+  return VERDICT_ROUTE_TABLE[verdict] ?? null;
 }
 
 /**
@@ -67,7 +91,7 @@ export function isCorrectableStage(s: string): s is CorrectableStage {
  */
 export function routeJudgeVerdict(
   parsed: ParsedJudgeReport,
-  options: { strict?: boolean } = {},
+  options: CorrectionRouteOptions = {},
 ): CorrectionRouteResult {
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -126,7 +150,7 @@ export function routeJudgeVerdict(
   }
 
   // Correction-required verdicts
-  const tableStage = VERDICT_ROUTE_TABLE[parsed.verdict] ?? null;
+  const tableStage = defaultRouteForVerdict(parsed.verdict, options.workflowMode);
 
   // Honour recommended stage when it's a valid correctable stage
   let routedStage: CorrectableStage | null = tableStage;
@@ -169,7 +193,7 @@ export function routeJudgeVerdict(
  */
 export function parseAndRoute(
   content: string,
-  options: { strict?: boolean } = {},
+  options: CorrectionRouteOptions = {},
 ): CorrectionRouteResult {
   const parsed = parseJudgeReport(content);
   return routeJudgeVerdict(parsed, options);

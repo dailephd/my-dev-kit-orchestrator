@@ -5,15 +5,26 @@ import { generateStagePrompt, writeStagePrompts } from '../promptGenerator';
 import { RunMetadata } from '../run';
 import { getWorkflow } from '../workflows';
 import { VALID_MODES } from '../types';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
+// Batch 5: the direct context-sensitive stages (implementation /
+// test-implementation) only render their normal packet-backed prompt when
+// repository context is ready (AGENTS.txt Batch 5 section 14.2). This
+// file's assertions are about normal-prompt content, so every mode gets a
+// real, ready-populated run folder rather than the old nonexistent
+// "/fake/project" path (which would now yield context-refresh-only prompts
+// for those stages). See tests/repositoryEvidencePromptIntegration.test.ts
+// for dedicated missing/ready-context prompt coverage.
 function makeFakeRun(mode: typeof VALID_MODES[number]): RunMetadata {
   const workflow = getWorkflow(mode);
+  const runFolder = fs.mkdtempSync(path.join(os.tmpdir(), `mdko-prompt-gen-${mode}-`));
+  makeReadyRunFolder(runFolder, mode);
   return {
     runId: `20240101T120000-test-run`,
     mode,
     request: 'test request',
-    projectRoot: '/fake/project',
-    runFolder: '/fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-test-run',
+    projectRoot: path.dirname(runFolder),
+    runFolder,
     createdAt: '2024-01-01T12:00:00.000Z',
     currentStage: workflow.stages[0].name,
     stages: workflow.stages,
@@ -302,6 +313,7 @@ describe('writeStagePrompts', () => {
 
       fs.mkdirSync(path.join(runFolder, 'prompts'), { recursive: true });
       fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+      fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
 
       writeStagePrompts(patchedMeta);
 
@@ -327,6 +339,8 @@ describe('writeStagePrompts', () => {
         for (const stage of patchedMeta.stages) {
           fs.mkdirSync(path.join(runFolder, path.dirname(stage.promptFile)), { recursive: true });
         }
+        fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+        fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
 
         writeStagePrompts(patchedMeta);
 

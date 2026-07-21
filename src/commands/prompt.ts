@@ -140,7 +140,7 @@ export function makePromptCommand(): Command {
         }
 
         // Check for active correction routing (judge-report.txt with non-PASS verdict)
-        const correctionState = readCorrectionState(meta.runFolder);
+        const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
         if (correctionState && correctionState.routeStatus === 'correction_required' && correctionState.routedStage) {
           try {
             const correctionPrompt = generateCorrectionPrompt(meta, correctionState);

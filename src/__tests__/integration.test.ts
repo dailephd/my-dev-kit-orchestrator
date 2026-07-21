@@ -10,6 +10,7 @@ import { generateStagePrompt } from '../promptGenerator';
 import { getNextStage, isRunComplete, getArtifactStatuses, getSupportingReportStatuses } from '../stageDetector';
 import { getWorkflow } from '../workflows';
 import { VALID_MODES } from '../types';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-int-'));
@@ -318,6 +319,7 @@ describe('audit: v0.1.0 scope compliance', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      makeReadyRunFolder(meta.runFolder, 'feature');
       const implPrompt = generateStagePrompt(meta, 'implementation');
       expect(implPrompt).not.toMatch(/verification.*passed/i);
       expect(implPrompt).not.toMatch(/tests.*passed/i);

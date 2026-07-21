@@ -1,0 +1,61 @@
+{
+  "auditOutput": "<FIXTURE_AUDIT_PATH>",
+  "changedFiles": [
+    "src/workflows.ts",
+    "src/promptGenerator.ts"
+  ],
+  "changedSymbols": [
+    "symbol:src/workflows.ts#getAllWorkflows",
+    "symbol:src/promptGenerator.ts#generateStagePrompt"
+  ],
+  "focusFiles": [
+    "src/workflows.ts",
+    "src/promptGenerator.ts",
+    "src/types.ts",
+    "src/run.ts",
+    "src/artifactLifecycle.ts"
+  ],
+  "focusSymbols": [
+    "symbol:src/workflows.ts#getAllWorkflows",
+    "symbol:src/promptGenerator.ts#generateStagePrompt"
+  ],
+  "index": "<ORCHESTRATOR_INDEX_ROOT>",
+  "limits": {
+    "candidates": 80,
+    "characters": 80000,
+    "evidenceGroupEntries": 20,
+    "files": 40,
+    "fullFileFallbacks": 2,
+    "graphDepth": 2,
+    "responsibilityMappings": 20,
+    "sourceLinesPerRange": 80,
+    "sourceRanges": 24,
+    "symbols": 80
+  },
+  "mode": "general",
+  "output": "<FIXTURE_OUTPUT_PATH>",
+  "query": "Retrieve controlled pre-implementation test context for planned v1.2.1 owner surfaces, including changed-surface evidence, production symbols, contracts, validators, errors, test infrastructure, test commands, responsibility mappings, freshness, adequacy, budget, truncation, and provenance. Changed inputs are synthetic fixture data, not Git changes.",
+  "requestedEvidenceKinds": [
+    "owner",
+    "contracts",
+    "validators",
+    "errors",
+    "schemas",
+    "closest-tests",
+    "test-infrastructure",
+    "test-commands",
+    "changed-surface",
+    "responsibility-mappings"
+  ],
+  "role": "test-implementation",
+  "schemaVersion": "1.0.0",
+  "testResponsibilityRefs": [
+    "TST-V121-001",
+    "TST-V121-002",
+    "TST-V121-003",
+    "TST-V121-004"
+  ],
+  "upstreamArtifactRefs": [
+    "<ORCHESTRATOR_REPO_ROOT>/tests/fixtures/context-contracts/my-dev-kit-1.10.2/test-strategy-sample.txt"
+  ]
+}

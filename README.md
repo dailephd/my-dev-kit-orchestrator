@@ -26,7 +26,11 @@ The latest published package is
 `@dailephd/my-dev-kit-orchestrator@1.2.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-The release supports seven workflow modes:
+The feature branch implements `v1.2.1`, but that version is unreleased:
+package metadata and the built CLI still report `1.2.0`, and npm installation
+continues to resolve the published `v1.2.0` package.
+
+Both the published release and the unreleased source support seven workflow modes:
 
 - `feature`
 - `repair`
@@ -35,6 +39,31 @@ The release supports seven workflow modes:
 - `harden`
 - `extraction`
 - `greenfield`
+
+## Unreleased v1.2.1 source behavior
+
+The implemented `v1.2.1` source adds a typed workflow-instruction catalog with
+stable workflow, stage, command, rule, and report-contract IDs. Every one of
+the 79 native stages receives an exact, deterministic
+`WorkflowInstructionPacket` and an instruction-packet sidecar. Supplemental
+implementation and test context can be supplied through fixed run files and
+evaluated for structure, provenance, freshness, adequacy, required-evidence
+truncation, and critical test-responsibility mappings.
+
+Repository retrieval remains manual. The orchestrator does not execute `my-dev-kit`:
+a user or coding agent must run a verified `my-dev-kit` CLI,
+populate the supplemental context packet and retrieval report, and reference
+the raw evidence. A context-sensitive direct-stage prompt becomes a
+refresh-only prompt while required context is blocked; normal implementation
+or test work resumes after context readiness passes. `status`, `check`, and
+`export` expose the resulting readiness state, and judge review uses the
+existing `NEED_CONTEXT` verdict with an exact `Recommended next stage`.
+
+These additions preserve the eight-command CLI surface, all seven mode stage
+orders, prompt filenames, lifecycle behavior, and old runs. Supplemental
+context files and instruction-packet sidecars are not native lifecycle
+artifacts. `TaskState` and `StageContextBundle` are assembled in memory and
+are not persisted.
 
 ## Quick start
 
@@ -88,6 +117,8 @@ mode are not supported.
 
 ## Command overview
 
+The CLI has eight commands:
+
 ```text
 my-dev-kit-orchestrator init
 my-dev-kit-orchestrator start [options] <request>
@@ -123,6 +154,10 @@ or release workflows.
 - Tests currently use both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`.
 - The mobile and autonomous-execution boundaries described above remain in
   effect.
+- The `scaffold-plan` and `scaffold-implementation` stages retain their
+  specialized greenfield scaffold renderer; they still receive catalog
+  entries and instruction-packet sidecars.
+- `status` is human-readable and has no JSON option.
 
 ## Documentation
 
@@ -133,3 +168,5 @@ or release workflows.
 - [Contributor setup and validation](docs/DEVELOPMENT.md)
 - [Release history](CHANGELOG.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Documentation preservation policy](docs/DOCUMENTATION_PRESERVATION_POLICY.md)
+- [Release checklist](docs/RELEASE_CHECKLIST.md)

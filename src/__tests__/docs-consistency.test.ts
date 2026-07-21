@@ -3,268 +3,118 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-function writeFile(root: string, relPath: string, content: string): void {
-  const fullPath = path.join(root, relPath);
-  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  fs.writeFileSync(fullPath, content, 'utf8');
+const repositoryRoot = path.resolve(__dirname, '..', '..');
+const scriptPath = path.join(repositoryRoot, 'scripts', 'check-docs-consistency.mjs');
+const temporaryRoots: string[] = [];
+
+function copyFile(root: string, relativePath: string): void {
+  const destination = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(path.join(repositoryRoot, relativePath), destination);
 }
 
-function makeFixture(
-  readme: string,
-  overrides: { workflows?: string } = {},
-): string {
+function makeFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-docs-check-'));
-
-  writeFile(
-    root,
-    'package.json',
-    JSON.stringify({
-      name: '@dailephd/my-dev-kit-orchestrator',
-      version: '1.1.0',
-    }),
-  );
-  writeFile(
-    root,
+  temporaryRoots.push(root);
+  for (const relativePath of ['package.json', 'README.md', 'CHANGELOG.md']) copyFile(root, relativePath);
+  fs.cpSync(path.join(repositoryRoot, 'docs'), path.join(root, 'docs'), { recursive: true });
+  fs.cpSync(path.join(repositoryRoot, 'src', 'commands'), path.join(root, 'src', 'commands'), { recursive: true });
+  for (const relativePath of [
     'src/types.ts',
-    "export const VALID_MODES = ['feature', 'repair', 'test', 'refactor', 'harden', 'extraction', 'greenfield'] as const;\n",
-  );
-  writeFile(
-    root,
+    'src/workflows.ts',
+    'src/program.ts',
     'src/greenfield/modes/greenfieldStages.ts',
-    "export const GREENFIELD_STAGE_NAMES: string[] = ['idea-brief','product-boundary','stack-decision','starter-profile','bootstrap-bundle','project-docs','scaffold-plan','scaffold-implementation','first-vertical-slice','verification','initial-index','judge','final-report'];\n",
-  );
-  writeFile(
-    root,
-    'src/greenfield/modes/greenfieldMode.ts',
-    "export const GREENFIELD_ARTIFACT_MAP: Record<string, string> = {'idea-brief':'artifacts/idea-brief.json','product-boundary':'artifacts/product-boundary.txt','stack-decision':'artifacts/stack-decision.txt','starter-profile':'artifacts/starter-profile.json','bootstrap-bundle':'artifacts/bootstrap-bundle.json','project-docs':'artifacts/project-docs-report.txt','scaffold-plan':'artifacts/scaffold-plan.txt','scaffold-implementation':'reports/scaffold-implementation-report.txt','first-vertical-slice':'artifacts/first-vertical-slice.txt','initial-index':'reports/initial-index-report.txt'};\n",
-  );
-  writeFile(
-    root,
     'src/greenfield/profiles/resolveGreenfieldProfile.ts',
-    "const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> = {\n" +
-      "  'typescript-cli': TYPESCRIPT_CLI_PROFILE,\n" +
-      "  'nextjs-app': NEXTJS_APP_PROFILE,\n" +
-      "  'android-compose': ANDROID_COMPOSE_PROFILE,\n" +
-      "};\n",
-  );
-
-  writeFile(root, 'README.md', readme);
-  writeFile(root, 'CHANGELOG.md', '# Changelog\n\n## v1.1.0\n\nReleased.\n');
-  writeFile(root, 'docs/ROADMAP.md', '# Roadmap\n\n`v1.1.0` is published.\n');
-  writeFile(
-    root,
-    'docs/WORKFLOWS.md',
-    overrides.workflows ??
-      '`feature` `repair` `test` `refactor` `harden` `extraction` `greenfield`\n' +
-        'supports the `typescript-cli`, `nextjs-app`, and `android-compose` profiles\n' +
-        '`idea-brief` `product-boundary` `stack-decision` `starter-profile` `bootstrap-bundle` `project-docs` `scaffold-plan` `scaffold-implementation` `first-vertical-slice` `verification` `initial-index` `judge` `final-report`\n',
-  );
-  writeFile(
-    root,
-    'docs/ARTIFACTS.md',
-    '`artifacts/idea-brief.json` `artifacts/product-boundary.txt` `artifacts/stack-decision.txt` `artifacts/starter-profile.json` `artifacts/bootstrap-bundle.json` `artifacts/project-docs-report.txt` `artifacts/scaffold-plan.txt` `reports/scaffold-implementation-report.txt` `artifacts/first-vertical-slice.txt` `reports/initial-index-report.txt` `artifacts/verification-report.txt` `artifacts/judge-report.txt` `artifacts/final-report.txt`\n',
-  );
-  writeFile(root, 'docs/USAGE.md', 'my-dev-kit-orchestrator check --artifacts\n');
-  writeFile(root, 'docs/DEVELOPMENT.md', 'development\n');
-  writeFile(root, 'docs/ARCHITECTURE.md', 'architecture\n');
-
+    'src/instructions/catalogTypes.ts',
+    'src/instructions/workflowInstructionPacket.ts',
+    'src/instructions/taskState.ts',
+    'src/instructions/stageContextBundle.ts',
+    'src/instructions/supplementalContextTypes.ts',
+    'src/instructions/contextReadiness.ts',
+    'src/instructions/stageRepositoryEvidenceRequirements.ts',
+    'tests/fixtures/v121-compatibility/compatibility-manifest.json',
+  ]) copyFile(root, relativePath);
   return root;
 }
 
-function addPreservationManifest(root: string): void {
-  writeFile(
-    root,
-    'docs/documentation-preservation-manifest.json',
-    JSON.stringify({
-      canonicalDocuments: [
-        'README.md',
-        'CHANGELOG.md',
-        'docs/ROADMAP.md',
-        'docs/USAGE.md',
-        'docs/WORKFLOWS.md',
-        'docs/ARTIFACTS.md',
-        'docs/ARCHITECTURE.md',
-        'docs/DEVELOPMENT.md',
-      ],
-      requiredTerms: {
-        'README.md': ['@dailephd/my-dev-kit-orchestrator@1.1.0'],
-        'docs/USAGE.md': ['check --artifacts'],
-        'docs/WORKFLOWS.md': ['greenfield'],
-        'CHANGELOG.md': ['v1.1.0'],
-      },
-      roadmapVersions: ['v1.1.0'],
-      greenfieldStageOrder: [
-        'idea-brief', 'product-boundary', 'stack-decision', 'starter-profile',
-        'bootstrap-bundle', 'project-docs', 'scaffold-plan',
-        'scaffold-implementation', 'first-vertical-slice', 'verification',
-        'initial-index', 'judge', 'final-report',
-      ],
-      starterProfiles: ['typescript-cli', 'nextjs-app', 'android-compose'],
-    }),
-  );
-  writeFile(root, 'docs/ROADMAP.md', '# Roadmap\n\n### v1.1.0\n\nPublished.\n');
+function mutate(root: string, relativePath: string, transform: (content: string) => string): void {
+  const target = path.join(root, relativePath);
+  const before = fs.readFileSync(target, 'utf8');
+  const after = transform(before);
+  expect(after).not.toBe(before);
+  fs.writeFileSync(target, after, 'utf8');
 }
 
-describe('docs consistency check script', () => {
-  const scriptPath = path.resolve(__dirname, '..', '..', 'scripts', 'check-docs-consistency.mjs');
-
-  it('fails when README contains a stale published-version claim', () => {
-    const root = makeFixture(
-      '# title\n\n' +
-        '`v1.0.0` is the current published stable workflow contract release.\n\n' +
-        'Current implementation also mentions `1.1.0` and `greenfield`.\n',
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain('README.md still claims v1.0.0 is the current published release');
-
-    fs.rmSync(root, { recursive: true, force: true });
+function run(root: string) {
+  return spawnSync(process.execPath, [scriptPath, '--root', root], {
+    encoding: 'utf8',
+    windowsHide: true,
   });
+}
 
-  it('passes for a complete, accurate fixture (three source-derived profiles, no stale claims)', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n' +
-        'The orchestrator does not run Gradle and does not require the Android SDK.\n',
-    );
+afterAll(() => {
+  for (const root of temporaryRoots) fs.rmSync(root, { recursive: true, force: true });
+});
 
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
+describe('docs consistency check script', () => {
+  it('passes a complete fixture derived from current canonical inputs', () => {
+    const result = run(makeFixture());
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('DOCS_CHECK_PASS');
     expect(result.stdout).toContain('3 greenfield profiles');
-
-    fs.rmSync(root, { recursive: true, force: true });
   });
 
-  it('fails when docs list only the two pre-v1.2.0 greenfield profiles (the known stale claim)', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app`\n',
-      {
-        workflows:
-          '`feature` `repair` `test` `refactor` `harden` `extraction` `greenfield`\n' +
-          'supports the `typescript-cli` and `nextjs-app` profiles\n' +
-          '`idea-brief` `product-boundary` `stack-decision` `starter-profile` `bootstrap-bundle` `project-docs` `scaffold-plan` `scaffold-implementation` `first-vertical-slice` `verification` `initial-index` `judge` `final-report`\n',
-      },
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
+  it('fails when README contains a stale current-published version claim', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => `${content}\n` + '`v1.0.0` is the current published stable release.\n');
+    const result = run(root);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('Docs do not mention current greenfield profile android-compose');
-
-    fs.rmSync(root, { recursive: true, force: true });
+    expect(result.stderr).toContain('[STALE_PUBLISHED_VERSION_CLAIM]');
   });
 
-  it('fails when docs state a fixed profile count that does not match source, even if all profile ids are also present', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n',
-      {
-        workflows:
-          '`feature` `repair` `test` `refactor` `harden` `extraction` `greenfield`\n' +
-          'supports the two supported profiles `typescript-cli`, `nextjs-app`, and `android-compose`\n' +
-          '`idea-brief` `product-boundary` `stack-decision` `starter-profile` `bootstrap-bundle` `project-docs` `scaffold-plan` `scaffold-implementation` `first-vertical-slice` `verification` `initial-index` `judge` `final-report`\n',
-      },
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
+  it('fails when current docs omit a source-defined greenfield profile', () => {
+    const root = makeFixture();
+    for (const relativePath of ['README.md', 'docs/WORKFLOWS.md']) {
+      mutate(root, relativePath, (content) => content.replace(/`android-compose`/g, 'Android profile'));
+    }
+    const result = run(root);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('Docs state a greenfield profile count that does not match source');
-
-    fs.rmSync(root, { recursive: true, force: true });
+    expect(result.stderr).toContain('[GREENFIELD_PROFILE_CLAIM_MISSING]');
   });
 
-  it('does not false-positive on a correct "supports Android Compose" claim (source-derived, not the old hardcoded rejection)', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n' +
-        'This release supports Android Compose as a greenfield starter profile.\n',
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
-    expect(result.status).toBe(0);
-
-    fs.rmSync(root, { recursive: true, force: true });
-  });
-
-  it('fails when docs make an unnegated generic mobile/iOS/Flutter/React Native support claim', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n' +
-        'This release supports mobile app development end to end.\n',
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
+  it('fails when docs state the old two-profile count', () => {
+    const root = makeFixture();
+    mutate(root, 'docs/WORKFLOWS.md', (content) => content.replace(/supports three starter\s+profiles:/, 'supports two starter profiles:'));
+    const result = run(root);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('generic mobile support claim');
-
-    fs.rmSync(root, { recursive: true, force: true });
+    expect(result.stderr).toContain('[GREENFIELD_PROFILE_COUNT_MISMATCH]');
   });
 
-  it('does not false-positive on a correct negated Gradle/Android-SDK/Play-Store disclaimer', () => {
-    const root = makeFixture(
-      '# title\n\n`1.1.0` `greenfield` `feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n' +
-        'The orchestrator does not run Gradle, does not require the Android SDK, ' +
-        'and does not claim Play Store readiness.\n',
-    );
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
-    expect(result.status).toBe(0);
-
-    fs.rmSync(root, { recursive: true, force: true });
+  it('allows the accurate Android Compose support claim', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => `${content}\nThe greenfield mode supports Android Compose as a starter profile.\n`);
+    expect(run(root).status).toBe(0);
   });
 
-  it.each([
-    ['README package identity', 'README.md', '# title\n\n`greenfield`\n'],
-    ['usage command family', 'docs/USAGE.md', 'usage without the required command\n'],
-    ['workflow family', 'docs/WORKFLOWS.md', '`feature` only\n'],
-    ['published release', 'CHANGELOG.md', '# Changelog\n\nNo release heading.\n'],
-  ])('fails when the preservation manifest loses %s', (_label, relPath, replacement) => {
-    const root = makeFixture(
-      '# title\n\n@dailephd/my-dev-kit-orchestrator@1.1.0 `greenfield` ' +
-        '`feature` `repair` `test` `refactor` `harden` `extraction`\n' +
-        '`typescript-cli` `nextjs-app` `android-compose`\n',
-    );
-    addPreservationManifest(root);
-    writeFile(root, relPath, replacement);
-
-    const result = spawnSync(process.execPath, [scriptPath, '--root', root], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-
+  it('fails on an unnegated generic mobile support claim', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => `${content}\nThe orchestrator supports mobile development end to end.\n`);
+    const result = run(root);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('DOCS_CHECK_FAIL');
-    fs.rmSync(root, { recursive: true, force: true });
+    expect(result.stderr).toContain('[GENERIC_MOBILE_SUPPORT_FALSE_CLAIM]');
+  });
+
+  it('allows accurate negated Gradle, Android SDK, and Play Store boundaries', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => `${content}\nThe orchestrator does not run Gradle, does not require the Android SDK, and does not claim Play Store readiness.\n`);
+    expect(run(root).status).toBe(0);
+  });
+
+  it('fails when a preservation-manifest term disappears', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => content.replace('design-first', 'structured'));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('[PRESERVED_TERM_MISSING]');
   });
 });

@@ -2,7 +2,66 @@
 
 ## Unreleased
 
-No unreleased user-visible changes are documented.
+### v1.2.1 - Workflow Instruction and Context Readiness
+
+Implemented in source but not published. Package metadata and the built CLI
+remain at `1.2.0`; no release date, tag, GitHub Release, or npm publication is
+claimed.
+
+### Added
+
+- Added the typed `1.0.0` workflow-instruction catalog, stable exact IDs,
+  catalog validation, exact dependency resolution, and deterministic budget
+  accounting.
+- Added `WorkflowInstructionPacket` schema `1.0.0` and deterministic
+  instruction-packet sidecars for all 79 native stages.
+- Added in-memory `TaskState` and `StageContextBundle` schemas `1.0.0`.
+- Added `1.0.0` supplemental context packet and retrieval-report contracts,
+  templates, raw-evidence references, and the exact 11-stage implementation/
+  test repository-evidence requirement registry.
+- Added `ContextReadiness` schema `1.0.0`, including freshness, adequacy,
+  provenance, required-evidence truncation, and critical responsibility-
+  mapping checks.
+- Added structured context-readiness visibility to `status`, `check`,
+  `check --all`, and `export`.
+
+### Changed
+
+- Context-sensitive implementation and test-implementation prompts render
+  refresh-only work when required evidence is not ready.
+- Verification and judge prompts review mode-required context; blocked judge
+  prompts use the existing `NEED_CONTEXT` verdict with a deterministic exact
+  `Recommended next stage`.
+- `TestStrategyPacket` responsibilities now declare criticality, and critical
+  responsibilities require repository-evidence mappings before test
+  implementation can proceed.
+- Required packet content is preserved even when over budget; optional
+  truncation is explicit and deterministic.
+
+### Fixed
+
+- Fixed the stage-instruction placeholder completeness defect so every native
+  stage has complete catalog-owned instruction content.
+
+### Compatibility
+
+- Preserved all seven workflow modes, all 79 native stage names and ordering,
+  the eight CLI commands, prompt filenames, lifecycle behavior, judge
+  verdicts, correction routing, and legacy run loading.
+- Added deterministic, cross-platform, prompt-compatibility, package, and
+  legacy-run coverage. Two greenfield scaffold prompts retain their existing
+  specialized renderer while still receiving catalog entries and sidecars.
+
+### Known limitations
+
+- `my-dev-kit` retrieval remains manual; the orchestrator does not execute an
+  external context engine.
+- The published package labeled `my-dev-kit` 1.10.2 showed a CLI identity/
+  command mismatch from the verified role-aware 1.10.2 source contract, so
+  manual integration must use a verified CLI.
+- Extraction command examples are not fully promoted into command catalog
+  entries, and generic non-`NEED_CONTEXT` extraction architecture-context
+  routing remains a pre-existing edge case.
 
 ## v1.2.0 - Android Compose Greenfield Profile
 

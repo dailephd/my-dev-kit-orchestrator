@@ -1,16 +1,19 @@
 # Release Checklist
 
-Use this checklist for release-readiness work on the currently shipped CLI.
-This file is a checklist template, not evidence that the listed steps have
-already run.
+Use this checklist for release-readiness work. This file is a checklist
+template, not evidence that the listed steps have already run. The latest
+published package is `v1.2.0`; `v1.2.1` is implemented in source but remains
+unreleased until its separate pre-release and publication work is completed.
 
 ## Current release baseline
 
-- [ ] package version in `package.json` and `package-lock.json` matches the version being released (e.g. `1.2.0` for the Android Compose Greenfield Profile release)
-- [ ] `node dist/cli.js --version` prints the package version being released
+- [ ] package metadata remains `1.2.0` before the authorized v1.2.1 pre-release version change
+- [ ] `node dist/cli.js --version` prints `1.2.0` before that version change
 - [ ] docs describe seven modes and list `greenfield` as the seventh
+- [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
+- [ ] docs distinguish latest-published `v1.2.0` from implemented-unreleased `v1.2.1`
 
 ## Required local validation
 
@@ -18,13 +21,41 @@ already run.
 - [ ] `npm run lint:docs`
 - [ ] `npm run lint`
 - [ ] `npm run test:security`
-- [ ] `npx jest tests/greenfield --silent`
-- [ ] `npx tsc --noEmit`
-- [ ] `npm test`
+- [ ] `npx jest tests/documentationConsistency.test.ts --runInBand`
+- [ ] `npm run typecheck`
+- [ ] `npm test -- --runInBand`
 - [ ] `npm run build`
 - [ ] `node dist/cli.js --version`
 - [ ] `node dist/cli.js --help`
 - [ ] `npm pack --dry-run`
+- [ ] `git diff --check`
+
+## Documentation and context-readiness audit
+
+- [ ] if a local project plan exists, confirm it is untracked, ignored, absent
+  from package output, and not linked as public documentation
+- [ ] public technical documents contain no detailed planning chapters,
+  candidate architecture, implementation-batch tracking, or contradictory
+  current-version status
+- [ ] required headings, forbidden headings, and major heading order satisfy
+  the preservation manifest
+- [ ] all eight CLI commands and seven workflow modes match built `--help`
+- [ ] all 79 native stages have catalog identities and instruction-packet sidecars
+- [ ] the two specialized greenfield scaffold-renderer exceptions are disclosed
+- [ ] the exact 11 context-sensitive direct stages are documented (five
+  implementation context and six test context)
+- [ ] all instruction/context schemas are documented as `1.0.0`
+- [ ] all four fixed supplemental context paths match source constants
+- [ ] docs state that repository retrieval is manual and use
+  `<MY_DEV_KIT_CLI>` rather than guaranteeing a mismatched published executable
+- [ ] docs state that supplemental context files and sidecars are not native
+  lifecycle artifacts
+- [ ] docs state that `TaskState` and `StageContextBundle` are not persisted
+- [ ] docs state that `status` has no JSON option
+- [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
+  exact `Recommended next stage` policy are documented
+- [ ] the configured Node 22/24 matrix is described separately from local
+  Node 24.11.0 evidence and any future live CI result
 
 ## Temporary-directory smoke
 
@@ -58,8 +89,9 @@ request, in a separate temporary directory:
 
 ## Cross-platform and security gates
 
-- [ ] GitHub Actions matrix passes on `windows-latest`, `macos-15`, and `ubuntu-latest`
-- [ ] GitHub Actions matrix covers Node 22 and Node 24
+- [ ] configured GitHub Actions matrices cover `windows-latest`, `macos-15`,
+  and `ubuntu-latest` with Node 22 and Node 24
+- [ ] after the branch is pushed, record the actual live CI result separately
 - [ ] `my-dev-kit-lab` self-validation passes
 - [ ] `my-dev-kit-lab` target security validation passes
 
@@ -71,6 +103,8 @@ request, in a separate temporary directory:
 - [ ] component docs remain empty until brief schema module/component hints exist
 - [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
+- [ ] release notes disclose manual `my-dev-kit` execution and the published
+  1.10.2 CLI mismatch risk
 
 ## v1.0.0 checklist
 

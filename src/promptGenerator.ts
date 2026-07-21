@@ -7,6 +7,18 @@ import {
   renderScaffoldPlanPrompt,
   renderScaffoldImplementationPrompt,
 } from './greenfield/scaffold/renderScaffoldPrompt';
+import { buildInstructionCatalog } from './instructions/catalog';
+import { renderWorkflowInstructionPacket } from './instructions/workflowInstructionPacketRenderer';
+import { serializeWorkflowInstructionPacket } from './instructions/workflowInstructionPacketSerialization';
+import {
+  assembleStageContextBundle,
+  RepositoryEvidenceReference,
+  StageContextBundle,
+  UpstreamArtifactReference,
+} from './instructions/stageContextBundle';
+import { writeSupplementalContextTemplates } from './instructions/supplementalContextTemplates';
+import { ContextReadinessResult } from './instructions/contextReadiness';
+import { RunContextReadinessSummary } from './instructions/runContextReadiness';
 
 interface PromptContext {
   stage: string;
@@ -18,6 +30,209 @@ interface PromptContext {
   totalStages: number;
   sourceRepoRoot?: string;
   targetRepoRoot?: string;
+  // Bounded, packet-backed rendering of this stage's catalog-owned task
+  // instructions, commands, rules, validation requirements, stop conditions,
+  // and report-contract summary (see renderStageInstructionBlock()). Every
+  // native stage prompt function interpolates this instead of hardcoding its
+  // own Task:/Stop conditions: text, so that content is never duplicated
+  // between the catalog and promptGenerator.ts.
+  stageInstructionText: string;
+}
+
+// Assembles the exact StageContextBundle for one workflow/stage and renders
+// its packet into bounded instruction text. Called once per generated
+// prompt (see generateStagePrompt() and generateCorrectionPrompt()) -- it
+// does not execute any command, read repository content, or persist
+// anything; it only composes already-validated in-memory catalog data.
+function assembleStageContextBundleOrThrow(
+  meta: RunMetadata,
+  selectedStage: string,
+  upstreamArtifacts: UpstreamArtifactReference[] = [],
+  correctionState?: CorrectionRouteResult,
+): StageContextBundle {
+  const result = assembleStageContextBundle({
+    catalog: buildInstructionCatalog(),
+    runMetadata: meta,
+    selectedStage,
+    upstreamArtifacts,
+    correctionState,
+  });
+  if (!result.ok) {
+    throw new Error(
+      `Failed to assemble stage context bundle for workflow.${meta.mode} / stage.${meta.mode}.${selectedStage}: ` +
+        result.issues.map((i) => `${i.code}: ${i.message}`).join('; '),
+    );
+  }
+  return result.bundle;
+}
+
+// Renders the "Repository evidence:" section for one of the 11 exact
+// context-sensitive stages. Structural status (Batch 4) plus, when a
+// readiness evaluation is available (Batch 5), the deterministic readiness
+// decision that governs whether this stage's normal work is allowed to
+// proceed -- see renderContextRefreshOnlyPrompt() for the blocked case.
+function renderRepositoryEvidenceSection(ref: RepositoryEvidenceReference, readiness?: ContextReadinessResult): string {
+  const lines = [
+    'Repository evidence:',
+    `  Expected role: ${ref.role}`,
+    `  Context packet: ${ref.packetPath}`,
+    `  Context packet status: ${ref.packetStatus}`,
+    `  Retrieval report: ${ref.reportPath}`,
+    `  Retrieval report status: ${ref.reportStatus}`,
+    `  Aggregate status: ${ref.status}`,
+    `  Declared freshness: ${ref.declaredFreshness ?? 'unknown'}`,
+    `  Declared adequacy: ${ref.declaredAdequacy ?? 'unknown'}`,
+    `  Enforcement: ${ref.enforcement}`,
+    `  Automatic retrieval: disabled`,
+  ];
+  if (ref.issues.length > 0) {
+    lines.push('  Issues:');
+    for (const issue of ref.issues) lines.push(`    - ${issue.code}: ${issue.message}`);
+  }
+  if (readiness) {
+    lines.push(`  Context readiness decision: ${readiness.decision}`);
+    lines.push(`  Evaluated freshness: ${readiness.evaluatedFreshness}`);
+    lines.push(`  Evaluated adequacy: ${readiness.evaluatedAdequacy}`);
+    if (readiness.readyWithAssumptions) lines.push('  Ready with assumptions: yes -- review declared assumptions before relying on this evidence.');
+    if (readiness.criticalResponsibilitySummary) {
+      const s = readiness.criticalResponsibilitySummary;
+      lines.push(
+        `  Critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} critical responsibilities fully mapped.`,
+      );
+    }
+  }
+  lines.push(
+    '  Notes: my-dev-kit is not run automatically by this orchestrator. These files are supplemental',
+    '  repository evidence -- template placeholders are not evidence; read populated documents before',
+    '  starting work.',
+  );
+  return lines.join('\n');
+}
+
+// Renders the "Context readiness review:" section for a non-greenfield
+// verification or judge stage, which reviews every mode-required context
+// kind rather than owning a single direct reference (Batch 5 sections
+// 16-17).
+function renderContextReadinessReviewSection(summary: RunContextReadinessSummary, stageKind: 'verification' | 'judge'): string {
+  const lines = ['Context readiness review:', `  Overall decision: ${summary.overallDecision}`];
+
+  for (const [label, result] of [
+    ['Implementation context', summary.implementationContext],
+    ['Test context', summary.testContext],
+  ] as const) {
+    if (!result) continue;
+    lines.push(`  ${label}:`);
+    lines.push(`    decision: ${result.decision}`);
+    lines.push(`    classification: ${result.classification}`);
+    lines.push(`    evaluated freshness: ${result.evaluatedFreshness}`);
+    lines.push(`    evaluated adequacy: ${result.evaluatedAdequacy}`);
+    if (result.blockingIssueCodes.length > 0) lines.push(`    blocking issues: ${result.blockingIssueCodes.join(', ')}`);
+    if (result.criticalResponsibilitySummary) {
+      const s = result.criticalResponsibilitySummary;
+      lines.push(`    critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} fully mapped`);
+    }
+  }
+
+  if (summary.overallDecision === 'ready') {
+    lines.push(
+      stageKind === 'verification'
+        ? '  All required repository context is ready. Compare the implementation and tests against this evidence before running verification commands.'
+        : '  All required repository context is ready. Judge freely on the complete evidence.',
+    );
+  } else {
+    lines.push(`  Recommended next stage: ${summary.recommendedNextStage ?? '(none)'}`);
+    lines.push(
+      stageKind === 'verification'
+        ? '  Required context is not ready: do not claim the work is verified. Do not run normal behavioral verification commands.'
+        : '  Required context is not ready: this stage must return "Verdict: NEED_CONTEXT" with the recommended next stage above. Do not return PASS.',
+    );
+  }
+  return lines.join('\n');
+}
+
+function renderStageInstructionBlockFromBundle(bundle: StageContextBundle): string {
+  const packetText = renderWorkflowInstructionPacket(bundle.workflowInstructionPacket);
+  if (bundle.repositoryEvidenceReference) {
+    return `${renderRepositoryEvidenceSection(bundle.repositoryEvidenceReference, bundle.repositoryContextReadiness)}\n\n${packetText}`;
+  }
+  if (bundle.runContextReadinessSummary) {
+    const stageKind = bundle.taskState.selectedStage === 'judge' ? 'judge' : 'verification';
+    return `${renderContextReadinessReviewSection(bundle.runContextReadinessSummary, stageKind)}\n\n${packetText}`;
+  }
+  return packetText;
+}
+
+function renderStageInstructionBlock(
+  meta: RunMetadata,
+  selectedStage: string,
+  upstreamArtifacts: UpstreamArtifactReference[] = [],
+  correctionState?: CorrectionRouteResult,
+): string {
+  const bundle = assembleStageContextBundleOrThrow(meta, selectedStage, upstreamArtifacts, correctionState);
+  return renderStageInstructionBlockFromBundle(bundle);
+}
+
+// Renders a context-refresh-only prompt for a blocked direct stage
+// (implementation or test-implementation) instead of its normal
+// packet-backed work prompt (AGENTS.txt Batch 5 section 14.2/14.3). No new
+// persisted artifact is introduced -- the coding agent reports the refresh
+// outcome directly in its response rather than writing a file.
+function renderContextRefreshOnlyPrompt(ctx: PromptContext, readiness: ContextReadinessResult): string {
+  const lines: string[] = [header(ctx)];
+  lines.push('This stage is BLOCKED on repository context. Normal stage work is prohibited until context is refreshed.');
+  lines.push('');
+  lines.push(`Context kind: ${readiness.kind}`);
+  lines.push(`Expected role: ${readiness.role}`);
+  lines.push(`Context packet: ${readiness.packetPath}`);
+  lines.push(`Retrieval report: ${readiness.reportPath}`);
+  if (readiness.sourceCapsulePath) lines.push(`Source context capsule: ${readiness.sourceCapsulePath}`);
+  if (readiness.sourceAuditPath) lines.push(`Source retrieval audit: ${readiness.sourceAuditPath}`);
+  lines.push(`Readiness decision: ${readiness.decision}`);
+  lines.push(`Classification: ${readiness.classification}`);
+  lines.push('');
+  if (readiness.blockingIssueCodes.length > 0) {
+    lines.push('Blocking issues:');
+    for (const i of readiness.issues.filter((x) => x.severity === 'error')) {
+      lines.push(`  - ${i.code}: ${i.message}`);
+    }
+    lines.push('');
+  }
+  if (readiness.warnings.length > 0) {
+    lines.push('Warnings:');
+    for (const w of readiness.warnings) lines.push(`  - ${w}`);
+    lines.push('');
+  }
+  if (readiness.affectedResponsibilityIds.length > 0) {
+    lines.push(`Affected responsibility IDs: ${readiness.affectedResponsibilityIds.join(', ')}`);
+    lines.push('');
+  }
+  lines.push('Required refresh actions:');
+  lines.push('  1. Populate or repair the context packet and retrieval report referenced above.');
+  lines.push('  2. Run my-dev-kit manually (this orchestrator does not execute it automatically):');
+  lines.push('       <MY_DEV_KIT_CLI> context --request <REQUEST_FILE> --json');
+  lines.push('  3. Record the resulting context capsule and retrieval audit paths in the packet/report');
+  lines.push('     "Source context capsule:" / "Source retrieval audit:" fields, replacing "unknown".');
+  lines.push('  4. Set Status: populated and resolve the blocking issues listed above.');
+  lines.push('');
+  lines.push('Automatic retrieval: disabled.');
+  lines.push('');
+  lines.push('Stop conditions:');
+  lines.push('  - do not modify production code');
+  lines.push('  - do not write test files');
+  lines.push('  - do not write the normal stage report artifact for this stage');
+  lines.push('  - do not claim this stage is complete');
+  lines.push('  - stop after refreshing or repairing the context evidence');
+  lines.push('');
+  lines.push('Return format:');
+  lines.push('Do not write a new artifact file for this report. In your response, report:');
+  lines.push('  Context refresh report');
+  lines.push('  Stage: ' + ctx.stage);
+  lines.push('  Actions taken: ...');
+  lines.push('  Remaining blocking issues, if any: ...');
+  lines.push('  Status: refreshed | still-blocked');
+  lines.push('');
+  lines.push('After refreshing, rerun `my-dev-kit-orchestrator prompt` for this stage and `my-dev-kit-orchestrator check` to confirm readiness.');
+  return lines.join('\n');
 }
 
 function header(ctx: PromptContext): string {
@@ -41,28 +256,10 @@ function requestBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original request: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/request-brief.txt (artifact: RequestBrief).
-
-The RequestBrief must define:
-- original request (verbatim from 00-request.txt)
-- requested change
-- target area (project, component, workflow, or command) if identifiable
-- user-visible or externally observable behavior
-- constraints
-- non-goals
-- success criteria
-- ambiguity or missing information
-- expected next stage: architecture-context
+${ctx.stageInstructionText}
 
 Required output artifact: RequestBrief
 Output file: ${ctx.runFolder}/artifacts/request-brief.txt
-
-Stop conditions:
-- do not inspect code deeply in this stage
-- do not write pseudocode
-- do not write tests
-- do not implement code
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -87,71 +284,11 @@ Inputs:
 - ${ctx.runFolder}/artifacts/request-brief.txt
 - project root: ${ctx.projectRoot}
 
-Task:
-Retrieve bounded project context and synthesize it into the required workflow artifact.
-
-Produce two output files:
-1. Supporting retrieval report: ${ctx.runFolder}/reports/architecture-context-retrieval-report.txt
-2. Required workflow artifact: ${ctx.runFolder}/artifacts/architecture-context-packet.txt (artifact: ArchitectureContextPacket)
-
-Later workflow stages consume ArchitectureContextPacket.
-Do not dump raw retrieval output directly into ArchitectureContextPacket.
-Synthesize retrieval evidence into the artifact before writing it.
-
-Graph-guided context acquisition sequence (when my-dev-kit is available):
-
-Step 1 - Index or refresh the target repository:
-  npx @dailephd/my-dev-kit index --root . --src src --out .my-dev-kit --call-graph --json
-
-Step 2 - Search for task-specific candidate nodes:
-  npx @dailephd/my-dev-kit search --index .my-dev-kit --query "<task-specific term>" --limit 20 --json
-  Run multiple queries for different aspects of the request.
-
-Step 3 - Look up selected nodes and their relationships:
-  npx @dailephd/my-dev-kit lookup --index .my-dev-kit --node "<selected-node-id>" --depth 1 --json
-
-Step 4 - Slice around the strongest relevant node:
-  npx @dailephd/my-dev-kit slice --index .my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --out .my-dev-kit/<task-name>-slice.json --json
-
-Step 5 - Retrieve exact symbol source (preferred):
-  npx @dailephd/my-dev-kit source --index .my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
-  or:
-  npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --symbol "<symbol-name>" --max-lines 160 --format numbered
-
-Step 6 - Use line-range retrieval only as fallback when symbol retrieval is insufficient:
-  npx @dailephd/my-dev-kit source --index .my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines <cap> --format numbered
-
-Step 7 - Inspect semantic artifacts, tests, docs, or data-model artifacts only when relevant to the task.
-
-Step 8 - Avoid whole-file reading unless bounded retrieval is insufficient. If a whole file must be read, state why.
-
-If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols. Document what was inspected, why, and what bounded context was gathered.
-
-The ArchitectureContextPacket must identify:
-- relevant files
-- relevant symbols
-- relevant components, modules, routes, commands, services, or data boundaries
-- relevant tests
-- relevant docs
-- state owners and data owners
-- upstream dependencies
-- downstream consumers
-- existing patterns to preserve
-- likely files or modules involved in this change
-- context gaps or uncertainty
-- selection rationale for each major file or symbol chosen
+${ctx.stageInstructionText}
 
 Required output artifact: ArchitectureContextPacket
 Output file: ${ctx.runFolder}/artifacts/architecture-context-packet.txt
-
 Supporting report output file: ${ctx.runFolder}/reports/architecture-context-retrieval-report.txt
-
-Stop conditions:
-- do not redesign the feature
-- do not write pseudocode
-- do not implement code
-- do not write test files
-- do not claim implementation or test implementation work in this stage
 
 Return format:
 
@@ -249,45 +386,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/request-brief.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/behavior-model.txt (artifact: BehaviorModel).
-
-Define intended behavior before pseudocode, implementation, or test writing begins.
-
-The BehaviorModel must define:
-- behavior summary
-- externally visible behavior
-- internal supporting behavior
-- state variables
-- inputs
-- events
-- derived values
-- invariants
-- valid states
-- invalid states
-- boundaries and partitions
-- empty states
-- error states
-- loading or pending states when relevant
-- external contracts
-- state transitions
-- behavior to preserve
-- behavior intentionally changed
-- unresolved design questions
-
-Trace IDs (optional):
-Assign trace IDs to behaviors, invariants, and transitions to enable downstream traceability.
-Format: BEH-001: description, INV-001: description, TRN-001: description.
-If trace IDs are used, link related items using: FROM_ID -> TO_ID.
-Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
+${ctx.stageInstructionText}
 
 Required output artifact: BehaviorModel
 Output file: ${ctx.runFolder}/artifacts/behavior-model.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not produce implementation-specific code
 
 Return format:
 Produce the artifact as a plain-text file following the BehaviorModel template.
@@ -307,42 +409,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 - ${ctx.runFolder}/artifacts/behavior-model.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/pseudocode-packet.txt (artifact: PseudocodePacket).
-
-Convert the BehaviorModel into implementation-neutral pseudocode.
-This is the shared design contract for both implementation and testing.
-
-The PseudocodePacket must define:
-- behavior references
-- data flow
-- state flow
-- state transitions
-- derived-value rules
-- validation rules
-- empty-state handling
-- error-state handling
-- external contract handling
-- component, module, service, route, command, or helper contracts
-- acceptance criteria
-- likely files or modules to modify
-- implementation constraints
-- assumptions preserved
-- assumptions removed or guarded
-- unresolved implementation questions
-
-Trace IDs (optional):
-Assign PSE-NNN trace IDs to pseudocode entries to enable downstream traceability.
-Format: PSE-001: pseudocode entry. Link to behavior IDs using: BEH-001 -> PSE-001.
-Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
+${ctx.stageInstructionText}
 
 Required output artifact: PseudocodePacket
 Output file: ${ctx.runFolder}/artifacts/pseudocode-packet.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not modify files
 
 Return format:
 Produce the artifact as a plain-text file following the PseudocodePacket template.
@@ -362,52 +432,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/behavior-model.txt
 - ${ctx.runFolder}/artifacts/pseudocode-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/test-strategy-packet.txt (artifact: TestStrategyPacket).
-
-Derive test responsibilities from the BehaviorModel and PseudocodePacket.
-Do not write test files in this stage.
-
-The TestStrategyPacket must identify:
-- behavior under test
-- participating layers
-- state variables
-- events
-- derived values
-- invariants
-- boundaries and partitions
-- external contracts
-- state transitions when relevant
-- relevant failure modes
-- existing tests
-- test matrix
-- test level assignment (unit / component / integration / end-to-end)
-- required verification commands
-- coverage gaps
-- risks not covered and why
-
-Each test responsibility must trace to at least one of:
-- behavior
-- invariant
-- state transition
-- derived value
-- boundary
-- external contract
-- failure mode
-
-Trace IDs (optional):
-Assign TST-NNN trace IDs to test responsibilities to enable downstream traceability.
-Format: TST-001: test responsibility. Link to behaviors or pseudocode: PSE-001 -> TST-001.
-Use canonical format (PREFIX-NNN with 3+ digits). Run: my-dev-kit-orchestrator check --trace
+${ctx.stageInstructionText}
 
 Required output artifact: TestStrategyPacket
 Output file: ${ctx.runFolder}/artifacts/test-strategy-packet.txt
-
-Stop conditions:
-- do not write test files in this stage
-- do not write production code
-- do not invent behavior not supported by prior artifacts
-- do not include test responsibilities that cannot be traced to behavior, invariant, transition, derived value, boundary, contract, or failure mode
 
 Return format:
 Produce the artifact as a plain-text file following the TestStrategyPacket template.
@@ -432,36 +460,10 @@ function implementationPrompt(ctx: PromptContext, extraInputs: string[] = []): s
 Inputs:
 ${inputs}
 
-Task:
-Implement the PseudocodePacket in the current project and produce ${ctx.runFolder}/artifacts/implementation-report.txt (artifact: ImplementationReport).
-
-Read required source files and implement from the PseudocodePacket.
-Follow the architecture and patterns identified in the ArchitectureContextPacket.
-Preserve the BehaviorModel.
-
-The ImplementationReport must include:
-- files read
-- files changed
-- behavior implemented
-- pseudocode sections implemented
-- assumptions preserved
-- assumptions removed or guarded
-- deviations from the PseudocodePacket
-- reason for each deviation
-- blockers encountered
-- unresolved risks
-- tests that should be run
-- notes for the test implementation stage
+${ctx.stageInstructionText}
 
 Required output artifact: ImplementationReport
 Output file: ${ctx.runFolder}/artifacts/implementation-report.txt
-
-Stop conditions:
-- do not broaden scope without reporting a blocker
-- do not create parallel architecture
-- do not claim verification success without command evidence
-- do not ignore contradictions in prior artifacts
-- do not modify files outside justified scope
 
 Return format:
 Produce the artifact as a plain-text file following the ImplementationReport template.
@@ -486,33 +488,10 @@ function testImplementationPrompt(ctx: PromptContext, extraInputs: string[] = []
 Inputs:
 ${inputs}
 
-Task:
-Implement tests from the TestStrategyPacket and produce ${ctx.runFolder}/artifacts/test-implementation-report.txt (artifact: TestImplementationReport).
-
-Follow the TestStrategyPacket. Do not invent a separate test strategy.
-
-The TestImplementationReport must include:
-- test files changed
-- tests added
-- tests updated
-- behaviors covered
-- invariants covered
-- state transitions covered
-- derived values covered
-- boundaries covered
-- external contracts covered
-- failure modes covered
-- TestStrategyPacket items not implemented
-- reason for each missing test
-- verification commands to run
+${ctx.stageInstructionText}
 
 Required output artifact: TestImplementationReport
 Output file: ${ctx.runFolder}/artifacts/test-implementation-report.txt
-
-Stop conditions:
-- do not replace the TestStrategyPacket with a new unrelated strategy
-- do not change production behavior unless reporting a blocker
-- do not claim tests passed unless command evidence is included
 
 Return format:
 Produce the artifact as a plain-text file following the TestImplementationReport template.
@@ -530,31 +509,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/implementation-report.txt
 - ${ctx.runFolder}/artifacts/test-implementation-report.txt
 
-Task:
-Run the required verification commands and produce ${ctx.runFolder}/artifacts/verification-report.txt (artifact: VerificationReport).
-
-Use the commands identified in the TestStrategyPacket, ImplementationReport, and TestImplementationReport.
-Run the narrowest relevant checks first, then broader validation.
-
-The VerificationReport must include:
-- commands run
-- working directory for each command
-- exit codes
-- pass/fail status
-- output summary
-- failed tests if any
-- skipped checks
-- reason for skipped checks
-- environment notes if relevant
-- remaining verification gaps
+${ctx.stageInstructionText}
 
 Required output artifact: VerificationReport
 Output file: ${ctx.runFolder}/artifacts/verification-report.txt
-
-Stop conditions:
-- do not claim checks passed unless command output was produced
-- do not hide failed commands
-- do not omit skipped required checks
 
 Return format:
 Produce the artifact as a plain-text file following the VerificationReport template.
@@ -577,34 +535,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/test-implementation-report.txt
 - ${ctx.runFolder}/artifacts/verification-report.txt
 
-Task:
-Review the implementation and tests against the workflow artifacts and produce ${ctx.runFolder}/artifacts/judge-report.txt (artifact: JudgeReport).
-
-The JudgeReport must assess:
-- implementation vs PseudocodePacket
-- tests vs TestStrategyPacket
-- behavior coverage
-- architecture alignment
-- scope control
-- verification evidence
-- risks and gaps
-- trace link integrity (if trace IDs were used): check for orphan IDs, missing link targets,
-  and malformed IDs by running: my-dev-kit-orchestrator check --trace
-  Include trace check results or note that trace IDs were not used in this run.
-
-Verdict must be one of:
-  PASS | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
-  TEST_COVERAGE_INCOMPLETE | ARCHITECTURE_MISMATCH | NEED_CONTEXT | SCOPE_VIOLATION |
-  NEED_VERIFICATION | BLOCKED
+${ctx.stageInstructionText}
 
 Required output artifact: JudgeReport
 Output file: ${ctx.runFolder}/artifacts/judge-report.txt
-
-Stop conditions:
-- do not rewrite code
-- do not approve without verification evidence
-- do not hide uncertainty or gaps
-- do not skip trace check if trace IDs are present in prior artifacts
 
 Return format:
 Produce the artifact as a plain-text file.
@@ -624,32 +558,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/request-brief.txt (or mode-specific entry artifact)
 - major design and implementation artifacts
 
-Task:
-Summarize the completed workflow and produce ${ctx.runFolder}/artifacts/final-report.txt (artifact: FinalReport).
-
-The FinalReport must include:
-- original request
-- workflow mode
-- run ID: ${ctx.runId}
-- stages completed
-- behavior designed
-- architecture context used
-- pseudocode summary
-- tests designed
-- implementation summary
-- tests added or updated
-- verification summary
-- judge verdict
-- unresolved risks
-- follow-up recommendations if needed
+${ctx.stageInstructionText}
 
 Required output artifact: FinalReport
 Output file: ${ctx.runFolder}/artifacts/final-report.txt
-
-Stop conditions:
-- do not exaggerate success
-- do not omit failed or skipped verification
-- do not hide unresolved risks
 
 Return format:
 Produce the artifact as a plain-text file following the FinalReport template.
@@ -668,29 +580,10 @@ function observedBehaviorReportPrompt(ctx: PromptContext): string {
 Inputs:
 - original request / observed behavior description: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/observed-behavior-report.txt (artifact: ObservedBehaviorReport).
-
-Capture the wrong or unexpected behavior without jumping to code-level causes.
-
-The ObservedBehaviorReport must define:
-- observed behavior (verbatim or close description)
-- expected behavior if known
-- triggering action or system event
-- visible output or runtime symptom
-- affected workflow or area
-- frequency or reproducibility
-- evidence available
-- uncertainty
+${ctx.stageInstructionText}
 
 Required output artifact: ObservedBehaviorReport
 Output file: ${ctx.runFolder}/artifacts/observed-behavior-report.txt
-
-Stop conditions:
-- do not guess code-level causes yet
-- do not write pseudocode
-- do not write tests
-- do not implement code
 
 Return format:
 Produce the artifact as a plain-text file following the ObservedBehaviorReport template.
@@ -708,28 +601,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/observed-behavior-report.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/behavior-trace.txt (artifact: BehaviorTrace).
-
-Connect the observed behavior to the intended behavior model or pseudocode path.
-
-The BehaviorTrace must identify:
-- observed behavior reference
-- matched behavior artifact if available
-- matched behavior rule
-- matched pseudocode section if available
-- expected data flow
-- expected state flow
-- expected output
-- missing design artifact if no match found
+${ctx.stageInstructionText}
 
 Required output artifact: BehaviorTrace
 Output file: ${ctx.runFolder}/artifacts/behavior-trace.txt
-
-Stop conditions:
-- do not modify code
-- do not write tests
-- do not implement fixes yet
 
 Return format:
   Artifact: BehaviorTrace
@@ -745,26 +620,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 - ${ctx.runFolder}/artifacts/behavior-trace.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/divergence-report.txt (artifact: DivergenceReport).
-
-Identify the first point where actual behavior diverges from intended behavior.
-
-The DivergenceReport must include:
-- expected path
-- actual path
-- first divergence point
-- affected layer
-- evidence
-- correction category (behavior design update / pseudocode update / implementation correction / test correction / external contract correction / runtime state ordering correction / artifact update)
-- uncertainty
+${ctx.stageInstructionText}
 
 Required output artifact: DivergenceReport
 Output file: ${ctx.runFolder}/artifacts/divergence-report.txt
-
-Stop conditions:
-- do not modify code
-- do not implement fixes yet
 
 Return format:
   Artifact: DivergenceReport
@@ -781,25 +640,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/divergence-report.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/correction-design.txt (artifact: CorrectionDesign).
-
-Define how the system should be corrected before implementation.
-
-The CorrectionDesign must include:
-- correction goal
-- artifact to update if any
-- code behavior to change
-- tests to add or update
-- acceptance criteria
-- risks
+${ctx.stageInstructionText}
 
 Required output artifact: CorrectionDesign
 Output file: ${ctx.runFolder}/artifacts/correction-design.txt
-
-Stop conditions:
-- do not implement code in this stage
-- do not write test files
 
 Return format:
   Artifact: CorrectionDesign
@@ -815,27 +659,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/correction-design.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/regression-test-strategy.txt (artifact: RegressionTestStrategy).
-
-Define tests that prove the observed divergence cannot recur and cover related behavior.
-
-The RegressionTestStrategy must include:
-- divergence being protected against
-- behavior or pseudocode rule being protected
-- regression test responsibilities
-- related boundary or transition coverage
-- verification commands
-
-Each test responsibility must trace to behavior, invariant, transition, derived value, boundary, contract, or failure mode.
-Do not write test files in this stage.
+${ctx.stageInstructionText}
 
 Required output artifact: RegressionTestStrategy
 Output file: ${ctx.runFolder}/artifacts/regression-test-strategy.txt
-
-Stop conditions:
-- do not write test files in this stage
-- do not implement code
 
 Return format:
   Artifact: RegressionTestStrategy
@@ -851,26 +678,10 @@ function testTargetBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original test target description: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/test-target-brief.txt (artifact: TestTargetBrief).
-
-Define the target of this test-design or test-implementation run.
-
-The TestTargetBrief must include:
-- test target
-- target behavior or workflow
-- whether code changes are allowed
-- desired test depth
-- constraints
-- success criteria
+${ctx.stageInstructionText}
 
 Required output artifact: TestTargetBrief
 Output file: ${ctx.runFolder}/artifacts/test-target-brief.txt
-
-Stop conditions:
-- do not write test files yet
-- do not implement code
-- do not write pseudocode
 
 Return format:
   Artifact: TestTargetBrief
@@ -885,27 +696,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/test-target-brief.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/behavior-reconstruction.txt (artifact: BehaviorReconstruction).
-
-Reconstruct behavior for the target feature when no BehaviorModel exists yet.
-
-The BehaviorReconstruction must include:
-- observed existing behavior
-- current architecture evidence
-- state variables
-- events
-- derived values
-- invariants
-- external contracts
-- uncertainty
+${ctx.stageInstructionText}
 
 Required output artifact: BehaviorReconstruction
 Output file: ${ctx.runFolder}/artifacts/behavior-reconstruction.txt
-
-Stop conditions:
-- do not write test files
-- do not implement code
 
 Return format:
   Artifact: BehaviorReconstruction
@@ -921,26 +715,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 - ${ctx.runFolder}/artifacts/behavior-reconstruction.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/pseudocode-summary.txt (artifact: PseudocodeSummary).
-
-Summarize existing implementation behavior in pseudocode form when no full PseudocodePacket exists.
-
-The PseudocodeSummary must include:
-- implementation-neutral behavior summary
-- data flow
-- state flow
-- derived values
-- validation rules
-- error or empty state handling
-- uncertainty
+${ctx.stageInstructionText}
 
 Required output artifact: PseudocodeSummary
 Output file: ${ctx.runFolder}/artifacts/pseudocode-summary.txt
-
-Stop conditions:
-- do not write test files
-- do not implement code
 
 Return format:
   Artifact: PseudocodeSummary
@@ -956,27 +734,10 @@ function refactorBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original refactor goal: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/refactor-brief.txt (artifact: RefactorBrief).
-
-Define the intended code-structure change and behavior-preservation requirement.
-
-The RefactorBrief must include:
-- refactor goal
-- behavior that must remain unchanged
-- target area
-- constraints
-- non-goals
-- success criteria
+${ctx.stageInstructionText}
 
 Required output artifact: RefactorBrief
 Output file: ${ctx.runFolder}/artifacts/refactor-brief.txt
-
-Stop conditions:
-- do not inspect code deeply
-- do not write pseudocode
-- do not implement code
-- do not write tests
 
 Return format:
   Artifact: RefactorBrief
@@ -991,28 +752,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/refactor-brief.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/existing-behavior-map.txt (artifact: ExistingBehaviorMap).
-
-Map the behavior that must remain stable during the refactor.
-
-The ExistingBehaviorMap must include:
-- current behaviors
-- state variables
-- events
-- derived values
-- invariants
-- external contracts
-- existing tests
-- behavior gaps
+${ctx.stageInstructionText}
 
 Required output artifact: ExistingBehaviorMap
 Output file: ${ctx.runFolder}/artifacts/existing-behavior-map.txt
-
-Stop conditions:
-- do not implement code
-- do not write tests
-- do not write pseudocode
 
 Return format:
   Artifact: ExistingBehaviorMap
@@ -1027,23 +770,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/refactor-brief.txt
 - ${ctx.runFolder}/artifacts/existing-behavior-map.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/preserved-invariant-list.txt (artifact: PreservedInvariantList).
-
-Define what must remain true after the refactor.
-
-The PreservedInvariantList must include:
-- invariants to preserve
-- affected code areas
-- tests protecting each invariant
-- missing tests
+${ctx.stageInstructionText}
 
 Required output artifact: PreservedInvariantList
 Output file: ${ctx.runFolder}/artifacts/preserved-invariant-list.txt
-
-Stop conditions:
-- do not implement code
-- do not write test files yet
 
 Return format:
   Artifact: PreservedInvariantList
@@ -1059,27 +789,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/preserved-invariant-list.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/compatibility-test-strategy.txt (artifact: CompatibilityTestStrategy).
-
-Define tests that prove the refactor preserved behavior.
-
-The CompatibilityTestStrategy must include:
-- preserved behavior
-- compatibility test responsibilities
-- existing tests to run
-- new tests needed
-- verification commands
-
-Each test responsibility must trace to behavior, invariant, transition, derived value, boundary, contract, or failure mode.
-Do not write test files in this stage.
+${ctx.stageInstructionText}
 
 Required output artifact: CompatibilityTestStrategy
 Output file: ${ctx.runFolder}/artifacts/compatibility-test-strategy.txt
-
-Stop conditions:
-- do not write test files in this stage
-- do not implement code
 
 Return format:
   Artifact: CompatibilityTestStrategy
@@ -1097,28 +810,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/preserved-invariant-list.txt
 - ${ctx.runFolder}/artifacts/compatibility-test-strategy.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/refactor-pseudocode-packet.txt (artifact: RefactorPseudocodePacket).
-
-Define the implementation-neutral design for the refactor. Preserve the behavior identified in ExistingBehaviorMap.
-
-The RefactorPseudocodePacket must include:
-- target structure
-- data flow changes
-- invariants preserved
-- files allowed to change
-- component or module contracts
-- acceptance criteria
-- assumptions preserved
-- unresolved implementation questions
+${ctx.stageInstructionText}
 
 Required output artifact: RefactorPseudocodePacket
 Output file: ${ctx.runFolder}/artifacts/refactor-pseudocode-packet.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not modify files
 
 Return format:
   Artifact: RefactorPseudocodePacket
@@ -1134,26 +829,10 @@ function hardeningBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original hardening goal: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/hardening-brief.txt (artifact: HardeningBrief).
-
-Define the robustness or failure-handling improvement requested.
-
-The HardeningBrief must include:
-- hardening goal
-- target behavior or boundary
-- current risk
-- constraints
-- success criteria
+${ctx.stageInstructionText}
 
 Required output artifact: HardeningBrief
 Output file: ${ctx.runFolder}/artifacts/hardening-brief.txt
-
-Stop conditions:
-- do not inspect code deeply
-- do not write pseudocode
-- do not implement code
-- do not write tests
 
 Return format:
   Artifact: HardeningBrief
@@ -1168,25 +847,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/hardening-brief.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/assumption-report.txt (artifact: AssumptionReport).
-
-Identify assumptions currently made by the code or design.
-
-For each assumption include:
-- assumption statement
-- source of assumption
-- where it is used
-- what breaks if false
-- decision (preserve / remove / validate / guard)
-- required follow-up
+${ctx.stageInstructionText}
 
 Required output artifact: AssumptionReport
 Output file: ${ctx.runFolder}/artifacts/assumption-report.txt
-
-Stop conditions:
-- do not implement code
-- do not write tests
 
 Return format:
   Artifact: AssumptionReport
@@ -1202,29 +866,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 - ${ctx.runFolder}/artifacts/assumption-report.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/failure-mode-matrix.txt (artifact: FailureModeMatrix).
-
-Classify realistic ways the behavior can fail and decide how each should be handled.
-
-For each failure mode include:
-- failure mode
-- category (input / state / contract / parser / storage / async / rendering / data volume / configuration / environment)
-- trigger
-- affected layer
-- current behavior
-- desired behavior
-- handling strategy (prevent / recover / surface to user / log / retry / ignore safely / fail fast)
-- required code change
-- required test
-- priority
+${ctx.stageInstructionText}
 
 Required output artifact: FailureModeMatrix
 Output file: ${ctx.runFolder}/artifacts/failure-mode-matrix.txt
-
-Stop conditions:
-- do not implement code
-- do not write tests yet
 
 Return format:
   Artifact: FailureModeMatrix
@@ -1241,27 +886,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/assumption-report.txt
 - ${ctx.runFolder}/artifacts/failure-mode-matrix.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/guard-pseudocode-packet.txt (artifact: GuardPseudocodePacket).
-
-Define pseudocode for validation, guards, recovery paths, and error or empty states.
-
-The GuardPseudocodePacket must include:
-- assumptions being guarded
-- failure modes handled
-- validation rules
-- guard rules
-- recovery behavior
-- error-state behavior
-- acceptance criteria
+${ctx.stageInstructionText}
 
 Required output artifact: GuardPseudocodePacket
 Output file: ${ctx.runFolder}/artifacts/guard-pseudocode-packet.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not modify files
 
 Return format:
   Artifact: GuardPseudocodePacket
@@ -1278,30 +906,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/guard-pseudocode-packet.txt
 - ${ctx.runFolder}/artifacts/architecture-context-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/resilience-test-strategy.txt (artifact: ResilienceTestStrategy).
-
-Define tests that verify hardening behavior.
-
-The ResilienceTestStrategy must include:
-- assumptions tested
-- failure modes tested
-- validation tests
-- guard tests
-- recovery tests
-- error-state tests
-- verification commands
-- remaining risks
-
-Each test responsibility must trace to assumption, failure mode, boundary, contract, or behavior.
-Do not write test files in this stage.
+${ctx.stageInstructionText}
 
 Required output artifact: ResilienceTestStrategy
 Output file: ${ctx.runFolder}/artifacts/resilience-test-strategy.txt
-
-Stop conditions:
-- do not write test files in this stage
-- do not implement code
 
 Return format:
   Artifact: ResilienceTestStrategy
@@ -1319,38 +927,10 @@ function extractionRequestBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original extraction request: ${ctx.runFolder}/00-request.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/request-brief.txt (artifact: ExtractionRequestBrief).
-
-Extraction guardrails:
-- The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not start by copying files from source to target.
-- Do not assume the source architecture is the desired target architecture.
-- Do not implement anything in the target repository in this stage.
-
-The ExtractionRequestBrief must define:
-- original request (verbatim from 00-request.txt)
-- source repository: ${sourceDir}
-- target repository: ${targetDir}
-- workflow or feature to extract
-- desired target scope (what should exist in the target when complete)
-- features explicitly excluded from the extraction
-- critical behaviors to preserve from the source workflow
-- expected deliverables
-- constraints
-- success criteria
-- ambiguity or missing information
-- expected next stage: source-architecture-context
+${ctx.stageInstructionText}
 
 Required output artifact: ExtractionRequestBrief
 Output file: ${ctx.runFolder}/artifacts/request-brief.txt
-
-Stop conditions:
-- do not inspect source code deeply in this stage
-- do not write pseudocode
-- do not write tests
-- do not start implementing in this stage
-- do not port files
 
 Return format:
 Produce the artifact as a plain-text file using this template:
@@ -1374,68 +954,16 @@ Produce the artifact as a plain-text file using this template:
 
 function sourceArchitectureContextPrompt(ctx: PromptContext): string {
   const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
-  const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
   return `${header(ctx)}
 Inputs:
 - ${ctx.runFolder}/artifacts/request-brief.txt
 - source repository: ${sourceDir}
 
-Task:
-Use my-dev-kit to inspect the source repository and produce a supporting retrieval report and source architecture context artifact.
-
-Produce two output files:
-1. Supporting retrieval report: ${ctx.runFolder}/reports/source-architecture-context-retrieval-report.txt
-2. Required workflow artifact: ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt (artifact: SourceArchitectureContextPacket)
-
-Extraction guardrails:
-- The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not start by reading whole source files.
-- Do not use target repository indexing to infer source behavior.
-- Do not modify the source repository.
-- Do not decide porting strategy in this stage.
-- Do not modify the target repository in this stage.
-- Source and target index directories must stay separate.
-
-Source repository inspection sequence (when my-dev-kit is available):
-
-Step 1 - Index the source repository into its own index directory:
-  npx @dailephd/my-dev-kit index --root ${sourceDir} --src src --out ${sourceDir}/.my-dev-kit --call-graph --json
-
-  Do not use ${targetDir}/.my-dev-kit to infer source behavior.
-
-Step 2 - Search for task-specific candidate nodes in the source repository:
-  npx @dailephd/my-dev-kit search --index ${sourceDir}/.my-dev-kit --query "<task-specific term>" --limit 20 --json
-  Run multiple queries for different aspects of the extraction request.
-
-Step 3 - Look up selected nodes and their relationships:
-  npx @dailephd/my-dev-kit lookup --index ${sourceDir}/.my-dev-kit --node "<selected-node-id>" --depth 1 --json
-
-Step 4 - Slice around the strongest relevant node:
-  npx @dailephd/my-dev-kit slice --index ${sourceDir}/.my-dev-kit --node "<strongest-node-id>" --depth 2 --direction both --json
-
-Step 5 - Retrieve exact symbol source (preferred):
-  npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --node "<symbol-node-id>" --max-lines 160 --format numbered
-
-Step 6 - Use line-range retrieval only as fallback when symbol retrieval is insufficient:
-  npx @dailephd/my-dev-kit source --index ${sourceDir}/.my-dev-kit --file "<file-path>" --start <start-line> --end <end-line> --max-lines 220 --format numbered
-
-Step 7 - Avoid reading whole source files unless bounded retrieval is insufficient. If a whole file must be read, state why.
-
-If my-dev-kit is unavailable, use focused manual inspection of relevant files and symbols in the source repository. Document what was inspected and why.
-
-The SourceArchitectureContextPacket must identify relevant source architecture context without deciding what to port.
+${ctx.stageInstructionText}
 
 Required output artifact: SourceArchitectureContextPacket
 Output file: ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
-
 Supporting report output file: ${ctx.runFolder}/reports/source-architecture-context-retrieval-report.txt
-
-Stop conditions:
-- do not decide porting strategy in this stage
-- do not write pseudocode
-- do not start implementing in this stage
-- do not write test files
-- do not modify source or target repositories
 
 Return format:
 
@@ -1510,45 +1038,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
 - source repository (read-only evidence): ${sourceDir}
 
-Task:
-Produce ${ctx.runFolder}/artifacts/source-workflow-map.txt (artifact: SourceWorkflowMap).
-
-This stage describes what exists in the source repository. It does not decide what to port.
-
-Extraction guardrails:
-- The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not decide porting strategy in this stage.
-- Do not start by copying files.
-- Do not modify the source repository.
-- Do not modify the target repository in this stage.
-- do not start implementing in this stage.
-
-Required sections for SourceWorkflowMap:
-- Source repo path
-- Workflow entry point
-- User-facing steps
-- Frontend components
-- Frontend state owners
-- API routes
-- Backend services
-- Data contracts
-- Persistence dependencies
-- External service dependencies
-- Tests found
-- Known behavior risks
-- Ambiguous or missing context
+${ctx.stageInstructionText}
 
 Required output artifact: SourceWorkflowMap
 Output file: ${ctx.runFolder}/artifacts/source-workflow-map.txt
-
-Stop conditions:
-- do not include porting decisions
-- do not include implementation plans
-- do not include target architecture details
-- do not write pseudocode
-- do not implement code
-- do not write test files
-- completion criteria: all required sections are present; the map describes what exists in the source, not what should be built in the target
 
 Return format:
 Produce the artifact as a plain-text file using this template:
@@ -1593,57 +1086,12 @@ Inputs:
 - ${ctx.runFolder}/artifacts/source-architecture-context-packet.txt
 - ${ctx.runFolder}/artifacts/source-workflow-map.txt
 
-Task:
-Produce TWO output files:
-1. ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt (artifact: SourceToTargetPortingMap)
-2. ${ctx.runFolder}/artifacts/do-not-port-list.txt (artifact: DoNotPortList)
-
-Classify each source subsystem as: port as-is, port with refactor, rewrite cleanly, discard, or postpone.
-Explicitly list every source system that must not be ported.
-
-Extraction guardrails:
-- The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not create a second copy of the old architecture inside the target project.
-- Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly in scope.
-- Do not preserve old UI labels if they conflict with the new workflow.
-- do not start implementing in this stage.
-- Do not modify source or target repositories.
-
-SourceToTargetPortingMap required structure for each item:
-- Source behavior
-- Source files or symbols
-- Target behavior
-- Target module or component (planned target location in ${targetDir})
-- Decision: port as-is | port with refactor | rewrite cleanly | discard | postpone
-- Reason
-- Required tests
-- Risks
-
-DoNotPortList required sections:
-- Systems excluded from the target project
-- UI labels excluded from the target project
-- Backend routes excluded from the target project
-- Persistence layers excluded from the target project
-- Downstream workflows excluded from the target project
-- Reason each exclusion exists
-- Consequences if accidentally ported
-
-Completion criteria:
-- Every significant source subsystem has a documented decision in SourceToTargetPortingMap
-- Every discarded subsystem also appears in DoNotPortList
-- Both artifact files must be present before the next stage can proceed
+${ctx.stageInstructionText}
 
 Required output artifact: SourceToTargetPortingMap
 Output file: ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
-
 Required output artifact: DoNotPortList
 Output file: ${ctx.runFolder}/artifacts/do-not-port-list.txt
-
-Stop conditions:
-- do not include implementation code
-- do not start implementing
-- do not write test files
-- do not modify source or target repositories
 
 Return format:
 Produce both artifacts as plain-text files.
@@ -1708,57 +1156,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
 - ${ctx.runFolder}/artifacts/do-not-port-list.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/golden-behavior-contract.txt (artifact: GoldenBehaviorContract).
-
-Define the exact behavior that the target implementation must satisfy.
-This is the primary source of truth for the target implementation and the judge stage.
-No production implementation should begin before this artifact exists.
-
-Extraction guardrails:
-- Do not include source implementation details as requirements.
-- Do not include source file paths or source architecture references as requirements.
-- Do not reference source architecture as the target design.
-- do not start implementing in this stage.
-- Do not modify source or target repositories in this stage.
-- The source repository is evidence. This artifact defines what must be true in the target, not what exists in the source.
-
-Required sections:
-- User-visible behavior
-- API behavior
-- State behavior
-- Sorting and ranking behavior
-- Pagination behavior
-- Selection behavior
-- Error and empty-state behavior
-- Edge cases
-- Non-negotiable regression tests
-- Acceptance criteria
-
-For fragile or complex workflows, define specific testable statements. Examples:
-- Search results must be ordered by relevance descending.
-- Page-size options must be 10, 30, 50, and 100.
-- Pagination must use Previous, numbered pages, ellipsis, last page, and Next.
-- Selection must be stored by stable item ID, not page index.
-- Select all current page must select only visible page items.
-- Deselect all current page must deselect only visible page items.
-- Automatic mode must use top N valid ranked results, not the first N visible rows.
-- Manual mode must use only user-selected items.
-- Changing page size must preserve valid selections.
-- Out-of-range pages must be clamped.
-
-Completion criteria:
-- Every user-visible behavior item is described precisely enough that a developer could implement it without reading the source repository.
-- Every non-negotiable regression test is listed.
+${ctx.stageInstructionText}
 
 Required output artifact: GoldenBehaviorContract
 Output file: ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
-
-Stop conditions:
-- do not write pseudocode
-- do not write test files
-- do not implement code
-- do not reference source architecture as the target design
 
 Return format:
 Produce the artifact as a plain-text file using this template:
@@ -1804,7 +1205,6 @@ Produce the artifact as a plain-text file using this template:
 }
 
 function targetArchitecturePrompt(ctx: PromptContext): string {
-  const sourceDir = ctx.sourceRepoRoot ?? '<source-repo-root>';
   const targetDir = ctx.targetRepoRoot ?? '<target-repo-root>';
   return `${header(ctx)}
 Inputs:
@@ -1813,51 +1213,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/do-not-port-list.txt
 - ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/target-architecture-proposal.txt (artifact: TargetArchitectureProposal).
-
-Describe the clean target architecture before implementation begins.
-
-Extraction guardrails:
-- Do not carry source implementation details forward without an explicit porting decision.
-- Do not include any architecture items from the DoNotPortList.
-- do not start implementing in this stage.
-- The proposal must be sufficient for implementation to begin without consulting the source repository again.
-- Every item must map back to the SourceToTargetPortingMap or be a new target-side concern.
-
-If the target repository already exists, use my-dev-kit to inspect it separately from the source repository:
-  npx @dailephd/my-dev-kit index --root ${targetDir} --src src --out ${targetDir}/.my-dev-kit --call-graph --json
-  npx @dailephd/my-dev-kit search --index ${targetDir}/.my-dev-kit --query "<task term>" --limit 20 --json
-
-Do not mix source (${sourceDir}/.my-dev-kit) and target (${targetDir}/.my-dev-kit) retrieval results.
-
-If the target repository does not exist yet, define the planned structure and contracts before any scaffolding begins.
-
-Required sections:
-- Target repo path
-- Target project purpose
-- Target workflow
-- Frontend components
-- Backend services
-- API routes
-- Shared contracts
-- State ownership
-- Persistence policy
-- External dependencies
-- Testing strategy overview
-- Source components reused
-- Source components rewritten
-- Source components discarded
-- Architecture guardrails
+${ctx.stageInstructionText}
 
 Required output artifact: TargetArchitectureProposal
 Output file: ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not include items from DoNotPortList
-- do not reference source implementation without a porting decision
 
 Return format:
 Produce the artifact as a plain-text file using this template:
@@ -1904,46 +1263,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
 - ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/behavior-model.txt (artifact: BehaviorModel).
-
-Use the GoldenBehaviorContract as the primary source of truth for the target behavior.
-Map behavior to the target system in ${targetDir}, not to the source architecture.
-
-Extraction guardrails:
-- Do not use source implementation details as the behavior definition.
-- Do not port behavior not listed in the SourceToTargetPortingMap or GoldenBehaviorContract.
-- do not start implementing in this stage.
-- Do not write test files.
-
-The BehaviorModel must define:
-- behavior summary (target system only)
-- externally visible behavior
-- internal supporting behavior
-- state variables
-- inputs
-- events
-- derived values
-- invariants
-- valid states
-- invalid states
-- boundaries and partitions
-- empty states
-- error states
-- loading or pending states when relevant
-- external contracts
-- state transitions
-- behavior from the GoldenBehaviorContract to preserve
-- behavior intentionally changed from source
-- unresolved design questions
+${ctx.stageInstructionText}
 
 Required output artifact: BehaviorModel
 Output file: ${ctx.runFolder}/artifacts/behavior-model.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not produce source architecture in behavior descriptions
 
 Return format:
 Produce the artifact as a plain-text file following the BehaviorModel template.
@@ -1966,43 +1289,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
 - ${ctx.runFolder}/artifacts/behavior-model.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/pseudocode-packet.txt (artifact: PseudocodePacket).
-
-Convert the BehaviorModel into implementation-neutral pseudocode for the target system.
-Map to the target architecture in ${targetDir}, not to the source architecture.
-This is the shared design contract for both implementation and testing.
-
-Extraction guardrails:
-- Do not copy source implementation code into this artifact.
-- Do not reference source module paths as the target module paths.
-- Do not port patterns from the DoNotPortList.
-- do not start implementing in this stage.
-
-The PseudocodePacket must define:
-- behavior references (from GoldenBehaviorContract)
-- data flow
-- state flow
-- state transitions
-- derived-value rules
-- validation rules
-- empty-state handling
-- error-state handling
-- external contract handling
-- target component, module, service, route, command, or helper contracts
-- acceptance criteria
-- likely files or modules to create or modify in the target repository
-- implementation constraints
-- assumptions preserved
-- unresolved implementation questions
+${ctx.stageInstructionText}
 
 Required output artifact: PseudocodePacket
 Output file: ${ctx.runFolder}/artifacts/pseudocode-packet.txt
-
-Stop conditions:
-- do not write production code
-- do not write test files
-- do not modify source or target repositories
 
 Return format:
 Produce the artifact as a plain-text file following the PseudocodePacket template.
@@ -2025,57 +1315,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/behavior-model.txt
 - ${ctx.runFolder}/artifacts/pseudocode-packet.txt
 
-Task:
-Produce ${ctx.runFolder}/artifacts/test-strategy-packet.txt (artifact: TestStrategyPacket).
-
-Derive test responsibilities from the GoldenBehaviorContract, BehaviorModel, and PseudocodePacket.
-All tests must target the target repository in ${targetDir}.
-Do not write test files in this stage.
-
-Extraction guardrails:
-- Do not test source repository behavior.
-- Do not write test files in this stage.
-- Do not start implementing code.
-
-The TestStrategyPacket must include:
-- contract tests (from GoldenBehaviorContract)
-- backend unit tests
-- frontend component tests
-- state behavior tests
-- integration tests
-- E2E tests for the full extracted workflow
-- regression tests for every non-negotiable item in the GoldenBehaviorContract
-- behavior under test
-- participating layers
-- state variables
-- events
-- derived values
-- invariants
-- boundaries and partitions
-- external contracts
-- relevant failure modes
-- test matrix
-- test level assignment (unit / component / integration / end-to-end)
-- required verification commands
-- coverage gaps
-
-Each test responsibility must trace to at least one of:
-- golden behavior contract item
-- behavior
-- invariant
-- state transition
-- derived value
-- boundary
-- external contract
-- failure mode
+${ctx.stageInstructionText}
 
 Required output artifact: TestStrategyPacket
 Output file: ${ctx.runFolder}/artifacts/test-strategy-packet.txt
-
-Stop conditions:
-- do not write test files in this stage
-- do not write production code
-- do not invent behavior not in GoldenBehaviorContract or BehaviorModel
 
 Return format:
 Produce the artifact as a plain-text file following the TestStrategyPacket template.
@@ -2101,43 +1344,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/behavior-model.txt
 - ${ctx.runFolder}/artifacts/pseudocode-packet.txt
 
-Task:
-Implement the extracted workflow in the target repository and produce ${ctx.runFolder}/artifacts/implementation-report.txt (artifact: ImplementationReport).
-
-Implement in ${targetDir} only. The source repository (${sourceDir}) is read-only evidence.
-Use the GoldenBehaviorContract as the implementation source of truth.
-Follow the TargetArchitectureProposal and PseudocodePacket.
-
-Extraction guardrails:
-- Implement only in the target repository (${targetDir}) unless source repository changes are explicitly permitted by the request brief.
-- Do not copy files directly from source to target.
-- Do not port systems listed in the DoNotPortList.
-- Do not import source repository modules into the target.
-- Do not assume source architecture is the required target architecture.
-- The GoldenBehaviorContract defines what must be true - not the source code.
-
-The ImplementationReport must include:
-- files read (source and target)
-- files created or changed (target only)
-- behavior implemented (must map to GoldenBehaviorContract items)
-- pseudocode sections implemented
-- porting decisions applied (from SourceToTargetPortingMap)
-- systems excluded (from DoNotPortList)
-- deviations from the PseudocodePacket and reason for each
-- source repository changes made, if any (normally: none)
-- blockers encountered
-- unresolved risks
-- tests that should be run
-- notes for the test implementation stage
+${ctx.stageInstructionText}
 
 Required output artifact: ImplementationReport
 Output file: ${ctx.runFolder}/artifacts/implementation-report.txt
-
-Stop conditions:
-- do not port DoNotPortList systems
-- do not modify the source repository unless explicitly allowed by the request brief
-- do not claim verification success without command evidence
-- do not broaden scope without reporting a blocker
 
 Return format:
 Produce the artifact as a plain-text file following the ImplementationReport template.
@@ -2161,42 +1371,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/test-strategy-packet.txt
 - ${ctx.runFolder}/artifacts/implementation-report.txt (if available)
 
-Task:
-Add or update tests in the target repository and produce ${ctx.runFolder}/artifacts/test-implementation-report.txt (artifact: TestImplementationReport).
-
-All test work must happen in ${targetDir}.
-Prioritize non-negotiable regression tests from the GoldenBehaviorContract.
-Follow the TestStrategyPacket. Do not invent a separate test strategy.
-
-Extraction guardrails:
-- Add or update tests in the target repository only.
-- Do not add tests to the source repository.
-- Regression tests must cover every non-negotiable item in the GoldenBehaviorContract.
-- Do not claim tests passed unless command evidence is included.
-
-The TestImplementationReport must include:
-- test files changed (target repository only)
-- tests added
-- tests updated
-- GoldenBehaviorContract items covered
-- behaviors covered
-- invariants covered
-- state transitions covered
-- derived values covered
-- boundaries covered
-- external contracts covered
-- failure modes covered
-- TestStrategyPacket items not implemented
-- reason for each missing test
-- verification commands to run
+${ctx.stageInstructionText}
 
 Required output artifact: TestImplementationReport
 Output file: ${ctx.runFolder}/artifacts/test-implementation-report.txt
-
-Stop conditions:
-- do not replace the TestStrategyPacket with a new unrelated strategy
-- do not change production behavior unless reporting a blocker
-- do not add tests to the source repository
 
 Return format:
 Produce the artifact as a plain-text file following the TestImplementationReport template.
@@ -2217,36 +1395,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/implementation-report.txt
 - ${ctx.runFolder}/artifacts/test-implementation-report.txt
 
-Task:
-Run validation commands in the target repository and produce ${ctx.runFolder}/artifacts/verification-report.txt (artifact: VerificationReport).
-
-Run target project validation commands in ${targetDir}.
-Do not validate the source repository unless explicitly requested by the request brief.
-
-Extraction guardrails:
-- Run all validation commands from inside the target repository.
-- Do not claim checks passed unless actual command output was produced.
-- Do not hide failed commands.
-
-The VerificationReport must include:
-- commands run and working directory for each (should be ${targetDir})
-- exit codes
-- pass/fail status
-- output summary
-- failed tests if any
-- GoldenBehaviorContract items verified by tests
-- skipped checks
-- reason for skipped checks
-- environment notes if relevant
-- remaining verification gaps
+${ctx.stageInstructionText}
 
 Required output artifact: VerificationReport
 Output file: ${ctx.runFolder}/artifacts/verification-report.txt
-
-Stop conditions:
-- do not claim checks passed unless command output was produced
-- do not hide failed commands
-- do not validate source repository unless explicitly requested
 
 Return format:
 Produce the artifact as a plain-text file following the VerificationReport template.
@@ -2276,40 +1428,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/test-implementation-report.txt
 - ${ctx.runFolder}/artifacts/verification-report.txt
 
-Task:
-Review the target implementation against all extraction artifacts and produce ${ctx.runFolder}/artifacts/judge-report.txt (artifact: JudgeReport).
-
-Do not mark the run as passed unless the target implementation satisfies the GoldenBehaviorContract.
-
-The JudgeReport must assess:
-- implementation vs GoldenBehaviorContract (primary gate)
-- implementation vs PseudocodePacket
-- implementation vs TargetArchitectureProposal
-- tests vs TestStrategyPacket
-- tests vs GoldenBehaviorContract non-negotiable regression tests
-- DoNotPortList compliance: no excluded systems were ported
-- SourceToTargetPortingMap decisions followed
-- source repository read-only compliance: was the source repository modified?
-- behavior coverage
-- verification evidence
-- scope control
-- risks and gaps
-
-Verdict must be one of:
-  PASS | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
-  TEST_COVERAGE_INCOMPLETE | ARCHITECTURE_MISMATCH | DO_NOT_PORT_VIOLATION |
-  GOLDEN_CONTRACT_NOT_SATISFIED | NEED_VERIFICATION | SCOPE_VIOLATION | BLOCKED
+${ctx.stageInstructionText}
 
 Required output artifact: JudgeReport
 Output file: ${ctx.runFolder}/artifacts/judge-report.txt
-
-Source repository: ${sourceDir}
-Target repository: ${targetDir}
-
-Stop conditions:
-- do not rewrite code
-- do not approve without verification evidence
-- do not hide gaps in GoldenBehaviorContract coverage
 
 Return format:
 Produce the artifact as a plain-text file.
@@ -2345,39 +1467,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/verification-report.txt
 - ${ctx.runFolder}/artifacts/judge-report.txt
 
-Task:
-Summarize the completed extraction workflow and produce ${ctx.runFolder}/artifacts/final-report.txt (artifact: FinalReport).
-
-The FinalReport must include:
-- Mode: extraction
-- Run ID: ${ctx.runId}
-- Original extraction request
-- Source repository: ${sourceDir}
-- Target repository: ${targetDir}
-- Final status (judge verdict)
-- Source workflow map: ${ctx.runFolder}/artifacts/source-workflow-map.txt
-- Source-to-target porting map: ${ctx.runFolder}/artifacts/source-to-target-porting-map.txt
-- Do-not-port list: ${ctx.runFolder}/artifacts/do-not-port-list.txt
-- Golden behavior contract: ${ctx.runFolder}/artifacts/golden-behavior-contract.txt
-- Target architecture proposal: ${ctx.runFolder}/artifacts/target-architecture-proposal.txt
-- Source components reused
-- Source components rewritten
-- Source components discarded
-- Files changed in target repository
-- Files changed in source repository (normally: none)
-- Tests added or updated
-- Verification commands and results
-- Judge result
-- Remaining risks
-- Recommended next extraction or implementation step
+${ctx.stageInstructionText}
 
 Required output artifact: FinalReport
 Output file: ${ctx.runFolder}/artifacts/final-report.txt
-
-Stop conditions:
-- do not exaggerate success
-- do not omit failed or skipped verification
-- do not hide unresolved risks
 
 Return format:
 Produce the artifact as a plain-text file following the FinalReport template.
@@ -2398,32 +1491,10 @@ function greenfieldIdeaBriefPrompt(ctx: PromptContext): string {
 Inputs:
 - original project idea: ${ctx.runFolder}/00-request.txt
 
-Task:
-Convert the project idea into a normalized greenfield idea brief and produce ${ctx.runFolder}/artifacts/idea-brief.json (artifact: IdeaBrief).
-
-Use src/greenfield/brief/loadProjectBrief.ts and normalizeProjectBrief.ts as the runtime source of truth for this stage's shape.
-
-The IdeaBrief must preserve:
-- raw idea text
-- project name if provided
-- product goal, users/audience, core workflow if provided
-- constraints
-- non-goals
-- preferred stack if provided
-- preferred profile if provided
-- platform target if provided
-- documentation preferences
-- testing expectations
-- unresolved questions
+${ctx.stageInstructionText}
 
 Required output artifact: IdeaBrief
 Output file: ${ctx.runFolder}/artifacts/idea-brief.json
-
-Stop conditions:
-- do not scaffold files
-- do not implement code
-- do not silently choose a mobile/Android profile as a default when the request is ambiguous (see src/greenfield/profiles/resolveGreenfieldProfile.ts)
-- do not claim validation or release readiness
 
 Return format:
 Produce the artifact as a JSON file matching NormalizedGreenfieldBrief (src/greenfield/brief/briefTypes.ts), plus:
@@ -2436,23 +1507,10 @@ function greenfieldProductBoundaryPrompt(ctx: PromptContext): string {
 Inputs:
 - ${ctx.runFolder}/artifacts/idea-brief.json
 
-Task:
-Define the product boundary and produce ${ctx.runFolder}/artifacts/product-boundary.txt (artifact: ProductBoundary).
-
-The ProductBoundary must define:
-- intended users
-- core workflow
-- constraints
-- non-goals
-- success criteria
+${ctx.stageInstructionText}
 
 Required output artifact: ProductBoundary
 Output file: ${ctx.runFolder}/artifacts/product-boundary.txt
-
-Stop conditions:
-- do not write implementation code
-- do not write scaffold files
-- do not invent unsupported product scope
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -2473,18 +1531,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/idea-brief.json
 - ${ctx.runFolder}/artifacts/product-boundary.txt
 
-Task:
-Define a platform-neutral stack decision from the brief and any explicit stack/profile preferences, and produce ${ctx.runFolder}/artifacts/stack-decision.txt (artifact: StackDecision).
-
-Preserve unresolved stack decisions rather than inventing a choice. Do not silently default to a mobile/Android stack when the request is ambiguous; only choose it when explicitly requested.
+${ctx.stageInstructionText}
 
 Required output artifact: StackDecision
 Output file: ${ctx.runFolder}/artifacts/stack-decision.txt
-
-Stop conditions:
-- do not implement dependencies
-- do not install packages
-- do not generate project files
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -2504,17 +1554,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/product-boundary.txt
 - ${ctx.runFolder}/artifacts/stack-decision.txt
 
-Task:
-Select or describe a starter profile using src/greenfield/profiles/resolveGreenfieldProfile.ts and produce ${ctx.runFolder}/artifacts/starter-profile.json (artifact: StarterProfile).
-
-Supported profiles in v1.2.0: typescript-cli, nextjs-app, android-compose. If an unsupported profile is requested, report it clearly as unsupported; do not substitute a default silently.
+${ctx.stageInstructionText}
 
 Required output artifact: StarterProfile
 Output file: ${ctx.runFolder}/artifacts/starter-profile.json
-
-Stop conditions:
-- do not silently substitute a mobile/Android profile for an ambiguous or unsupported request
-- do not scaffold files
 
 Return format:
 Produce the artifact as a JSON file matching GreenfieldProfileSelection (src/greenfield/profiles/profileTypes.ts), plus:
@@ -2530,16 +1573,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/stack-decision.txt
 - ${ctx.runFolder}/artifacts/starter-profile.json
 
-Task:
-Build the GreenfieldBootstrapBundle using src/greenfield/bootstrap/buildBootstrapBundle.ts and produce ${ctx.runFolder}/artifacts/bootstrap-bundle.json (artifact: GreenfieldBootstrapBundleArtifact).
+${ctx.stageInstructionText}
 
 Required output artifact: GreenfieldBootstrapBundleArtifact
 Output file: ${ctx.runFolder}/artifacts/bootstrap-bundle.json
-
-Stop conditions:
-- do not implement scaffold
-- do not write project files
-- do not claim release or security readiness
 
 Return format:
 Produce the artifact as a JSON file matching GreenfieldBootstrapBundle (src/greenfield/bootstrap/bootstrapBundleTypes.ts), plus:
@@ -2552,18 +1589,10 @@ function greenfieldProjectDocsPrompt(ctx: PromptContext): string {
 Inputs:
 - ${ctx.runFolder}/artifacts/bootstrap-bundle.json
 
-Task:
-Produce a project docs bootstrap report using src/greenfield/bootstrap/bootstrapProjectDocs.ts and src/greenfield/bootstrap/validateBootstrapDocs.ts, written to ${ctx.runFolder}/artifacts/project-docs-report.txt (artifact: ProjectDocsReport).
-
-Preserve component docs as empty/unresolved unless the brief carries module hints. Validate generated content for unsupported claims before finishing.
+${ctx.stageInstructionText}
 
 Required output artifact: ProjectDocsReport
 Output file: ${ctx.runFolder}/artifacts/project-docs-report.txt
-
-Stop conditions:
-- do not update the current repository's README.md or docs/ROADMAP.md
-- do not claim Android/mobile support unless the selected profile is android-compose (see src/greenfield/bootstrap/validateBootstrapDocs.ts)
-- do not claim release, security, or publish completion
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -2584,18 +1613,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/scaffold-plan.txt
 - ${ctx.runFolder}/reports/scaffold-implementation-report.txt
 
-Task:
-Define or implement one minimal runnable behavior that proves the scaffold works, tied directly to the product boundary, and produce ${ctx.runFolder}/artifacts/first-vertical-slice.txt (artifact: FirstVerticalSlice).
-
-Keep the slice minimal. Do not expand into the full product.
+${ctx.stageInstructionText}
 
 Required output artifact: FirstVerticalSlice
 Output file: ${ctx.runFolder}/artifacts/first-vertical-slice.txt
-
-Stop conditions:
-- do not expand into full product scope
-- do not claim tests passed without verification evidence
-- do not add unrelated features
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -2615,25 +1636,10 @@ Inputs:
 - ${ctx.runFolder}/reports/scaffold-implementation-report.txt
 - ${ctx.runFolder}/artifacts/first-vertical-slice.txt
 
-Task:
-Run the required project checks for the scaffolded project and produce ${ctx.runFolder}/reports/verification-report.txt (artifact: VerificationReport).
-
-The VerificationReport must include:
-- commands run
-- working directory for each command
-- exit codes
-- pass/fail status
-- output summary
-- skipped checks and reasons
-- remaining verification gaps
+${ctx.stageInstructionText}
 
 Required output artifact: VerificationReport
 Output file: ${ctx.runFolder}/reports/verification-report.txt
-
-Stop conditions:
-- do not claim checks passed unless they actually ran
-- do not hide failed commands
-- do not run release, security, or publish workflow
 
 Return format:
 Produce the artifact as a plain-text file following the VerificationReport template.
@@ -2652,22 +1658,10 @@ Inputs:
 - ${ctx.runFolder}/artifacts/first-vertical-slice.txt
 - ${ctx.runFolder}/reports/verification-report.txt
 
-Task:
-Guide the handoff to my-dev-kit now that scaffold code exists, and produce ${ctx.runFolder}/reports/initial-index-report.txt (artifact: InitialIndexReport).
-
-Use package execution; do not assume a global my-dev-kit command exists. Prefer:
-  npx @dailephd/my-dev-kit@latest index --root . --src src --out .my-dev-kit --json
-
-Record whether indexing was actually run (with command, working directory, exit code, and output summary) or only planned, and why.
+${ctx.stageInstructionText}
 
 Required output artifact: InitialIndexReport
 Output file: ${ctx.runFolder}/reports/initial-index-report.txt
-
-Stop conditions:
-- do not assume a global my-dev-kit command exists
-- do not claim indexing succeeded unless command evidence exists
-- do not run security validation
-- do not publish
 
 Return format:
 Produce the artifact as a plain-text file using the template:
@@ -2697,30 +1691,10 @@ Inputs:
 - ${ctx.runFolder}/reports/verification-report.txt
 - ${ctx.runFolder}/reports/initial-index-report.txt
 
-Task:
-Compare the greenfield run's outputs against the greenfield stage contract and produce ${ctx.runFolder}/reports/judge-report.txt (artifact: JudgeReport).
-
-The JudgeReport must assess:
-- idea brief vs product boundary alignment
-- stack decision and starter profile justification
-- bootstrap bundle and project docs completeness
-- scaffold plan followed by scaffold implementation
-- first vertical slice tied to product boundary
-- verification evidence
-- initial-index handoff evidence
-- risks and gaps
-
-Verdict must be one of:
-  PASS | NEED_CONTEXT | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
-  TEST_COVERAGE_INCOMPLETE | ARCHITECTURE_MISMATCH | SCOPE_VIOLATION | NEED_VERIFICATION | BLOCKED
+${ctx.stageInstructionText}
 
 Required output artifact: JudgeReport
 Output file: ${ctx.runFolder}/reports/judge-report.txt
-
-Stop conditions:
-- do not rewrite code
-- do not approve without verification evidence
-- do not hide uncertainty
 
 Return format:
 Produce the artifact as a plain-text file.
@@ -2739,31 +1713,10 @@ Inputs:
 - ${ctx.runFolder}/reports/verification-report.txt
 - major greenfield artifacts and reports
 
-Task:
-Summarize the completed greenfield run honestly for the user and produce ${ctx.runFolder}/reports/final-report.txt (artifact: FinalReport).
-
-The FinalReport must include:
-- original project idea
-- run ID: ${ctx.runId}
-- stages completed
-- product boundary summary
-- stack decision and starter profile
-- bootstrap bundle and project docs summary
-- scaffold plan and implementation summary
-- first vertical slice summary
-- verification summary
-- initial-index handoff summary
-- judge verdict
-- unresolved risks
-- follow-up recommendations if needed
+${ctx.stageInstructionText}
 
 Required output artifact: FinalReport
 Output file: ${ctx.runFolder}/reports/final-report.txt
-
-Stop conditions:
-- do not exaggerate success
-- do not omit failed or skipped verification
-- do not claim release, security, or publish completion
 
 Return format:
 Produce the artifact as a plain-text file following the FinalReport template.
@@ -2783,6 +1736,8 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     throw new Error(`Stage "${stageName}" not found in ${meta.mode} workflow`);
   }
 
+  const bundle = assembleStageContextBundleOrThrow(meta, stageName);
+
   const ctx: PromptContext = {
     stage: stageName,
     mode: meta.mode,
@@ -2793,7 +1748,19 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     totalStages: meta.stages.length,
     sourceRepoRoot: meta.sourceRepoRoot,
     targetRepoRoot: meta.targetRepoRoot,
+    stageInstructionText: renderStageInstructionBlockFromBundle(bundle),
   };
+
+  // Batch 5: a direct context-sensitive stage (implementation or
+  // test-implementation, in any mode including extraction) whose context is
+  // not ready becomes a context-refresh-only prompt instead of its normal
+  // work prompt -- see AGENTS.txt Batch 5 section 14.2.
+  if (
+    (stageName === 'implementation' || stageName === 'test-implementation') &&
+    bundle.repositoryContextReadiness?.decision === 'refresh-required'
+  ) {
+    return renderContextRefreshOnlyPrompt(ctx, bundle.repositoryContextReadiness);
+  }
 
   const isExtraction = meta.mode === 'extraction';
   const isGreenfield = meta.mode === 'greenfield';
@@ -2862,6 +1829,12 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
 // Artifact files used as inputs for each correctable stage
 const CORRECTION_STAGE_INPUTS: Record<string, string[]> = {
   'architecture-context': ['artifacts/request-brief.txt'],
+  'target-architecture': [
+    'artifacts/request-brief.txt',
+    'artifacts/source-workflow-map.txt',
+    'artifacts/porting-map.txt',
+    'artifacts/golden-behavior-contract.txt',
+  ],
   'behavior-model': [
     'artifacts/request-brief.txt',
     'artifacts/architecture-context-packet.txt',
@@ -2906,6 +1879,18 @@ export function generateCorrectionPrompt(
   const verdict = correctionState.verdict ?? 'UNKNOWN';
   const runFolder = meta.runFolder;
 
+  // Batch 5 section 18.1: a context-sensitive correction target
+  // (implementation/test-implementation) must reevaluate readiness and
+  // become a context-refresh-only correction when blocked, rather than
+  // allowing a production or test correction against stale/insufficient
+  // evidence.
+  if (routedStage === 'implementation' || routedStage === 'test-implementation') {
+    const bundle = assembleStageContextBundleOrThrow(meta, routedStage);
+    if (bundle.repositoryContextReadiness?.decision === 'refresh-required') {
+      return renderCorrectionContextRefreshPrompt(meta, correctionState, routedStage, bundle.repositoryContextReadiness);
+    }
+  }
+
   const priorInputs = CORRECTION_STAGE_INPUTS[routedStage] ?? [];
   const designMapPath = path.join(runFolder, 'artifacts', 'design-map.txt');
   const designMapExists = fs.existsSync(designMapPath);
@@ -2924,6 +1909,24 @@ export function generateCorrectionPrompt(
     correctionState.warnings.length > 0
       ? [`\nWarning from routing:\n${correctionState.warnings.map((w) => `  ${w}`).join('\n')}\n`]
       : [];
+
+  // Batch 3: render the exact target-stage packet (same catalog content the
+  // stage's normal prompt uses) in addition to -- not instead of -- the
+  // correction-specific dynamic context above. Judge findings, routing, and
+  // the "revise only this stage" procedural guardrails below are correction
+  // workflow content and stay outside the packet (see section 14.2).
+  const upstreamArtifacts: UpstreamArtifactReference[] = [
+    { stageName: 'judge', artifactFile: 'artifacts/judge-report.txt', path: `${runFolder}/artifacts/judge-report.txt`, purpose: 'judge finding driving this correction', required: true, source: 'correction-context' },
+    ...priorInputs.map((f) => ({
+      stageName: routedStage,
+      artifactFile: f,
+      path: `${runFolder}/${f}`,
+      purpose: 'prior artifact for the corrected stage',
+      required: true,
+      source: 'correction-context' as const,
+    })),
+  ];
+  const stageInstructionText = renderStageInstructionBlock(meta, routedStage, upstreamArtifacts, correctionState);
 
   return [
     `Stage: ${routedStage} (correction)`,
@@ -2949,6 +1952,8 @@ export function generateCorrectionPrompt(
     `Read the prior artifacts listed above to understand the current design state.`,
     `Produce an updated artifact that addresses the judge finding.`,
     ``,
+    stageInstructionText,
+    ``,
     `Required output artifact: ${artifactKindForStage(routedStage)}`,
     `Output file: ${outputFile}`,
     ``,
@@ -2966,6 +1971,76 @@ export function generateCorrectionPrompt(
     `Update the Status: field to complete when the correction is done.`,
     ``,
   ].join('\n');
+}
+
+// Correction-specific counterpart to renderContextRefreshOnlyPrompt():
+// retains the judge verdict / routing context (per AGENTS.txt Batch 5
+// section 18.1) but replaces the normal "revise the artifact" task with
+// refresh-only instructions. Creates no context file and no correction-
+// specific sidecar.
+function renderCorrectionContextRefreshPrompt(
+  meta: RunMetadata,
+  correctionState: CorrectionRouteResult,
+  routedStage: string,
+  readiness: ContextReadinessResult,
+): string {
+  const verdict = correctionState.verdict ?? 'UNKNOWN';
+  const lines: string[] = [
+    `Stage: ${routedStage} (correction, context-blocked)`,
+    `Workflow mode: ${meta.mode}`,
+    `Run ID: ${meta.runId}`,
+    `Project root: ${meta.projectRoot}`,
+    `Run folder: ${meta.runFolder}`,
+    ``,
+    `Correction context:`,
+    `  Judge verdict: ${verdict}`,
+    `  Routed correction stage: ${routedStage}`,
+    ...(correctionState.recommendedStage ? [`  Judge recommended: ${correctionState.recommendedStage}`] : []),
+    ``,
+    `Inputs:`,
+    `- ${meta.runFolder}/artifacts/judge-report.txt`,
+    ``,
+    `This correction is BLOCKED on repository context. Production or test correction is prohibited until context is refreshed.`,
+    ``,
+    `Context kind: ${readiness.kind}`,
+    `Context packet: ${readiness.packetPath}`,
+    `Retrieval report: ${readiness.reportPath}`,
+    `Readiness decision: ${readiness.decision}`,
+    `Classification: ${readiness.classification}`,
+    ``,
+  ];
+  if (readiness.blockingIssueCodes.length > 0) {
+    lines.push('Blocking issues:');
+    for (const i of readiness.issues.filter((x) => x.severity === 'error')) lines.push(`  - ${i.code}: ${i.message}`);
+    lines.push('');
+  }
+  lines.push(
+    'Required refresh actions:',
+    '  1. Populate or repair the context packet and retrieval report referenced above.',
+    '  2. Run my-dev-kit manually (this orchestrator does not execute it automatically):',
+    '       <MY_DEV_KIT_CLI> context --request <REQUEST_FILE> --json',
+    '  3. Record the resulting context capsule and retrieval audit paths in the packet/report.',
+    '  4. Set Status: populated and resolve the blocking issues listed above.',
+    '',
+    'Automatic retrieval: disabled.',
+    '',
+    'Stop conditions:',
+    `  - do not correct the ${routedStage} artifact until context is ready`,
+    '  - do not modify production code',
+    '  - do not write test files',
+    '  - do not create a context file for this correction',
+    '  - stop after refreshing or repairing the context evidence',
+    '',
+    'Return format:',
+    'Do not write a new artifact file for this report. In your response, report:',
+    '  Context refresh report',
+    `  Stage: ${routedStage} (correction)`,
+    '  Actions taken: ...',
+    '  Remaining blocking issues, if any: ...',
+    '  Status: refreshed | still-blocked',
+    '',
+  );
+  return lines.join('\n');
 }
 
 function stageToArtifactBasename(stageName: string): string {
@@ -2994,11 +2069,37 @@ function artifactKindForStage(stageName: string): string {
   return map[stageName] ?? stageName;
 }
 
+// Derives the packet sidecar path from the stage's existing promptFile
+// (e.g. "prompts/06-implementation.prompt.txt" ->
+// "prompts/06-implementation.instruction-packet.json"), rather than
+// hardcoding a stage number, so it stays correct if prompt numbering ever
+// shifts. The sidecar is a generated inspection output: it is not an
+// artifact, not part of ARTIFACT_MAP/additionalArtifactFiles, not part of
+// run.json, and not read by lifecycle, check, status, or export.
+function sidecarPathForPromptFile(promptFile: string): string {
+  return promptFile.replace(/\.prompt\.txt$/, '.instruction-packet.json');
+}
+
 export function writeStagePrompts(meta: RunMetadata): void {
+  // Batch 4: write the mode-appropriate starter supplemental context
+  // templates exactly once, before any prompt text (which may reference
+  // them) is generated. Existing files are never overwritten -- see
+  // writeSupplementalContextTemplates(). This is the only write boundary;
+  // prompt display (generateStagePrompt/generateCorrectionPrompt) never
+  // creates files.
+  writeSupplementalContextTemplates(meta.mode, meta.runFolder);
+
   for (const stage of meta.stages) {
     const promptContent = generateStagePrompt(meta, stage.name);
     const promptPath = path.join(meta.runFolder, stage.promptFile);
     fs.writeFileSync(promptPath, promptContent, 'utf8');
+
+    // Batch 3: write one packet sidecar per native stage. generateStagePrompt()
+    // above already throws if the packet cannot be assembled for this stage,
+    // so this call is expected to always succeed when reached.
+    const bundle = assembleStageContextBundleOrThrow(meta, stage.name);
+    const sidecarPath = path.join(meta.runFolder, sidecarPathForPromptFile(stage.promptFile));
+    fs.writeFileSync(sidecarPath, serializeWorkflowInstructionPacket(bundle.workflowInstructionPacket), 'utf8');
   }
 }
 
