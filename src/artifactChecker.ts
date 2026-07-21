@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ArtifactStateFile } from './artifactLifecycle';
 import { RunMetadata } from './run';
+import {
+  GREENFIELD_STAGE_TO_KIND,
+  GREENFIELD_SECTION_REGISTRY,
+} from './greenfield/modes/greenfieldArtifactContract';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -135,6 +139,8 @@ const SECTION_REGISTRY: Record<string, SectionRequirements> = {
       'Status',
     ],
   },
+  // greenfield-specific (verification, judge, final-report already registered above)
+  ...GREENFIELD_SECTION_REGISTRY,
 };
 
 // ─── Artifact kind resolver ───────────────────────────────────────────────────
@@ -181,6 +187,8 @@ const STAGE_TO_KIND: Record<string, string> = {
   'target-architecture': 'TargetArchitectureProposal',
   // design trace
   'design-map': 'DesignMap',
+  // greenfield-specific (verification, judge, final-report already registered above)
+  ...GREENFIELD_STAGE_TO_KIND,
 };
 
 export function resolveArtifactKind(stageName: string): string | undefined {

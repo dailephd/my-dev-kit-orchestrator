@@ -1,295 +1,167 @@
 # my-dev-kit-orchestrator
 
-`my-dev-kit-orchestrator` is a CLI-first workflow shell for design-first software development with coding agents.
+`my-dev-kit-orchestrator` is a CLI-first tool for guiding coding agents through
+design-first software work. It turns a request into a sequence of bounded stage
+prompts, records each stage's artifact on disk, and keeps implementation,
+testing, verification, and judge review connected to the same design.
 
-It is for teams or individual developers who want a coding agent to work through a bounded sequence of design, pseudocode, testing, implementation, and verification steps instead of jumping straight from a raw request to code.
+The package is `@dailephd/my-dev-kit-orchestrator`, and the installed executable
+is `my-dev-kit-orchestrator`.
 
-## Capabilities
+## What it helps you do
 
-`v0.1.0` provided the workflow shell:
+- Start and resume inspectable workflow runs.
+- Choose a workflow mode for feature, repair, test, refactor, hardening,
+  extraction, or greenfield work.
+- Generate the prompt for the current stage instead of one large master prompt.
+- Track artifact state and deterministic check results.
+- Route judge findings back to the appropriate correction stage.
+- Export a portable run handoff.
+- Guide a new project from an idea through a first verified vertical slice and
+  an initial `my-dev-kit` indexing handoff.
 
-- a small CLI command surface
-- five workflow modes: `feature`, `repair`, `test`, `refactor`, `harden`
-- local run folders under `.my-dev-kit-orchestrator/runs/`
-- stage-specific prompt generation
-- plain-text prompt and artifact files
-- simple stage advancement based on expected artifact file existence
+## Current release
 
-`v0.6.0` adds judge correction routing and trace-aware workflow recovery:
+The latest published package is
+`@dailephd/my-dev-kit-orchestrator@1.2.0`. See [CHANGELOG.md](CHANGELOG.md) for
+release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-- judge verdict parser: reads `Verdict:` and `Recommended next stage:` from `judge-report.txt`
-- supported verdicts: `PASS`, `DESIGN_INCOMPLETE`, `PSEUDOCODE_INCOMPLETE`, `IMPLEMENTATION_MISMATCH`, `TEST_COVERAGE_INCOMPLETE`, `ARCHITECTURE_MISMATCH`, `NEED_VERIFICATION`, `NEED_CONTEXT`, `SCOPE_VIOLATION`, `BLOCKED`
-- deterministic routing table maps each non-PASS verdict to a correction stage
-- `status` command shows a Judge correction section when a judge report is present (verdict, routed stage, warnings)
-- `prompt` command selects the routed correction stage and generates a bounded correction-stage prompt
-- correction prompts include the judge report, prior stage inputs, and design-map when present
-- `SCOPE_VIOLATION` and `BLOCKED` verdicts produce a blocked state - no correction stage is routed
-- unknown verdicts fail the parser instead of being guessed
-- `check --trace` and `check --design-map` suggest a correction stage for each trace issue
-- trace-aware correction suggestions are deterministic: missing `BEH-NNN` target → suggest `behavior-model`, missing `PSE-NNN` → suggest `pseudocode-packet`, etc.
-- correction routing is a prompt-generation aid, not an autonomous repair runtime
-- `src/judgeParser.ts`: `parseJudgeReport`, `isValidVerdict`, `JUDGE_VERDICTS`, `JudgeVerdict`
-- `src/correctionRouter.ts`: `routeJudgeVerdict`, `parseAndRoute`, `CORRECTABLE_STAGES`, `CorrectionRouteResult`
-- `src/correctionState.ts`: `readCorrectionState`, `isCorrectionActive`
-- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) and [docs/USAGE.md](docs/USAGE.md) for correction routing usage
+The release supports seven workflow modes:
 
-`v0.5.0` adds design trace IDs and trace link checking:
-
-- `check --trace`: deterministic trace link checker across all run artifacts
-- `check --design-map`: checks the DesignMap artifact (required sections + trace links)
-- `check --strict --trace` / `check --strict --design-map`: promote warns to failures
-- `trace-check-results.json` persists trace check results per run
-- `status` command shows a trace check summary when results are available
-- `src/traceModel.ts`: `TRACE_PREFIXES`, `TRACE_ID_RE`, `isValidTraceId`, `isMalformedTraceId`
-- `src/traceParser.ts`: `parseTraceIds`, `parseTraceLinks`, `findMalformedTraceIds`, `findDuplicateIds`, `findOrphanIds`, `findMissingLinkTargets`, `parseTrace`
-- `src/traceChecker.ts`: `parseDeclaredTraceIds` (skips link lines to avoid false negatives), `checkArtifactTrace`, `checkAllTraces`, `checkDesignMapTrace`
-- `DesignMap` artifact kind added to section registry with 18 required sections
-- Trace IDs are optional guidance in `behavior-model`, `pseudocode-packet`, and `test-strategy` prompts
-- `judge` prompt requests trace link review when trace IDs are present
-- check codes: `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, `TRACE_MISSING_LINK_TARGET`
-- canonical trace ID format: `PREFIX-NNN` (3+ zero-padded digits; prefix one of `REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK`)
-- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for trace check codes and DesignMap sections
-
-`v0.4.0` adds artifact content checks and prompt quality checks:
-
-- `check` command: `my-dev-kit-orchestrator check [--artifact <name>] [--prompts] [--strict]`
-- deterministic text-based checks for required sections in each artifact kind
-- check codes: `MISSING_FILE`, `MISSING_SECTION`, `EMPTY_SECTION`, `PLACEHOLDER_CONTENT`, `STATUS_MISMATCH` (artifacts); `PROMPT_MISSING_FILE`, `PROMPT_EMPTY`, `PROMPT_MISSING_STAGE_HEADER`, `PROMPT_MISSING_TASK_SECTION`, `PROMPT_MISSING_OUTPUT_ARTIFACT`, `PROMPT_PLACEHOLDER` (prompts)
-- `artifact-check-results.json` persists check results per run
-- `status` command shows a content check summary when results are available
-- `--strict` mode exits 1 on any `warn` in addition to `fail`
-- see [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for check codes and result schema
-
-`v0.3.0` adds artifact lifecycle and resume states:
-
-- artifact lifecycle states: `missing`, `incomplete`, `blocked`, `complete`, `stale`
-- `artifact-state.json` per run persists manual lifecycle state
-- stale artifact detection when upstream artifacts change
-- `status` shows lifecycle state for each artifact with reason for blocked/incomplete/stale
-- `prompt` progression respects incomplete, blocked, and stale states
-- `mark` command for manual lifecycle state updates: `mark <artifact-name> --state <state> [--reason]`
-- backward compatible: existing runs without `artifact-state.json` use file-existence behavior
-
-`v0.2.1` adds extraction mode:
-
-- `--mode extraction` for transferring a bounded feature, workflow, or subsystem from an existing source repository into a new or separate target repository
-- `--source <path>` and `--target <path>` options required for extraction runs
-- the source repository is used for inspection and evidence only; the target repository is where the extracted workflow is implemented, tested, verified, and reported
-- source and target `.my-dev-kit` index directories are kept separate
-- extraction-specific 14-stage workflow with artifact gates before implementation begins: `SourceWorkflowMap`, `SourceToTargetPortingMap`, `DoNotPortList`, `GoldenBehaviorContract`, and `TargetArchitectureProposal`
-- run artifacts placed under the target repository by default
-- cross-platform support verified in the GitHub Actions OS matrix on Ubuntu, Windows, and macOS
-- see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for the full extraction workflow and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for artifact contracts
-
-`v0.2.0` added graph-guided architecture context support:
-
-- architecture-context stage prompt now guides the coding agent through graph-guided context acquisition with `my-dev-kit`
-- generated prompt includes the full retrieval sequence, retrieval evidence report template, and ArchitectureContextPacket template
-- `status` command shows supporting report presence for the architecture-context stage
-- stage progression remains based on required artifact presence only
-
-The CLI owns workflow order and prompt generation. Each run advances as the expected artifact files appear on disk.
-
-## How it works with my-dev-kit
-
-`my-dev-kit` and `my-dev-kit-orchestrator` have different responsibilities.
-
-- `my-dev-kit` retrieves bounded project context through graph-guided architecture context workflows such as indexing, search, lookup, slice generation, source retrieval, and optional semantic inspection
-- `my-dev-kit-orchestrator` organizes the staged design-to-code workflow after context acquisition
-- the coding agent records retrieval evidence in `reports/architecture-context-retrieval-report.txt`
-- the coding agent synthesizes that evidence into `artifacts/architecture-context-packet.txt`
-- downstream stages consume the ArchitectureContextPacket rather than raw retrieval output
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOWS.md](docs/WORKFLOWS.md), and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the detailed design.
-
-## Non-goals (current release)
-
-`my-dev-kit-orchestrator` does not include in v0.6.0:
-
-- full JSON schema validation or Zod/AJV enforcement
-- LLM-based artifact judging or semantic artifact grading
-- automatic artifact rewriting or correction loops
-- automatic judge routing
-- automatic code modification after a judge failure
-- automatic code-to-symbol tracing or AST-level dependency graph tracing
-- test coverage instrumentation
-- LLM-based trace inference or judge inference
-- automatic coding-agent execution
-- automatic `my-dev-kit` command execution
-- design-map visualization
-- direct LLM-provider execution
-- multi-agent runtime
-- extra low-level CLI commands beyond the current surface
-
-Architecture-context prompts may suggest use of `my-dev-kit` when it is available, but `my-dev-kit-orchestrator` does not run `my-dev-kit` automatically.
-
-## Command surface
-
-```text
-my-dev-kit-orchestrator init
-my-dev-kit-orchestrator start "<request>"
-my-dev-kit-orchestrator start --mode <feature|repair|test|refactor|harden|extraction> "<request>"
-my-dev-kit-orchestrator status
-my-dev-kit-orchestrator status --run <run-id>
-my-dev-kit-orchestrator prompt
-my-dev-kit-orchestrator prompt <stage>
-my-dev-kit-orchestrator prompt <stage> --run <run-id>
-my-dev-kit-orchestrator list
-my-dev-kit-orchestrator list --mode <mode>
-my-dev-kit-orchestrator mark <artifact-name> --state <incomplete|blocked|complete> [--reason "<reason>"]
-my-dev-kit-orchestrator check
-my-dev-kit-orchestrator check --artifact <stage-name|filename>
-my-dev-kit-orchestrator check --prompts
-my-dev-kit-orchestrator check --strict
-```
-
-Common flags:
-
-- `--root <path>`: use a specific project root
-- `--mode <mode>`: choose the workflow mode for `start`
-- `--name <run-name>`: use a readable suffix in the run ID
-- `--run <run-id>`: target a specific run for `status` or `prompt`
-- `--output-dir <path>`: write runs outside the default workspace
+- `feature`
+- `repair`
+- `test`
+- `refactor`
+- `harden`
+- `extraction`
+- `greenfield`
 
 ## Quick start
 
-1. Install dependencies and build the CLI:
+Prerequisite: a supported Node.js installation with npm.
 
-   ```bash
-   npm install
-   npm run build
-   ```
-
-2. Initialize the workspace in your project:
-
-   ```bash
-   node dist/cli.js init
-   ```
-
-3. Start a workflow run:
-
-   ```bash
-   node dist/cli.js start "add audit logging to the export command"
-   ```
-
-4. Print the next stage prompt:
-
-   ```bash
-   node dist/cli.js prompt
-   ```
-
-5. Paste the prompt into your coding tool of choice and save the returned artifact into the run folder.
-
-6. Continue stage by stage:
-
-   ```bash
-   node dist/cli.js status
-   node dist/cli.js prompt
-   node dist/cli.js list
-   ```
-
-If you link the package locally, you can use the installed command directly:
+Run the published package without installing it globally:
 
 ```bash
-npm link
-my-dev-kit-orchestrator --help
+npx @dailephd/my-dev-kit-orchestrator init
+npx @dailephd/my-dev-kit-orchestrator start "Add audit logging"
+npx @dailephd/my-dev-kit-orchestrator prompt
 ```
 
-## Supported modes
+The CLI creates `.my-dev-kit-orchestrator/` in the project. Each workflow run
+contains its request, metadata, stage prompts, artifacts, and reports. Give the
+generated stage prompt to a coding agent, save the requested artifact, and run
+`prompt` again to continue.
 
-### `feature`
-
-Use for new behavior or intentional behavior changes.
-
-Stage order:
-`request-brief -> architecture-context -> behavior-model -> pseudocode-packet -> test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
-
-### `repair`
-
-Use when observed behavior diverges from intended design.
-
-Stage order:
-`observed-behavior-report -> architecture-context -> behavior-trace -> divergence-report -> correction-design -> regression-test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
-
-### `test`
-
-Use for behavior-derived test design or test implementation for existing behavior.
-
-Stage order:
-`test-target-brief -> architecture-context -> behavior-reconstruction -> pseudocode-summary -> test-strategy -> test-implementation -> verification -> judge -> final-report`
-
-### `refactor`
-
-Use for structure changes that must preserve behavior.
-
-Stage order:
-`refactor-brief -> architecture-context -> existing-behavior-map -> preserved-invariant-list -> compatibility-test-strategy -> refactor-pseudocode-packet -> implementation -> test-implementation -> verification -> judge -> final-report`
-
-### `harden`
-
-Use for validation, guard, resilience, and failure-handling work.
-
-Stage order:
-`hardening-brief -> architecture-context -> assumption-report -> failure-mode-matrix -> guard-pseudocode-packet -> resilience-test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
-
-### `extraction`
-
-Use for transferring a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
-
-Requires `--source <path>` (source repo, read-only evidence) and `--target <path>` (target repo, implementation destination).
-
-Stage order:
-`request-brief -> source-architecture-context -> source-workflow-map -> porting-map -> golden-behavior-contract -> target-architecture -> behavior-model -> pseudocode-packet -> test-strategy -> implementation -> test-implementation -> verification -> judge -> final-report`
-
-See [docs/WORKFLOWS.md](docs/WORKFLOWS.md) and [docs/ARTIFACTS.md](docs/ARTIFACTS.md) for the full extraction workflow and artifact contracts.
-
-## Run folder layout
-
-Each run lives under `.my-dev-kit-orchestrator/runs/<run-id>/`.
-
-```text
-.my-dev-kit-orchestrator/
-  config.json
-  runs/
-    <run-id>/
-      00-request.txt
-      run.json
-      prompts/
-      artifacts/
-      reports/
-```
-
-Key files and folders:
-
-- `00-request.txt`: the original request passed to `start`
-- `run.json`: run metadata, mode, and ordered stage definitions
-- `prompts/`: generated stage prompt files such as `01-request-brief.prompt.txt`
-- `artifacts/`: stage outputs such as `request-brief.txt` and `pseudocode-packet.txt`
-- `reports/`: reserved run folder for report-oriented outputs and future expansion
-
-The next stage is determined by the first expected artifact file that is missing for the current workflow.
-
-## Install, build, test
+To work from this repository instead:
 
 ```bash
 npm install
 npm run build
-npx tsc --noEmit
-npm test
+node dist/cli.js init
+node dist/cli.js start "Add audit logging"
+node dist/cli.js prompt
 ```
 
-Optional local lint check:
+See [docs/USAGE.md](docs/USAGE.md) for complete command syntax and
+[docs/WORKFLOWS.md](docs/WORKFLOWS.md) for mode selection and stage procedures.
 
-```bash
-npm run lint
+## Greenfield starter profiles
+
+The `greenfield` mode supports these starter profiles:
+
+- `typescript-cli`
+- `nextjs-app`
+- `android-compose`
+
+Greenfield remains prompt-guided. The CLI records the selected profile and
+generates planning guidance; it does not generate and build an application on
+its own. After code exists, the `initial-index` stage guides the first
+`my-dev-kit` index.
+
+The Android Compose profile describes Kotlin, Jetpack Compose, Gradle project
+structure, scaffold targets, and validation commands. The orchestrator does
+not run Gradle, require the Android SDK, or check for a device or emulator.
+Generic requests such as "mobile app" remain unresolved instead of defaulting
+to Android Compose. iOS, Flutter, React Native, and a general-purpose mobile
+mode are not supported.
+
+## Command overview
+
+```text
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start [options] <request>
+my-dev-kit-orchestrator prompt [stage]
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator list
+my-dev-kit-orchestrator mark <artifact-name> --state <state>
+my-dev-kit-orchestrator check
+my-dev-kit-orchestrator export
 ```
+
+See [docs/USAGE.md](docs/USAGE.md) for flags, defaults, run selection, check
+variants, export options, and troubleshooting.
+
+## Tool boundaries
+
+- `my-dev-kit` indexes and retrieves bounded context from an existing codebase.
+- `my-dev-kit-orchestrator` manages workflow stages, prompts, artifacts, checks,
+  correction routing, and handoff export.
+- `my-dev-kit-lab` owns experiments, audits, security validation, and
+  release-readiness evidence.
+
+These integrations are explicit and prompt-guided. The orchestrator does not
+autonomously run coding agents, `my-dev-kit`, security validation, publishing,
+or release workflows.
+
+## Current limitations
+
+- Checks validate artifact structure and trace relationships; they do not prove
+  runtime correctness.
+- Component documents remain empty until the brief schema supplies module or
+  component hints.
+- Tests currently use both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`.
+- The mobile and autonomous-execution boundaries described above remain in
+  effect.
+
+## Planned: v1.2.1 (workflow-instruction and context-refresh integration)
+
+**Status: planned, not implemented, not published.** `v1.2.1` is a bounded
+patch after the current `1.2.0` release. Nothing described in this section
+exists in the current release; see
+[docs/ROADMAP.md](docs/ROADMAP.md#v121-planned) for the full plan and
+candidate implementation batches.
+
+Planned scope:
+
+- a structured workflow catalog owned by `my-dev-kit-orchestrator`, with
+  stable IDs for workflows, stages, commands, rules, and report contracts
+- deterministic, exact-ID reference resolution (no fuzzy or semantic
+  workflow selection)
+- a `WorkflowInstructionPacket` that bounds each generated stage prompt to
+  only the instructions that stage needs, instead of every instruction
+  category the current prompt generator can produce
+- supplemental, optional implementation-context and test-context artifacts
+  consumed inside the existing `implementation` and `test-implementation`
+  stages
+- manual freshness rules (`fresh` / `stale` / `unknown`) for that
+  supplemental context, since the orchestrator has no automatic
+  `my-dev-kit` invocation or content-hash staleness tracking today
+- full compatibility with existing runs, modes, stage order, artifact
+  files, and lifecycle behavior
+
+`v1.2.1` does not add a native implementation-context or test-context
+stage, does not invoke `my-dev-kit` automatically, and does not change the
+native stage count for any workflow mode. Integration with `my-dev-kit` and
+`my-dev-kit-lab` is planned as a manual, prompt-guided step, the same way
+the existing architecture-context stage works today.
 
 ## Documentation
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/USAGE.md](docs/USAGE.md)
-- [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
-- [docs/ARTIFACTS.md](docs/ARTIFACTS.md)
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
-- [CHANGELOG.md](CHANGELOG.md)
-- [ROADMAP.md](docs/ROADMAP.md)
+- [Usage and command reference](docs/USAGE.md)
+- [Workflow modes and stage procedures](docs/WORKFLOWS.md)
+- [Artifact contracts and lifecycle](docs/ARTIFACTS.md)
+- [Architecture and subsystem boundaries](docs/ARCHITECTURE.md)
+- [Contributor setup and validation](docs/DEVELOPMENT.md)
+- [Release history](CHANGELOG.md)
+- [Roadmap](docs/ROADMAP.md)

@@ -277,7 +277,8 @@ describe('supporting report status', () => {
   });
 
   it('getSupportingReportStatuses returns architecture-context report for non-extraction modes', () => {
-    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction');
+    // greenfield (v1.1.0) has its own stage vocabulary and has no architecture-context stage.
+    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction' && m !== 'greenfield');
     for (const mode of nonExtractionModes) {
       const tmp = makeTempDir();
       try {

@@ -3,6 +3,10 @@ import * as path from 'path';
 import { WorkflowMode } from './types';
 import { RunMetadata } from './run';
 import { CorrectionRouteResult } from './correctionRouter';
+import {
+  renderScaffoldPlanPrompt,
+  renderScaffoldImplementationPrompt,
+} from './greenfield/scaffold/renderScaffoldPrompt';
 
 interface PromptContext {
   stage: string;
@@ -2387,6 +2391,390 @@ Produce the artifact as a plain-text file following the FinalReport template.
 `;
 }
 
+// ─── Greenfield stages (v1.1.0) ────────────────────────────────────────────────
+
+function greenfieldIdeaBriefPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- original project idea: ${ctx.runFolder}/00-request.txt
+
+Task:
+Convert the project idea into a normalized greenfield idea brief and produce ${ctx.runFolder}/artifacts/idea-brief.json (artifact: IdeaBrief).
+
+Use src/greenfield/brief/loadProjectBrief.ts and normalizeProjectBrief.ts as the runtime source of truth for this stage's shape.
+
+The IdeaBrief must preserve:
+- raw idea text
+- project name if provided
+- product goal, users/audience, core workflow if provided
+- constraints
+- non-goals
+- preferred stack if provided
+- preferred profile if provided
+- platform target if provided
+- documentation preferences
+- testing expectations
+- unresolved questions
+
+Required output artifact: IdeaBrief
+Output file: ${ctx.runFolder}/artifacts/idea-brief.json
+
+Stop conditions:
+- do not scaffold files
+- do not implement code
+- do not silently choose a mobile/Android profile as a default when the request is ambiguous (see src/greenfield/profiles/resolveGreenfieldProfile.ts)
+- do not claim validation or release readiness
+
+Return format:
+Produce the artifact as a JSON file matching NormalizedGreenfieldBrief (src/greenfield/brief/briefTypes.ts), plus:
+  "status": "complete" | "incomplete" | "blocked"
+`;
+}
+
+function greenfieldProductBoundaryPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/idea-brief.json
+
+Task:
+Define the product boundary and produce ${ctx.runFolder}/artifacts/product-boundary.txt (artifact: ProductBoundary).
+
+The ProductBoundary must define:
+- intended users
+- core workflow
+- constraints
+- non-goals
+- success criteria
+
+Required output artifact: ProductBoundary
+Output file: ${ctx.runFolder}/artifacts/product-boundary.txt
+
+Stop conditions:
+- do not write implementation code
+- do not write scaffold files
+- do not invent unsupported product scope
+
+Return format:
+Produce the artifact as a plain-text file using the template:
+  Artifact: ProductBoundary
+  Workflow mode: greenfield
+  Intended users: ...
+  Core workflow: ...
+  Constraints: ...
+  Non-goals: ...
+  Success criteria: ...
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldStackDecisionPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/idea-brief.json
+- ${ctx.runFolder}/artifacts/product-boundary.txt
+
+Task:
+Define a platform-neutral stack decision from the brief and any explicit stack/profile preferences, and produce ${ctx.runFolder}/artifacts/stack-decision.txt (artifact: StackDecision).
+
+Preserve unresolved stack decisions rather than inventing a choice. Do not silently default to a mobile/Android stack when the request is ambiguous; only choose it when explicitly requested.
+
+Required output artifact: StackDecision
+Output file: ${ctx.runFolder}/artifacts/stack-decision.txt
+
+Stop conditions:
+- do not implement dependencies
+- do not install packages
+- do not generate project files
+
+Return format:
+Produce the artifact as a plain-text file using the template:
+  Artifact: StackDecision
+  Workflow mode: greenfield
+  Chosen stack: ...
+  User-preferred stack: ...
+  Unresolved: ...
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldStarterProfilePrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/idea-brief.json
+- ${ctx.runFolder}/artifacts/product-boundary.txt
+- ${ctx.runFolder}/artifacts/stack-decision.txt
+
+Task:
+Select or describe a starter profile using src/greenfield/profiles/resolveGreenfieldProfile.ts and produce ${ctx.runFolder}/artifacts/starter-profile.json (artifact: StarterProfile).
+
+Supported profiles in v1.2.0: typescript-cli, nextjs-app, android-compose. If an unsupported profile is requested, report it clearly as unsupported; do not substitute a default silently.
+
+Required output artifact: StarterProfile
+Output file: ${ctx.runFolder}/artifacts/starter-profile.json
+
+Stop conditions:
+- do not silently substitute a mobile/Android profile for an ambiguous or unsupported request
+- do not scaffold files
+
+Return format:
+Produce the artifact as a JSON file matching GreenfieldProfileSelection (src/greenfield/profiles/profileTypes.ts), plus:
+  "status": "complete" | "incomplete" | "blocked"
+`;
+}
+
+function greenfieldBootstrapBundlePrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/idea-brief.json
+- ${ctx.runFolder}/artifacts/product-boundary.txt
+- ${ctx.runFolder}/artifacts/stack-decision.txt
+- ${ctx.runFolder}/artifacts/starter-profile.json
+
+Task:
+Build the GreenfieldBootstrapBundle using src/greenfield/bootstrap/buildBootstrapBundle.ts and produce ${ctx.runFolder}/artifacts/bootstrap-bundle.json (artifact: GreenfieldBootstrapBundleArtifact).
+
+Required output artifact: GreenfieldBootstrapBundleArtifact
+Output file: ${ctx.runFolder}/artifacts/bootstrap-bundle.json
+
+Stop conditions:
+- do not implement scaffold
+- do not write project files
+- do not claim release or security readiness
+
+Return format:
+Produce the artifact as a JSON file matching GreenfieldBootstrapBundle (src/greenfield/bootstrap/bootstrapBundleTypes.ts), plus:
+  "status": "complete" | "incomplete" | "blocked"
+`;
+}
+
+function greenfieldProjectDocsPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/bootstrap-bundle.json
+
+Task:
+Produce a project docs bootstrap report using src/greenfield/bootstrap/bootstrapProjectDocs.ts and src/greenfield/bootstrap/validateBootstrapDocs.ts, written to ${ctx.runFolder}/artifacts/project-docs-report.txt (artifact: ProjectDocsReport).
+
+Preserve component docs as empty/unresolved unless the brief carries module hints. Validate generated content for unsupported claims before finishing.
+
+Required output artifact: ProjectDocsReport
+Output file: ${ctx.runFolder}/artifacts/project-docs-report.txt
+
+Stop conditions:
+- do not update the current repository's README.md or docs/ROADMAP.md
+- do not claim Android/mobile support unless the selected profile is android-compose (see src/greenfield/bootstrap/validateBootstrapDocs.ts)
+- do not claim release, security, or publish completion
+
+Return format:
+Produce the artifact as a plain-text file using the template:
+  Artifact: ProjectDocsReport
+  Workflow mode: greenfield
+  Doc targets: ...
+  Component doc targets: ...
+  Unresolved decisions: ...
+  Validation result: ...
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldFirstVerticalSlicePrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/bootstrap-bundle.json
+- ${ctx.runFolder}/artifacts/scaffold-plan.txt
+- ${ctx.runFolder}/reports/scaffold-implementation-report.txt
+
+Task:
+Define or implement one minimal runnable behavior that proves the scaffold works, tied directly to the product boundary, and produce ${ctx.runFolder}/artifacts/first-vertical-slice.txt (artifact: FirstVerticalSlice).
+
+Keep the slice minimal. Do not expand into the full product.
+
+Required output artifact: FirstVerticalSlice
+Output file: ${ctx.runFolder}/artifacts/first-vertical-slice.txt
+
+Stop conditions:
+- do not expand into full product scope
+- do not claim tests passed without verification evidence
+- do not add unrelated features
+
+Return format:
+Produce the artifact as a plain-text file using the template:
+  Artifact: FirstVerticalSlice
+  Workflow mode: greenfield
+  Minimal behavior: ...
+  Entry point: ...
+  Tied to product boundary: ...
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldVerificationPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/scaffold-plan.txt
+- ${ctx.runFolder}/reports/scaffold-implementation-report.txt
+- ${ctx.runFolder}/artifacts/first-vertical-slice.txt
+
+Task:
+Run the required project checks for the scaffolded project and produce ${ctx.runFolder}/reports/verification-report.txt (artifact: VerificationReport).
+
+The VerificationReport must include:
+- commands run
+- working directory for each command
+- exit codes
+- pass/fail status
+- output summary
+- skipped checks and reasons
+- remaining verification gaps
+
+Required output artifact: VerificationReport
+Output file: ${ctx.runFolder}/reports/verification-report.txt
+
+Stop conditions:
+- do not claim checks passed unless they actually ran
+- do not hide failed commands
+- do not run release, security, or publish workflow
+
+Return format:
+Produce the artifact as a plain-text file following the VerificationReport template.
+  Artifact: VerificationReport
+  Workflow mode: greenfield
+  [all required sections]
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldInitialIndexPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/scaffold-plan.txt
+- ${ctx.runFolder}/reports/scaffold-implementation-report.txt
+- ${ctx.runFolder}/artifacts/first-vertical-slice.txt
+- ${ctx.runFolder}/reports/verification-report.txt
+
+Task:
+Guide the handoff to my-dev-kit now that scaffold code exists, and produce ${ctx.runFolder}/reports/initial-index-report.txt (artifact: InitialIndexReport).
+
+Use package execution; do not assume a global my-dev-kit command exists. Prefer:
+  npx @dailephd/my-dev-kit@latest index --root . --src src --out .my-dev-kit --json
+
+Record whether indexing was actually run (with command, working directory, exit code, and output summary) or only planned, and why.
+
+Required output artifact: InitialIndexReport
+Output file: ${ctx.runFolder}/reports/initial-index-report.txt
+
+Stop conditions:
+- do not assume a global my-dev-kit command exists
+- do not claim indexing succeeded unless command evidence exists
+- do not run security validation
+- do not publish
+
+Return format:
+Produce the artifact as a plain-text file using the template:
+  Artifact: InitialIndexReport
+  Workflow mode: greenfield
+  Indexing status: run | planned-only
+  Command: ...
+  Working directory: ...
+  Exit code: ...
+  Output summary: ...
+  Status: complete | incomplete | blocked
+`;
+}
+
+function greenfieldJudgePrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/artifacts/idea-brief.json
+- ${ctx.runFolder}/artifacts/product-boundary.txt
+- ${ctx.runFolder}/artifacts/stack-decision.txt
+- ${ctx.runFolder}/artifacts/starter-profile.json
+- ${ctx.runFolder}/artifacts/bootstrap-bundle.json
+- ${ctx.runFolder}/artifacts/project-docs-report.txt
+- ${ctx.runFolder}/artifacts/scaffold-plan.txt
+- ${ctx.runFolder}/reports/scaffold-implementation-report.txt
+- ${ctx.runFolder}/artifacts/first-vertical-slice.txt
+- ${ctx.runFolder}/reports/verification-report.txt
+- ${ctx.runFolder}/reports/initial-index-report.txt
+
+Task:
+Compare the greenfield run's outputs against the greenfield stage contract and produce ${ctx.runFolder}/reports/judge-report.txt (artifact: JudgeReport).
+
+The JudgeReport must assess:
+- idea brief vs product boundary alignment
+- stack decision and starter profile justification
+- bootstrap bundle and project docs completeness
+- scaffold plan followed by scaffold implementation
+- first vertical slice tied to product boundary
+- verification evidence
+- initial-index handoff evidence
+- risks and gaps
+
+Verdict must be one of:
+  PASS | NEED_CONTEXT | DESIGN_INCOMPLETE | PSEUDOCODE_INCOMPLETE | IMPLEMENTATION_MISMATCH |
+  TEST_COVERAGE_INCOMPLETE | ARCHITECTURE_MISMATCH | SCOPE_VIOLATION | NEED_VERIFICATION | BLOCKED
+
+Required output artifact: JudgeReport
+Output file: ${ctx.runFolder}/reports/judge-report.txt
+
+Stop conditions:
+- do not rewrite code
+- do not approve without verification evidence
+- do not hide uncertainty
+
+Return format:
+Produce the artifact as a plain-text file.
+  Artifact: JudgeReport
+  Workflow mode: greenfield
+  Verdict: ...
+  Recommended next stage if not PASS: ...
+  Status: complete
+`;
+}
+
+function greenfieldFinalReportPrompt(ctx: PromptContext): string {
+  return `${header(ctx)}
+Inputs:
+- ${ctx.runFolder}/reports/judge-report.txt
+- ${ctx.runFolder}/reports/verification-report.txt
+- major greenfield artifacts and reports
+
+Task:
+Summarize the completed greenfield run honestly for the user and produce ${ctx.runFolder}/reports/final-report.txt (artifact: FinalReport).
+
+The FinalReport must include:
+- original project idea
+- run ID: ${ctx.runId}
+- stages completed
+- product boundary summary
+- stack decision and starter profile
+- bootstrap bundle and project docs summary
+- scaffold plan and implementation summary
+- first vertical slice summary
+- verification summary
+- initial-index handoff summary
+- judge verdict
+- unresolved risks
+- follow-up recommendations if needed
+
+Required output artifact: FinalReport
+Output file: ${ctx.runFolder}/reports/final-report.txt
+
+Stop conditions:
+- do not exaggerate success
+- do not omit failed or skipped verification
+- do not claim release, security, or publish completion
+
+Return format:
+Produce the artifact as a plain-text file following the FinalReport template.
+  Artifact: FinalReport
+  Workflow mode: greenfield
+  Run ID: ...
+  [all required sections]
+  Status: complete
+`;
+}
+
 // ─── Stage router ─────────────────────────────────────────────────────────────
 
 export function generateStagePrompt(meta: RunMetadata, stageName: string): string {
@@ -2408,13 +2796,17 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
   };
 
   const isExtraction = meta.mode === 'extraction';
+  const isGreenfield = meta.mode === 'greenfield';
 
   switch (stageName) {
     // shared - non-extraction
     case 'architecture-context': return architectureContextPrompt(ctx);
-    case 'verification': return isExtraction ? extractionVerificationPrompt(ctx) : verificationPrompt(ctx);
-    case 'judge': return isExtraction ? extractionJudgePrompt(ctx) : judgePrompt(ctx);
-    case 'final-report': return isExtraction ? extractionFinalReportPrompt(ctx) : finalReportPrompt(ctx);
+    case 'verification':
+      return isExtraction ? extractionVerificationPrompt(ctx) : isGreenfield ? greenfieldVerificationPrompt(ctx) : verificationPrompt(ctx);
+    case 'judge':
+      return isExtraction ? extractionJudgePrompt(ctx) : isGreenfield ? greenfieldJudgePrompt(ctx) : judgePrompt(ctx);
+    case 'final-report':
+      return isExtraction ? extractionFinalReportPrompt(ctx) : isGreenfield ? greenfieldFinalReportPrompt(ctx) : finalReportPrompt(ctx);
     // shared stages with extraction-specific overrides
     case 'behavior-model': return isExtraction ? extractionBehaviorModelPrompt(ctx) : behaviorModelPrompt(ctx);
     case 'pseudocode-packet': return isExtraction ? extractionPseudocodePacketPrompt(ctx) : pseudocodePacketPrompt(ctx);
@@ -2451,6 +2843,17 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     case 'porting-map': return portingMapPrompt(ctx);
     case 'golden-behavior-contract': return goldenBehaviorContractPrompt(ctx);
     case 'target-architecture': return targetArchitecturePrompt(ctx);
+    // greenfield-specific (v1.1.0)
+    case 'idea-brief': return greenfieldIdeaBriefPrompt(ctx);
+    case 'product-boundary': return greenfieldProductBoundaryPrompt(ctx);
+    case 'stack-decision': return greenfieldStackDecisionPrompt(ctx);
+    case 'starter-profile': return greenfieldStarterProfilePrompt(ctx);
+    case 'bootstrap-bundle': return greenfieldBootstrapBundlePrompt(ctx);
+    case 'project-docs': return greenfieldProjectDocsPrompt(ctx);
+    case 'scaffold-plan': return renderScaffoldPlanPrompt(ctx);
+    case 'scaffold-implementation': return renderScaffoldImplementationPrompt(ctx);
+    case 'first-vertical-slice': return greenfieldFirstVerticalSlicePrompt(ctx);
+    case 'initial-index': return greenfieldInitialIndexPrompt(ctx);
     default:
       throw new Error(`No prompt generator for stage: "${stageName}"`);
   }

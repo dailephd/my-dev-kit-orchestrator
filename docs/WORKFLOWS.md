@@ -1,6 +1,8 @@
 # Workflows
 
-`my-dev-kit-orchestrator` supports six workflow modes in the current release.
+`my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
+choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
+syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
@@ -161,7 +163,7 @@ This mode is not for normal feature implementation. It is for inspecting an exis
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -170,7 +172,7 @@ npx my-dev-kit-orchestrator start --mode extraction \
 Windows example:
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
   --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
   --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
   "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
@@ -312,7 +314,69 @@ Summarize:
 
 ---
 
-## Shared workflow rules
+## Greenfield
+
+Use `greenfield` to start a new project before useful code exists. Do not use
+it to add behavior to an established codebase; use `feature` for that work.
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+```
+
+The greenfield foundation is platform-neutral. It supports three starter
+profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. It also
+excludes security validation, release, and publishing workflows.
+
+`start` stores the request but does not resolve a profile at the CLI layer.
+Profile resolution
+(`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
+agent executes the `starter-profile` stage prompt, using the
+`preferredProfile`/`platformTarget` fields from the normalized brief. `prompt`
+itself renders static, mode-and-stage-keyed template text; profile-specific
+correctness is carried through that static wording and the artifacts a coding
+agent produces, not through a separate CLI Android/mobile mode.
+
+Android Compose is profile-guided planning support, not an Android build
+runner: the orchestrator does not run Gradle, does not require the Android
+SDK, and does not check for a connected device or emulator.
+`./gradlew connectedAndroidTest` is optional validation guidance, dependent on
+a device or emulator being available where the generated project is actually
+built -- not something the orchestrator itself runs or verifies. A generic
+"mobile" or "mobile app" request does not silently resolve to
+`android-compose`; it is reported as `unresolved`. iOS, Flutter, and React
+Native remain unsupported profiles.
+
+The 13 stages are:
+
+1. `idea-brief` - capture and normalize the project idea.
+2. `product-boundary` - define goals, users, constraints, and non-goals.
+3. `stack-decision` - record the platform-neutral stack decision.
+4. `starter-profile` - resolve a supported profile and its validation rules.
+5. `bootstrap-bundle` - assemble deterministic brief, profile, template,
+   documentation, scaffold, and validation inputs.
+6. `project-docs` - prepare and validate structured in-memory project
+   documentation content.
+7. `scaffold-plan` - define bounded files, commands, and acceptance criteria.
+8. `scaffold-implementation` - guide a coding agent through the approved
+   scaffold plan.
+9. `first-vertical-slice` - guide the smallest useful runnable behavior.
+10. `verification` - record actual implementation-level evidence.
+11. `initial-index` - hand the now-existing codebase to `my-dev-kit` for its
+    first index and context retrieval.
+12. `judge` - compare implementation and evidence with the greenfield plan.
+13. `final-report` - summarize the run, verdict, risks, and next action.
+
+Scaffold planning and implementation are prompt-guided. The CLI generates a
+bounded prompt for one stage; the user gives that prompt to a coding agent and
+saves the returned artifact. It does not invoke an LLM or autonomously write a
+project.
+
+The bootstrap runtime is deterministic and has no disk I/O or timestamps.
+Project-doc bootstrap returns structured in-memory content rather than writing
+template files. Component documentation remains empty until the brief schema
+has module or component hints.
+
+## Shared stage gates and completion rules
 
 - The CLI generates one prompt file per stage when a run starts.
 - `prompt` without a stage selects the first stage whose effective artifact state is not `complete`.
@@ -365,10 +429,121 @@ When an artifact is blocked:
 
 Existing runs without `artifact-state.json` continue to work:
 
-- file present → `complete`
-- file missing → `missing`
+- file present -> `complete`
+- file missing -> `missing`
 
 No migration is needed for runs created before v0.3.0.
+
+## v1.2.1 (planned): Operational Sequence
+
+**Status: planned, not implemented.** See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for scope and batches, and
+[docs/ARCHITECTURE.md](ARCHITECTURE.md#v121-planned-workflow-catalog-workflowinstructionpacket-and-stagecontextbundle)
+for the catalog/packet/bundle design.
+
+### Native stages vs. operational substeps
+
+`v1.2.1` preserves the feature workflow's ten native stages exactly:
+
+1. `request-brief`
+2. `architecture-context`
+3. `behavior-model`
+4. `pseudocode-packet`
+5. `test-strategy`
+6. `implementation`
+7. `test-implementation`
+8. `verification`
+9. `judge`
+10. `final-report`
+
+The revised design adds *operational substeps* inside two of the existing
+stages -- it does not add native stages, and it does not change the stage
+count for `feature`, `repair`, `test`, `refactor`, `harden`, `extraction`,
+or `greenfield`. The planned operational sequence is:
+
+1. RequestBrief
+2. Architecture-context retrieval
+3. ArchitectureContextPacket
+4. BehaviorModel
+5. PseudocodePacket
+6. TestStrategyPacket
+7. **Implementation-context refresh** (operational substep inside stage 6,
+   `implementation`)
+8. ImplementationContextPacket (supplemental artifact)
+9. Production implementation
+10. ImplementationReport
+11. **Post-implementation index refresh** (operational substep inside stage
+    7, `test-implementation`)
+12. TestContextPacket (supplemental artifact)
+13. Test implementation
+14. TestImplementationReport
+15. Verification
+16. Judge
+17. Final report
+
+### Architecture-context stage (unchanged in v1.2.1)
+
+The architecture-context stage continues to use architecture-role
+repository evidence, as it does today. It receives the `RequestBrief`,
+stage-specific instructions, relevant `my-dev-kit` commands, and the
+architecture-context output contract, and it produces the
+`ArchitectureContextPacket` and optional retrieval evidence. It continues to
+exclude implementation-only instructions, test-implementation instructions,
+and release/publication instructions -- the same exclusion the bounded
+`WorkflowInstructionPacket` design formalizes for every stage.
+
+### Implementation stage integration (planned)
+
+The existing `implementation` stage prompt is planned to begin by
+instructing the coding agent to:
+
+1. Verify or refresh the `my-dev-kit` index.
+2. Request implementation-role context.
+3. Save or synthesize `artifacts/implementation-context-packet.txt`.
+4. Save `reports/implementation-context-retrieval-report.txt`.
+5. Inspect adequacy, freshness, and unresolved evidence.
+6. Stop when required contract evidence is missing or ownership is
+   unclear.
+7. Begin production implementation only after context is current and
+   adequate.
+
+These two files are supplemental in `v1.2.1`: they may be required by newly
+selected workflow entries for new runs, but they are never retroactively
+required for `v1.2.0`-era runs, and they are not native stages. See
+[docs/ARTIFACTS.md](ARTIFACTS.md#v121-planned-supplemental-context-artifacts).
+
+### Test-implementation stage integration (planned)
+
+The existing `test-implementation` stage prompt is planned to begin by
+instructing the coding agent to:
+
+1. Refresh the repository index after production changes.
+2. Collect changed files and changed symbols.
+3. Use before/after index or graph-diff evidence when available.
+4. Retrieve test-implementation-role context.
+5. Supply `TestStrategyPacket` responsibility IDs.
+6. Save or synthesize `artifacts/test-context-packet.txt`.
+7. Save `reports/test-context-retrieval-report.txt`.
+8. Inspect responsibility-mapping completeness, adequacy, and freshness.
+9. Stop when critical responsibilities remain unmapped.
+10. Implement tests only against current production evidence.
+
+### Verification and judge (unchanged mechanism, new evidence categories)
+
+Verification is planned to check that required context refresh occurred,
+that context-packet and retrieval-report references exist where required,
+that adequacy is not falsely reported, and that stale warnings are resolved
+or explicitly accepted. The existing judge stage remains authoritative and
+is not duplicated; it may treat missing/stale/unknown-freshness context and
+unresolved critical responsibility mappings as correction evidence, routed
+through the existing correction-routing architecture described above.
+
+### Manual integration boundary
+
+None of this is automatic. The orchestrator does not gain an external-command
+runtime in `v1.2.1`; every retrieval, refresh, and context-file step above is
+something the prompt instructs a coding agent to do, the same way the
+current architecture-context stage already works.
 
 ## Practical architecture-context flow
 

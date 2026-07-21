@@ -100,7 +100,12 @@ describe('artifact filenames', () => {
       const wf = getWorkflow(mode);
       for (const stage of wf.stages) {
         expect(stage.artifactFile).toBeTruthy();
-        expect(stage.artifactFile).toMatch(/^artifacts\/.+\.txt$/);
+        // greenfield (v1.1.0) intentionally introduces JSON artifacts (e.g.
+        // artifacts/idea-brief.json) and reports/-prefixed stage artifacts
+        // (e.g. reports/scaffold-implementation-report.txt); every other
+        // mode still only ever produces artifacts/*.txt, so this broadened
+        // pattern does not weaken the check for them.
+        expect(stage.artifactFile).toMatch(/^(artifacts|reports)\/.+\.(txt|json)$/);
       }
     });
   }
@@ -236,11 +241,11 @@ describe('invalid mode rejection', () => {
 });
 
 describe('getAllWorkflows', () => {
-  it('returns all six workflow modes', () => {
+  it('returns all seven workflow modes', () => {
     const all = getAllWorkflows();
-    expect(all).toHaveLength(6);
+    expect(all).toHaveLength(7);
     const modes = all.map((wf) => wf.mode).sort();
-    expect(modes).toEqual(['extraction', 'feature', 'harden', 'refactor', 'repair', 'test']);
+    expect(modes).toEqual(['extraction', 'feature', 'greenfield', 'harden', 'refactor', 'repair', 'test']);
   });
 
   it('extraction mode has correct stage sequence', () => {

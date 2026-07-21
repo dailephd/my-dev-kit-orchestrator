@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "removalAuthorizationField": "ALLOWED_DOCUMENT_REMOVALS",
+  "maxPlanningNonblankLineReductionPercent": 15,
+  "canonicalDocuments": [
+    "README.md",
+    "docs/USAGE.md",
+    "docs/WORKFLOWS.md",
+    "docs/ARTIFACTS.md",
+    "docs/ARCHITECTURE.md",
+    "docs/DEVELOPMENT.md",
+    "CHANGELOG.md",
+    "docs/ROADMAP.md"
+  ],
+  "requiredTerms": {
+    "README.md": ["design-first", "stage prompt", "artifact", "my-dev-kit", "my-dev-kit-lab", "docs/USAGE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/ARCHITECTURE.md", "docs/DEVELOPMENT.md", "CHANGELOG.md", "docs/ROADMAP.md"],
+    "docs/USAGE.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export", "--root", "--run", "--name", "--output-dir"],
+    "docs/WORKFLOWS.md": ["feature", "repair", "test", "refactor", "harden", "extraction", "greenfield"],
+    "docs/ARTIFACTS.md": ["RequestBrief", "ArchitectureContextPacket", "BehaviorModel", "PseudocodePacket", "TestStrategyPacket", "ImplementationReport", "TestImplementationReport", "VerificationReport", "JudgeReport", "FinalReport", "incomplete", "blocked", "complete", "missing", "stale"],
+    "docs/ARCHITECTURE.md": ["CLI command layer", "Workflow mode layer", "Prompt generation architecture", "Artifact handoff architecture", "Greenfield profile architecture", "Extraction mode architecture", "my-dev-kit", "my-dev-kit-lab"],
+    "docs/DEVELOPMENT.md": ["docs:check", "lint:docs", "test:security", "tests/greenfield", "typecheck", "lint", "test", "build"],
+    "CHANGELOG.md": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0"],
+    "docs/ROADMAP.md": ["Ecosystem responsibility boundaries", "Non-goals", "Conceptual workflow model"]
+  },
+  "roadmapVersions": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0", "v1.2.1", "v1.3.0", "v1.4.0", "v1.5.0"],
+  "greenfieldStageOrder": ["idea-brief", "product-boundary", "stack-decision", "starter-profile", "bootstrap-bundle", "project-docs", "scaffold-plan", "scaffold-implementation", "first-vertical-slice", "verification", "initial-index", "judge", "final-report"],
+  "starterProfiles": ["typescript-cli", "nextjs-app", "android-compose"]
+}

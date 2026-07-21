@@ -76,7 +76,8 @@ describe('generateStagePrompt - scope boundaries', () => {
   });
 
   it('test-implementation prompt requires test-strategy-packet as input', () => {
-    for (const mode of VALID_MODES) {
+    // greenfield (v1.1.0) has no test-implementation stage; every other mode does.
+    for (const mode of VALID_MODES.filter((m) => m !== 'greenfield')) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'test-implementation');
       expect(prompt).toContain('test-strategy-packet.txt');
@@ -172,8 +173,10 @@ describe('generateStagePrompt - no unrelated workflow modes', () => {
   });
 });
 
-// extraction mode uses source-architecture-context, not architecture-context
-const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction');
+// extraction mode uses source-architecture-context, not architecture-context;
+// greenfield (v1.1.0) has its own stage vocabulary and has no
+// architecture-context stage at all
+const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction' && m !== 'greenfield');
 
 describe('generateStagePrompt - architecture-context my-dev-kit guidance', () => {
   it('architecture-context prompt mentions my-dev-kit as prompt-driven guidance', () => {

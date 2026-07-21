@@ -1,6 +1,31 @@
 # Usage
 
-This guide covers the CLI command surface and common workflows.
+This guide is the complete user-facing command reference. For exact stage
+procedures, see [Workflows](WORKFLOWS.md). For artifact contracts and paths,
+see [Artifacts](ARTIFACTS.md).
+
+## Install or run the CLI
+
+Run the published package without a global installation:
+
+```bash
+npx @dailephd/my-dev-kit-orchestrator --help
+```
+
+After installing the package, use the executable directly:
+
+```bash
+npm install @dailephd/my-dev-kit-orchestrator
+my-dev-kit-orchestrator --help
+```
+
+From this repository, build and run the local executable:
+
+```bash
+npm install
+npm run build
+node dist/cli.js --help
+```
 
 ## Initialize a project workspace
 
@@ -59,6 +84,60 @@ Result:
 - writes `run.json`
 - writes all prompt files for the chosen workflow
 
+## Start and inspect a greenfield run
+
+Greenfield mode bootstraps a project before useful code exists:
+
+```bash
+my-dev-kit-orchestrator init
+my-dev-kit-orchestrator start --mode greenfield "<project idea>"
+my-dev-kit-orchestrator prompt
+my-dev-kit-orchestrator status
+my-dev-kit-orchestrator list
+my-dev-kit-orchestrator check --artifacts
+my-dev-kit-orchestrator check --all
+my-dev-kit-orchestrator export
+```
+
+For example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a sample TypeScript CLI app"
+```
+
+Next.js example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a Next.js web dashboard"
+```
+
+Android Compose example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
+```
+
+The greenfield foundation supports three starter profiles: `typescript-cli`,
+`nextjs-app`, and `android-compose`. Android Compose support is profile-guided
+planning and prompt support: the generated stack decision, docs, and scaffold
+plan describe a Kotlin/Jetpack Compose/Gradle project, and validation guidance
+lists Gradle commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and an
+optional device/emulator-dependent `./gradlew connectedAndroidTest`) -- the
+orchestrator does not run Gradle itself. `start` does not parse the request
+into a profile; a coding agent resolves the profile later, when it executes
+the `starter-profile` stage prompt. Each generated prompt remains specific to
+the current stage regardless of profile. Paste that bounded prompt into the
+coding agent, save the required artifact in the run folder, and then request
+the next prompt.
+
+`check --artifacts` and `check --all` use the shared artifact and contract
+checkers for greenfield runs, for every profile. On a newly created run they
+report missing stage artifacts and may exit with code 1; that is a completed
+check with findings, not a CLI crash. `export` produces the same portable run
+handoff used by other modes. `--out` rejects raw `..` path-traversal segments
+in the given argument and refuses symlink or directory targets before writing
+anything.
+
 ## Print prompts
 
 Print the next prompt for the most recent run:
@@ -88,7 +167,7 @@ Behavior notes:
 
 ## Save artifacts between prompts
 
-The CLI does not call a coding agent directly in `v0.1.0`.
+The CLI does not call a coding agent directly.
 
 Expected manual loop:
 
@@ -131,7 +210,7 @@ In that flow, the coding agent should:
 
 The ArchitectureContextPacket should summarize the relevant design context for the change. Later stages should consume that synthesized artifact rather than raw retrieval output.
 
-## Extraction mode (v0.2.1)
+## Start an extraction run
 
 `--mode extraction` is available in v0.2.1.
 
@@ -146,7 +225,7 @@ Extraction mode transfers a bounded feature, workflow, subsystem, or behavior fr
 ### Command
 
 ```bash
-npx my-dev-kit-orchestrator start --mode extraction \
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   --source "<source-repo-root>" \
   --target "<target-repo-root>" \
   "<extraction request>"
@@ -155,7 +234,7 @@ npx my-dev-kit-orchestrator start --mode extraction \
 ### Windows example
 
 ```powershell
-npx my-dev-kit-orchestrator start --mode extraction `
+npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
   --source "Z:\Users\newuser\Projects\scientific-literature-explorer-v1" `
   --target "Z:\Users\newuser\Projects\biolit-neighborhoods" `
   "Extract search, ranked results, pagination, paper selection, evidence-set construction, and semantic paper-neighborhood workflow."
@@ -190,9 +269,10 @@ The current runtime loop is:
 5. implement only in the target repository
 6. verify against the golden behavior contract in the judge stage
 
-### What `--create-target` would do (possible future behavior)
+### Unsupported `--create-target` option
 
-A `--create-target` flag that initializes the target repository before the run is a possible future addition. It is not implemented in the current release. Do not assume this flag exists.
+The CLI does not implement `--create-target`. Create the target repository
+before starting an extraction run.
 
 ---
 
@@ -260,7 +340,7 @@ my-dev-kit-orchestrator status
 my-dev-kit-orchestrator list
 ```
 
-## Mark command (v0.3.0)
+## Mark artifact state
 
 Use `mark` to manually set the lifecycle state of a run artifact.
 
@@ -295,7 +375,7 @@ my-dev-kit-orchestrator mark request-brief.txt --state complete
 my-dev-kit-orchestrator mark pseudocode-packet.txt --state blocked --reason "Need design decision" --run 20260601T120000-add-logging
 ```
 
-## Status with lifecycle states (v0.3.0)
+## Interpret lifecycle state in status output
 
 The `status` command shows the lifecycle state of each artifact:
 
@@ -311,7 +391,7 @@ Artifacts:
                 Reason: Performance test cases not written yet
 ```
 
-## Prompt behavior with lifecycle states (v0.3.0)
+## Continue an incomplete, blocked, or stale stage
 
 When the current artifact is blocked, incomplete, or stale, the `prompt` command prepends a lifecycle context block before the standard stage prompt:
 
@@ -331,16 +411,16 @@ Stage: request-brief
 
 For stale artifacts, the context instructs the agent to reconcile against newer upstream artifacts.
 
-## Backward compatibility (v0.3.0)
+## Runs without lifecycle metadata
 
 Existing runs without an `artifact-state.json` continue to work:
 
-- artifact file present → `complete`
-- artifact file missing → `missing`
+- artifact file present -> `complete`
+- artifact file missing -> `missing`
 
 No migration is required for runs created before v0.3.0.
 
-## Judge correction routing (v0.6.0)
+## Follow judge correction routing
 
 When a run's judge report contains a non-PASS verdict, `status` and `prompt` integrate correction routing automatically.
 
@@ -349,7 +429,7 @@ When a run's judge report contains a non-PASS verdict, `status` and `prompt` int
 After `judge-report.txt` is saved, `status` shows a Judge correction section:
 
 ```text
-Judge correction: IMPLEMENTATION_MISMATCH → correction required
+Judge correction: IMPLEMENTATION_MISMATCH -> correction required
   Routed stage: implementation
 ```
 
@@ -366,7 +446,7 @@ Judge correction: SCOPE_VIOLATION - run is blocked
   This run requires external resolution before it can continue.
 ```
 
-No judge report → the section is omitted (backward compatible with pre-v0.6.0 runs).
+No judge report -> the section is omitted (backward compatible with pre-v0.6.0 runs).
 
 ### Prompt prints the correction stage
 
@@ -413,11 +493,11 @@ Correction suggestions:
 
 Suggestions are deterministic - they map trace ID prefixes to owning stages without any LLM inference:
 
-- missing `BEH-NNN` link target → suggest `behavior-model`
-- missing `PSE-NNN` link target → suggest `pseudocode-packet`
-- missing `TST-NNN` link target → suggest `test-strategy`
-- malformed trace ID → suggest `design-map`
-- orphan ID → suggest `design-map`
+- missing `BEH-NNN` link target -> suggest `behavior-model`
+- missing `PSE-NNN` link target -> suggest `pseudocode-packet`
+- missing `TST-NNN` link target -> suggest `test-strategy`
+- malformed trace ID -> suggest `design-map`
+- orphan ID -> suggest `design-map`
 
 ### What correction routing does not do
 
@@ -428,7 +508,7 @@ Suggestions are deterministic - they map trace ID prefixes to owning stages with
 
 After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
 
-## Trace check command (v0.5.0)
+## Check trace links
 
 Use `check --trace` to run deterministic trace link checks on all run artifacts.
 
@@ -493,7 +573,7 @@ Before `check --trace` has been run:
 Trace check: not run  (run: my-dev-kit-orchestrator check --trace)
 ```
 
-## Check command (v0.4.0)
+## Check artifact and prompt content
 
 Use `check` to run deterministic content checks on artifacts and prompts.
 
@@ -588,7 +668,7 @@ Content check: not run  (run: my-dev-kit-orchestrator check)
 
 The `check` command reports quality issues for human review. It does not block stage advancement. Stage advancement continues to be based on artifact file existence and lifecycle state.
 
-## Artifact contract check (v1.0.0)
+## Check artifact contracts and stage gates
 
 Use `check --artifacts` to run the v1.0.0 artifact contract checker across all stages:
 
@@ -623,7 +703,7 @@ my-dev-kit-orchestrator check --all --strict
 - design-map trace check (if design-map.txt exists)
 - correction routing state
 
-## Export command (v1.0.0)
+## Export a run handoff
 
 Use `export` to generate a portable plain-text run handoff for use in another session or agent:
 
@@ -651,4 +731,69 @@ Export behavior:
 - default: print to stdout
 - `--out <file>`: write to file; refuses if file already exists
 - `--overwrite`: allow replacing an existing output file
-- refuses symbolic links, path traversal, non-existent parent directories
+- rejects raw parent-path traversal segments, symbolic-link targets,
+  directory targets, and non-existent parent directories
+
+## v1.2.1 (planned): Bounded Instruction and Context References
+
+**Status: planned, not implemented.** No command in this section exists
+today; this is a conceptual illustration of what a generated stage prompt is
+planned to reference once `v1.2.1` ships. See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for the full plan.
+
+A stage prompt is planned to reference, rather than inline, the following
+concepts:
+
+- **`WorkflowInstructionPacket`** -- the bounded instruction set for the
+  current stage only (its workflow/stage ID, resolved commands and rules,
+  one report contract, stop conditions).
+- **Context capsule / retrieval audit** -- `my-dev-kit`-produced repository
+  evidence for the current stage's role, referenced by path rather than
+  pasted in full.
+- **Required upstream artifacts** -- the same prior-stage artifacts the
+  current prompt architecture already lists (for example,
+  `artifacts/pseudocode-packet.txt` before `implementation`).
+- **`TaskState`** -- project, run, mode, stage, and scope information drawn
+  from `run.json` rather than duplicated in prose.
+- **Freshness and adequacy** -- whether the referenced repository evidence
+  is `fresh`, `stale`, or `unknown`, and whether it is adequate for the
+  current stage to proceed.
+
+Conceptual excerpt of a planned `implementation`-stage prompt fragment
+(illustrative only; not current CLI output):
+
+```text
+Stage: implementation
+Workflow instruction packet: workflow.feature.implementation
+Required upstream artifacts:
+  - artifacts/pseudocode-packet.txt
+  - artifacts/test-strategy-packet.txt
+Repository evidence:
+  - role: implementation
+  - source: artifacts/implementation-context-packet.txt
+  - freshness: fresh | stale | unknown
+  - adequacy: adequate | inadequate
+Task: refresh implementation-role repository context, then implement
+  according to the pseudocode packet.
+Stop conditions:
+  - do not implement if repository evidence is stale or inadequate
+  - do not perform test-implementation-stage work here
+```
+
+This is a candidate illustration of the planned prompt shape, not a
+published schema. Do not treat the field names above as final; they are
+subject to implementation-time inspection of `src/promptGenerator.ts` and
+the catalog design in
+[docs/ARCHITECTURE.md](ARCHITECTURE.md#v121-planned-workflow-catalog-workflowinstructionpacket-and-stagecontextbundle).
+
+## Troubleshooting
+
+- If no run exists, start one with `start` before using `prompt`, `status`,
+  `check`, or `export`.
+- If a selected run cannot be found, confirm the value passed to `--run` and
+  the project selected by `--root`.
+- A new run can make `check --artifacts` or `check --all` exit with status 1
+  because required artifacts are missing. The result is a completed structural
+  check with findings, not evidence of a CLI crash.
+- The CLI generates guidance for external tools. It does not run a coding
+  agent, Gradle, `my-dev-kit`, security validation, or publishing commands.

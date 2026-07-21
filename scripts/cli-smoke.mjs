@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const cliPath = path.resolve(repoRoot, 'dist', 'cli.js');
+const expectedVersion = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).version;
 
 function runCli(args, cwd) {
   return execFileSync(process.execPath, [cliPath, ...args], {
@@ -45,8 +46,8 @@ function withTempDir(prefix, fn) {
 
 function smokeHelp() {
   const version = runCli(['--version'], repoRoot).trim();
-  if (version !== '1.0.0') {
-    throw new Error(`Expected version 1.0.0, got ${version}`);
+  if (version !== expectedVersion) {
+    throw new Error(`Expected version ${expectedVersion}, got ${version}`);
   }
 
   const help = runCli(['--help'], repoRoot);
@@ -336,6 +337,96 @@ function smokeExport() {
   });
 }
 
+function smokeGreenfield() {
+  withTempDir('mdko-smoke-greenfield-', (projectRoot) => {
+    runCli(['init'], projectRoot);
+    runCli(
+      ['start', '--mode', 'greenfield', 'Create an Android Compose habit tracker app'],
+      projectRoot,
+    );
+
+    const status = runCli(['status'], projectRoot);
+    assertIncludes(status, 'greenfield', 'greenfield status mode');
+    assertIncludes(status, 'idea-brief', 'greenfield status next stage');
+    assertIncludes(status, 'Present artifacts: 0/13', 'greenfield status artifact count');
+
+    const prompt = runCli(['prompt'], projectRoot);
+    assertIncludes(prompt, 'Stage: idea-brief', 'greenfield prompt stage');
+    assertIncludes(prompt, 'Workflow mode: greenfield', 'greenfield prompt mode');
+    const lowerPrompt = prompt.toLowerCase();
+    for (const forbidden of [
+      'gradle ran',
+      'gradle succeeded',
+      'android sdk is installed',
+      'android sdk exists',
+      'android sdk available',
+      'play store readiness',
+      'flutter support',
+      'react native support',
+      'ios support',
+      'mobile mode',
+    ]) {
+      if (lowerPrompt.includes(forbidden)) {
+        throw new Error(`greenfield prompt unexpectedly claimed: ${forbidden}`);
+      }
+    }
+
+    const list = runCli(['list'], projectRoot);
+    assertIncludes(list, 'greenfield', 'greenfield list mode');
+
+    // check --artifacts / check --all: a fresh greenfield run has all 13
+    // artifacts missing, so the CLI is expected to exit 1. Distinguish this
+    // expected missing-artifact exit from an unexpected command crash by
+    // inspecting the captured stdout rather than treating any nonzero exit
+    // as a failure.
+    const checkArtifactsOut = runCliExpectingExit(['check', '--artifacts'], projectRoot, 1);
+    assertIncludes(checkArtifactsOut, 'Artifact contract check for run:', 'greenfield check --artifacts header');
+    assertIncludes(checkArtifactsOut, 'idea-brief.json', 'greenfield check --artifacts artifact path');
+    assertIncludes(checkArtifactsOut, 'mode: greenfield', 'greenfield check --artifacts mode label');
+
+    const checkAllOut = runCliExpectingExit(['check', '--all'], projectRoot, 1);
+    assertIncludes(checkAllOut, 'Full check for run:', 'greenfield check --all header');
+    assertIncludes(checkAllOut, '=== Artifact contracts ===', 'greenfield check --all contracts section');
+
+    const exportOut = runCli(['export'], projectRoot);
+    assertIncludes(exportOut, 'Mode:', 'greenfield export mode label');
+    assertIncludes(exportOut, 'greenfield', 'greenfield export mode value');
+    assertIncludes(exportOut, 'reports/scaffold-implementation-report.txt', 'greenfield export scaffold-implementation path');
+    assertIncludes(exportOut, 'reports/initial-index-report.txt', 'greenfield export initial-index path');
+
+    const safeOut = path.join(projectRoot, 'android-compose-export.txt');
+    runCli(['export', '--out', safeOut], projectRoot);
+    if (!fs.existsSync(safeOut)) {
+      throw new Error('greenfield export --out did not create the expected file');
+    }
+
+    const parentUnsafeOut = path.join(path.dirname(projectRoot), 'unsafe-export.txt');
+    const unsafeBefore = fs.existsSync(parentUnsafeOut);
+    const unsafeExportOut = runCliExpectingExit(
+      ['export', '--out', '../unsafe-export.txt'],
+      projectRoot,
+      1,
+    );
+    assertIncludes(unsafeExportOut, 'path traversal', 'greenfield unsafe export rejection');
+    if (fs.existsSync(parentUnsafeOut) !== unsafeBefore) {
+      throw new Error('greenfield unsafe export wrote outside the allowed project root');
+    }
+  });
+}
+
+function runCliExpectingExit(args, cwd, expectedStatus) {
+  try {
+    return runCli(args, cwd);
+  } catch (err) {
+    if (err.status !== expectedStatus) {
+      throw new Error(
+        `${args.join(' ')}: expected exit ${expectedStatus}, got ${err.status}\nstdout: ${err.stdout}\nstderr: ${err.stderr}`,
+      );
+    }
+    return `${err.stdout ?? ''}${err.stderr ?? ''}`;
+  }
+}
+
 const mode = process.argv[2] ?? 'all';
 
 smokeHelp();
@@ -366,4 +457,8 @@ if (mode === 'all' || mode === 'correction') {
 
 if (mode === 'all' || mode === 'export') {
   smokeExport();
+}
+
+if (mode === 'all' || mode === 'greenfield') {
+  smokeGreenfield();
 }

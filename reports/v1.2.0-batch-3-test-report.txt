@@ -1,0 +1,69 @@
+Artifact: V120Batch3TestReport
+Batch: v1.2.0 Batch 3
+
+TEST FILES ADDED
+- tests/greenfield/androidComposeBootstrapBundle.spec.ts -- purpose: Android Compose GreenfieldBootstrapBundle coverage (11 tests)
+- tests/greenfield/androidComposeBootstrapDocs.spec.ts -- purpose: Android Compose project docs bootstrap + validateBootstrapDocs profile-awareness coverage (12 tests)
+- tests/greenfield/androidComposeScaffoldPlan.spec.ts -- purpose: Android Compose scaffold plan command-integration coverage plus TypeScript CLI/Next.js regression (11 tests)
+
+TEST FILES CHANGED
+- tests/greenfield/bootstrapBundle.spec.ts -- purpose: updated 1 stale assertion (validation-rule id list, now reflecting the split rules)
+- tests/greenfield/bootstrapProjectDocs.spec.ts -- purpose: updated 1 test to pass the profile id explicitly (making the profile-conditional behavior explicit rather than relying on the omitted-parameter default); added 3 new tests (android-compose permission, unsupported-platform still rejected for android-compose, Play Store claim rejected for android-compose)
+- tests/greenfield/scaffoldPrompt.spec.ts -- purpose: updated 1 stale assertion (setupCommands/validationCommands are now GreenfieldProfileCommand[] objects, not string[])
+
+BOOTSTRAP BUNDLE COVERAGE
+- covered: android-compose profile selected and reflected in starterProfile; stackDecision includes Kotlin/Jetpack Compose/Gradle/Android app module with status 'resolved'; templateTargets category list unchanged (3 static categories, profile-independent); scaffoldPlanningInputs carry profile id/hints/template targets including AndroidManifest.xml; docGenerationInstructions include Gradle-based validation expectations and an Android Compose-mentioning stack summary; validationRules include `android-claims-allowed-for-android-compose` (and exclude the rejection rule) for android-compose; validationRules still include the always-on unsupported-platform/release-security-publish/Play-Store rules; validationRules regression-confirmed to still reject Android claims (`android-claims-require-android-compose-profile`) for typescript-cli; deterministic output; no filesystem writes; unresolvedDecisions still records the componentBoundaries limitation.
+- uncovered: bundle behavior for the `'unresolved'` profile-selection status (generic mobile ambiguity) flowing into `buildUnresolvedDecisions()`'s widened condition.
+  reason for uncovered case: this specific code path (the `=== 'unresolved'` branch added to `buildUnresolvedDecisions()`) was exercised indirectly by the existing test suite passing (no regression), but no new dedicated test asserts a bundle built from an *ambiguous* mobile brief (e.g. `preferredProfile: 'mobile'`) produces the expected `unresolvedDecisions` entry. This is a minor gap; the underlying resolver behavior (`status: 'unresolved'`) is already thoroughly tested in Batch 2's profileResolution.spec.ts, and the one-line `buildUnresolvedDecisions()` change is low-risk (a boolean-OR condition widening), but a dedicated bundle-level test would have been better practice. Flagged here rather than silently omitted.
+
+BOOTSTRAP DOCS COVERAGE
+- covered: all nine doc categories generated for an android-compose bundle; stack-decision doc mentions Kotlin/Jetpack Compose/Gradle; starter-profile-summary doc names "Android Compose"; validation-expectations doc mentions Gradle and explicitly does not mention npm; scaffold-planning-notes doc mentions AndroidManifest.xml; development-workflow doc mentions the Gradle wrapper hint; docs do not claim Gradle was run, SDK/emulator exists, or the app builds successfully; docs do not claim Play Store/release readiness/security validation/publication; docs do not claim Flutter/React Native/iOS support; component docs remain empty with the reasoning documented in the test itself; validateBootstrapDocs reports valid for untampered android-compose docs; deterministic output.
+- uncovered: none identified beyond the bundle-level gap noted above (which is a resolver/bundle concern, not a docs-generation concern).
+
+VALIDATEBOOTSTRAPDOCS COVERAGE
+- Android Compose allowed claims: covered (tampered doc containing "Android and Jetpack Compose" passes when profile id is `'android-compose'`).
+- non-Android rejected claims: covered (same tampered-content pattern, profile id `'typescript-cli'`, still flagged as `android-mobile-claim`).
+- release/security/publish rejected claims: covered (pre-existing test, unchanged, still passing).
+- unsupported mobile platform claims: covered, both for a non-Android profile (pre-existing "flags an Android/mobile claim..." style test lineage) and explicitly for android-compose itself (new test: "still flags iOS/React Native/Flutter/multiplatform claims even for android-compose" -- confirms the split is correctly always-on, not accidentally permissive once a profile is "mobile-flavored").
+- Play Store/release-readiness claims: covered, new test confirms rejection for android-compose specifically (the profile most likely to tempt such a claim).
+
+SCAFFOLD PLAN COVERAGE
+- setupCommands: covered (android-compose `[]`; typescript-cli/nextjs-app `[{ command: 'npm install', ... }]`, exact-value regression-tested).
+- validationCommands: covered (android-compose's 3 Gradle commands in exact order; typescript-cli/nextjs-app's 3 npm commands in exact order, regression-tested); `required`/`environmentNotes` fields specifically verified for the connectedAndroidTest (optional, device/emulator note) vs. build (required) commands.
+- Android Compose commands: covered, including the "no npm command anywhere in setupCommands/validationCommands" negative assertion.
+- TypeScript CLI regression: covered (exact command values, plus entry-point regex still matches `.ts`/`.tsx` and does not falsely broaden).
+- Next.js regression: covered (exact command values).
+- no Android tooling execution: covered via the same dedicated-temp-directory "no filesystem writes" pattern used throughout this project since the v1.1.0 batches (a passing assertion here is itself evidence no shell-out occurred, combined with source inspection confirming no `child_process`/`execSync` usage was added anywhere in this batch's diff).
+
+REGRESSION COVERAGE
+- Batch 2 profile tests: tests/greenfield/androidComposeProfile.spec.ts and profileResolution.spec.ts were not modified in this batch and all pass unchanged (confirmed via the full `npx jest tests/greenfield --silent` run: 14 suites, 222 tests).
+- v1.1.0 greenfield tests: all pre-existing tests/greenfield/*.spec.ts files (briefNormalization, profileResolution, bootstrapBundle, bootstrapProjectDocs, greenfieldMode, greenfieldArtifactContract, scaffoldPrompt, greenfieldInitialIndexHandoff, greenfieldCheckExport, greenfieldCliRegression) pass unchanged except the 2 narrowly-fixed stale assertions documented above.
+- existing modes: feature/repair/test/refactor/harden/extraction were not touched by this batch's changes (all confined to src/greenfield/bootstrap/ and src/greenfield/scaffold/) and the full suite (`npm test`, 1097 tests) confirms no regression.
+
+TRACEABILITY
+
+- requirement: Android Compose bundle correctly preserves profile metadata, setupCommands, validationCommands, scaffold planning inputs, documentation instructions, and validation rules (section 8.1/8.2)
+  test file: tests/greenfield/androidComposeBootstrapBundle.spec.ts
+  test case: all 11 tests
+
+- requirement: buildValidationRules is profile-conditional; Android/Jetpack allowed for android-compose, rejected for others; Play Store/release-readiness always rejected (section 7.2, 8.2)
+  test file: tests/greenfield/androidComposeBootstrapBundle.spec.ts, bootstrapBundle.spec.ts
+  test case: "validationRules allow Android/Jetpack claims for android-compose", "validationRules still include the always-on...", "validationRules reject Android claims for a non-android-compose profile (regression)"
+
+- requirement: validateBootstrapDocs is profile-aware; Android Compose docs pass; non-Android docs still flagged; release/security/publish/Play-Store claims always rejected (section 7.4, 9.3)
+  test file: tests/greenfield/androidComposeBootstrapDocs.spec.ts, bootstrapProjectDocs.spec.ts
+  test case: "validateBootstrapDocs(result, \"android-compose\") reports valid...", "flags an Android/mobile claim...for a non-android-compose profile", "v1.2.0: permits an Android/Jetpack claim...", "v1.2.0: still flags iOS/React Native/Flutter/multiplatform claims...", "v1.2.0: flags a Play Store/release-readiness claim..."
+
+- requirement: buildScaffoldPlan uses profile-provided setupCommands/validationCommands instead of hardcoded npm logic (section 7.5, 10.2)
+  test file: tests/greenfield/androidComposeScaffoldPlan.spec.ts
+  test case: "uses setupCommands directly from the profile...", "uses validationCommands directly from the profile...", "marks connectedAndroidTest as optional..."
+
+- requirement: TypeScript CLI and Next.js scaffold plans keep current npm-based behavior (section 10.3)
+  test file: tests/greenfield/androidComposeScaffoldPlan.spec.ts
+  test case: "TypeScript CLI scaffold plan keeps npm-based setup/validation commands", "Next.js scaffold plan keeps npm-based setup/validation commands", "TypeScript CLI entry point detection still works..."
+
+- requirement: no Android tooling is executed anywhere in this batch's tests (section 10.4)
+  test file: all three new spec files
+  test case: each file's "does not run..."/"performs no filesystem writes..." test
+
+STATUS: complete

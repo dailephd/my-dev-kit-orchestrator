@@ -1,4 +1,6 @@
 import { WorkflowMode, VALID_MODES, isValidMode } from './types';
+import { GREENFIELD_STAGE_NAMES } from './greenfield/modes/greenfieldStages';
+import { GREENFIELD_ARTIFACT_MAP } from './greenfield/modes/greenfieldMode';
 
 export interface StageDefinition {
   name: string;
@@ -53,6 +55,8 @@ const ARTIFACT_MAP: Record<string, string> = {
   'target-architecture': 'artifacts/target-architecture-proposal.txt',
   // design trace
   'design-map': 'artifacts/design-map.txt',
+  // greenfield-specific (verification, judge, final-report are reused above)
+  ...GREENFIELD_ARTIFACT_MAP,
 };
 
 const ADDITIONAL_ARTIFACT_MAP: Record<string, string[]> = {
@@ -160,6 +164,8 @@ const EXTRACTION_STAGES = buildStages([
   'final-report',
 ]);
 
+const GREENFIELD_STAGES = buildStages(GREENFIELD_STAGE_NAMES);
+
 const WORKFLOW_DEFINITIONS: Record<WorkflowMode, WorkflowDefinition> = {
   feature: { mode: 'feature', stages: FEATURE_STAGES },
   repair: { mode: 'repair', stages: REPAIR_STAGES },
@@ -167,6 +173,7 @@ const WORKFLOW_DEFINITIONS: Record<WorkflowMode, WorkflowDefinition> = {
   refactor: { mode: 'refactor', stages: REFACTOR_STAGES },
   harden: { mode: 'harden', stages: HARDEN_STAGES },
   extraction: { mode: 'extraction', stages: EXTRACTION_STAGES },
+  greenfield: { mode: 'greenfield', stages: GREENFIELD_STAGES },
 };
 
 export function getWorkflow(mode: WorkflowMode): WorkflowDefinition {

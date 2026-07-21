@@ -440,7 +440,8 @@ describe('integration: v0.2.0 graph-guided architecture context', () => {
   });
 
   it('non-extraction modes include architecture-context supporting report entry', () => {
-    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction');
+    // greenfield (v1.1.0) has its own stage vocabulary and has no architecture-context stage.
+    const nonExtractionModes = VALID_MODES.filter((m) => m !== 'extraction' && m !== 'greenfield');
     for (const mode of nonExtractionModes) {
       const tmp = makeTempDir();
       try {

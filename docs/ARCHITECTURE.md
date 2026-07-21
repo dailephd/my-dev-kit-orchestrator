@@ -2,28 +2,33 @@
 
 `my-dev-kit-orchestrator` is a CLI-first workflow tool for design-first software development with coding agents.
 
-`v0.1.0` established the workflow shell. `v0.2.0` added graph-guided architecture context support. `v0.2.1` adds extraction mode and cross-platform validation across Ubuntu, Windows, and macOS.
+The current published release is `v1.2.0`. It preserves the stable workflow
+contract, Design Trace and DesignMap checks, correction routing, and greenfield
+foundation while adding the Android Compose starter profile.
 
 ## Architecture overview
 
-The released architecture has five main responsibilities:
+The released architecture has seven main responsibilities:
 
 - define the workflow mode and ordered stages for each run
 - create and manage the local run workspace
 - generate stage-specific prompt files
 - detect workflow progress from expected artifact files
+- inspect artifact quality, trace links, and critical stage dependencies on request
+- export portable plain-text run handoff summaries
 - keep source-repository evidence and target-repository implementation responsibilities separate in extraction mode
 
 The CLI is intentionally small. It does not try to become a general automation platform, a task runner, or an autonomous multi-agent system.
 
 ## Tool responsibilities
 
-The intended design uses four cooperating roles:
+The architecture separates these responsibilities:
 
-- ChatGPT writes task-specific coding-agent prompts for the requested software change
-- `my-dev-kit` performs graph-guided code retrieval and produces retrieval evidence
-- `my-dev-kit-orchestrator` stores synthesized architecture context and manages downstream workflow stages
-- the coding agent executes the prompt, runs commands, writes artifacts, implements changes, and verifies results
+- the user selects and advances workflow runs
+- `my-dev-kit` retrieves bounded codebase context and produces retrieval evidence
+- `my-dev-kit-orchestrator` manages stages, prompts, artifacts, checks, and handoff export
+- the coding agent consumes prompts, writes artifacts, implements changes, and records verification evidence
+- `my-dev-kit-lab` owns experiments, audits, security validation, and release-readiness evidence
 
 This split keeps retrieval, workflow control, and implementation work clearly separated.
 
@@ -47,12 +52,15 @@ The public command surface is:
 - `status`
 - `prompt`
 - `list`
+- `mark`
+- `check`
+- `export`
 
-These commands cover workspace setup, run creation, prompt retrieval, run inspection, and run listing. The release does not expose a larger set of low-level workflow management commands.
+These commands cover workspace setup, run creation, prompt retrieval, run inspection, lifecycle state, deterministic checks, run listing, and portable handoff export. The release does not expose a larger set of low-level workflow management commands.
 
 ## Workflow mode layer
 
-`my-dev-kit-orchestrator` ships with six workflow modes:
+`my-dev-kit-orchestrator` ships with seven workflow modes:
 
 - `feature`
 - `repair`
@@ -60,6 +68,7 @@ These commands cover workspace setup, run creation, prompt retrieval, run inspec
 - `refactor`
 - `harden`
 - `extraction`
+- `greenfield`
 
 Each mode has a fixed stage sequence and a corresponding ordered list of expected artifact files. The CLI uses those definitions as the source of truth for prompt generation and stage advancement.
 
@@ -71,6 +80,21 @@ Examples:
 - `refactor` preserves behavior through invariant and compatibility stages
 - `harden` emphasizes assumptions, failure modes, guards, and resilience testing
 - `extraction` adds source-repository inspection, source workflow mapping, source-to-target porting analysis, a do-not-port gate, a golden behavior contract, and a target architecture proposal before implementation begins
+- `greenfield` guides a new project from an idea brief through a platform-neutral scaffold and first vertical slice to an initial `my-dev-kit` index
+
+The `initial-index` stage is a prompt-guided handoff. It tells the coding agent
+how to invoke `my-dev-kit` after source exists; the orchestrator does not invoke
+the retrieval tool itself.
+
+## Greenfield profile architecture
+
+Greenfield is profile-driven: `src/greenfield/profiles/resolveGreenfieldProfile.ts` resolves a normalized brief to one of three supported profiles (`typescript-cli`, `nextjs-app`, `android-compose`) using an explicit, bounded alias table with no fuzzy matching. An ambiguous, technology-unspecified "mobile" request resolves to `'unresolved'` rather than being silently defaulted; iOS, Flutter, and React Native fall through to `'unsupported'` like any other unrecognized profile id.
+
+Each `GreenfieldProfile` (`src/greenfield/profiles/profileTypes.ts`) carries stack assumptions, template targets, documentation/testing/validation expectations, and two command fields -- `setupCommands` and `validationCommands` -- that are descriptive data only; the orchestrator never executes them. `buildBootstrapBundle.ts` and `buildScaffoldPlan.ts` both read these fields directly rather than hardcoding profile-specific (e.g. npm-only) assumptions, so a Gradle-based profile like `android-compose` produces Gradle-appropriate guidance without any Android-specific branch in the bundle/scaffold builders themselves.
+
+Validation is profile-conditional in exactly one place: the bootstrap-bundle's validation-rules builder and `validateBootstrapDocs()` both permit Android/Jetpack/Kotlin/Gradle content only when the selected profile is `android-compose`, while unsupported-platform (iOS/React Native/Flutter/multiplatform) and Play Store/release-readiness claims are rejected unconditionally, for every profile.
+
+Profile resolution itself is not wired into the CLI. `start` stores the request as raw text (unchanged since `v1.1.0`, for every profile); `prompt` renders static, mode-and-stage-keyed template text (`src/promptGenerator.ts`, `src/greenfield/scaffold/renderScaffoldPrompt.ts`) that does not read prior artifact content or resolve a profile at render time. A coding agent resolves the profile when it executes the `starter-profile` stage prompt. `check` and `export` remain fully generic across profiles: neither has any Android-specific logic, and `export`'s one real per-run content channel is `verification-report.txt`, echoed verbatim rather than asserted as fact.
 
 ## Run workspace and storage model
 
@@ -150,7 +174,7 @@ Each stage produces one expected artifact file, except `porting-map`, which prod
 - `artifacts/source-to-target-porting-map.txt`
 - `artifacts/do-not-port-list.txt`
 
-The next stage consumes the request, prior artifacts, or both. The CLI does not parse a heavy structured schema to decide whether a stage is complete. It uses required artifact existence at the expected paths.
+The next stage consumes the request, prior artifacts, or both. Lifecycle progression uses artifact existence and lifecycle state. Deterministic content, contract, trace, and stage-gate checks are explicit inspection operations and do not replace lifecycle progression.
 
 That handoff model keeps the workflow simple:
 
@@ -168,7 +192,7 @@ Two artifact relationships matter especially in the current release:
 - the pseudocode packet is the shared design source for implementation and test implementation
 - the test strategy packet is the source for test implementation
 
-Verification and final report artifacts are expected to include command evidence and unresolved risks, but the CLI does not enforce content validation automatically.
+Verification and final report artifacts are expected to include command evidence and unresolved risks. `check --artifacts` validates required artifact sections, and `check --all` adds critical stage-gate, trace, DesignMap, and correction-routing coverage. These checks are deterministic and user-invoked; they do not semantically judge evidence or advance the run.
 
 ## Stage gate model
 
@@ -191,7 +215,7 @@ Extraction mode adds additional pre-implementation gates:
 - no implementation before `golden-behavior-contract.txt` exists
 - no implementation before `target-architecture-proposal.txt` exists
 
-These gates are enforced through ordered stages, expected artifact names, and stage-specific prompt instructions rather than through a large validation engine.
+Ordered stages, lifecycle state, and stage-specific prompts control progression. `check --all` additionally reports critical dependency violations when a downstream artifact exists without a required upstream artifact.
 
 ## Extraction mode architecture
 
@@ -286,8 +310,8 @@ The current release does not include:
 - automatic `my-dev-kit` execution
 - automatic provider integration
 - full JSON schema validation
-- automatic judge routing
-- design-map generation
+- autonomous judge correction execution
+- automatic design-map generation
 - autonomous multi-agent execution
 - a large low-level command surface
 - low-level retrieval commands inside `my-dev-kit-orchestrator`
@@ -295,15 +319,182 @@ The current release does not include:
 
 Those exclusions are intentional. The release is designed to keep workflow logic clear, local, and easy to inspect.
 
-## Future architecture direction
+## Check and export boundaries
 
-Possible future extensions:
+Artifact and trace checks are deterministic text inspection. They do not perform AST-level code tracing, coverage instrumentation, semantic LLM grading, automatic artifact rewriting, or automatic code modification.
 
-- stronger artifact validation
-- design-map generation
-- deeper `my-dev-kit` integration
-- optional provider integrations
-- CI-friendly verification summaries
-- richer run status and judge-outcome routing
+The `export` command reads run state and emits a portable plain-text handoff to stdout or a selected output file. It rejects raw `..` traversal in `--out`, refuses symlink targets, and does not execute agents, call external services, or mutate run artifacts.
 
-These are possible directions, not current features.
+## v1.2.1 (planned): Workflow Catalog, WorkflowInstructionPacket, and StageContextBundle
+
+**Status: planned, not implemented.** This section documents the approved
+`v1.2.1` architecture plan so implementation prompts can be written against
+verified current source. See
+[docs/ROADMAP.md](ROADMAP.md#v121-planned) for goals, scope, batches, and
+acceptance criteria, and
+[docs/WORKFLOWS.md](WORKFLOWS.md#v121-planned-operational-sequence) for the
+revised operational sequence.
+
+### Current source owners this patch extends
+
+- **`src/workflows.ts`** currently defines fixed `WorkflowDefinition` arrays
+  keyed by mode, each holding a `StageDefinition[]` built by `buildStages()`
+  from a plain stage-name list plus the shared `ARTIFACT_MAP`. A
+  `StageDefinition` has only `name`, `artifactFile`, `promptFile`, and an
+  optional `additionalArtifactFiles`. There are no stable instruction IDs,
+  `commandRefs`, `ruleRefs`, `reportContractRef`, context requirements, or
+  instruction budgets on this type today.
+- **`src/types.ts`** currently defines the seven `VALID_MODES`
+  (`feature`, `repair`, `test`, `refactor`, `harden`, `extraction`,
+  `greenfield`). No new public mode is required solely for catalog/context
+  integration.
+- **`src/promptGenerator.ts`** is the current primary instruction owner
+  (approximately 3,000 lines as of `v1.2.0`). It hardcodes prompt text per
+  stage and mode. There is no normalized catalog, no typed reference
+  resolution, and no bounded stage-specific instruction packet; instruction
+  categories (shared invariants, git safety, testing methodology,
+  release/publication rules, examples) are not currently separated behind
+  stable IDs.
+- **`src/run.ts`** stores `RunMetadata` (`mode`, `request`, `projectRoot`,
+  `runFolder`, `currentStage`, `stages`, `status`, and optional extraction
+  `sourceRepoRoot`/`targetRepoRoot`) and creates the `00-request.txt`,
+  `run.json`, `prompts/`, `artifacts/`, and `reports/` run structure.
+- **`src/artifactChecker.ts`** validates artifacts by parsing `Key: value`
+  section headers against a per-artifact-kind `SECTION_REGISTRY`. It has no
+  awareness of context freshness or provenance.
+- **`src/artifactLifecycle.ts`** tracks manual lifecycle state
+  (`incomplete` / `blocked` / `complete`) plus computed `missing` and
+  `stale` states, using `mtime`-based staleness against all prior-stage
+  artifacts as a single undifferentiated upstream set. There are no explicit
+  dependency edges, content-hash identities, or native context-identity
+  tracking.
+- **`src/stageDetector.ts`**, **`src/judgeParser.ts`**, and
+  **`src/correctionRouter.ts`** own stage detection, judge-verdict parsing,
+  and deterministic correction routing respectively. Their behavior must
+  remain unchanged by this patch; context-related failures route through
+  this existing machinery rather than a new one.
+- There is currently no automatic external-command runtime in the
+  orchestrator: no automatic `my-dev-kit` index refresh, no automatic
+  context-capsule creation. The architecture-context stage prompt instructs
+  a coding agent to perform retrieval manually; the implementation and
+  test-implementation stages currently have no context-refresh
+  requirement at all.
+
+### Structured workflow catalog (planned)
+
+The catalog is owned by `my-dev-kit-orchestrator`; `my-dev-kit` does not
+retrieve workflow entries, and `my-dev-kit-lab` only consumes packet outputs
+for evaluation. Candidate logical entry types: pipeline, workflow, stage,
+command, rule, and report contract (exact type names are subject to
+implementation-time naming-convention inspection). Candidate stable-ID
+patterns -- **conceptual and non-final** -- include
+`pipeline.version-implementation`, `workflow.feature`,
+`workflow.feature.implementation`, `workflow.feature.test-implementation`,
+`command.my-dev-kit.index`, `command.my-dev-kit.context`,
+`rule.git-safety`, `rule.context.refresh-before-implementation`, and
+`report.implementation`. IDs must be deterministic and independent of array
+position; selection is always by exact ID, never fuzzy or semantic.
+
+Required validation: duplicate-ID rejection, missing-reference rejection,
+invalid-reference-type rejection, cycle detection, deterministic
+deduplication and ordering, missing report-contract failure, and
+unknown-workflow/unknown-stage failure.
+
+Storage format is an implementation decision (typed TypeScript data,
+versioned JSON, or versioned JSONL are all candidates); unstructured
+markdown must not be the runtime catalog when typed reference validation is
+required, and the catalog must not permanently duplicate content already
+owned by `src/promptGenerator.ts`.
+
+### WorkflowInstructionPacket (planned)
+
+One packet contains only the instructions required by one selected stage:
+one primary workflow/stage entry, only its explicitly referenced commands
+and rules, one report contract, and required validation/stop conditions. A
+packet excludes the rest of the catalog, adjacent workflows, all command/
+rule/report-contract definitions, unreferenced examples, and unrelated
+publication, release, security, documentation, or implementation
+instructions.
+
+Planned fields (semantic, not final): `schemaVersion`, `workflowId`,
+`stageId`, the selected primary entry, resolved commands, resolved rules,
+validation requirements, stop conditions, the resolved report contract,
+dependency-resolution provenance, budget limit/used, truncation,
+unresolved references, and warnings.
+
+Budgeting uses deterministic limits (entry counts, per-entry size, total
+text size). Character/word/estimated-token budgets may be used, but any
+token estimate must be labeled as an estimate -- this patch does not claim
+exact model-token measurement. Required dependencies must never be silently
+dropped; required content that cannot fit produces explicit inadequacy or
+truncation instead.
+
+Determinism requirement: identical catalog, workflow ID, stage ID, limits,
+task state, and upstream artifact references must produce identical
+selected entries, ordering, packet content, warnings, budget accounting,
+and serialized output.
+
+### Prompt-level StageContextBundle (planned)
+
+For `v1.2.1`, `StageContextBundle` is an orchestrator-assembled prompt or
+in-memory structure -- not a native lifecycle stage, not a shared package,
+not a `my-dev-kit` artifact, and not required for historical runs.
+Conceptual sections: `TaskState` (project, repository path, branch, version,
+milestone/batch, stage, previous stage/verdict, in-scope/out-of-scope work,
+allowed/forbidden edits, authorization flags -- reusing `run.json` and
+current run state where possible rather than duplicating it), the
+`WorkflowInstructionPacket`, a repository-evidence reference or bounded
+rendering (context capsule, retrieval-audit record, or human-readable
+implementation/test-context packet, each recording path, role, index
+identity, repository identity, creation/refresh evidence, adequacy,
+freshness, warnings, and provenance when available), required upstream
+artifacts, and per-section provenance. Prompt sections must remain
+distinguishable by origin (user instruction, roadmap/project constraints,
+workflow catalog, repository evidence, upstream orchestrator artifact, run
+state, authorization) rather than being flattened into one unattributed
+block.
+
+### Migration strategy (planned)
+
+1. Add catalog types and resolver.
+2. Migrate one representative workflow and stage.
+3. Validate packet assembly.
+4. Integrate bounded packet rendering.
+5. Migrate remaining stages in coherent groups.
+6. Preserve temporary fallback only when required, with an explicit owner,
+   tests, and removal plan.
+7. Remove duplication before patch completion.
+
+`src/promptGenerator.ts` is extended incrementally, not rewritten wholesale.
+Existing prompt filenames and stage contracts remain stable throughout.
+
+### Compatibility constraints
+
+New fields on workflow/stage definitions, `run.json`, and artifact metadata
+must be additive or optional so old runs remain valid without migration.
+Existing modes, stage order, stage names, prompt filenames, run creation/
+loading, `status` output, artifact files, artifact checking, the `mtime`
+lifecycle, correction routing, judge behavior, and final-report behavior all
+remain unchanged in `v1.2.1`.
+
+### Cross-repository boundaries
+
+No repository indexing, source ranking, or code-graph traversal is
+implemented inside `my-dev-kit-orchestrator`. Repository evidence is
+produced by `my-dev-kit` and only referenced by the orchestrator's prompts
+and supplemental artifacts (see
+[docs/ARTIFACTS.md](ARTIFACTS.md#v121-planned-supplemental-context-artifacts)).
+`v1.2.1` does not add a native context-retrieval stage; implementation- and
+test-context refresh are operational substeps documented inside the
+existing `implementation` and `test-implementation` stages.
+
+## Package security contract
+
+The package includes a lightweight, target-owned security contract:
+
+- `npm run test:security` runs `scripts/test-security.mjs`
+- the script validates package name, semver, CLI bin path, `files` policy, and
+  `npm pack --dry-run --json` contents
+- it is deterministic, local, and dependency-free
+- it does not replace `my-dev-kit-lab`; it gives the package its own portable
+  release-safety baseline

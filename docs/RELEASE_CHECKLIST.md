@@ -1,5 +1,77 @@
 # Release Checklist
 
+Use this checklist for release-readiness work on the currently shipped CLI.
+This file is a checklist template, not evidence that the listed steps have
+already run.
+
+## Current release baseline
+
+- [ ] package version in `package.json` and `package-lock.json` matches the version being released (e.g. `1.2.0` for the Android Compose Greenfield Profile release)
+- [ ] `node dist/cli.js --version` prints the package version being released
+- [ ] docs describe seven modes and list `greenfield` as the seventh
+- [ ] docs describe the 13 greenfield stages and implemented artifact paths
+- [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
+
+## Required local validation
+
+- [ ] `npm run docs:check`
+- [ ] `npm run lint:docs`
+- [ ] `npm run lint`
+- [ ] `npm run test:security`
+- [ ] `npx jest tests/greenfield --silent`
+- [ ] `npx tsc --noEmit`
+- [ ] `npm test`
+- [ ] `npm run build`
+- [ ] `node dist/cli.js --version`
+- [ ] `node dist/cli.js --help`
+- [ ] `npm pack --dry-run`
+
+## Temporary-directory smoke
+
+- [ ] run `init`
+- [ ] run `start --mode greenfield "<project idea>"`
+- [ ] run `prompt`
+- [ ] run `status`
+- [ ] run `list`
+- [ ] run `check --artifacts` and record expected missing-artifact findings
+- [ ] run `check --all` and record expected missing-artifact findings
+- [ ] run `export --out greenfield-export.txt`
+- [ ] run `export --out ../unsafe-export.txt` and confirm rejection
+- [ ] remove the temporary directory
+
+## v1.2.0 Android Compose greenfield smoke
+
+Repeat the temporary-directory smoke above with an explicit Android Compose
+request, in a separate temporary directory:
+
+- [ ] run `init`
+- [ ] run `start --mode greenfield "Create an Android Compose habit tracker app"`
+- [ ] run `prompt` (confirm the run stays `mode: greenfield`, never a separate mobile/Android mode)
+- [ ] run `status`
+- [ ] run `list`
+- [ ] run `check --artifacts` and record expected missing-artifact findings
+- [ ] run `check --all` and record expected missing-artifact findings
+- [ ] run `export --out android-compose-export.txt`
+- [ ] run `export --out ../unsafe-export.txt` and confirm rejection
+- [ ] confirm no Gradle command was executed and no Android SDK was required anywhere in this smoke pass
+- [ ] remove the temporary directory
+
+## Cross-platform and security gates
+
+- [ ] GitHub Actions matrix passes on `windows-latest`, `macos-15`, and `ubuntu-latest`
+- [ ] GitHub Actions matrix covers Node 22 and Node 24
+- [ ] `my-dev-kit-lab` self-validation passes
+- [ ] `my-dev-kit-lab` target security validation passes
+
+## Scope and limitations audit
+
+- [ ] Android Compose support is profile-guided planning only: the orchestrator does not run Gradle and does not require the Android SDK
+- [ ] generic mobile requests remain ambiguous/unresolved rather than silently selecting a profile; iOS, Flutter, and React Native remain unsupported; no mobile mode exists
+- [ ] shared artifact checking is used; no `validateGreenfieldArtifacts.ts` exists
+- [ ] component docs remain empty until brief schema module/component hints exist
+- [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
+- [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
+
 ## v1.0.0 checklist
 
 ### Artifact contract check verification
@@ -37,7 +109,7 @@
 - [ ] `export --out <existing>` exits 1 with message about --overwrite
 - [ ] `export --out <existing> --overwrite` succeeds
 - [ ] export refuses symlink output path
-- [ ] export refuses path traversal (..) in output path
+- [ ] export traversal-guard gap is tracked as a separate cross-mode follow-up
 - [ ] export text contains no em dash, en dash, smart quotes, or ellipsis
 
 ### Version verification
@@ -332,7 +404,7 @@ Expected: no matches.
 ### Lifecycle model verification
 
 - [ ] `artifact-state.json` is created in the run folder on first `mark` command
-- [ ] `artifact-state.json` absent → file-existence-only fallback works (backward compat)
+- [ ] `artifact-state.json` absent -> file-existence-only fallback works (backward compat)
 - [ ] `mark <artifact> --state blocked --reason "..."` writes state file
 - [ ] `mark <artifact> --state incomplete --reason "..."` writes state file
 - [ ] `mark <artifact> --state complete` writes state file (no reason required)

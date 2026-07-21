@@ -8,16 +8,25 @@ import { readCheckResults } from '../promptChecker';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
-function isSafePath(outputPath: string): { safe: boolean; reason?: string } {
-  // Must be an absolute resolved path (caller should path.resolve first)
-  const resolved = path.resolve(outputPath);
+function isSafePath(rawInput: string, resolved: string): { safe: boolean; reason?: string } {
+  // Refuse path traversal sequences in the raw, pre-resolution argument.
+  // path.resolve() normalizes away ".." segments, so this must run against
+  // the raw CLI input, not the already-resolved path -- checking the
+  // resolved path here would always miss traversal attempts, since a
+  // resolved absolute path never contains ".." segments by construction.
+  // A plain substring check works identically regardless of OS path
+  // separator convention ("/" or "\"), so no separator-specific parsing is
+  // needed for this check to work cross-platform.
+  if (rawInput.includes('..')) {
+    return { safe: false, reason: 'output path contains path traversal (..)' };
+  }
 
-  // Refuse if the path is a directory
+  // Refuse if the resolved path is a directory
   if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
     return { safe: false, reason: 'output path is a directory' };
   }
 
-  // Refuse if the path is a symbolic link
+  // Refuse if the resolved path is a symbolic link
   try {
     const lstat = fs.lstatSync(resolved);
     if (lstat.isSymbolicLink()) {
@@ -25,11 +34,6 @@ function isSafePath(outputPath: string): { safe: boolean; reason?: string } {
     }
   } catch {
     // File does not exist -- that is fine
-  }
-
-  // Refuse path traversal sequences in the raw argument
-  if (outputPath.includes('..')) {
-    return { safe: false, reason: 'output path contains path traversal (..)' };
   }
 
   return { safe: true };
@@ -241,8 +245,8 @@ export function makeExportCommand(): Command {
 
         const outPath = path.resolve(options.out);
 
-        // Path safety checks
-        const safety = isSafePath(outPath);
+        // Path safety checks (must inspect the raw --out argument, not just the resolved path)
+        const safety = isSafePath(options.out, outPath);
         if (!safety.safe) {
           console.error(`Error: output path rejected: ${safety.reason}`);
           process.exit(1);

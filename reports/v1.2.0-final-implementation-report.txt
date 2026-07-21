@@ -1,0 +1,133 @@
+Artifact: V120FinalImplementationReport
+Version: v1.2.0
+
+BRANCH
+- branch name: feature/v1.2.0-documentation-compatibility
+- starting commit: c99edf7 (Batch 4 ending commit)
+- ending commit: 7c72876 (documentation compatibility commit)
+
+SUMMARY
+
+What v1.2.0 implemented:
+- `android-compose` as a third greenfield starter profile, alongside
+  `typescript-cli` and `nextjs-app`, selectable only explicitly (directly or
+  via a small bounded alias table), never as a silent default.
+- Required `setupCommands`/`validationCommands` fields on the shared
+  `GreenfieldProfile` contract, flowing through bootstrap-bundle and
+  scaffold-plan generation in place of a hardcoded npm assumption.
+- Profile-conditional validation: Android/Jetpack/Kotlin/Gradle content is
+  legitimate only for `android-compose`; unsupported-platform (iOS/React
+  Native/Flutter/multiplatform) and Play Store/release-readiness claims
+  remain rejected for every profile.
+- Full CLI/check/export regression coverage, plus 6 corrected static
+  stage-prompt lines that had blanket-forbidden Android/mobile content from
+  before this profile existed.
+- A fully audited and repaired documentation set, plus a hardened
+  `docs:check` that extracts the supported profile list from source instead
+  of a hardcoded regex, and no longer false-positives on legitimate "supports
+  Android Compose" claims.
+
+What was intentionally not implemented:
+- No CLI `--profile` flag and no automatic signal-based routing to
+  `android-compose` (both were in the original roadmap sketch but were a
+  deliberate scope decision, not built -- see docs/ROADMAP.md's "Implemented
+  v1.2.0" deviations note).
+- No Gradle execution, no Android SDK requirement/detection, no Play Store
+  readiness logic, anywhere in the orchestrator.
+- No Flutter, React Native, or iOS support; no generic mobile mode.
+- No brief-schema changes of any kind across all five batches.
+- No publish, tag, or GitHub release; package.json version remains 1.1.0.
+
+SOURCE FILES CHANGED ACROSS v1.2.0
+Profile files (Batch 2): src/greenfield/profiles/profileTypes.ts,
+typescriptCliProfile.ts, nextjsAppProfile.ts, androidComposeProfile.ts (new),
+resolveGreenfieldProfile.ts.
+
+Bootstrap files (Batch 3): src/greenfield/bootstrap/buildBootstrapBundle.ts,
+validateBootstrapDocs.ts.
+
+Scaffold files (Batch 3): src/greenfield/scaffold/buildScaffoldPlan.ts,
+scaffoldPlanTypes.ts.
+
+Prompt files (Batch 4): src/promptGenerator.ts (4 stage-prompt wording
+corrections), src/greenfield/scaffold/renderScaffoldPrompt.ts (2 corrections),
+src/greenfield/bootstrap/populateProjectDocsFromBrief.ts (1 stale comment
+correction).
+
+Docs-check files (Batch 5): scripts/check-docs-consistency.mjs.
+
+Tests: tests/greenfield/androidComposeProfile.spec.ts,
+androidComposeBootstrapBundle.spec.ts, androidComposeBootstrapDocs.spec.ts,
+androidComposeScaffoldPlan.spec.ts, androidComposeCliRegression.spec.ts,
+androidComposeCheckExport.spec.ts (all new); profileResolution.spec.ts,
+bootstrapBundle.spec.ts, bootstrapProjectDocs.spec.ts, scaffoldPrompt.spec.ts
+(updated for new/changed behavior); src/__tests__/docs-consistency.test.ts
+(updated fixture, 6 new tests).
+
+Docs: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/USAGE.md,
+docs/WORKFLOWS.md, docs/ARTIFACTS.md, docs/DEVELOPMENT.md,
+docs/ARCHITECTURE.md, docs/RELEASE_CHECKLIST.md.
+
+DOCUMENTATION SUMMARY
+- docs audited: all 9 required user-facing documents (README.md,
+  CHANGELOG.md, docs/ROADMAP.md, docs/USAGE.md, docs/WORKFLOWS.md,
+  docs/ARTIFACTS.md, docs/DEVELOPMENT.md, docs/ARCHITECTURE.md,
+  docs/RELEASE_CHECKLIST.md), plus a full stale-claim search-term sweep
+  across every docs/*.md file.
+- docs changed: all 9 required documents were changed; every stale claim
+  found (see reports/v1.2.0-documentation-compatibility-audit.txt) was
+  fixed, not just the ones already known from Batch 4.
+- docs consistency gate changed: scripts/check-docs-consistency.mjs
+  refactored to extract the greenfield profile list from source
+  (`SUPPORTED_PROFILES`) instead of a hardcoded two-profile regex, and to
+  use a negation-aware claim checker so correct disclaimers ("does not run
+  Gradle", "does not claim Play Store readiness") are never themselves
+  flagged as the violation they describe.
+- stale claims fixed: 9 distinct stale claims across 7 documents (see the
+  audit and repair reports for the full list), plus the docs-check script's
+  own 2 classes of hardcoded/false-positive-prone logic.
+
+VALIDATION SUMMARY
+- npx jest tests/greenfield --silent: exit 0, 16 suites / 248 tests
+- npx tsc --noEmit: exit 0
+- npm test: exit 0, 44 suites / 1129 tests
+- npm run build: exit 0
+- npm run lint: exit 0
+- npm run lint:docs: exit 0, 9 files, 0 errors
+- npm run test:security: exit 0, SECURITY_CONTRACT_PASS
+- npm run docs:check: exit 0, DOCS_CHECK_PASS (3 greenfield profiles now reported)
+- npm pack --dry-run: exit 0, 198 files, no unexpected content
+- CLI smoke (real built dist/cli.js, dedicated temp directory, Android
+  Compose request): exit 0 for start/prompt/status/list/safe-export; exit 1
+  (expected) for check --artifacts/check --all on a fresh run and for the
+  unsafe (`..`) export path; no file written outside the temp directory
+- optional Kotlin-indexing check: performed. `npx @dailephd/my-dev-kit@latest
+  index --src <tmp-dir-with-a-.kt-file>` ran successfully but indexed 0
+  files -- Kotlin is not currently recognized by my-dev-kit's indexer. Not a
+  blocker: Android Compose support here is planning/prompt guidance, not
+  indexing.
+
+PRE-RELEASE READINESS: READY_FOR_PRE_RELEASE
+
+Reason: all five batches are complete; every required test, lint, typecheck,
+build, security-contract, pack-dry-run, and CLI-smoke check passes; every
+required user-facing document is compatible with the actual implementation;
+docs:check is hardened against the specific drift class (hardcoded profile
+list, Android/mobile false-positive) that caused the original v1.1.0-era
+staleness. No non-goal was violated. No brief-schema, resolver-auto-selection,
+or scope-expanding change was made or is required.
+
+NEXT WORKFLOW
+
+A separate v1.2.0 pre-release readiness workflow, not part of this batch
+sequence, should now:
+- bump package.json/package-lock.json version to 1.2.0
+- run the cross-platform Node matrix (windows-latest, macos-15,
+  ubuntu-latest; Node 22 and Node 24) via GitHub Actions
+- run my-dev-kit-lab security validation (self-validation and target
+  validation against this repository)
+- run `npm pack --dry-run` as a final pre-publish content check
+- only then publish to npm, create the git tag, and create the GitHub
+  release
+
+This report does not authorize or perform any of those steps.

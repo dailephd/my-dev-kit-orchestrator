@@ -7,6 +7,8 @@ import { generateCorrectionPrompt } from '../promptGenerator';
 import { parseAndRoute } from '../correctionRouter';
 
 const CLI = path.resolve(__dirname, '../../dist/cli.js');
+const CLI_BUILT = fs.existsSync(CLI);
+const describeIfBuilt = CLI_BUILT ? describe : describe.skip;
 
 function cli(args: string[], cwd: string): string {
   return execFileSync(process.execPath, [CLI, ...args], {
@@ -280,7 +282,7 @@ describe('generateCorrectionPrompt', () => {
 
 // ─── CLI integration: status with judge reports ───────────────────────────────
 
-describe('CLI status with judge report', () => {
+describeIfBuilt('CLI status with judge report', () => {
   it('shows PASS correction status when judge report has PASS', () => {
     withTempDir((projectRoot) => {
       cli(['init'], projectRoot);
@@ -329,7 +331,7 @@ describe('CLI status with judge report', () => {
 
 // ─── CLI integration: prompt with correction ──────────────────────────────────
 
-describe('CLI prompt with correction routing', () => {
+describeIfBuilt('CLI prompt with correction routing', () => {
   it('normal prompt works with no judge report (backward compat)', () => {
     withTempDir((projectRoot) => {
       cli(['init'], projectRoot);
