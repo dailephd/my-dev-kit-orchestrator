@@ -295,4 +295,44 @@ describe('findCapsuleAuditInconsistencies', () => {
   it('detects a responsibility-mappings-truncated mismatch', () => {
     expectMismatch({ responsibilityMappings: { mappings: [], truncated: true } }, 'responsibilityMappings');
   });
+
+  it('detects a repository-identity (index.projectRoot) mismatch (v1.2.2 Batch 2 / F-006)', () => {
+    expectMismatch({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/other' } }, 'repositoryIdentity');
+  });
+
+  it('does not flag a repository identity that only differs by cosmetic path form (separators/case/trailing slash)', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'C:\\Users\\dev\\repo\\' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'c:/Users/dev/repo' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('repositoryIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('does not flag an index-identity mismatch for cosmetically different but equivalent paths', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: 'C:\\idx\\', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: 'c:/idx', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('indexIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });

@@ -175,7 +175,13 @@ export function assembleStageContextBundle(
 
   const requirement = findStageRepositoryEvidenceRequirement(stageId);
   const repositoryContextReadiness = requirement
-    ? evaluateContextReadiness({ requirement, stageId, runFolder: runMetadata.runFolder, mode: runMetadata.mode })
+    ? evaluateContextReadiness({
+        requirement,
+        stageId,
+        runFolder: runMetadata.runFolder,
+        mode: runMetadata.mode,
+        projectRoot: runMetadata.projectRoot,
+      })
     : undefined;
 
   const isContextReviewStage =
@@ -187,6 +193,7 @@ export function assembleStageContextBundle(
       mode: runMetadata.mode,
       runFolder: runMetadata.runFolder,
       workflowStageNames: runMetadata.stages.map((s) => s.name),
+      projectRoot: runMetadata.projectRoot,
     });
     relatedRepositoryEvidenceReferences = ['implementation', 'test-implementation']
       .map((name) => resolveRepositoryEvidenceReference(makeStageId(runMetadata.mode, name), runMetadata.runFolder))

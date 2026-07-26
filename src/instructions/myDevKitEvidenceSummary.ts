@@ -12,6 +12,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { identityPathsEqual } from './contextIdentity';
 
 export const RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR = 1;
 export const RAW_RETRIEVAL_AUDIT_SUPPORTED_MAJOR = 1;
@@ -28,6 +29,7 @@ export interface RawEvidenceProjection {
   toolVersion?: string;
   indexPath?: string;
   manifestPath?: string;
+  projectRoot?: string;
   requestRole?: string;
   roleContextRole?: string;
   roleAdequacyStatus?: string;
@@ -130,6 +132,7 @@ function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number):
     toolVersion: asString(tool.version),
     indexPath: asString(index.indexPath),
     manifestPath: asString(index.manifestPath),
+    projectRoot: asString(index.projectRoot),
     requestRole: asString(request.role),
     roleContextRole: asString(roleContext.role),
     roleAdequacyStatus: asString(roleAdequacy.status),
@@ -239,9 +242,14 @@ export function findCapsuleAuditInconsistencies(
     mismatches.push('role');
   }
   if (capsule.schemaMajor !== audit.schemaMajor) mismatches.push('schemaMajor');
-  if (capsule.indexPath !== audit.indexPath) mismatches.push('indexIdentity');
-  if (capsule.freshnessBeforeIndexPath !== audit.freshnessBeforeIndexPath) mismatches.push('beforeIndexIdentity');
-  if (capsule.freshnessAfterIndexPath !== audit.freshnessAfterIndexPath) mismatches.push('afterIndexIdentity');
+  if (!identityPathsEqual(capsule.indexPath, audit.indexPath)) mismatches.push('indexIdentity');
+  if (!identityPathsEqual(capsule.projectRoot, audit.projectRoot)) mismatches.push('repositoryIdentity');
+  if (!identityPathsEqual(capsule.freshnessBeforeIndexPath ?? undefined, audit.freshnessBeforeIndexPath ?? undefined)) {
+    mismatches.push('beforeIndexIdentity');
+  }
+  if (!identityPathsEqual(capsule.freshnessAfterIndexPath ?? undefined, audit.freshnessAfterIndexPath ?? undefined)) {
+    mismatches.push('afterIndexIdentity');
+  }
   if (capsule.freshnessState !== audit.freshnessState) mismatches.push('freshness');
   if (capsule.overallAdequacyStatus !== audit.overallAdequacyStatus) mismatches.push('overallAdequacy');
   if (capsule.roleAdequacyStatus !== audit.roleAdequacyStatus) mismatches.push('adequacy');

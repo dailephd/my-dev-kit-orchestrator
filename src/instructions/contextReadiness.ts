@@ -30,6 +30,7 @@ import {
   readRawContextCapsule,
   readRawRetrievalAudit,
 } from './myDevKitEvidenceSummary';
+import { identityPathsEqual, nonEmpty } from './contextIdentity';
 import {
   CriticalResponsibilitySummary,
   allCriticalResponsibilitiesFullyMapped,
@@ -189,6 +190,9 @@ function structuralIssuesFor(
 const RAW_SUMMARY_MISMATCH_CLASSIFICATION: Record<string, ContextReadinessClassification> = {
   role: 'role-mismatch',
   indexIdentity: 'index-identity-mismatch',
+  beforeIndexIdentity: 'index-identity-mismatch',
+  afterIndexIdentity: 'index-identity-mismatch',
+  repositoryIdentity: 'repository-scope-mismatch',
 };
 
 const ADEQUACY_TEXT_MAP: Record<string, ContextReadinessResult['evaluatedAdequacy']> = {
@@ -225,10 +229,16 @@ export interface EvaluateContextReadinessInput {
   stageId: string;
   runFolder: string;
   mode: string;
+  // Active repository identity (v1.2.2 Batch 2 / F-006), e.g. RunMetadata's
+  // projectRoot. Optional and additive: when omitted (as in callers that
+  // predate Batch 2, and in old/legacy runs), repository-identity
+  // enforcement below is simply not evaluated -- it never becomes a new
+  // required field on existing callers or a new blocker for old runs.
+  projectRoot?: string;
 }
 
 export function evaluateContextReadiness(input: EvaluateContextReadinessInput): ContextReadinessResult {
-  const { requirement, stageId, runFolder, mode } = input;
+  const { requirement, stageId, runFolder, mode, projectRoot } = input;
   const { kind, role, packetRelativePath, reportRelativePath } = requirement;
   const packetPath = joinRunPath(runFolder, packetRelativePath);
   const reportPath = joinRunPath(runFolder, reportRelativePath);
@@ -344,6 +354,80 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
   if (!capsule.indexPath) {
     issues.push(issue('CONTEXT_SOURCE_INDEX_IDENTITY_MISSING', 'error', 'Raw evidence does not declare an index identity.', stageId, kind));
     setPrimary('index-identity-incomplete');
+  }
+
+  // Repository identity enforcement (v1.2.2 Batch 2 / F-006). Raw evidence
+  // may declare index.projectRoot (my-dev-kit >=1.10.x); when the caller
+  // supplies the active run's real repository root, a declared projectRoot
+  // that resolves to a different repository must block -- evidence gathered
+  // against the wrong repository must never be accepted as ready. A missing
+  // declaration on both sides remains compatible (older my-dev-kit versions
+  // and existing schema-major-1 fixtures do not carry this field); a
+  // declaration on only one of capsule/audit is an incomplete pair.
+  const expectedRepositoryRoot = nonEmpty(projectRoot);
+  if (expectedRepositoryRoot) {
+    const capsuleHasRoot = nonEmpty(capsule.projectRoot) !== undefined;
+    const auditHasRoot = nonEmpty(audit.projectRoot) !== undefined;
+    if (capsuleHasRoot && auditHasRoot) {
+      if (!identityPathsEqual(capsule.projectRoot, expectedRepositoryRoot)) {
+        issues.push(
+          issue('CONTEXT_SOURCE_REPOSITORY_MISMATCH', 'error', `Raw context capsule declares repository "${capsule.projectRoot}", expected "${expectedRepositoryRoot}".`, stageId, kind, {
+            expected: expectedRepositoryRoot,
+            actual: capsule.projectRoot,
+          }),
+        );
+        setPrimary('repository-scope-mismatch');
+      }
+      if (!identityPathsEqual(audit.projectRoot, expectedRepositoryRoot)) {
+        issues.push(
+          issue('CONTEXT_SOURCE_REPOSITORY_MISMATCH', 'error', `Raw retrieval audit declares repository "${audit.projectRoot}", expected "${expectedRepositoryRoot}".`, stageId, kind, {
+            expected: expectedRepositoryRoot,
+            actual: audit.projectRoot,
+          }),
+        );
+        setPrimary('repository-scope-mismatch');
+      }
+    } else if (capsuleHasRoot !== auditHasRoot) {
+      issues.push(
+        issue('CONTEXT_SOURCE_REPOSITORY_INCOMPLETE', 'error', 'Raw capsule and raw audit disagree on whether a repository identity is declared.', stageId, kind),
+      );
+      setPrimary('repository-identity-incomplete');
+    }
+  }
+
+  // Declared index identity enforcement (v1.2.2 Batch 2 / F-006). The
+  // supplemental packet's "Index identity"/"After index" metadata lines are
+  // already parsed (supplementalContextParser.ts) but were never previously
+  // compared against the raw evidence they claim to summarize -- an agent
+  // could declare any value and it would be silently accepted. "unknown"
+  // (the starter-template default) and an absent declaration both remain
+  // optional/compatible; only a real declared value that disagrees with the
+  // raw evidence blocks.
+  const declaredIndexIdentity = nonUnknown(packetInspection.indexIdentity) ?? nonUnknown(reportInspection.indexIdentity);
+  if (declaredIndexIdentity && !identityPathsEqual(declaredIndexIdentity, capsule.indexPath)) {
+    issues.push(
+      issue('CONTEXT_DECLARED_INDEX_IDENTITY_MISMATCH', 'error', `Declared index identity "${declaredIndexIdentity}" does not match raw evidence index path "${capsule.indexPath ?? 'unknown'}".`, stageId, kind, {
+        field: 'indexIdentity',
+        expected: capsule.indexPath,
+        actual: declaredIndexIdentity,
+      }),
+    );
+    setPrimary('index-identity-mismatch');
+  }
+
+  const declaredAfterIndex = nonUnknown(packetInspection.declaredAfterIndex) ?? nonUnknown(reportInspection.declaredAfterIndex);
+  if (declaredAfterIndex && !identityPathsEqual(declaredAfterIndex, capsule.freshnessAfterIndexPath ?? undefined)) {
+    issues.push(
+      issue(
+        'CONTEXT_DECLARED_AFTER_INDEX_MISMATCH',
+        'error',
+        `Declared after index "${declaredAfterIndex}" does not match raw evidence after-index path "${capsule.freshnessAfterIndexPath ?? 'unknown'}".`,
+        stageId,
+        kind,
+        { field: 'afterIndex', expected: capsule.freshnessAfterIndexPath ?? undefined, actual: declaredAfterIndex },
+      ),
+    );
+    setPrimary('index-identity-mismatch');
   }
 
   // Supplemental/raw consistency (Batch 5 section 8.6): a populated

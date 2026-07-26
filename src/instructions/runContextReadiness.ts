@@ -37,8 +37,9 @@ export function evaluateRunContextReadiness(input: {
   mode: string;
   runFolder: string;
   workflowStageNames: readonly string[];
+  projectRoot?: string;
 }): RunContextReadinessSummary {
-  const { mode, runFolder, workflowStageNames } = input;
+  const { mode, runFolder, workflowStageNames, projectRoot } = input;
   const requiredKinds = requiredSupplementalContextKindsForMode(mode);
 
   if (requiredKinds.length === 0) {
@@ -59,13 +60,13 @@ export function evaluateRunContextReadiness(input: {
   if (requiredKinds.includes('implementation')) {
     const req = requirementForKind(mode, 'implementation');
     implementationContext = req
-      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode })
+      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode, projectRoot })
       : notRequiredContextReadiness(`stage.${mode}.implementation`, 'implementation', 'implementation');
   }
   if (requiredKinds.includes('test')) {
     const req = requirementForKind(mode, 'test');
     testContext = req
-      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode })
+      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode, projectRoot })
       : notRequiredContextReadiness(`stage.${mode}.test-implementation`, 'test', 'test-implementation');
   }
 
