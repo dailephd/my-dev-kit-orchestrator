@@ -100,12 +100,16 @@ describe('v1.2.1 cross-platform path safety', () => {
       const runFolder = path.join(parent, 'run');
       makeReadyRunFolder(runFolder, 'feature');
       const packetPath = path.join(runFolder, 'artifacts', 'implementation-context-packet.txt');
+      const reportPath = path.join(runFolder, 'reports', 'implementation-context-retrieval-report.txt');
       const dirAsCapsule = path.join(parent, 'not-a-file-dir');
       fs.mkdirSync(dirAsCapsule);
-      const text = fs
-        .readFileSync(packetPath, 'utf8')
-        .replace(/Source context capsule: .*/, `Source context capsule: ${dirAsCapsule}`);
-      fs.writeFileSync(packetPath, text, 'utf8');
+      // Patch both packet and report identically so the pair still agrees on
+      // the (broken) capsule reference -- this test targets a single
+      // unreadable reference, not a packet/report disagreement (Batch 3).
+      for (const p of [packetPath, reportPath]) {
+        const text = fs.readFileSync(p, 'utf8').replace(/Source context capsule: .*/, `Source context capsule: ${dirAsCapsule}`);
+        fs.writeFileSync(p, text, 'utf8');
+      }
 
       const requirement = STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS.find((r) => r.stageId === 'stage.feature.implementation')!;
       expect(() =>
@@ -124,10 +128,15 @@ describe('v1.2.1 cross-platform path safety', () => {
       const runFolder = path.join(parent, 'run');
       makeReadyRunFolder(runFolder, 'feature');
       const packetPath = path.join(runFolder, 'artifacts', 'implementation-context-packet.txt');
-      const text = fs
-        .readFileSync(packetPath, 'utf8')
-        .replace(/Source context capsule: .*/, `Source context capsule: ${path.join(parent, 'does-not-exist.json')}`);
-      fs.writeFileSync(packetPath, text, 'utf8');
+      const reportPath = path.join(runFolder, 'reports', 'implementation-context-retrieval-report.txt');
+      // Patch both packet and report identically -- see the directory-ref
+      // test above for why (Batch 3 pair reconciliation).
+      for (const p of [packetPath, reportPath]) {
+        const text = fs
+          .readFileSync(p, 'utf8')
+          .replace(/Source context capsule: .*/, `Source context capsule: ${path.join(parent, 'does-not-exist.json')}`);
+        fs.writeFileSync(p, text, 'utf8');
+      }
 
       const requirement = STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS.find((r) => r.stageId === 'stage.feature.implementation')!;
       const result = evaluateContextReadiness({ requirement, stageId: requirement.stageId, runFolder, mode: 'feature' });

@@ -31,6 +31,7 @@ import {
   readRawRetrievalAudit,
 } from './myDevKitEvidenceSummary';
 import { identityPathsEqual, nonEmpty } from './contextIdentity';
+import { reconcileDeclaredField, nonUnknown } from './supplementalPairReconciliation';
 import {
   CriticalResponsibilitySummary,
   allCriticalResponsibilitiesFullyMapped,
@@ -284,12 +285,57 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     return base(structuralClassification, 'refresh-required');
   }
 
-  // Both packet and report are structurally populated. Resolve raw-evidence
-  // references (prefer the packet's declaration, fall back to the report's).
-  const declaredSourceCapsulePath =
-    nonUnknown(packetInspection.declaredSourceCapsulePath) ?? nonUnknown(reportInspection.declaredSourceCapsulePath);
-  const declaredSourceAuditPath =
-    nonUnknown(packetInspection.declaredSourceAuditPath) ?? nonUnknown(reportInspection.declaredSourceAuditPath);
+  // Both packet and report are structurally populated. Reconcile the raw
+  // capsule/audit references each document declares (v1.2.2 Batch 3 /
+  // F-007) before either is trusted. Reconciliation, not precedence: when
+  // both documents declare a real (non-"unknown") path and those paths
+  // disagree, neither is selected -- the pair does not identify a single
+  // piece of raw evidence, so no raw evidence is opened at all. Only when
+  // the pair agrees, or only one side declares a real value (the metadata
+  // key itself is not in REQUIRED_METADATA_BY_DOCUMENT_KIND for either
+  // document kind, so a one-sided declaration is a contractually permitted
+  // state, not a masked disagreement) does a value carry forward.
+  const capsulePathOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.declaredSourceCapsulePath),
+    nonUnknown(reportInspection.declaredSourceCapsulePath),
+    identityPathsEqual,
+  );
+  const auditPathOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.declaredSourceAuditPath),
+    nonUnknown(reportInspection.declaredSourceAuditPath),
+    identityPathsEqual,
+  );
+
+  if (capsulePathOutcome.status === 'disagree' || auditPathOutcome.status === 'disagree') {
+    if (capsulePathOutcome.status === 'disagree') {
+      issues.push(
+        issue(
+          'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+          'error',
+          `Packet declares source context capsule "${capsulePathOutcome.packetValue}"; report declares "${capsulePathOutcome.reportValue}". Raw evidence cannot be trusted until they agree.`,
+          stageId,
+          kind,
+          { field: 'sourceCapsulePath', expected: capsulePathOutcome.packetValue, actual: capsulePathOutcome.reportValue },
+        ),
+      );
+    }
+    if (auditPathOutcome.status === 'disagree') {
+      issues.push(
+        issue(
+          'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+          'error',
+          `Packet declares source retrieval audit "${auditPathOutcome.packetValue}"; report declares "${auditPathOutcome.reportValue}". Raw evidence cannot be trusted until they agree.`,
+          stageId,
+          kind,
+          { field: 'sourceAuditPath', expected: auditPathOutcome.packetValue, actual: auditPathOutcome.reportValue },
+        ),
+      );
+    }
+    return base('incompatible', 'refresh-required');
+  }
+
+  const declaredSourceCapsulePath = capsulePathOutcome.status === 'both-absent' ? undefined : capsulePathOutcome.value;
+  const declaredSourceAuditPath = auditPathOutcome.status === 'both-absent' ? undefined : auditPathOutcome.value;
 
   if (!declaredSourceCapsulePath) {
     issues.push(
@@ -395,15 +441,54 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     }
   }
 
-  // Declared index identity enforcement (v1.2.2 Batch 2 / F-006). The
-  // supplemental packet's "Index identity"/"After index" metadata lines are
-  // already parsed (supplementalContextParser.ts) but were never previously
-  // compared against the raw evidence they claim to summarize -- an agent
-  // could declare any value and it would be silently accepted. "unknown"
-  // (the starter-template default) and an absent declaration both remain
-  // optional/compatible; only a real declared value that disagrees with the
-  // raw evidence blocks.
-  const declaredIndexIdentity = nonUnknown(packetInspection.indexIdentity) ?? nonUnknown(reportInspection.indexIdentity);
+  // Supplemental pair reconciliation (v1.2.2 Batch 3 / F-007), continued:
+  // the declared "Repository scope", "Index identity", "After index",
+  // "Freshness", "Adequacy", and "Required evidence truncated" metadata
+  // lines are each required in both the packet and the report (see
+  // supplementalContextContracts.ts's COMMON_PACKET_METADATA /
+  // COMMON_REPORT_METADATA). Reconcile each pair -- rather than letting the
+  // packet's value win by `??` precedence -- before comparing the result
+  // against raw evidence. "unknown" is a legal declared value for these
+  // enum-shaped fields (meaning "not yet determined"), not an absence, so
+  // nonUnknown() is used consistently to treat it the same as omission for
+  // reconciliation purposes.
+  const repositoryScopeOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.declaredRepositoryScope),
+    nonUnknown(reportInspection.declaredRepositoryScope),
+  );
+  if (repositoryScopeOutcome.status === 'disagree') {
+    issues.push(
+      issue(
+        'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+        'error',
+        `Packet declares repository scope "${repositoryScopeOutcome.packetValue}"; report declares "${repositoryScopeOutcome.reportValue}".`,
+        stageId,
+        kind,
+        { field: 'repositoryScope', expected: repositoryScopeOutcome.packetValue, actual: repositoryScopeOutcome.reportValue },
+      ),
+    );
+    setPrimary('repository-scope-mismatch');
+  }
+
+  const indexIdentityOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.indexIdentity),
+    nonUnknown(reportInspection.indexIdentity),
+    identityPathsEqual,
+  );
+  if (indexIdentityOutcome.status === 'disagree') {
+    issues.push(
+      issue(
+        'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+        'error',
+        `Packet declares index identity "${indexIdentityOutcome.packetValue}"; report declares "${indexIdentityOutcome.reportValue}".`,
+        stageId,
+        kind,
+        { field: 'indexIdentity', expected: indexIdentityOutcome.packetValue, actual: indexIdentityOutcome.reportValue },
+      ),
+    );
+    setPrimary('index-identity-mismatch');
+  }
+  const declaredIndexIdentity = indexIdentityOutcome.status === 'agree' || indexIdentityOutcome.status === 'packet-only' || indexIdentityOutcome.status === 'report-only' ? indexIdentityOutcome.value : undefined;
   if (declaredIndexIdentity && !identityPathsEqual(declaredIndexIdentity, capsule.indexPath)) {
     issues.push(
       issue('CONTEXT_DECLARED_INDEX_IDENTITY_MISMATCH', 'error', `Declared index identity "${declaredIndexIdentity}" does not match raw evidence index path "${capsule.indexPath ?? 'unknown'}".`, stageId, kind, {
@@ -415,7 +500,25 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     setPrimary('index-identity-mismatch');
   }
 
-  const declaredAfterIndex = nonUnknown(packetInspection.declaredAfterIndex) ?? nonUnknown(reportInspection.declaredAfterIndex);
+  const afterIndexOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.declaredAfterIndex),
+    nonUnknown(reportInspection.declaredAfterIndex),
+    identityPathsEqual,
+  );
+  if (afterIndexOutcome.status === 'disagree') {
+    issues.push(
+      issue(
+        'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+        'error',
+        `Packet declares after index "${afterIndexOutcome.packetValue}"; report declares "${afterIndexOutcome.reportValue}".`,
+        stageId,
+        kind,
+        { field: 'afterIndex', expected: afterIndexOutcome.packetValue, actual: afterIndexOutcome.reportValue },
+      ),
+    );
+    setPrimary('index-identity-mismatch');
+  }
+  const declaredAfterIndex = afterIndexOutcome.status === 'agree' || afterIndexOutcome.status === 'packet-only' || afterIndexOutcome.status === 'report-only' ? afterIndexOutcome.value : undefined;
   if (declaredAfterIndex && !identityPathsEqual(declaredAfterIndex, capsule.freshnessAfterIndexPath ?? undefined)) {
     issues.push(
       issue(
@@ -430,12 +533,59 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     setPrimary('index-identity-mismatch');
   }
 
-  // Supplemental/raw consistency (Batch 5 section 8.6): a populated
-  // supplemental document's declared freshness/adequacy/truncation must not
-  // silently contradict the raw evidence it points to.
-  const declaredFreshness = packetInspection.declaredFreshness ?? reportInspection.declaredFreshness;
-  const declaredAdequacy = packetInspection.declaredAdequacy ?? reportInspection.declaredAdequacy;
-  const declaredTruncated = packetInspection.declaredRequiredEvidenceTruncated ?? reportInspection.declaredRequiredEvidenceTruncated;
+  const freshnessOutcome = reconcileDeclaredField(nonUnknown(packetInspection.declaredFreshness), nonUnknown(reportInspection.declaredFreshness));
+  if (freshnessOutcome.status === 'disagree') {
+    issues.push(
+      issue('CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH', 'error', `Packet declares freshness "${freshnessOutcome.packetValue}"; report declares "${freshnessOutcome.reportValue}".`, stageId, kind, {
+        field: 'freshness',
+        expected: freshnessOutcome.packetValue,
+        actual: freshnessOutcome.reportValue,
+      }),
+    );
+    setPrimary('incompatible');
+  }
+  const declaredFreshness =
+    freshnessOutcome.status === 'agree' || freshnessOutcome.status === 'packet-only' || freshnessOutcome.status === 'report-only'
+      ? (freshnessOutcome.value as DeclaredFreshness)
+      : undefined;
+
+  const adequacyOutcome = reconcileDeclaredField(nonUnknown(packetInspection.declaredAdequacy), nonUnknown(reportInspection.declaredAdequacy));
+  if (adequacyOutcome.status === 'disagree') {
+    issues.push(
+      issue('CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH', 'error', `Packet declares adequacy "${adequacyOutcome.packetValue}"; report declares "${adequacyOutcome.reportValue}".`, stageId, kind, {
+        field: 'adequacy',
+        expected: adequacyOutcome.packetValue,
+        actual: adequacyOutcome.reportValue,
+      }),
+    );
+    setPrimary('incompatible');
+  }
+  const declaredAdequacy =
+    adequacyOutcome.status === 'agree' || adequacyOutcome.status === 'packet-only' || adequacyOutcome.status === 'report-only'
+      ? (adequacyOutcome.value as DeclaredAdequacy)
+      : undefined;
+
+  const truncatedOutcome = reconcileDeclaredField(
+    nonUnknown(packetInspection.declaredRequiredEvidenceTruncated),
+    nonUnknown(reportInspection.declaredRequiredEvidenceTruncated),
+  );
+  if (truncatedOutcome.status === 'disagree') {
+    issues.push(
+      issue(
+        'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+        'error',
+        `Packet declares "Required evidence truncated: ${truncatedOutcome.packetValue}"; report declares "${truncatedOutcome.reportValue}".`,
+        stageId,
+        kind,
+        { field: 'requiredEvidenceTruncated', expected: truncatedOutcome.packetValue, actual: truncatedOutcome.reportValue },
+      ),
+    );
+    setPrimary('incompatible');
+  }
+  const declaredTruncated =
+    truncatedOutcome.status === 'agree' || truncatedOutcome.status === 'packet-only' || truncatedOutcome.status === 'report-only'
+      ? (truncatedOutcome.value as DeclaredTruncation)
+      : undefined;
 
   const { evaluated: evaluatedFreshness, inconsistent: freshnessInconsistent } = normalizeFreshness(capsule);
   if (freshnessInconsistent) {
@@ -502,6 +652,48 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
   let affectedResponsibilityIds: string[] = [];
 
   if (kind === 'test') {
+    // Test-kind-only supplemental reconciliation (v1.2.2 Batch 3 / F-007):
+    // "Responsibility mappings truncated" and "Critical responsibility
+    // mapping status" are required metadata in both test-context-packet and
+    // test-context-retrieval-report (TEST_ONLY_METADATA) but were never
+    // read by readiness at all before this batch -- a contradiction between
+    // the two documents' mapping-completeness claims was invisible.
+    const responsibilityTruncatedOutcome = reconcileDeclaredField(
+      nonUnknown(packetInspection.declaredResponsibilityMappingsTruncated),
+      nonUnknown(reportInspection.declaredResponsibilityMappingsTruncated),
+    );
+    if (responsibilityTruncatedOutcome.status === 'disagree') {
+      issues.push(
+        issue(
+          'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+          'error',
+          `Packet declares "Responsibility mappings truncated: ${responsibilityTruncatedOutcome.packetValue}"; report declares "${responsibilityTruncatedOutcome.reportValue}".`,
+          stageId,
+          kind,
+          { field: 'responsibilityMappingsTruncated', expected: responsibilityTruncatedOutcome.packetValue, actual: responsibilityTruncatedOutcome.reportValue },
+        ),
+      );
+      setPrimary('responsibility-mappings-truncated');
+    }
+
+    const criticalMappingStatusOutcome = reconcileDeclaredField(
+      nonUnknown(packetInspection.declaredCriticalResponsibilityMappingStatus),
+      nonUnknown(reportInspection.declaredCriticalResponsibilityMappingStatus),
+    );
+    if (criticalMappingStatusOutcome.status === 'disagree') {
+      issues.push(
+        issue(
+          'CONTEXT_SUPPLEMENTAL_SOURCE_MISMATCH',
+          'error',
+          `Packet declares "Critical responsibility mapping status: ${criticalMappingStatusOutcome.packetValue}"; report declares "${criticalMappingStatusOutcome.reportValue}".`,
+          stageId,
+          kind,
+          { field: 'criticalResponsibilityMappingStatus', expected: criticalMappingStatusOutcome.packetValue, actual: criticalMappingStatusOutcome.reportValue },
+        ),
+      );
+      setPrimary('critical-responsibilities-unmapped');
+    }
+
     const strategyRequirement = findTestStrategySourceRequirement(mode);
     const strategyPath = strategyRequirement ? joinRunPath(runFolder, strategyRequirement.strategyArtifactRelativePath) : undefined;
     const parsed = strategyPath ? readTestResponsibilityBlocks(strategyPath) : undefined;
@@ -586,13 +778,6 @@ export function notRequiredContextReadiness(stageId: string, kind: SupplementalC
     readyWithAssumptions: false,
     provenanceSummary: 'not applicable',
   };
-}
-
-function nonUnknown(v: string | undefined): string | undefined {
-  if (!v) return undefined;
-  const trimmed = v.trim();
-  if (trimmed.length === 0 || trimmed.toLowerCase() === 'unknown') return undefined;
-  return trimmed;
 }
 
 function rawStatusToCodeAndClassification(
