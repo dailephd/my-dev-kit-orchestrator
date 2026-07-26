@@ -31,10 +31,13 @@ export interface RawEvidenceProjection {
   requestRole?: string;
   roleContextRole?: string;
   roleAdequacyStatus?: string;
+  overallAdequacyStatus?: string;
   freshnessState?: string;
   freshnessRole?: string;
   freshnessAfterIndexDeclared: boolean;
   freshnessAfterIndexPath: string | null;
+  freshnessBeforeIndexDeclared: boolean;
+  freshnessBeforeIndexPath: string | null;
   responsibilityMappings: RawResponsibilityMappingEntry[];
   responsibilityMappingsTruncated: boolean;
   truncated: boolean;
@@ -72,6 +75,7 @@ function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number):
   const request = isPlainObject(data.request) ? data.request : {};
   const roleContext = isPlainObject(data.roleContext) ? data.roleContext : {};
   const roleAdequacy = isPlainObject(data.roleAdequacy) ? data.roleAdequacy : {};
+  const contextAdequacy = isPlainObject(data.contextAdequacy) ? data.contextAdequacy : {};
   const freshness = isPlainObject(data.freshness) ? data.freshness : {};
   const responsibilityMappingsRaw = isPlainObject(data.responsibilityMappings) ? data.responsibilityMappings : {};
   const truncation = isPlainObject(data.truncation) ? data.truncation : {};
@@ -79,13 +83,22 @@ function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number):
 
   let freshnessAfterIndexDeclared = false;
   let freshnessAfterIndexPath: string | null = null;
+  let freshnessBeforeIndexDeclared = false;
+  let freshnessBeforeIndexPath: string | null = null;
   if (Array.isArray(freshness.comparedIdentities)) {
-    const entry = freshness.comparedIdentities.find(
+    const afterEntry = freshness.comparedIdentities.find(
       (e): e is { label: unknown; value: unknown } => isPlainObject(e) && e.label === 'afterIndexPath',
     );
-    if (entry) {
+    if (afterEntry) {
       freshnessAfterIndexDeclared = true;
-      freshnessAfterIndexPath = asString(entry.value) ?? null;
+      freshnessAfterIndexPath = asString(afterEntry.value) ?? null;
+    }
+    const beforeEntry = freshness.comparedIdentities.find(
+      (e): e is { label: unknown; value: unknown } => isPlainObject(e) && e.label === 'beforeIndexPath',
+    );
+    if (beforeEntry) {
+      freshnessBeforeIndexDeclared = true;
+      freshnessBeforeIndexPath = asString(beforeEntry.value) ?? null;
     }
   }
 
@@ -120,10 +133,13 @@ function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number):
     requestRole: asString(request.role),
     roleContextRole: asString(roleContext.role),
     roleAdequacyStatus: asString(roleAdequacy.status),
+    overallAdequacyStatus: asString(contextAdequacy.status),
     freshnessState: asString(freshness.state),
     freshnessRole: asString(freshness.role),
     freshnessAfterIndexDeclared,
     freshnessAfterIndexPath,
+    freshnessBeforeIndexDeclared,
+    freshnessBeforeIndexPath,
     responsibilityMappings,
     responsibilityMappingsTruncated: asBoolean(responsibilityMappingsRaw.truncated),
     truncated: asBoolean(truncation.truncated),
@@ -224,8 +240,15 @@ export function findCapsuleAuditInconsistencies(
   }
   if (capsule.schemaMajor !== audit.schemaMajor) mismatches.push('schemaMajor');
   if (capsule.indexPath !== audit.indexPath) mismatches.push('indexIdentity');
+  if (capsule.freshnessBeforeIndexPath !== audit.freshnessBeforeIndexPath) mismatches.push('beforeIndexIdentity');
+  if (capsule.freshnessAfterIndexPath !== audit.freshnessAfterIndexPath) mismatches.push('afterIndexIdentity');
   if (capsule.freshnessState !== audit.freshnessState) mismatches.push('freshness');
+  if (capsule.overallAdequacyStatus !== audit.overallAdequacyStatus) mismatches.push('overallAdequacy');
   if (capsule.roleAdequacyStatus !== audit.roleAdequacyStatus) mismatches.push('adequacy');
+  if (capsule.truncationRequiredEvidenceLost !== audit.truncationRequiredEvidenceLost) mismatches.push('requiredTruncation');
   if (capsule.truncated !== audit.truncated) mismatches.push('truncation');
+  if (capsule.fullFileFallbackUsed !== audit.fullFileFallbackUsed) mismatches.push('fallback');
+  if (capsule.provenanceCount !== audit.provenanceCount) mismatches.push('provenance');
+  if (capsule.responsibilityMappingsTruncated !== audit.responsibilityMappingsTruncated) mismatches.push('responsibilityMappings');
   return mismatches;
 }

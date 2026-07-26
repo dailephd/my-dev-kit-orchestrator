@@ -311,6 +311,141 @@ test level: unit
   });
 });
 
+describe('evaluateContextReadiness: raw capsule/audit contradictions fail closed (v1.2.2 Batch 1 / F-005)', () => {
+  function contradictionCase(
+    label: string,
+    capsuleOverrides: Record<string, unknown>,
+    auditOverrides: Record<string, unknown>,
+  ) {
+    it(`${label} -> refresh-required with a blocking CONTEXT_SOURCE_SUMMARY_MISMATCH and a primary blocker`, () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', capsuleOverrides, auditOverrides);
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+      expect(result.classification).not.toBe('ready');
+      expect(result.decision).not.toBe('ready');
+    });
+  }
+
+  contradictionCase(
+    'capsule fresh / audit stale',
+    {},
+    { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } },
+  );
+
+  contradictionCase(
+    'capsule stale / audit fresh',
+    { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } },
+    {},
+  );
+
+  contradictionCase(
+    'capsule overall-adequacy sufficient / audit overall-adequacy insufficient',
+    {},
+    { contextAdequacy: { status: 'context insufficient and more retrieval required' } },
+  );
+
+  contradictionCase(
+    'capsule overall-adequacy insufficient / audit overall-adequacy sufficient',
+    { contextAdequacy: { status: 'context insufficient and more retrieval required' } },
+    {},
+  );
+
+  contradictionCase(
+    'capsule role-adequacy sufficient / audit role-adequacy insufficient',
+    {},
+    { roleAdequacy: { status: 'context insufficient and more retrieval required' } },
+  );
+
+  contradictionCase(
+    'capsule role-adequacy insufficient / audit role-adequacy sufficient',
+    { roleAdequacy: { status: 'context insufficient and more retrieval required' } },
+    {},
+  );
+
+  contradictionCase(
+    'required truncation false / true',
+    {},
+    { truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } },
+  );
+
+  contradictionCase(
+    'fallback false / true',
+    {},
+    { fullFileFallback: { used: 1 } },
+  );
+
+  contradictionCase(
+    'provenance present / mismatched count (missing evidence)',
+    {},
+    { provenance: [] },
+  );
+
+  contradictionCase(
+    'responsibility mapping truncated: complete / incomplete',
+    {},
+    { responsibilityMappings: { mappings: [], truncated: true } },
+  );
+
+  contradictionCase(
+    'different active (index) identities',
+    {},
+    { index: { indexPath: '/other-active', manifestPath: '/other-active/manifest.json' } },
+  );
+
+  contradictionCase(
+    'different before-index identities',
+    {
+      freshness: {
+        role: 'implementation',
+        state: 'fresh',
+        comparedIdentities: [
+          { label: 'afterIndexPath', value: '/idx' },
+          { label: 'beforeIndexPath', value: '/before-a' },
+        ],
+      },
+    },
+    {
+      freshness: {
+        role: 'implementation',
+        state: 'fresh',
+        comparedIdentities: [
+          { label: 'afterIndexPath', value: '/idx' },
+          { label: 'beforeIndexPath', value: '/before-b' },
+        ],
+      },
+    },
+  );
+
+  contradictionCase(
+    'different after-index identities',
+    {},
+    { freshness: { role: 'implementation', state: 'fresh', comparedIdentities: [{ label: 'afterIndexPath', value: '/other-after' }] } },
+  );
+
+  it('primary-blocker selection is deterministic: the same contradictory pair always yields the same classification', () => {
+    const runFolder1 = makeRunFolder();
+    const runFolder2 = makeRunFolder();
+    const overrides = { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } };
+    populateWithRawEvidence(runFolder1, 'implementation', {}, overrides);
+    populateWithRawEvidence(runFolder2, 'implementation', {}, overrides);
+    const r1 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder1, mode: 'feature' });
+    const r2 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder2, mode: 'feature' });
+    expect(r1.classification).toBe(r2.classification);
+    expect(r1.decision).toBe(r2.decision);
+    expect(r1.blockingIssueCodes).toEqual(r2.blockingIssueCodes);
+  });
+
+  it('a matching (non-contradictory) raw pair with otherwise valid evidence remains ready', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation');
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+    expect(result.blockingIssueCodes).not.toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+  });
+});
+
 describe('notRequiredContextReadiness', () => {
   it('returns a not-required decision with empty issues', () => {
     const result = notRequiredContextReadiness('stage.greenfield.scaffold-plan', 'implementation', 'implementation');

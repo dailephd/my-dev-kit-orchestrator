@@ -186,6 +186,11 @@ function structuralIssuesFor(
   }
 }
 
+const RAW_SUMMARY_MISMATCH_CLASSIFICATION: Record<string, ContextReadinessClassification> = {
+  role: 'role-mismatch',
+  indexIdentity: 'index-identity-mismatch',
+};
+
 const ADEQUACY_TEXT_MAP: Record<string, ContextReadinessResult['evaluatedAdequacy']> = {
   'context sufficient for implementation': 'sufficient',
   'context sufficient for test implementation': 'sufficient',
@@ -310,14 +315,23 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     if (!primaryClassification) primaryClassification = c;
   };
 
+  // Fail-closed raw-evidence consistency (v1.2.2 Batch 1 / F-005): every
+  // error-severity CONTEXT_SOURCE_SUMMARY_MISMATCH between the raw capsule
+  // and raw audit must set a primary blocker so the decision below cannot
+  // resolve to "ready". Fields with a more specific classification take that
+  // classification; every other duplicated raw summary field falls back to
+  // the generic "incompatible" classification -- the same one already used
+  // for declared-vs-raw contradictions -- so no contradiction can silently
+  // fall through unclassified. setPrimary keeps the first (lowest, most
+  // specific) mismatch in findCapsuleAuditInconsistencies's fixed field
+  // order as the deterministic primary blocker.
   const mismatches = findCapsuleAuditInconsistencies(capsule, audit);
   for (const field of mismatches) {
     issues.push(
       issue('CONTEXT_SOURCE_SUMMARY_MISMATCH', 'error', `Capsule and audit disagree on "${field}".`, stageId, kind, { field }),
     );
+    setPrimary(RAW_SUMMARY_MISMATCH_CLASSIFICATION[field] ?? 'incompatible');
   }
-  if (mismatches.includes('role')) setPrimary('role-mismatch');
-  if (mismatches.includes('indexIdentity')) setPrimary('index-identity-mismatch');
 
   const capsuleRole = capsule.requestRole ?? capsule.roleContextRole;
   if (capsuleRole && capsuleRole !== expectedRole) {
