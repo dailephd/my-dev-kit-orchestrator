@@ -1,5 +1,48 @@
 # Changelog
 
+## Unreleased - v1.2.2 Context Readiness and Documentation Safeguards
+
+Status: implemented in repository source, not published.
+
+### Added
+
+- canonical actionable context-blocker summaries with a primary code and
+  reason, corrective action, evidence target, and deterministic blocking and
+  supporting issue-code lists
+- production-level historical readiness-matrix coverage across valid,
+  contradictory, mismatched, truncated, unmapped, stale, and legacy evidence
+- preservation-manifest checks for the actionable blocker contract, unreleased
+  version status, and unsupported context-identity claims
+
+### Changed
+
+- `status`, `check`, prompts, verification, judge, correction routing, and
+  export now present the same canonical blocker information
+- test-responsibility parsing distinguishes actual responsibility entries from
+  packet preamble, coverage, risk, verification, downstream-use, and status
+  sections while retaining malformed, duplicate, and missing-ID diagnostics
+- documentation now distinguishes the published `v1.2.1` package from the
+  implemented, unreleased `v1.2.2` source state
+
+### Fixed
+
+- every refresh-required result now has an actionable issue and deterministic
+  primary blocker
+- raw and supplemental evidence contradictions, repository/index mismatch,
+  required truncation, missing provenance, and incomplete critical mappings
+  remain fail closed across all consumers
+- public architecture wording no longer claims unsupported workflow, stage, or
+  run identity validation
+
+### Compatibility and limits
+
+- package metadata remains `1.2.1`; this entry is not a publication claim
+- schema-major-1 evidence, legacy runs, stage order, verdicts, CLI commands,
+  and manual `my-dev-kit` execution remain compatible
+- the published `my-dev-kit` 1.10.2 package is not the authority for the
+  corrected role-aware producer behavior; select and verify an appropriate
+  producer CLI manually
+
 ## v1.2.1 - Workflow Instruction and Context Readiness
 
 Release date: 2026-07-21.

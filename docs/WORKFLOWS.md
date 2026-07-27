@@ -417,6 +417,13 @@ the user to refresh the required evidence. Printing a prompt reevaluates
 readiness but does not write sidecars, generate templates, or mutate run files.
 Normal work resumes after readiness passes.
 
+A refresh-required decision always carries an actionable issue. One
+deterministic primary blocker supplies the primary reason, corrective action,
+and evidence target; blocking and supporting issue codes retain canonical
+order. Direct prompts, `status`, `check`, verification, judge, correction
+routing, and `export` consume that same summary rather than selecting their
+own blocker.
+
 ### Verification, judge, and correction flow
 
 Verification and judge in `feature`, `repair`, `refactor`, `harden`, and

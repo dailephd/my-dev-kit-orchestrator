@@ -162,6 +162,7 @@ npm test -- --runInBand
 npm run build
 npm run docs:check
 npm run smoke:cli
+npm run smoke:context
 npm run lint
 npm run lint:docs
 npm run test:security
@@ -180,13 +181,21 @@ intentionally skipped during an ordinary suite and run only when regenerating
 fixtures. Tests and fixtures are excluded from npm package output because the
 package `files` policy includes only `dist`.
 
+Context-readiness changes require both focused owner tests and the historical
+readiness matrix. The historical readiness matrix covers accepted producer
+evidence, raw and supplemental contradictions, repository and index
+mismatches, truncation, provenance, responsibility mappings, stale evidence,
+schema-major-1 evidence, and legacy runs. Consumer integration tests must
+confirm that prompts, `status`, `check`, verification, judge, correction
+routing, and `export` preserve the canonical primary blocker.
+
 ### Manual my-dev-kit integration caveat
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
-and run manually. During the initial integration investigation, the published package labeled `my-dev-kit` 1.10.2 reported a mismatched CLI identity and
-lacked the verified role-aware context command. Fixtures and implementation
-therefore use the verified 1.10.2 source contract. This remains an upstream
-integration risk and no local worktree path is part of the public contract.
+and run manually. The published package labeled `my-dev-kit` 1.10.2 remains
+unsuitable as the authority for the corrected role-aware producer behavior.
+Use a verified unreleased producer until the upstream patch is published; no
+local worktree path is part of the public contract.
 
 ### Known instruction and context limitations
 

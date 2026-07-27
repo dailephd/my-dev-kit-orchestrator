@@ -127,6 +127,14 @@ function extractSchemaVersions(root) {
   };
 }
 
+function extractInterfaceFields(root, relPath, interfaceName) {
+  const source = readText(root, relPath);
+  const escapedName = interfaceName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = source.match(new RegExp(`export interface ${escapedName}\\s*\\{([\\s\\S]*?)\\n\\}`));
+  if (!match) throw new Error(`Could not extract ${interfaceName} from ${relPath}`);
+  return [...match[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9_]*)\??\s*:/gm)].map((field) => field[1]);
+}
+
 function collectDocs(root, canonicalDocuments) {
   return canonicalDocuments.map((relPath) => ({ relPath, content: readText(root, relPath) }));
 }
@@ -293,6 +301,11 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const greenfieldProfiles = extractGreenfieldProfiles(root);
   const contextFacts = extractContextFacts(root);
   const schemaVersions = extractSchemaVersions(root);
+  const contextReadinessBlockerFields = extractInterfaceFields(
+    root,
+    'src/instructions/contextReadiness.ts',
+    'ContextReadinessBlockerSummary',
+  );
   const docs = collectDocs(root, manifest.canonicalDocuments);
   const byPath = Object.fromEntries(docs.map(({ relPath, content }) => [relPath, content]));
   const joinedDocs = docs.map(({ content }) => content).join('\n');
@@ -325,6 +338,13 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'schemaVersions', schemaVersions, facts.schemaVersions);
   compareFact(issues, manifestPath, 'fixedContextPaths', contextFacts.fixedPaths, facts.fixedContextPaths);
   compareFact(issues, manifestPath, 'specializedRendererStages', compatibility.documentedLegacyExceptions, facts.specializedRendererStages);
+  compareFact(
+    issues,
+    manifestPath,
+    'contextReadinessBlockerFields',
+    contextReadinessBlockerFields,
+    facts.contextReadinessBlockerFields,
+  );
   compareFact(issues, compatibilityPath, 'modeNames', modes, compatibility.modeNames);
   compareFact(issues, compatibilityPath, 'stageCount', workflowFacts.nativeStageCount, compatibility.stageCount);
   compareFact(issues, compatibilityPath, 'cliCommandNames', cliCommands, compatibility.cliCommands.map(({ name }) => name));
@@ -357,13 +377,22 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const development = byPath['docs/DEVELOPMENT.md'];
 
   requireTokens(issues, 'README.md', readme, [pkg.name, 'latest published package', '1.2.1', 'eight commands', 'seven workflow modes', '79 native stages']);
-  requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
-  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
+  requireTokens(issues, 'CHANGELOG.md', changelog, ['Unreleased - v1.2.2', 'not published', 'v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
+  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Implemented, unreleased v1.2.2', 'not published', 'Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages']);
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths]);
   requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'no JSON option', 'refresh-only', ...contextFacts.fixedPaths]);
   requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'Node.js 24.11.0', 'live cross-platform CI evidence']);
+  for (const documentPath of ['docs/ARCHITECTURE.md', 'docs/ARTIFACTS.md']) {
+    requireTokens(
+      issues,
+      documentPath,
+      byPath[documentPath],
+      contextReadinessBlockerFields,
+      'CONTEXT_BLOCKER_FIELD_DOCUMENTATION_MISSING',
+    );
+  }
   const architectureSchemaLabels = {
     catalogSchema: 'Instruction catalog schema',
     catalogVersion: 'Instruction catalog version',
@@ -414,10 +443,34 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', 'v1.2.1 is the current published version', 'older current-published claim found', 'Historically scope or remove the stale publication claim.');
   }
   for (const [documentPath, content] of [['README.md', readme], ['CHANGELOG.md', changelog], ['docs/ROADMAP.md', roadmap]]) {
-    if (/v1\.2\.1[\s\S]{0,180}(?:not published|unreleased|not yet published)|(?:not published|unreleased|not yet published)[\s\S]{0,180}v1\.2\.1/i.test(content)) {
+    if (/\bv1\.2\.1\b[^\n.]{0,80}\b(?:is|remains|was)\s+(?:not published|unreleased|not yet published)\b|\b(?:not published|unreleased|not yet published)\s+\bv1\.2\.1\b/i.test(content)) {
       addIssue(issues, 'V121_RELEASE_STATUS_CONTRADICTION', documentPath, 'v1.2.1 released', 'unreleased claim found', 'Remove the transitional release-state claim.');
       addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'v1.2.1 released', 'unreleased claim found', 'Keep the current release state consistent.');
     }
+  }
+  for (const [documentPath, content] of [['README.md', readme], ['CHANGELOG.md', changelog], ['docs/ROADMAP.md', roadmap]]) {
+    if (!/\bv1\.2\.2\b[\s\S]{0,180}\b(?:implemented|repository source)\b|\b(?:implemented|repository source)\b[\s\S]{0,180}\bv1\.2\.2\b/i.test(content)
+      || !/\bv1\.2\.2\b[\s\S]{0,180}\b(?:unreleased|not published)\b|\b(?:unreleased|not published)\b[\s\S]{0,180}\bv1\.2\.2\b/i.test(content)) {
+      addIssue(issues, 'V122_UNRELEASED_STATUS_MISSING', documentPath, 'v1.2.2 implemented and unreleased', 'status claim missing or incomplete', 'Document the implemented source state without claiming publication.');
+    }
+    if (containsUnnegatedClaim(content, /\bv1\.2\.2\b[^\n]{0,80}\b(?:is|was|has been)\s+(?:the\s+)?(?:current\s+)?published\b|\bpublished\s+(?:as\s+)?`?v?1\.2\.2\b/i)) {
+      addIssue(issues, 'V122_PUBLICATION_FALSE_CLAIM', documentPath, 'v1.2.2 remains unpublished', 'publication claim found', 'Restore the implemented-unreleased status.');
+    }
+  }
+
+  const contextReadinessArchitecture = section(architecture, '## Context readiness', 2);
+  if (containsUnnegatedClaim(
+    contextReadinessArchitecture,
+    /\b(?:workflow|stage|run)(?:\s*,\s*(?:workflow|stage|run))*\s*(?:,\s*)?(?:and\s+)?(?:repository\s+)?identity\b/i,
+  )) {
+    addIssue(
+      issues,
+      'UNSUPPORTED_CONTEXT_IDENTITY_CLAIM',
+      'docs/ARCHITECTURE.md',
+      'only implemented supplemental document, repository, and index identity checks',
+      'workflow, stage, or run identity validation claim found',
+      'Describe only identities enforced by the current supplemental and raw evidence contracts.',
+    );
   }
 
   const contradictionChecks = [
@@ -467,11 +520,13 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['scaffold-plan', 'scaffold-implementation', 'specialized scaffold renderer'], 'SCAFFOLD_EXCEPTION_DISCLOSURE_MISSING');
   const v121Roadmap = section(roadmap, '### v1.2.1', 3);
   const v121Changelog = section(changelog, '## v1.2.1', 2);
-  if (/\bBatch\s+[0-9]+\b|candidate implementation batches|files changed|test suites?:\s*\d+/i.test(v121Roadmap)) {
-    addIssue(issues, 'ROADMAP_BATCH_LOG_CONTAMINATION', 'docs/ROADMAP.md', 'high-level v1.2.1 milestone only', 'batch/log detail found', 'Move implementation chronology outside the public roadmap.');
+  const v122Roadmap = section(roadmap, '### v1.2.2', 3);
+  const v122Changelog = section(changelog, '## Unreleased - v1.2.2', 2);
+  if (/\bBatch\s+[0-9]+\b|candidate implementation batches|files changed|test suites?:\s*\d+/i.test(`${v121Roadmap}\n${v122Roadmap}`)) {
+    addIssue(issues, 'ROADMAP_BATCH_LOG_CONTAMINATION', 'docs/ROADMAP.md', 'high-level v1.2.1 and v1.2.2 milestones only', 'batch/log detail found', 'Move implementation chronology outside the public roadmap.');
   }
-  if (/\bBatch\s+[0-9]+\b|candidate implementation batches|tests?:\s*\d+\s+(?:passed|total)|worktree/i.test(v121Changelog)) {
-    addIssue(issues, 'CHANGELOG_BATCH_HISTORY_CONTAMINATION', 'CHANGELOG.md', 'release-oriented v1.2.1 delta', 'batch/history detail found', 'Remove internal implementation chronology.');
+  if (/\bBatch\s+[0-9]+\b|candidate implementation batches|tests?:\s*\d+\s+(?:passed|total)|worktree/i.test(`${v121Changelog}\n${v122Changelog}`)) {
+    addIssue(issues, 'CHANGELOG_BATCH_HISTORY_CONTAMINATION', 'CHANGELOG.md', 'release-oriented v1.2.1 and v1.2.2 deltas', 'batch/history detail found', 'Remove internal implementation chronology.');
   }
 
   issues.sort((a, b) => a.code.localeCompare(b.code) || a.documentPath.localeCompare(b.documentPath) || a.expected.localeCompare(b.expected));

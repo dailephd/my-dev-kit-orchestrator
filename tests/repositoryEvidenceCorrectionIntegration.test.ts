@@ -95,6 +95,10 @@ describe('repository evidence correction prompt integration', () => {
       expect(prompt).toContain('Context kind: implementation');
       expect(prompt).toContain('Readiness decision: refresh-required');
       expect(prompt).toContain('Classification: missing');
+      expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
+      expect(prompt).toContain('Primary reason:');
+      expect(prompt).toContain('Corrective action:');
+      expect(prompt).toContain('Evidence target:');
       // Correction-specific content must remain present alongside it.
       expect(prompt).toContain('Correction context:');
       expect(prompt).toContain('Judge verdict: IMPLEMENTATION_MISMATCH');
@@ -113,6 +117,7 @@ describe('repository evidence correction prompt integration', () => {
       expect(prompt).toContain('BLOCKED on repository context');
       expect(prompt).toContain('Context kind: test');
       expect(prompt).toContain('Readiness decision: refresh-required');
+      expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

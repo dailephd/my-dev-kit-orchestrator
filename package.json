@@ -23,6 +23,7 @@
     "start": "node dist/cli.js",
     "docs:check": "node scripts/check-docs-consistency.mjs",
     "smoke:cli": "node scripts/cli-smoke.mjs",
+    "smoke:context": "node scripts/context-readiness-cli-smoke.mjs",
     "test": "jest",
     "test:security": "node scripts/test-security.mjs",
     "test:watch": "jest --watch",

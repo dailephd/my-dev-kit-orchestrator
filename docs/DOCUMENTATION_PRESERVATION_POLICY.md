@@ -53,7 +53,10 @@ explicit evidence and authorization.
 
 Content may move to its canonical document when the destination preserves its
 complete meaning. Keep a summary and link at the source when readers still need
-context, and record the move in a relocation ledger.
+context, and record the move in a relocation ledger. The preservation manifest
+is the permanent ledger for canonical document ownership, protected facts,
+required structure, and duplication boundaries; run-specific forensic notes
+belong in the run reports.
 
 ## Reconciliation and stop threshold
 
@@ -77,3 +80,8 @@ temporal lens, planning policy, required and forbidden headings, forbidden
 content, major heading order, version-status policy, source owners, and
 duplication boundaries. The documentation gate validates required claims and
 the absence of contradictory or structurally invalid planning material.
+
+When a public contract is represented by a stable source interface, the
+checker should derive its field inventory from that owner and compare it with
+the manifest. Documentation must not claim workflow, stage, or run identity
+validation unless an implementation owner enforces that identity.

@@ -37,6 +37,11 @@ describe('verification prompt context readiness review', () => {
       const prompt = generateStagePrompt(meta, 'verification');
       expect(prompt).toContain('Context readiness review:');
       expect(prompt).toContain('Overall decision: refresh-required');
+      expect(prompt).toContain('Canonical run blocker:');
+      expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
+      expect(prompt).toContain('Primary reason:');
+      expect(prompt).toContain('Corrective action:');
+      expect(prompt).toContain('Evidence target:');
       expect(prompt).toContain('do not claim the work is verified');
       expect(prompt).toContain('Do not run normal behavioral verification commands');
       // The stage's own VerificationReport contract must still be present.
@@ -55,6 +60,7 @@ describe('verification prompt context readiness review', () => {
       const prompt = generateStagePrompt(meta, 'verification');
       expect(prompt).toContain('Overall decision: ready');
       expect(prompt).toContain('All required repository context is ready');
+      expect(prompt).not.toContain('Canonical run blocker:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

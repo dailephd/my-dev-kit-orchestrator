@@ -25,6 +25,7 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] `npm run build`
 - [ ] `node dist/cli.js --version`
 - [ ] `node dist/cli.js --help`
+- [ ] `npm run smoke:context`
 - [ ] `npm pack --dry-run`
 - [ ] `git diff --check`
 
@@ -52,6 +53,14 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] docs state that `status` has no JSON option
 - [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
   exact `Recommended next stage` policy are documented
+- [ ] every refresh-required result has a deterministic primary blocker,
+  primary reason, corrective action, evidence target, and ordered issue codes
+- [ ] `status`, `check`, prompts, verification, judge, correction routing, and
+  `export` present the canonical blocker consistently
+- [ ] the historical readiness matrix covers valid, contradictory, mismatched,
+  truncated, unmapped, stale, schema-major-1, and legacy evidence
+- [ ] docs claim only repository and index identity checks implemented by the
+  raw and supplemental context contracts, not workflow, stage, or run identity
 - [ ] the configured Node.js 24 validation matrix and Node.js 26 pre-release
   matrix are described separately from local Node.js 24.11.0 evidence
 
@@ -102,8 +111,8 @@ request, in a separate temporary directory:
 - [ ] component docs remain empty until brief schema module/component hints exist
 - [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
-- [ ] release notes disclose manual `my-dev-kit` execution and the published
-  1.10.2 CLI mismatch risk
+- [ ] release notes disclose manual `my-dev-kit` execution and that published
+  1.10.2 is not the corrected producer authority
 
 ## v1.0.0 checklist
 

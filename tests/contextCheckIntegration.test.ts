@@ -20,6 +20,11 @@ describe('check command: repository context readiness', () => {
       expect(output).toContain('=== Repository context readiness ===');
       expect(output).toContain('[fail] implementation context: template');
       expect(output).toContain('[fail] test context: template');
+      expect(output).toContain('Primary blocker: CONTEXT_PACKET_TEMPLATE');
+      expect(output).toContain('Reason:');
+      expect(output).toContain('Blocking issues: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
+      expect(output).toContain('Corrective action:');
+      expect(output).toContain('Evidence target:');
       expect(exitCode).toBe(1);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -50,6 +55,7 @@ describe('check command: repository context readiness', () => {
       const { output } = runCli(['check', '--root', tmp]);
       expect(output).toContain('[pass] implementation context: ready');
       expect(output).toContain('[pass] test context: ready');
+      expect(output).not.toContain('Primary blocker:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -63,6 +69,7 @@ describe('check command: repository context readiness', () => {
       const { output } = runCli(['check', '--all', '--root', tmp]);
       const occurrences = output.split('implementation context: template').length - 1;
       expect(occurrences).toBe(1);
+      expect(output.split('Primary blocker: CONTEXT_PACKET_TEMPLATE').length - 1).toBe(2);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

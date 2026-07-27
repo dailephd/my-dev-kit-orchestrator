@@ -22,6 +22,12 @@ describe('export command: repository context readiness summary', () => {
       expect(output).toContain('recommendedNextStage: implementation');
       expect(output).toContain('implementationContext:');
       expect(output).toContain('testContext:');
+      expect(output).toContain('primaryContextKind: implementation');
+      expect(output).toContain('primaryCode: CONTEXT_PACKET_TEMPLATE');
+      expect(output).toContain('primaryReason:');
+      expect(output).toContain('correctiveAction:');
+      expect(output).toContain('evidenceTarget:');
+      expect(output).toContain('blockingIssueCodes: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -35,6 +41,7 @@ describe('export command: repository context readiness summary', () => {
       makeReadyRunFolder(meta.runFolder, 'feature');
       const { output } = runCli(['export', '--root', tmp]);
       expect(output).toContain('overallDecision: ready');
+      expect(output).not.toContain('primaryContextKind:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

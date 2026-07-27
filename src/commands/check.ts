@@ -127,9 +127,14 @@ function formatGateViolation(v: StageGateViolation): string[] {
 }
 
 function formatContextReadinessResult(kind: string, result: ContextReadinessResult): string[] {
-  const lines = [`  [${result.decision === 'ready' ? 'pass' : 'fail'}] ${kind} context: ${result.classification}`];
-  for (const issue of result.issues.filter((i) => i.severity === 'error')) {
-    lines.push(`         ${issue.code}: ${issue.message}`);
+  const lines = [`  [${result.decision === 'refresh-required' ? 'fail' : 'pass'}] ${kind} context: ${result.classification}`];
+  if (result.blockerSummary) {
+    const blocker = result.blockerSummary;
+    lines.push(`         Primary blocker: ${blocker.primaryCode}`);
+    lines.push(`         Reason: ${blocker.primaryReason}`);
+    lines.push(`         Blocking issues: ${blocker.blockingIssueCodes.join(', ')}`);
+    lines.push(`         Corrective action: ${blocker.correctiveAction}`);
+    lines.push(`         Evidence target: ${blocker.evidenceTarget}`);
   }
   return lines;
 }
@@ -297,6 +302,7 @@ export function makeCheckCommand(): Command {
             mode: meta.mode,
             runFolder: meta.runFolder,
             workflowStageNames: meta.stages.map((s) => s.name),
+            projectRoot: meta.projectRoot,
           });
           const contextCheck = formatContextReadinessCheck(contextReadiness);
 
@@ -562,6 +568,7 @@ export function makeCheckCommand(): Command {
                   mode: meta.mode,
                   runFolder: meta.runFolder,
                   workflowStageNames: meta.stages.map((s) => s.name),
+                  projectRoot: meta.projectRoot,
                 }),
               )
             : null;

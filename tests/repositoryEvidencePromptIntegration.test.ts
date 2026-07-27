@@ -53,6 +53,11 @@ describe('repository evidence prompt integration', () => {
         expect(prompt).toContain('BLOCKED on repository context');
         expect(prompt).toContain('Readiness decision: refresh-required');
         expect(prompt).toContain('Classification: missing');
+        expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
+        expect(prompt).toContain('Primary reason:');
+        expect(prompt).toContain('Blocking issues: CONTEXT_PACKET_MISSING, CONTEXT_REPORT_MISSING');
+        expect(prompt).toContain('Corrective action:');
+        expect(prompt).toContain('Evidence target:');
         expect(prompt).toContain('Automatic retrieval: disabled');
         expect(prompt).toContain('do not write the normal stage report artifact for this stage');
         // The normal packet-backed instruction block must NOT be present --
@@ -197,6 +202,9 @@ describe('repository evidence prompt integration', () => {
       const prompt = generateStagePrompt(meta, 'implementation');
       expect(prompt).toContain('BLOCKED on repository context');
       expect(prompt).toContain('Readiness decision: refresh-required');
+      expect(prompt).toContain('Primary blocker: CONTEXT_SOURCE_SUMMARY_MISMATCH');
+      expect(prompt).toContain('Corrective action: Regenerate one canonical capsule/audit pair and preserve producer parity.');
+      expect(prompt).toContain('Evidence target: raw capsule/audit agreement');
       expect(prompt).not.toContain('Context readiness decision: ready');
       expect(prompt).not.toContain('Workflow instruction packet:');
     } finally {
