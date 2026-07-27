@@ -383,6 +383,13 @@ from source when a profile is added or removed.
 - Verify changes with the narrowest relevant checks first, then broader ones when needed.
 - Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
 - Run `npm run lint` when changing TypeScript files.
+- Complete validation requires both `npm test` and `npm run verify`, in either
+  order, each exactly once. `npm test` runs the complete Jest suite. `npm run
+  verify` runs the non-test verification chain (typecheck, build, lint,
+  lint:docs, docs:check, the package-content security contract check, and the
+  CLI smoke checks) and intentionally excludes the test suite, so running
+  both does not execute the suite twice. `npm run verify` alone is not a
+  substitute for `npm test`.
 - Keep ordinary validation on Node.js 22 and Node.js 24, with the supplementary
   Node.js 26 pre-release matrix, across `ubuntu-latest`, `windows-latest`, and
   `macos-15`.

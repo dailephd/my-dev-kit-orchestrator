@@ -30,7 +30,8 @@
     "lint": "eslint src --ext .ts",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "verify": "npm run typecheck && npm run build && npm run lint && npm run lint:docs && npm run docs:check && npm run test:security && npm run smoke:cli -- normal && npm run smoke:cli -- lifecycle && npm run smoke:cli -- extraction && npm run smoke:cli -- check && npm run smoke:cli -- trace && npm run smoke:cli -- correction && npm run smoke:cli -- export && npm run smoke:cli -- greenfield"
   },
   "files": [
     "dist"
