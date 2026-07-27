@@ -3,8 +3,9 @@
 ## Prerequisites
 
 The package does not declare a Node.js version range in `package.json`. The
-ordinary validation workflow runs on Node.js 24, while the pre-release matrix
-uses Node.js 26 to check the latest supported runtime before publication. Both
+ordinary validation workflow runs on Node.js 22 and Node.js 24, while the
+pre-release matrix uses Node.js 26 as supplementary forward-compatibility
+evidence before publication. Both
 workflows cover `ubuntu-latest`, `windows-latest`, and `macos-15`. Local
 compatibility validation used Node.js 24.11.0. The completed feature branch also
 has live cross-platform CI evidence from its validation checkpoint.
@@ -382,7 +383,9 @@ from source when a profile is added or removed.
 - Verify changes with the narrowest relevant checks first, then broader ones when needed.
 - Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
 - Run `npm run lint` when changing TypeScript files.
-- Keep ordinary validation on Node.js 24 and the pre-release matrix on Node.js 26 across `ubuntu-latest`, `windows-latest`, and `macos-15`.
+- Keep ordinary validation on Node.js 22 and Node.js 24, with the supplementary
+  Node.js 26 pre-release matrix, across `ubuntu-latest`, `windows-latest`, and
+  `macos-15`.
 - Report skipped checks and unresolved risks clearly in release work.
 
 ## Validation matrix

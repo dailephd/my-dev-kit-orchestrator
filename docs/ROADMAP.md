@@ -474,9 +474,9 @@ Dependencies and evaluation boundaries:
 - the verified `my-dev-kit` 1.10.2 source contract is the repository-context
   authority; the published 1.10.2 CLI mismatch remains an upstream integration
   risk, so users must select a verified CLI manually
-- `my-dev-kit-lab` v0.4.2 remains the stable evaluation baseline; incorrect
-  dirty v0.4.3 work is not current authority, and any corrected v0.4.3 work is
-  downstream evaluation scope
+- `my-dev-kit-lab` v0.4.3 is the latest published evaluation baseline;
+  the v0.4.4 producer-readiness bridge is implemented but unpublished and is
+  undergoing its separate pre-release correction and revalidation workflow
 - the orchestrator has no runtime dependency on `my-dev-kit-lab`
 
 Exclusions:

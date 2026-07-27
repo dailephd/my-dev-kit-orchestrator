@@ -97,7 +97,7 @@ request, in a separate temporary directory:
 ## Cross-platform and security gates
 
 - [ ] ordinary validation covers `windows-latest`, `macos-15`, and
-  `ubuntu-latest` with Node.js 24
+  `ubuntu-latest` with Node.js 22 and Node.js 24
 - [ ] pre-release validation covers the same operating systems with Node.js 26
 - [ ] after the branch is pushed, record the actual live CI result separately
 - [ ] `my-dev-kit-lab` self-validation passes
@@ -113,6 +113,33 @@ request, in a separate temporary directory:
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
 - [ ] release notes disclose manual `my-dev-kit` execution and that published
   1.10.2 is not the corrected producer authority
+
+### v1.2.2 release preparation and publication procedure
+
+This procedure is inactive until a separately authorized release workflow
+begins. Completing this checklist does not itself authorize a release.
+
+1. Verify the corrected `v1.2.2` candidate commit and a clean candidate branch.
+2. Confirm that `@dailephd/my-dev-kit-orchestrator@1.2.2` is available on npm.
+3. Create `release/v1.2.2` from the verified candidate.
+4. Update `package.json` and both package-lock root version fields to `1.2.2`.
+5. Update the changelog and release-state documentation for the release.
+6. Run `npm ci` and the complete configured validation suite.
+7. Revalidate compatibility against published `my-dev-kit@1.10.3`.
+8. Inspect the complete `npm pack --dry-run` inventory.
+9. Commit the exact release files and push `release/v1.2.2`.
+10. Create a pull request targeting `main`.
+11. Require passing CI, review, and the repository's approved pull-request gate.
+12. Merge only through that approved pull-request gate.
+13. Verify the merged release commit on `main`.
+14. Create and push tag `v1.2.2` at the verified merged commit.
+15. Create the GitHub Release for `v1.2.2` and verify its tag and commit.
+16. Verify npm authentication, registry state, and version availability again.
+17. Run `npm publish --access public` as the final publication command because
+    it requires the user's passkey.
+18. Verify the published `@dailephd/my-dev-kit-orchestrator@1.2.2` package.
+19. Verify that npm `latest` resolves to `1.2.2`.
+20. Run read-only post-publication CLI and compatibility smoke tests.
 
 ## v1.0.0 checklist
 
