@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15]
-        node-version: ['24']
+        node-version: ['22', '24']
 
     steps:
       - name: Checkout
@@ -49,6 +49,9 @@ jobs:
 
       - name: Lint docs
         run: npm run lint:docs
+
+      - name: Check documentation consistency
+        run: npm run docs:check
 
       - name: Security contract check
         run: npm run test:security
@@ -82,3 +85,6 @@ jobs:
 
       - name: CLI greenfield smoke
         run: npm run smoke:cli -- greenfield
+
+      - name: Package dry run
+        run: npm pack --dry-run
