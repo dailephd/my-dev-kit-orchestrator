@@ -193,10 +193,9 @@ routing, and `export` preserve the canonical primary blocker.
 ### Manual my-dev-kit integration caveat
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
-and run manually. The published package labeled `my-dev-kit` 1.10.2 remains
-unsuitable as the authority for the corrected role-aware producer behavior.
-Use a verified unreleased producer until the upstream patch is published; no
-local worktree path is part of the public contract.
+and run manually. The published `@dailephd/my-dev-kit@1.10.3` package is the
+verified authority for the corrected role-aware producer behavior; no local
+worktree path is part of the public contract.
 
 ### Known instruction and context limitations
 

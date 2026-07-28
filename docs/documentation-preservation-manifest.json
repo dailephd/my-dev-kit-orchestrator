@@ -21,8 +21,7 @@
       "seven workflow modes",
       "79 native stages",
       "latest published package",
-      "v1.2.1",
-      "implemented, unreleased `v1.2.2`",
+      "v1.2.2",
       "refresh-only prompt",
       "primary blocker",
       "corrective action",
@@ -99,7 +98,7 @@
       "Node.js 26",
       "Node.js 24.11.0",
       "live cross-platform CI evidence",
-      "published package labeled `my-dev-kit` 1.10.2",
+      "published `@dailephd/my-dev-kit@1.10.3`",
       "historical readiness matrix"
     ],
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md": [
@@ -108,7 +107,7 @@
       "Reconciliation and stop threshold"
     ],
     "docs/RELEASE_CHECKLIST.md": [
-      "latest-published `v1.2.1`",
+      "latest-published `v1.2.2`",
       "79 native stages",
       "eight CLI commands",
       "11 context-sensitive direct stages",
@@ -119,7 +118,8 @@
       "historical readiness matrix"
     ],
     "CHANGELOG.md": [
-      "Unreleased - v1.2.2 Context Readiness and Documentation Safeguards",
+      "v1.2.2 - Context Readiness and Documentation Safeguards",
+      "Release date: 2026-07-28",
       "v1.2.1",
       "Release date: 2026-07-21",
       "v1.2.0",
@@ -127,7 +127,7 @@
       "v1.0.0"
     ],
     "docs/ROADMAP.md": [
-      "Implemented, unreleased v1.2.2",
+      "Published v1.2.2",
       "Published v1.2.1",
       "Published as `1.2.1`",
       "Ecosystem responsibility boundaries",
@@ -174,9 +174,8 @@
   ],
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.2.1",
-    "latestPublishedVersion": "1.2.1",
-    "latestImplementedUnreleasedVersion": "1.2.2",
+    "packageMetadataVersion": "1.2.2",
+    "latestPublishedVersion": "1.2.2",
     "cliCommands": [
       "init",
       "start",
@@ -232,8 +231,7 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.2.1 with older releases historically scoped",
-    "implemented unreleased v1.2.2 without a publication claim",
+    "published v1.2.2 with older releases historically scoped",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -289,7 +287,7 @@
       "orderedHeadingGroups": [
         ["What it helps you do", "Current release", "Quick start", "Command overview", "Tool boundaries", "Documentation"]
       ],
-      "versionStatusPolicy": "v1.2.1 is latest published; v1.2.2 source is implemented but unreleased; older versions remain historically scoped.",
+      "versionStatusPolicy": "v1.2.2 is latest published; older versions remain historically scoped.",
       "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
       "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
@@ -299,16 +297,16 @@
       "purpose": "Released product changes and any future unreleased delta.",
       "temporalLens": "Release history with the current release first.",
       "planningDetailAllowed": false,
-      "requiredTopLevelHeadings": ["Unreleased - v1.2.2 Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"],
+      "requiredTopLevelHeadings": ["v1.2.2 - Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"],
       "allowedTopLevelHeadingPatterns": ["^(Unreleased.*|v[0-9]+\\.[0-9]+\\.[0-9]+.*)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
       "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
-      "orderedHeadingGroups": [["Unreleased - v1.2.2 Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
-      "versionStatusPolicy": "v1.2.2 is implemented but unreleased; v1.2.1 is the current release; older entries remain historical.",
+      "orderedHeadingGroups": [["v1.2.2 - Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
+      "versionStatusPolicy": "v1.2.2 is the current release; older entries remain historical.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
-      "protectedFacts": ["latestPublishedVersion", "latestImplementedUnreleasedVersion"]
+      "protectedFacts": ["latestPublishedVersion"]
     },
     "docs/ARCHITECTURE.md": {
       "purpose": "Current implemented architecture at repository HEAD.",
@@ -407,16 +405,16 @@
       "purpose": "High-level released, current, and future version roadmap.",
       "temporalLens": "Historical releases, current published status, and high-level future direction.",
       "planningDetailAllowed": "high-level-only",
-      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Implemented, unreleased v1.2.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
+      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
       "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Implemented, unreleased v[0-9]+\\.[0-9]+\\.[0-9]+|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
-      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Implemented, unreleased v1.2.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.2.1 as the current published milestone, v1.2.2 as implemented and unreleased, and future versions high level.",
+      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
+      "versionStatusPolicy": "Keep v1.2.2 as the current published milestone; future versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],
-      "protectedFacts": ["roadmapVersions", "latestPublishedVersion", "latestImplementedUnreleasedVersion"]
+      "protectedFacts": ["roadmapVersions", "latestPublishedVersion"]
     },
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md": {
       "purpose": "Permanent authority, preservation, and structural rules for committed documentation.",

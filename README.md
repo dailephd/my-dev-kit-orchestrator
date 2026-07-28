@@ -23,14 +23,15 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The latest published package is
-`@dailephd/my-dev-kit-orchestrator@1.2.1`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.2.2`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-Repository HEAD also contains the implemented, unreleased `v1.2.2` context-
-readiness and documentation safeguards. They are not part of the published
-package yet.
+`v1.2.2` ships context-readiness and documentation safeguards on top of the
+`v1.2.1` workflow-instruction foundation: canonical actionable context-blocker
+summaries, historical readiness-matrix coverage, and preservation-manifest
+checks for the blocker contract and context-identity claims.
 
-The `v1.2.1` release supports seven workflow modes:
+The current release supports seven workflow modes:
 
 - `feature`
 - `repair`

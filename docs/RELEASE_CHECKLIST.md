@@ -2,7 +2,7 @@
 
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The latest
-published package is `v1.2.1`; older releases remain historical baselines.
+published package is `v1.2.2`; older releases remain historical baselines.
 
 ## Current release baseline
 
@@ -11,7 +11,7 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify latest-published `v1.2.1` and scope older versions historically
+- [ ] docs identify latest-published `v1.2.2` and scope older versions historically
 
 ## Required local validation
 
@@ -111,8 +111,9 @@ request, in a separate temporary directory:
 - [ ] component docs remain empty until brief schema module/component hints exist
 - [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
-- [ ] release notes disclose manual `my-dev-kit` execution and that published
-  1.10.2 is not the corrected producer authority
+- [ ] release notes disclose manual `my-dev-kit` execution and that the
+  published `@dailephd/my-dev-kit@1.10.3` package is the verified corrected
+  producer authority
 
 ### v1.2.2 release preparation and publication procedure
 

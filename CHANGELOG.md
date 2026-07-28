@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased - v1.2.2 Context Readiness and Documentation Safeguards
+## v1.2.2 - Context Readiness and Documentation Safeguards
 
-Status: implemented in repository source, not published.
+Release date: 2026-07-28.
 
 ### Added
 
@@ -21,8 +21,8 @@ Status: implemented in repository source, not published.
 - test-responsibility parsing distinguishes actual responsibility entries from
   packet preamble, coverage, risk, verification, downstream-use, and status
   sections while retaining malformed, duplicate, and missing-ID diagnostics
-- documentation now distinguishes the published `v1.2.1` package from the
-  implemented, unreleased `v1.2.2` source state
+- documentation now distinguishes the published `v1.2.1` package history from
+  the shipped `v1.2.2` source state
 
 ### Fixed
 
@@ -36,12 +36,11 @@ Status: implemented in repository source, not published.
 
 ### Compatibility and limits
 
-- package metadata remains `1.2.1`; this entry is not a publication claim
 - schema-major-1 evidence, legacy runs, stage order, verdicts, CLI commands,
   and manual `my-dev-kit` execution remain compatible
-- the published `my-dev-kit` 1.10.2 package is not the authority for the
-  corrected role-aware producer behavior; select and verify an appropriate
-  producer CLI manually
+- verified against the published `@dailephd/my-dev-kit@1.10.3` producer
+  package for role-aware producer behavior; manual retrieval still requires
+  selecting and running a verified producer CLI
 
 ## v1.2.1 - Workflow Instruction and Context Readiness
 

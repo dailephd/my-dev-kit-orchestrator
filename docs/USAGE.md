@@ -229,10 +229,10 @@ or `extraction`; test mode uses only the test-context pair.
 8. Print the target prompt again.
 9. Proceed with implementation or test work only when readiness is `ready`.
 
-The published package labeled `my-dev-kit` 1.10.2 is not the authority for the
-corrected role-aware context producer behavior. Until that upstream patch is
-published, select and verify an appropriate unreleased producer CLI manually;
-no local worktree path is part of this public contract.
+The published `@dailephd/my-dev-kit@1.10.3` package is the verified authority
+for the corrected role-aware context producer behavior. Select and verify an
+appropriate producer CLI manually; no local worktree path is part of this
+public contract.
 
 The fixed files are:
 
