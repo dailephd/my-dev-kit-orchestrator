@@ -170,6 +170,6 @@ describe('v1.2.1 compatibility manifest', () => {
     const pkg = require('../package.json');
     expect(manifest.packageName).toBe(pkg.name);
     expect(manifest.currentPackageVersion).toBe(pkg.version);
-    expect(pkg.version).toBe('1.2.1');
+    expect(pkg.version).toBe('1.2.2');
   });
 });

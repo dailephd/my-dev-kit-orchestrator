@@ -20,6 +20,11 @@ describe('status command: repository context readiness', () => {
       expect(output).toContain('Repository context readiness: refresh-required');
       expect(output).toContain('Implementation context: refresh-required');
       expect(output).toContain('Test context: refresh-required');
+      expect(output).toContain('Primary blocker: CONTEXT_PACKET_TEMPLATE');
+      expect(output).toContain('Reason:');
+      expect(output).toContain('Blocking: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
+      expect(output).toContain('Corrective action:');
+      expect(output).toContain('Evidence target:');
       expect(output).toContain('Recommended next stage: implementation');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -34,6 +39,7 @@ describe('status command: repository context readiness', () => {
       makeReadyRunFolder(meta.runFolder, 'feature');
       const { output } = runCli(['status', '--root', tmp]);
       expect(output).toContain('Repository context readiness: ready');
+      expect(output).not.toContain('Primary blocker:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

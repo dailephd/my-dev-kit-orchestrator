@@ -131,12 +131,14 @@ function listMissingArtifacts(
 function formatContextReadinessSummary(meta: {
   mode: string;
   runFolder: string;
+  projectRoot?: string;
   stages: Array<{ name: string }>;
 }): string {
   const summary = evaluateRunContextReadiness({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
   });
 
   const lines: string[] = [
@@ -159,8 +161,22 @@ function formatContextReadinessSummary(meta: {
     lines.push(`    evaluatedFreshness: ${result.evaluatedFreshness}`);
     lines.push(`    evaluatedAdequacy: ${result.evaluatedAdequacy}`);
     lines.push(`    readyWithAssumptions: ${result.readyWithAssumptions}`);
+    if (result.blockerSummary) {
+      lines.push(`    primaryCode: ${result.blockerSummary.primaryCode}`);
+      lines.push(`    primaryReason: ${result.blockerSummary.primaryReason}`);
+      lines.push(`    correctiveAction: ${result.blockerSummary.correctiveAction}`);
+      lines.push(`    evidenceTarget: ${result.blockerSummary.evidenceTarget}`);
+      lines.push(`    blockingIssueCodes: ${result.blockerSummary.blockingIssueCodes.join(', ')}`);
+    }
   }
 
+  if (summary.primaryBlocker) {
+    lines.push(`  primaryContextKind: ${summary.primaryBlocker.contextKind}`);
+    lines.push(`  primaryCode: ${summary.primaryBlocker.primaryCode}`);
+    lines.push(`  primaryReason: ${summary.primaryBlocker.primaryReason}`);
+    lines.push(`  correctiveAction: ${summary.primaryBlocker.correctiveAction}`);
+    lines.push(`  evidenceTarget: ${summary.primaryBlocker.evidenceTarget}`);
+  }
   lines.push(`  blockingIssueCodes: ${summary.blockingIssueCodes.length > 0 ? summary.blockingIssueCodes.join(', ') : '(none)'}`);
   lines.push(`  warnings: ${summary.warnings.length > 0 ? summary.warnings.join('; ') : '(none)'}`);
   lines.push(`  affectedStages: ${summary.affectedStages.length > 0 ? summary.affectedStages.join(', ') : '(none)'}`);
@@ -194,6 +210,7 @@ export function buildExportText(meta: {
   status: string;
   createdAt: string;
   runFolder: string;
+  projectRoot?: string;
   stages: Array<{ name: string; artifactFile: string }>;
 }): string {
   const parts: string[] = [];

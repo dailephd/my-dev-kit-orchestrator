@@ -110,6 +110,8 @@ const REQUIRED_BLOCK_FIELDS = [
   'expected result',
   'test level',
 ];
+const RESPONSIBILITY_BODY_FIELDS = REQUIRED_BLOCK_FIELDS.filter((field) => field !== 'test responsibility id');
+const RESPONSIBILITY_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._:/#-]*$/;
 
 export interface ParsedTestResponsibility {
   responsibilityId: string;
@@ -121,6 +123,7 @@ export interface ParsedTestResponsibility {
 
 export type TestResponsibilityParseIssueCode =
   | 'CONTEXT_TEST_RESPONSIBILITY_ID_MISSING'
+  | 'CONTEXT_TEST_RESPONSIBILITY_ID_INVALID'
   | 'CONTEXT_TEST_RESPONSIBILITY_DUPLICATE'
   | 'CONTEXT_TEST_RESPONSIBILITY_CRITICALITY_MISSING'
   | 'CONTEXT_TEST_RESPONSIBILITY_CRITICALITY_INVALID';
@@ -169,6 +172,36 @@ function splitIntoBlocks(text: string): string[][] {
   return blocks.filter((b) => b.some((l) => l.trim().length > 0));
 }
 
+function hasLegacyResponsibilityList(blockLines: readonly string[]): boolean {
+  const headingIndex = blockLines.findIndex((line) => /^test responsibilities\s*:\s*$/i.test(line.trim()));
+  if (headingIndex < 0) return false;
+  return blockLines.slice(headingIndex + 1).some((line) => /^[-*+]\s+\S/.test(line.trim()));
+}
+
+function isResponsibilityEntry(
+  fields: Readonly<Record<string, string>>,
+  blockLines: readonly string[],
+): boolean {
+  if (Object.prototype.hasOwnProperty.call(fields, 'test responsibility id')) return true;
+  if (hasLegacyResponsibilityList(blockLines)) return true;
+
+  const bodyFieldCount = RESPONSIBILITY_BODY_FIELDS.filter((field) =>
+    Object.prototype.hasOwnProperty.call(fields, field),
+  ).length;
+  const hasResponsibilitySignature =
+    Object.prototype.hasOwnProperty.call(fields, 'criticality') ||
+    Object.prototype.hasOwnProperty.call(fields, 'action or trigger') ||
+    Object.prototype.hasOwnProperty.call(fields, 'expected result') ||
+    Object.prototype.hasOwnProperty.call(fields, 'test level');
+
+  // A real entry with its ID accidentally removed still has the structured
+  // responsibility body. Requiring two body fields plus a responsibility-only
+  // signature avoids interpreting document preambles, headings, prose, command
+  // lists, coverage/risk sections, downstream-use text, or status trailers as
+  // responsibility entries.
+  return bodyFieldCount >= 2 && hasResponsibilitySignature;
+}
+
 export function parseTestResponsibilityBlocks(text: string): TestResponsibilityParseResult {
   const blocks = splitIntoBlocks(text);
   const responsibilities: ParsedTestResponsibility[] = [];
@@ -187,6 +220,8 @@ export function parseTestResponsibilityBlocks(text: string): TestResponsibilityP
       }
     }
 
+    if (!isResponsibilityEntry(fields, blockLines)) return;
+
     const responsibilityId = fields['test responsibility id'];
     if (!responsibilityId) {
       issues.push({
@@ -195,6 +230,15 @@ export function parseTestResponsibilityBlocks(text: string): TestResponsibilityP
         blockIndex,
       });
       return;
+    }
+
+    if (!RESPONSIBILITY_ID_RE.test(responsibilityId)) {
+      issues.push({
+        code: 'CONTEXT_TEST_RESPONSIBILITY_ID_INVALID',
+        message: `Responsibility block ${blockIndex} has a malformed test responsibility ID: "${responsibilityId}".`,
+        blockIndex,
+        responsibilityId,
+      });
     }
 
     if (seenIds.has(responsibilityId)) {

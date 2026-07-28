@@ -155,6 +155,7 @@ export function makeStatusCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
       });
       if (readiness.overallDecision === 'not-required') {
         lines.push(`Repository context: not required`);
@@ -164,8 +165,13 @@ export function makeStatusCommand(): Command {
           lines.push(
             `  Implementation context: ${readiness.implementationContext.decision} (${readiness.implementationContext.classification}, freshness: ${readiness.implementationContext.evaluatedFreshness}, adequacy: ${readiness.implementationContext.evaluatedAdequacy})`,
           );
-          if (readiness.implementationContext.blockingIssueCodes.length > 0) {
-            lines.push(`    Blocking: ${readiness.implementationContext.blockingIssueCodes.join(', ')}`);
+          if (readiness.implementationContext.blockerSummary) {
+            const blocker = readiness.implementationContext.blockerSummary;
+            lines.push(`    Primary blocker: ${blocker.primaryCode}`);
+            lines.push(`    Reason: ${blocker.primaryReason}`);
+            lines.push(`    Blocking: ${blocker.blockingIssueCodes.join(', ')}`);
+            lines.push(`    Corrective action: ${blocker.correctiveAction}`);
+            lines.push(`    Evidence target: ${blocker.evidenceTarget}`);
           }
         }
         if (readiness.testContext) {
@@ -176,8 +182,13 @@ export function makeStatusCommand(): Command {
             const s = readiness.testContext.criticalResponsibilitySummary;
             lines.push(`    Critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} fully mapped`);
           }
-          if (readiness.testContext.blockingIssueCodes.length > 0) {
-            lines.push(`    Blocking: ${readiness.testContext.blockingIssueCodes.join(', ')}`);
+          if (readiness.testContext.blockerSummary) {
+            const blocker = readiness.testContext.blockerSummary;
+            lines.push(`    Primary blocker: ${blocker.primaryCode}`);
+            lines.push(`    Reason: ${blocker.primaryReason}`);
+            lines.push(`    Blocking: ${blocker.blockingIssueCodes.join(', ')}`);
+            lines.push(`    Corrective action: ${blocker.correctiveAction}`);
+            lines.push(`    Evidence target: ${blocker.evidenceTarget}`);
           }
         }
         if (readiness.overallDecision === 'refresh-required' && readiness.recommendedNextStage) {

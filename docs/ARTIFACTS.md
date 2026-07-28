@@ -619,9 +619,12 @@ not mark artifacts stale, deletion creates no artifact-state transition, and
 they do not appear as lifecycle stages. They can affect context readiness,
 prompt rendering, `check` results, and exported readiness summaries.
 
-`export` includes a structured readiness summary. It does not embed complete
-raw capsule or audit contents and does not copy referenced external evidence
-files merely because a supplemental document names them.
+`export` includes a structured readiness summary. A blocked context includes
+its canonical `contextKind`, `primaryCode`, `primaryReason`,
+`correctiveAction`, `evidenceTarget`, `blockingIssueCodes`, and
+`supportingIssueCodes`; a ready context has no primary blocker. The export does
+not embed complete raw capsule or audit contents and does not copy referenced
+external evidence files merely because a supplemental document names them.
 
 ## Shared completion expectations
 

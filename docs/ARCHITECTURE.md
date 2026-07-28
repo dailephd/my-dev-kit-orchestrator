@@ -6,7 +6,7 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The latest published release is `v1.2.1`. Architecture is organized by current
+The latest published release is `v1.2.2`. Architecture is organized by current
 responsibility rather than by release version.
 
 ## System boundaries
@@ -184,9 +184,10 @@ by the selected mode.
 Evaluation checks:
 
 - document structure and schema identity
-- workflow, stage, run, and repository identity
+- supplemental document kind and role
+- raw capsule/audit repository and active-index identity agreement
 - source references and provenance
-- declared freshness and after-index evidence
+- declared freshness and after-index agreement
 - role-specific adequacy
 - required-evidence truncation
 - critical test-responsibility mappings
@@ -195,6 +196,13 @@ Freshness is supplied by verified external evidence; the orchestrator does not
 independently compute repository freshness. Missing, stale, inadequate,
 truncated, or critically unmapped required evidence produces deterministically
 ordered issues and a blocked decision.
+
+Every refresh-required result is finalized with an actionable canonical
+blocker summary. The summary contains `contextKind`, `primaryCode`,
+`primaryReason`, `correctiveAction`, `evidenceTarget`, `blockingIssueCodes`,
+and `supportingIssueCodes`. Primary selection uses one deterministic priority
+order; run-level aggregation preserves implementation-before-test priority and
+never converts an error-bearing result to ready.
 
 ## Lifecycle boundaries
 
@@ -214,18 +222,21 @@ summaries without changing the native lifecycle graph.
 ## Status, check, and export
 
 `status` reports human-readable implementation and test readiness, freshness,
-adequacy, blocking issues, and the recommended next stage. The current CLI has
-no status JSON option.
+adequacy, the primary blocker and reason, corrective action, evidence target,
+ordered issue codes, and the recommended next stage. The current CLI has no
+status JSON option.
 
 `check` evaluates context readiness together with its selected existing checks.
 Blocking context issues fail the command, warning-only conditions do not, and
-duplicate failures for the same context kind are suppressed. `check` and
-`check --all` are read-only.
+duplicate failures for the same context kind are suppressed. Its failure
+message uses the same canonical blocker summary. `check` and `check --all` are
+read-only.
 
 `export` includes a structured readiness summary and preserves an honest blocked
-state. It does not embed full raw capsule or audit content and does not copy
-external evidence merely because a supplemental file references it. Existing
-path-safety checks remain in effect.
+state, including the canonical primary blocker fields when blocked. It does not
+embed full raw capsule or audit content and does not copy external evidence
+merely because a supplemental file references it. Existing path-safety checks
+remain in effect.
 
 ## Judge and correction routing
 

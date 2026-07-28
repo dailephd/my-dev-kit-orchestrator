@@ -2,7 +2,7 @@
 
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The latest
-published package is `v1.2.1`; older releases remain historical baselines.
+published package is `v1.2.2`; older releases remain historical baselines.
 
 ## Current release baseline
 
@@ -11,7 +11,7 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify latest-published `v1.2.1` and scope older versions historically
+- [ ] docs identify latest-published `v1.2.2` and scope older versions historically
 
 ## Required local validation
 
@@ -25,6 +25,7 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] `npm run build`
 - [ ] `node dist/cli.js --version`
 - [ ] `node dist/cli.js --help`
+- [ ] `npm run smoke:context`
 - [ ] `npm pack --dry-run`
 - [ ] `git diff --check`
 
@@ -52,6 +53,14 @@ published package is `v1.2.1`; older releases remain historical baselines.
 - [ ] docs state that `status` has no JSON option
 - [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
   exact `Recommended next stage` policy are documented
+- [ ] every refresh-required result has a deterministic primary blocker,
+  primary reason, corrective action, evidence target, and ordered issue codes
+- [ ] `status`, `check`, prompts, verification, judge, correction routing, and
+  `export` present the canonical blocker consistently
+- [ ] the historical readiness matrix covers valid, contradictory, mismatched,
+  truncated, unmapped, stale, schema-major-1, and legacy evidence
+- [ ] docs claim only repository and index identity checks implemented by the
+  raw and supplemental context contracts, not workflow, stage, or run identity
 - [ ] the configured Node.js 24 validation matrix and Node.js 26 pre-release
   matrix are described separately from local Node.js 24.11.0 evidence
 
@@ -88,7 +97,7 @@ request, in a separate temporary directory:
 ## Cross-platform and security gates
 
 - [ ] ordinary validation covers `windows-latest`, `macos-15`, and
-  `ubuntu-latest` with Node.js 24
+  `ubuntu-latest` with Node.js 22 and Node.js 24
 - [ ] pre-release validation covers the same operating systems with Node.js 26
 - [ ] after the branch is pushed, record the actual live CI result separately
 - [ ] `my-dev-kit-lab` self-validation passes
@@ -102,8 +111,36 @@ request, in a separate temporary directory:
 - [ ] component docs remain empty until brief schema module/component hints exist
 - [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
-- [ ] release notes disclose manual `my-dev-kit` execution and the published
-  1.10.2 CLI mismatch risk
+- [ ] release notes disclose manual `my-dev-kit` execution and that the
+  published `@dailephd/my-dev-kit@1.10.3` package is the verified corrected
+  producer authority
+
+### v1.2.2 release preparation and publication procedure
+
+This procedure is inactive until a separately authorized release workflow
+begins. Completing this checklist does not itself authorize a release.
+
+1. Verify the corrected `v1.2.2` candidate commit and a clean candidate branch.
+2. Confirm that `@dailephd/my-dev-kit-orchestrator@1.2.2` is available on npm.
+3. Create `release/v1.2.2` from the verified candidate.
+4. Update `package.json` and both package-lock root version fields to `1.2.2`.
+5. Update the changelog and release-state documentation for the release.
+6. Run `npm ci` and the complete configured validation suite.
+7. Revalidate compatibility against published `my-dev-kit@1.10.3`.
+8. Inspect the complete `npm pack --dry-run` inventory.
+9. Commit the exact release files and push `release/v1.2.2`.
+10. Create a pull request targeting `main`.
+11. Require passing CI, review, and the repository's approved pull-request gate.
+12. Merge only through that approved pull-request gate.
+13. Verify the merged release commit on `main`.
+14. Create and push tag `v1.2.2` at the verified merged commit.
+15. Create the GitHub Release for `v1.2.2` and verify its tag and commit.
+16. Verify npm authentication, registry state, and version availability again.
+17. Run `npm publish --access public` as the final publication command because
+    it requires the user's passkey.
+18. Verify the published `@dailephd/my-dev-kit-orchestrator@1.2.2` package.
+19. Verify that npm `latest` resolves to `1.2.2`.
+20. Run read-only post-publication CLI and compatibility smoke tests.
 
 ## v1.0.0 checklist
 

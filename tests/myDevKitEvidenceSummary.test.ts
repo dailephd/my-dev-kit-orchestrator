@@ -225,4 +225,114 @@ describe('findCapsuleAuditInconsistencies', () => {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  function expectMismatch(overrides: Record<string, unknown>, field: string) {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule(), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule(overrides), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain(field);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  it('detects a freshness state mismatch', () => {
+    expectMismatch({ freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } }, 'freshness');
+  });
+
+  it('detects an after-index identity mismatch', () => {
+    expectMismatch(
+      { freshness: { role: 'implementation', state: 'fresh', comparedIdentities: [{ label: 'afterIndexPath', value: '/other-after' }] } },
+      'afterIndexIdentity',
+    );
+  });
+
+  it('detects a before-index identity mismatch', () => {
+    expectMismatch(
+      {
+        freshness: {
+          role: 'implementation',
+          state: 'fresh',
+          comparedIdentities: [
+            { label: 'afterIndexPath', value: '/idx' },
+            { label: 'beforeIndexPath', value: '/other-before' },
+          ],
+        },
+      },
+      'beforeIndexIdentity',
+    );
+  });
+
+  it('detects an overall (contextAdequacy) adequacy mismatch', () => {
+    expectMismatch({ contextAdequacy: { status: 'context insufficient and more retrieval required' } }, 'overallAdequacy');
+  });
+
+  it('detects a role-adequacy mismatch', () => {
+    expectMismatch({ roleAdequacy: { status: 'context insufficient and more retrieval required' } }, 'adequacy');
+  });
+
+  it('detects a required-truncation mismatch', () => {
+    expectMismatch({ truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } }, 'requiredTruncation');
+    expectMismatch({ truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } }, 'truncation');
+  });
+
+  it('detects a fallback-usage mismatch', () => {
+    expectMismatch({ fullFileFallback: { used: 1 } }, 'fallback');
+  });
+
+  it('detects a provenance-count mismatch', () => {
+    expectMismatch({ provenance: [{ id: 'p1' }, { id: 'p2' }] }, 'provenance');
+  });
+
+  it('detects a responsibility-mappings-truncated mismatch', () => {
+    expectMismatch({ responsibilityMappings: { mappings: [], truncated: true } }, 'responsibilityMappings');
+  });
+
+  it('detects a repository-identity (index.projectRoot) mismatch (v1.2.2 Batch 2 / F-006)', () => {
+    expectMismatch({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/other' } }, 'repositoryIdentity');
+  });
+
+  it('does not flag a repository identity that only differs by cosmetic path form (separators/case/trailing slash)', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'C:\\Users\\dev\\repo\\' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'c:/Users/dev/repo' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('repositoryIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('does not flag an index-identity mismatch for cosmetically different but equivalent paths', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: 'C:\\idx\\', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: 'c:/idx', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('indexIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });

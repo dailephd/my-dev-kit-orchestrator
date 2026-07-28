@@ -24,6 +24,55 @@ expected result: returns qux
 test level: integration
 `;
 
+const CURRENT_BATCH4_RESPONSIBILITY_IDS = Array.from(
+  { length: 21 },
+  (_, index) => `TST-${String(index + 1).padStart(3, '0')}`,
+);
+const CURRENT_BATCH4_CRITICAL_IDS = CURRENT_BATCH4_RESPONSIBILITY_IDS.filter((id) => id !== 'TST-018');
+
+function responsibilityBlock(id: string, criticality = 'critical'): string {
+  return `
+### Responsibility ${id}
+test responsibility ID: ${id}
+criticality: ${criticality}
+traces to: behavior and failure-mode contract for ${id}
+setup: create the required fixture
+action or trigger: evaluate the readiness boundary
+expected result: the declared invariant remains protected
+test level: integration
+`;
+}
+
+const CURRENT_BATCH4_STRATEGY_SHAPE = [
+  'Artifact: ResilienceTestStrategy',
+  '',
+  ...CURRENT_BATCH4_RESPONSIBILITY_IDS.flatMap((id) =>
+    responsibilityBlock(id, id === 'TST-018' ? 'noncritical' : 'critical').trim().split('\n').concat(''),
+  ),
+  '## Assumptions tested',
+  '',
+  '- A-01 through A-12 are covered by the responsibilities above.',
+  '',
+  '## Coverage gaps',
+  '',
+  '- No unsupported coverage claim is introduced.',
+  '',
+  '## Remaining risks',
+  '',
+  '- Rendered review remains a manual acceptance step.',
+  '',
+  '## Required verification commands',
+  '',
+  '- npm run typecheck',
+  '- npm test -- --runInBand',
+  '',
+  '## Downstream use',
+  '',
+  '- Test implementation consumes string responsibility IDs only.',
+  '',
+  'Status: complete',
+].join('\n');
+
 describe('TEST_STRATEGY_SOURCE_REQUIREMENTS', () => {
   it('covers exactly the six applicable modes with exact stage IDs', () => {
     const modes = TEST_STRATEGY_SOURCE_REQUIREMENTS.map((r) => r.mode).sort();
@@ -59,6 +108,71 @@ describe('parseTestResponsibilityBlocks', () => {
     const result = parseTestResponsibilityBlocks('');
     expect(result.responsibilities).toEqual([]);
     expect(result.issues).toEqual([]);
+  });
+
+  it('ignores the real packet preamble and trailer while extracting all 21 responsibilities and exactly 20 critical IDs', () => {
+    const result = parseTestResponsibilityBlocks(CURRENT_BATCH4_STRATEGY_SHAPE);
+    expect(result.issues).toEqual([]);
+    expect(result.responsibilities.map((responsibility) => responsibility.responsibilityId)).toEqual(
+      CURRENT_BATCH4_RESPONSIBILITY_IDS,
+    );
+    expect(
+      result.responsibilities
+        .filter((responsibility) => responsibility.criticality === 'critical')
+        .map((responsibility) => responsibility.responsibilityId),
+    ).toEqual(CURRENT_BATCH4_CRITICAL_IDS);
+  });
+
+  it.each([
+    ['coverage-gap section', 'Coverage gaps:\n- one known gap remains documented'],
+    ['risk section', 'Remaining risks:\n- rendering needs manual inspection'],
+    ['required verification commands', 'Required verification commands:\n- npm run typecheck\n- npm test'],
+    ['downstream-use section', 'Downstream use:\n- pass string IDs to the producer'],
+    ['status section', 'Status: complete'],
+  ])('does not classify a %s as a responsibility', (_label, trailer) => {
+    const result = parseTestResponsibilityBlocks(`${VALID_BLOCK}\n${trailer}\n`);
+    expect(result.issues).toEqual([]);
+    expect(result.responsibilities.map((responsibility) => responsibility.responsibilityId)).toEqual([
+      'TST-001',
+      'TST-002',
+    ]);
+  });
+
+  it('reports a structurally real responsibility entry whose ID is missing', () => {
+    const text = `
+## Responsibility with an accidentally omitted ID
+criticality: critical
+traces to: invariant A-01
+setup: create a run
+action or trigger: evaluate readiness
+expected result: refresh is required
+test level: unit
+`;
+    const result = parseTestResponsibilityBlocks(text);
+    expect(result.responsibilities).toEqual([]);
+    expect(result.issues.map((issue) => issue.code)).toEqual(['CONTEXT_TEST_RESPONSIBILITY_ID_MISSING']);
+  });
+
+  it('reports an exact legacy Test responsibilities list without IDs', () => {
+    const result = parseTestResponsibilityBlocks([
+      'Artifact: TestStrategyPacket',
+      'Workflow mode: feature',
+      '',
+      'Test responsibilities:',
+      '- Verify the login form validates empty fields.',
+      '- Verify the logout button clears the session.',
+      '',
+      'Status: complete',
+    ].join('\n'));
+
+    expect(result.responsibilities).toEqual([]);
+    expect(result.issues.map((issue) => issue.code)).toEqual(['CONTEXT_TEST_RESPONSIBILITY_ID_MISSING']);
+  });
+
+  it('reports malformed responsibility IDs without suppressing the responsibility record', () => {
+    const result = parseTestResponsibilityBlocks(VALID_BLOCK.replace('TST-001', 'TST 001'));
+    expect(result.responsibilities[0]?.responsibilityId).toBe('TST 001');
+    expect(result.issues.map((issue) => issue.code)).toContain('CONTEXT_TEST_RESPONSIBILITY_ID_INVALID');
   });
 
   it('reports missing criticality', () => {
@@ -100,6 +214,36 @@ test level: unit
     const result2 = parseTestResponsibilityBlocks(VALID_BLOCK);
     expect(result1.responsibilities.map((r) => r.responsibilityId)).toEqual(result2.responsibilities.map((r) => r.responsibilityId));
     expect(result1.responsibilities.map((r) => r.responsibilityId)).toEqual(['TST-001', 'TST-002']);
+  });
+
+  it('supports multiline entries beneath different Markdown heading depths', () => {
+    const text = `
+# Primary responsibility
+test responsibility ID: TST-101
+criticality: critical
+traces to: invariant one
+  and invariant two
+setup: create a run
+  with populated evidence
+action or trigger: evaluate readiness
+expected result: readiness is deterministic
+test level: unit
+
+#### Secondary responsibility
+test responsibility ID: TST-102
+criticality: noncritical
+traces to: editorial freedom
+setup: update prose
+action or trigger: validate documentation
+expected result: semantic structure remains valid
+test level: integration
+`;
+    const result = parseTestResponsibilityBlocks(text);
+    expect(result.issues).toEqual([]);
+    expect(result.responsibilities.map((responsibility) => responsibility.responsibilityId)).toEqual([
+      'TST-101',
+      'TST-102',
+    ]);
   });
 });
 

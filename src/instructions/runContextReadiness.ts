@@ -2,7 +2,11 @@
 // policy (Batch 5). Never persisted; recomputed in memory per call.
 
 import {
+  ContextReadinessBlockerSummary,
+  ContextReadinessIssue,
   ContextReadinessResult,
+  compareContextReadinessIssues,
+  createContextReadinessIssue,
   evaluateContextReadiness,
   notRequiredContextReadiness,
 } from './contextReadiness';
@@ -14,6 +18,7 @@ export interface RunContextReadinessSummary {
   testContext?: ContextReadinessResult;
   overallDecision: 'not-required' | 'ready' | 'refresh-required';
   blockingIssueCodes: string[];
+  primaryBlocker?: ContextReadinessBlockerSummary;
   warnings: string[];
   recommendedNextStage: string | null;
   readyWithAssumptions: boolean;
@@ -37,8 +42,9 @@ export function evaluateRunContextReadiness(input: {
   mode: string;
   runFolder: string;
   workflowStageNames: readonly string[];
+  projectRoot?: string;
 }): RunContextReadinessSummary {
-  const { mode, runFolder, workflowStageNames } = input;
+  const { mode, runFolder, workflowStageNames, projectRoot } = input;
   const requiredKinds = requiredSupplementalContextKindsForMode(mode);
 
   if (requiredKinds.length === 0) {
@@ -59,13 +65,13 @@ export function evaluateRunContextReadiness(input: {
   if (requiredKinds.includes('implementation')) {
     const req = requirementForKind(mode, 'implementation');
     implementationContext = req
-      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode })
+      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode, projectRoot })
       : notRequiredContextReadiness(`stage.${mode}.implementation`, 'implementation', 'implementation');
   }
   if (requiredKinds.includes('test')) {
     const req = requirementForKind(mode, 'test');
     testContext = req
-      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode })
+      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode, projectRoot })
       : notRequiredContextReadiness(`stage.${mode}.test-implementation`, 'test', 'test-implementation');
   }
 
@@ -73,10 +79,6 @@ export function evaluateRunContextReadiness(input: {
   const testReady = !testContext || testContext.decision !== 'refresh-required';
   const overallDecision: RunContextReadinessSummary['overallDecision'] = implementationReady && testReady ? 'ready' : 'refresh-required';
 
-  const blockingIssueCodes = [
-    ...(implementationContext?.blockingIssueCodes ?? []),
-    ...(testContext?.blockingIssueCodes ?? []),
-  ];
   const warnings = [...(implementationContext?.warnings ?? []), ...(testContext?.warnings ?? [])];
 
   // Recommendation policy (AGENTS.txt Batch 5 section 13): implementation
@@ -90,6 +92,37 @@ export function evaluateRunContextReadiness(input: {
     recommendedCandidate = 'test-implementation';
   }
   const recommendedNextStage = recommendedCandidate ? recommendStage(recommendedCandidate, workflowStageNames) : null;
+
+  let blockingIssues: ContextReadinessIssue[] = [
+    ...(implementationContext?.issues.filter((candidate) => candidate.severity === 'error') ?? []),
+    ...(testContext?.issues.filter((candidate) => candidate.severity === 'error') ?? []),
+  ].sort(compareContextReadinessIssues);
+  if (overallDecision === 'refresh-required' && blockingIssues.length === 0) {
+    const fallbackKind = !implementationReady ? 'implementation' : 'test';
+    blockingIssues = [
+      createContextReadinessIssue(
+        'CONTEXT_READINESS_CONTRACT_VIOLATION',
+        'error',
+        'Run-level readiness is refresh-required but no child context exposed an actionable error issue.',
+        `stage.${mode}.${recommendedCandidate ?? 'implementation'}`,
+        fallbackKind,
+      ),
+    ];
+  }
+  const blockingIssueCodes = [...new Set(blockingIssues.map((candidate) => candidate.code))];
+  const primaryIssue = overallDecision === 'refresh-required' ? blockingIssues[0] : undefined;
+  const primaryBlocker =
+    primaryIssue
+      ? {
+          contextKind: primaryIssue.contextKind,
+          primaryCode: primaryIssue.code,
+          primaryReason: primaryIssue.message,
+          correctiveAction: primaryIssue.correctiveAction,
+          evidenceTarget: primaryIssue.evidenceTarget,
+          blockingIssueCodes,
+          supportingIssueCodes: blockingIssueCodes.filter((code) => code !== primaryIssue.code),
+        }
+      : undefined;
 
   const affectedStages: string[] = [];
   if (!implementationReady) {
@@ -111,6 +144,7 @@ export function evaluateRunContextReadiness(input: {
     testContext,
     overallDecision,
     blockingIssueCodes,
+    ...(primaryBlocker ? { primaryBlocker } : {}),
     warnings,
     recommendedNextStage,
     readyWithAssumptions,

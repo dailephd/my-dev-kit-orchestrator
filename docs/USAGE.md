@@ -229,10 +229,10 @@ or `extraction`; test mode uses only the test-context pair.
 8. Print the target prompt again.
 9. Proceed with implementation or test work only when readiness is `ready`.
 
-The published package labeled `my-dev-kit` 1.10.2 showed a CLI mismatch from
-the verified role-aware source contract used by this integration. Do not assume
-a particular published executable provides the required commands; select and
-verify `<MY_DEV_KIT_CLI>` manually.
+The published `@dailephd/my-dev-kit@1.10.3` package is the verified authority
+for the corrected role-aware context producer behavior. Select and verify an
+appropriate producer CLI manually; no local worktree path is part of this
+public contract.
 
 The fixed files are:
 
@@ -246,6 +246,12 @@ When readiness is blocked, a direct `implementation` or
 ready direct stage renders its normal task. `prompt` display is read-only: it
 does not create sidecars or templates and does not alter `run.json`,
 `artifact-state.json`, or supplemental files.
+
+Blocked output identifies one deterministic primary blocker and prints its
+primary reason, corrective action, evidence target, and ordered blocking issue
+codes. The same canonical details appear in `status`, failing `check` output,
+refresh-only prompts, verification and judge context review, correction
+routing, and exported readiness summaries.
 
 ## Start an extraction run
 

@@ -23,10 +23,15 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The latest published package is
-`@dailephd/my-dev-kit-orchestrator@1.2.1`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.2.2`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-The `v1.2.1` release supports seven workflow modes:
+`v1.2.2` ships context-readiness and documentation safeguards on top of the
+`v1.2.1` workflow-instruction foundation: canonical actionable context-blocker
+summaries, historical readiness-matrix coverage, and preservation-manifest
+checks for the blocker contract and context-identity claims.
+
+The current release supports seven workflow modes:
 
 - `feature`
 - `repair`
@@ -54,6 +59,12 @@ refresh-only prompt while required context is blocked; normal implementation
 or test work resumes after context readiness passes. `status`, `check`, and
 `export` expose the resulting readiness state, and judge review uses the
 existing `NEED_CONTEXT` verdict with an exact `Recommended next stage`.
+
+Current source makes every refresh-required result actionable and consistent.
+It selects one deterministic primary blocker, preserves ordered blocking and
+supporting issue codes, and carries the primary reason, corrective action, and
+evidence target through prompts, `status`, `check`, verification, judge,
+correction routing, and `export`.
 
 These additions preserve the eight-command CLI surface, all seven mode stage
 orders, prompt filenames, lifecycle behavior, and old runs. Supplemental

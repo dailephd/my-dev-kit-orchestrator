@@ -6,7 +6,7 @@ import { RunMetadata } from '../src/run';
 import { getWorkflow } from '../src/workflows';
 import { VALID_MODES, WorkflowMode } from '../src/types';
 import { STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS } from '../src/instructions/stageRepositoryEvidenceRequirements';
-import { renderSupplementalContextTemplate } from '../src/instructions/supplementalContextTemplates';
+import { renderSupplementalContextTemplate, writeSupplementalContextTemplates } from '../src/instructions/supplementalContextTemplates';
 import { makeReadyRunFolder, fillRequiredSections } from './readyContextTestHelpers';
 
 function makeTempDir(): string {
@@ -53,6 +53,11 @@ describe('repository evidence prompt integration', () => {
         expect(prompt).toContain('BLOCKED on repository context');
         expect(prompt).toContain('Readiness decision: refresh-required');
         expect(prompt).toContain('Classification: missing');
+        expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
+        expect(prompt).toContain('Primary reason:');
+        expect(prompt).toContain('Blocking issues: CONTEXT_PACKET_MISSING, CONTEXT_REPORT_MISSING');
+        expect(prompt).toContain('Corrective action:');
+        expect(prompt).toContain('Evidence target:');
         expect(prompt).toContain('Automatic retrieval: disabled');
         expect(prompt).toContain('do not write the normal stage report artifact for this stage');
         // The normal packet-backed instruction block must NOT be present --
@@ -148,6 +153,60 @@ describe('repository evidence prompt integration', () => {
       expect(() => generateStagePrompt(meta, 'implementation')).not.toThrow();
       const prompt = generateStagePrompt(meta, 'implementation');
       expect(prompt).toContain('Classification: malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('v1.2.2 Batch 1: a raw capsule/audit contradiction renders a refresh-only implementation prompt, not the normal one', () => {
+    const tmp = makeTempDir();
+    try {
+      fs.mkdirSync(path.join(tmp, 'artifacts'), { recursive: true });
+      fs.mkdirSync(path.join(tmp, 'reports'), { recursive: true });
+      writeSupplementalContextTemplates('feature', tmp);
+
+      const rawEvidence = (state: string) =>
+        JSON.stringify({
+          schemaVersion: '1.0.0',
+          tool: { name: 'my-dev-kit', version: '1.10.2' },
+          index: { indexPath: '/idx', manifestPath: '/idx/manifest.json' },
+          request: { role: 'implementation' },
+          roleContext: { role: 'implementation' },
+          roleAdequacy: { status: 'context sufficient for implementation' },
+          freshness: { role: 'implementation', state, comparedIdentities: [{ label: 'afterIndexPath', value: '/idx' }] },
+          responsibilityMappings: { mappings: [], truncated: false },
+          truncation: { truncated: false, records: [] },
+          fullFileFallback: { used: 0 },
+          provenance: [{ id: 'p1' }],
+          warnings: [],
+        });
+
+      const capsulePath = path.join(tmp, 'implementation-capsule.json');
+      const auditPath = path.join(tmp, 'implementation-audit.json');
+      fs.writeFileSync(capsulePath, rawEvidence('fresh'), 'utf8');
+      fs.writeFileSync(auditPath, rawEvidence('stale'), 'utf8');
+
+      const packetPath = path.join(tmp, 'artifacts', 'implementation-context-packet.txt');
+      const reportPath = path.join(tmp, 'reports', 'implementation-context-retrieval-report.txt');
+      for (const file of [packetPath, reportPath]) {
+        let text = fs
+          .readFileSync(file, 'utf8')
+          .replace('Status: template', 'Status: populated')
+          .replace('Source context capsule: unknown', `Source context capsule: ${capsulePath}`)
+          .replace('Source retrieval audit: unknown', `Source retrieval audit: ${auditPath}`);
+        if (file === packetPath) text = fillRequiredSections(text, 'implementation-context-packet');
+        fs.writeFileSync(file, text, 'utf8');
+      }
+
+      const meta = makeMeta('feature', tmp);
+      const prompt = generateStagePrompt(meta, 'implementation');
+      expect(prompt).toContain('BLOCKED on repository context');
+      expect(prompt).toContain('Readiness decision: refresh-required');
+      expect(prompt).toContain('Primary blocker: CONTEXT_SOURCE_SUMMARY_MISMATCH');
+      expect(prompt).toContain('Corrective action: Regenerate one canonical capsule/audit pair and preserve producer parity.');
+      expect(prompt).toContain('Evidence target: raw capsule/audit agreement');
+      expect(prompt).not.toContain('Context readiness decision: ready');
+      expect(prompt).not.toContain('Workflow instruction packet:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

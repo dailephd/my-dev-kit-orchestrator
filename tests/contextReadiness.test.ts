@@ -311,6 +311,317 @@ test level: unit
   });
 });
 
+describe('evaluateContextReadiness: raw capsule/audit contradictions fail closed (v1.2.2 Batch 1 / F-005)', () => {
+  function contradictionCase(
+    label: string,
+    capsuleOverrides: Record<string, unknown>,
+    auditOverrides: Record<string, unknown>,
+  ) {
+    it(`${label} -> refresh-required with a blocking CONTEXT_SOURCE_SUMMARY_MISMATCH and a primary blocker`, () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', capsuleOverrides, auditOverrides);
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+      expect(result.classification).not.toBe('ready');
+      expect(result.decision).not.toBe('ready');
+    });
+  }
+
+  contradictionCase(
+    'capsule fresh / audit stale',
+    {},
+    { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } },
+  );
+
+  contradictionCase(
+    'capsule stale / audit fresh',
+    { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } },
+    {},
+  );
+
+  contradictionCase(
+    'capsule overall-adequacy sufficient / audit overall-adequacy insufficient',
+    {},
+    { contextAdequacy: { status: 'context insufficient and more retrieval required' } },
+  );
+
+  contradictionCase(
+    'capsule overall-adequacy insufficient / audit overall-adequacy sufficient',
+    { contextAdequacy: { status: 'context insufficient and more retrieval required' } },
+    {},
+  );
+
+  contradictionCase(
+    'capsule role-adequacy sufficient / audit role-adequacy insufficient',
+    {},
+    { roleAdequacy: { status: 'context insufficient and more retrieval required' } },
+  );
+
+  contradictionCase(
+    'capsule role-adequacy insufficient / audit role-adequacy sufficient',
+    { roleAdequacy: { status: 'context insufficient and more retrieval required' } },
+    {},
+  );
+
+  contradictionCase(
+    'required truncation false / true',
+    {},
+    { truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } },
+  );
+
+  contradictionCase(
+    'fallback false / true',
+    {},
+    { fullFileFallback: { used: 1 } },
+  );
+
+  contradictionCase(
+    'provenance present / mismatched count (missing evidence)',
+    {},
+    { provenance: [] },
+  );
+
+  contradictionCase(
+    'responsibility mapping truncated: complete / incomplete',
+    {},
+    { responsibilityMappings: { mappings: [], truncated: true } },
+  );
+
+  contradictionCase(
+    'different active (index) identities',
+    {},
+    { index: { indexPath: '/other-active', manifestPath: '/other-active/manifest.json' } },
+  );
+
+  contradictionCase(
+    'different before-index identities',
+    {
+      freshness: {
+        role: 'implementation',
+        state: 'fresh',
+        comparedIdentities: [
+          { label: 'afterIndexPath', value: '/idx' },
+          { label: 'beforeIndexPath', value: '/before-a' },
+        ],
+      },
+    },
+    {
+      freshness: {
+        role: 'implementation',
+        state: 'fresh',
+        comparedIdentities: [
+          { label: 'afterIndexPath', value: '/idx' },
+          { label: 'beforeIndexPath', value: '/before-b' },
+        ],
+      },
+    },
+  );
+
+  contradictionCase(
+    'different after-index identities',
+    {},
+    { freshness: { role: 'implementation', state: 'fresh', comparedIdentities: [{ label: 'afterIndexPath', value: '/other-after' }] } },
+  );
+
+  it('primary-blocker selection is deterministic: the same contradictory pair always yields the same classification', () => {
+    const runFolder1 = makeRunFolder();
+    const runFolder2 = makeRunFolder();
+    const overrides = { freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } };
+    populateWithRawEvidence(runFolder1, 'implementation', {}, overrides);
+    populateWithRawEvidence(runFolder2, 'implementation', {}, overrides);
+    const r1 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder1, mode: 'feature' });
+    const r2 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder2, mode: 'feature' });
+    expect(r1.classification).toBe(r2.classification);
+    expect(r1.decision).toBe(r2.decision);
+    expect(r1.blockingIssueCodes).toEqual(r2.blockingIssueCodes);
+  });
+
+  it('a matching (non-contradictory) raw pair with otherwise valid evidence remains ready', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation');
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+    expect(result.blockingIssueCodes).not.toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+  });
+});
+
+describe('evaluateContextReadiness: identity enforcement (v1.2.2 Batch 2 / F-006)', () => {
+  const ACTIVE_REPO = '/repo/orchestrator';
+
+  describe('repository identity', () => {
+    it('matching declared repository identity remains ready', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: ACTIVE_REPO } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('an equivalent normalized repository path (separator/case-insensitive drive) remains ready', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'C:/Users/dev/Repo' } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: 'C:\\Users\\dev\\Repo\\' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('a path containing spaces compares correctly', () => {
+      const runFolder = makeRunFolder();
+      const repo = 'C:\\Users\\dev\\My Project (2)\\repo';
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: repo } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: repo });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('a wrong (unrelated) repository blocks with a deterministic primary blocker', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/unrelated-project' } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.classification).toBe('repository-scope-mismatch');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_REPOSITORY_MISMATCH');
+    });
+
+    it('a merely different (but real) repository path is never treated as equal to the active one', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/orchestrator-lab' } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(result.decision).toBe('refresh-required');
+    });
+
+    it('missing declared repository identity on both raw sources remains compatible (legacy schema-major-1 evidence)', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('caller not supplying an expected repository root leaves repository enforcement inactive (backward compatible)', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/anything' } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('an incomplete declared pair (capsule declares it, audit does not) blocks -- both the raw consistency check and the dedicated incomplete-pair check fire', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(
+        runFolder,
+        'implementation',
+        { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: ACTIVE_REPO } },
+        { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json' } },
+      );
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(result.decision).toBe('refresh-required');
+      // Batch 1's raw capsule/audit consistency check (findCapsuleAuditInconsistencies)
+      // fires first and wins the deterministic primary-blocker slot.
+      expect(result.classification).toBe('repository-scope-mismatch');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_REPOSITORY_INCOMPLETE');
+    });
+  });
+
+  describe('declared index identity (packet vs. raw evidence)', () => {
+    function withDeclaredIndexIdentity(runFolder: string, value: string) {
+      const packetPath = path.join(runFolder, 'artifacts/implementation-context-packet.txt');
+      const text = fs.readFileSync(packetPath, 'utf8').replace('Index identity: unknown', `Index identity: ${value}`);
+      fs.writeFileSync(packetPath, text, 'utf8');
+    }
+
+    it('a matching declared index identity remains ready', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      withDeclaredIndexIdentity(runFolder, '/idx');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('leaving the declared index identity as "unknown" (the template default) remains ready -- optional', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('a mismatched declared index identity blocks', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      withDeclaredIndexIdentity(runFolder, '/completely/unrelated/index/path');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.classification).toBe('index-identity-mismatch');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_DECLARED_INDEX_IDENTITY_MISMATCH');
+    });
+
+    it('a malformed-but-present declared index identity blocks rather than crashing', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      withDeclaredIndexIdentity(runFolder, 'not a path at all !!');
+      expect(() =>
+        evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' }),
+      ).not.toThrow();
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+    });
+  });
+
+  describe('declared after-index identity (packet vs. raw evidence)', () => {
+    function withDeclaredAfterIndex(runFolder: string, value: string) {
+      const packetPath = path.join(runFolder, 'artifacts/implementation-context-packet.txt');
+      const text = fs.readFileSync(packetPath, 'utf8').replace('After index: unknown', `After index: ${value}`);
+      fs.writeFileSync(packetPath, text, 'utf8');
+    }
+
+    it('a matching declared after-index remains ready', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      withDeclaredAfterIndex(runFolder, '/idx');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('a mismatched declared after-index blocks', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      withDeclaredAfterIndex(runFolder, '/unrelated/after/index');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.classification).toBe('index-identity-mismatch');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_DECLARED_AFTER_INDEX_MISMATCH');
+    });
+  });
+
+  describe('role identity (regression: already enforced prior to Batch 2)', () => {
+    it('the correct implementation role remains ready', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation');
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+
+    it('test-implementation role evidence supplied to an implementation stage blocks', () => {
+      const runFolder = makeRunFolder();
+      populateWithRawEvidence(runFolder, 'implementation', { request: { role: 'test-implementation' }, roleContext: { role: 'test-implementation' } });
+      const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.classification).toBe('role-mismatch');
+    });
+  });
+
+  describe('deterministic ordering', () => {
+    it('the same identity contradiction always produces the same classification and blocking issue codes', () => {
+      const runFolder1 = makeRunFolder();
+      const runFolder2 = makeRunFolder();
+      const overrides = { index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/wrong' } };
+      populateWithRawEvidence(runFolder1, 'implementation', overrides);
+      populateWithRawEvidence(runFolder2, 'implementation', overrides);
+      const r1 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder1, mode: 'feature', projectRoot: ACTIVE_REPO });
+      const r2 = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder: runFolder2, mode: 'feature', projectRoot: ACTIVE_REPO });
+      expect(r1.classification).toBe(r2.classification);
+      expect(r1.blockingIssueCodes).toEqual(r2.blockingIssueCodes);
+    });
+  });
+});
+
 describe('notRequiredContextReadiness', () => {
   it('returns a not-required decision with empty issues', () => {
     const result = notRequiredContextReadiness('stage.greenfield.scaffold-plan', 'implementation', 'implementation');

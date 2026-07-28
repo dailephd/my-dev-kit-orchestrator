@@ -29,29 +29,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Documentation consistency
-        run: npm run docs:check
-
-      - name: Documentation lint
-        run: npm run lint:docs
-
-      - name: Source lint
-        run: npm run lint
-
-      - name: Security contract check
-        run: npm run test:security
+      - name: Build
+        run: npm run build
 
       - name: Greenfield tests
         run: npx jest tests/greenfield --silent
 
-      - name: Typecheck
-        run: npx tsc --noEmit
-
-      - name: Build
-        run: npm run build
-
-      - name: Full test suite
+      - name: Test
         run: npm test
+
+      - name: Verify
+        run: npm run verify
 
       - name: CLI version
         run: node dist/cli.js --version
@@ -61,6 +49,3 @@ jobs:
 
       - name: Package dry-run
         run: npm pack --dry-run
-
-      - name: Android Compose greenfield smoke
-        run: npm run smoke:cli -- greenfield

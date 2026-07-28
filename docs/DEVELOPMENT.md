@@ -3,8 +3,9 @@
 ## Prerequisites
 
 The package does not declare a Node.js version range in `package.json`. The
-ordinary validation workflow runs on Node.js 24, while the pre-release matrix
-uses Node.js 26 to check the latest supported runtime before publication. Both
+ordinary validation workflow runs on Node.js 22 and Node.js 24, while the
+pre-release matrix uses Node.js 26 as supplementary forward-compatibility
+evidence before publication. Both
 workflows cover `ubuntu-latest`, `windows-latest`, and `macos-15`. Local
 compatibility validation used Node.js 24.11.0. The completed feature branch also
 has live cross-platform CI evidence from its validation checkpoint.
@@ -162,6 +163,7 @@ npm test -- --runInBand
 npm run build
 npm run docs:check
 npm run smoke:cli
+npm run smoke:context
 npm run lint
 npm run lint:docs
 npm run test:security
@@ -180,13 +182,20 @@ intentionally skipped during an ordinary suite and run only when regenerating
 fixtures. Tests and fixtures are excluded from npm package output because the
 package `files` policy includes only `dist`.
 
+Context-readiness changes require both focused owner tests and the historical
+readiness matrix. The historical readiness matrix covers accepted producer
+evidence, raw and supplemental contradictions, repository and index
+mismatches, truncation, provenance, responsibility mappings, stale evidence,
+schema-major-1 evidence, and legacy runs. Consumer integration tests must
+confirm that prompts, `status`, `check`, verification, judge, correction
+routing, and `export` preserve the canonical primary blocker.
+
 ### Manual my-dev-kit integration caveat
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
-and run manually. During the initial integration investigation, the published package labeled `my-dev-kit` 1.10.2 reported a mismatched CLI identity and
-lacked the verified role-aware context command. Fixtures and implementation
-therefore use the verified 1.10.2 source contract. This remains an upstream
-integration risk and no local worktree path is part of the public contract.
+and run manually. The published `@dailephd/my-dev-kit@1.10.3` package is the
+verified authority for the corrected role-aware producer behavior; no local
+worktree path is part of the public contract.
 
 ### Known instruction and context limitations
 
@@ -373,7 +382,16 @@ from source when a profile is added or removed.
 - Verify changes with the narrowest relevant checks first, then broader ones when needed.
 - Run at least `npx tsc --noEmit`, `npm test`, and `npm run build` for release-facing changes when feasible.
 - Run `npm run lint` when changing TypeScript files.
-- Keep ordinary validation on Node.js 24 and the pre-release matrix on Node.js 26 across `ubuntu-latest`, `windows-latest`, and `macos-15`.
+- Complete validation requires both `npm test` and `npm run verify`, in either
+  order, each exactly once. `npm test` runs the complete Jest suite. `npm run
+  verify` runs the non-test verification chain (typecheck, build, lint,
+  lint:docs, docs:check, the package-content security contract check, and the
+  CLI smoke checks) and intentionally excludes the test suite, so running
+  both does not execute the suite twice. `npm run verify` alone is not a
+  substitute for `npm test`.
+- Keep ordinary validation on Node.js 22 and Node.js 24, with the supplementary
+  Node.js 26 pre-release matrix, across `ubuntu-latest`, `windows-latest`, and
+  `macos-15`.
 - Report skipped checks and unresolved risks clearly in release work.
 
 ## Validation matrix

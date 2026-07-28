@@ -17,7 +17,7 @@ import {
   UpstreamArtifactReference,
 } from './instructions/stageContextBundle';
 import { writeSupplementalContextTemplates } from './instructions/supplementalContextTemplates';
-import { ContextReadinessResult } from './instructions/contextReadiness';
+import { ContextReadinessBlockerSummary, ContextReadinessResult } from './instructions/contextReadiness';
 import { RunContextReadinessSummary } from './instructions/runContextReadiness';
 
 interface PromptContext {
@@ -37,6 +37,19 @@ interface PromptContext {
   // own Task:/Stop conditions: text, so that content is never duplicated
   // between the catalog and promptGenerator.ts.
   stageInstructionText: string;
+}
+
+function renderCanonicalBlockerLines(
+  blocker: ContextReadinessBlockerSummary,
+  indent: string,
+): string[] {
+  return [
+    `${indent}Primary blocker: ${blocker.primaryCode}`,
+    `${indent}Primary reason: ${blocker.primaryReason}`,
+    `${indent}Blocking issues: ${blocker.blockingIssueCodes.join(', ')}`,
+    `${indent}Corrective action: ${blocker.correctiveAction}`,
+    `${indent}Evidence target: ${blocker.evidenceTarget}`,
+  ];
 }
 
 // Assembles the exact StageContextBundle for one workflow/stage and renders
@@ -126,7 +139,7 @@ function renderContextReadinessReviewSection(summary: RunContextReadinessSummary
     lines.push(`    classification: ${result.classification}`);
     lines.push(`    evaluated freshness: ${result.evaluatedFreshness}`);
     lines.push(`    evaluated adequacy: ${result.evaluatedAdequacy}`);
-    if (result.blockingIssueCodes.length > 0) lines.push(`    blocking issues: ${result.blockingIssueCodes.join(', ')}`);
+    if (result.blockerSummary) lines.push(...renderCanonicalBlockerLines(result.blockerSummary, '    '));
     if (result.criticalResponsibilitySummary) {
       const s = result.criticalResponsibilitySummary;
       lines.push(`    critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} fully mapped`);
@@ -140,6 +153,10 @@ function renderContextReadinessReviewSection(summary: RunContextReadinessSummary
         : '  All required repository context is ready. Judge freely on the complete evidence.',
     );
   } else {
+    if (summary.primaryBlocker) {
+      lines.push('  Canonical run blocker:');
+      lines.push(...renderCanonicalBlockerLines(summary.primaryBlocker, '    '));
+    }
     lines.push(`  Recommended next stage: ${summary.recommendedNextStage ?? '(none)'}`);
     lines.push(
       stageKind === 'verification'
@@ -190,11 +207,9 @@ function renderContextRefreshOnlyPrompt(ctx: PromptContext, readiness: ContextRe
   lines.push(`Readiness decision: ${readiness.decision}`);
   lines.push(`Classification: ${readiness.classification}`);
   lines.push('');
-  if (readiness.blockingIssueCodes.length > 0) {
+  if (readiness.blockerSummary) {
     lines.push('Blocking issues:');
-    for (const i of readiness.issues.filter((x) => x.severity === 'error')) {
-      lines.push(`  - ${i.code}: ${i.message}`);
-    }
+    lines.push(...renderCanonicalBlockerLines(readiness.blockerSummary, '  '));
     lines.push('');
   }
   if (readiness.warnings.length > 0) {
@@ -2009,9 +2024,9 @@ function renderCorrectionContextRefreshPrompt(
     `Classification: ${readiness.classification}`,
     ``,
   ];
-  if (readiness.blockingIssueCodes.length > 0) {
+  if (readiness.blockerSummary) {
     lines.push('Blocking issues:');
-    for (const i of readiness.issues.filter((x) => x.severity === 'error')) lines.push(`  - ${i.code}: ${i.message}`);
+    lines.push(...renderCanonicalBlockerLines(readiness.blockerSummary, '  '));
     lines.push('');
   }
   lines.push(

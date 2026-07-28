@@ -35,6 +35,10 @@ describe('judge prompt context readiness review', () => {
       const prompt = generateStagePrompt(meta, 'judge');
       expect(prompt).toContain('Context readiness review:');
       expect(prompt).toContain('must return "Verdict: NEED_CONTEXT"');
+      expect(prompt).toContain('Canonical run blocker:');
+      expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
+      expect(prompt).toContain('Corrective action:');
+      expect(prompt).toContain('Evidence target:');
       expect(prompt).toContain('Recommended next stage: implementation');
       expect(prompt).toContain('Do not return PASS');
     } finally {
@@ -51,6 +55,7 @@ describe('judge prompt context readiness review', () => {
       const meta = makeMeta('feature', tmp);
       const prompt = generateStagePrompt(meta, 'judge');
       expect(prompt).toContain('Recommended next stage: test-implementation');
+      expect(prompt).toContain('Primary blocker: CONTEXT_PACKET_MISSING');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -76,6 +81,7 @@ describe('judge prompt context readiness review', () => {
       expect(prompt).toContain('Overall decision: ready');
       expect(prompt).toContain('Judge freely on the complete evidence');
       expect(prompt).not.toContain('must return "Verdict: NEED_CONTEXT"');
+      expect(prompt).not.toContain('Canonical run blocker:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

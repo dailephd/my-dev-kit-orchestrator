@@ -2,9 +2,9 @@
 
 Versions are listed in chronological order.
 
-`v1.2.1` is the current published release. `v1.2.0`, `v1.1.0`, `v1.0.0`, and
-the `v0.x.0` releases remain part of the published project history. Versions
-after `v1.2.1` are planned milestones.
+`v1.2.2` is the current published release. `v1.2.1`, `v1.2.0`, `v1.1.0`,
+`v1.0.0`, and the `v0.x.0` releases remain part of the published project
+history. Versions after `v1.2.2` are planned milestones.
 
 ## Version summary
 
@@ -19,6 +19,7 @@ after `v1.2.1` are planned milestones.
 - `v1.1.0` publishes the platform-neutral Greenfield Project Bootstrap foundation so a new project can move from idea to brief, product boundary, stack/profile decision, bootstrap bundle, docs, scaffold plan, first runnable slice, verification, and initial my-dev-kit handoff.
 - `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
+- `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -472,9 +473,9 @@ Dependencies and evaluation boundaries:
 - the verified `my-dev-kit` 1.10.2 source contract is the repository-context
   authority; the published 1.10.2 CLI mismatch remains an upstream integration
   risk, so users must select a verified CLI manually
-- `my-dev-kit-lab` v0.4.2 remains the stable evaluation baseline; incorrect
-  dirty v0.4.3 work is not current authority, and any corrected v0.4.3 work is
-  downstream evaluation scope
+- `my-dev-kit-lab` v0.4.3 is the latest published evaluation baseline;
+  the v0.4.4 producer-readiness bridge is implemented but unpublished and is
+  undergoing its separate pre-release correction and revalidation workflow
 - the orchestrator has no runtime dependency on `my-dev-kit-lab`
 
 Exclusions:
@@ -484,6 +485,42 @@ Exclusions:
 - no shared cross-repository schema package
 - no new context stage and no wholesale prompt-generator rewrite
 - no lab evaluation logic in orchestrator production behavior
+
+## Published v1.2.2
+
+### v1.2.2 - Context Readiness and Documentation Safeguards
+
+Published as `1.2.2` on 2026-07-28 after implementation, compatibility,
+documentation, security, package, and cross-platform validation completed.
+
+Goal:
+Make every blocked repository-context path actionable and consistent while
+preserving fail-closed evidence contracts and durable public documentation.
+
+Delivered scope:
+
+- deterministic primary blocker selection with a primary reason, corrective
+  action, evidence target, and canonical issue ordering
+- consistent propagation through direct prompts, `status`, `check`,
+  verification, judge, correction routing, and `export`
+- fail-closed handling for raw and supplemental contradictions, repository and
+  index mismatch, required truncation, missing provenance, and incomplete
+  critical responsibility mappings
+- responsibility parsing that ignores genuine packet preamble and trailer
+  sections without suppressing missing, malformed, or duplicate IDs
+- historical producer/readiness coverage for valid, negative, schema-major-1,
+  and legacy-run cases
+- documentation preservation, manifest validation, anti-drift checking, and
+  source-of-truth reconciliation
+
+Compatibility and exclusions:
+
+- no new workflow, native context stage, schema major, verdict, command, or
+  persisted run metadata
+- no automatic `my-dev-kit` execution or release behavior
+- old runs and schema-major-1 producer evidence remain supported
+- verified against the published `@dailephd/my-dev-kit@1.10.3` producer
+  package; users must continue to select and verify the producer CLI manually
 
 ## Planned milestones
 
