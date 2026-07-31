@@ -6,6 +6,7 @@ import { evaluateRunContextReadiness } from '../src/instructions/runContextReadi
 import { STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS } from '../src/instructions/stageRepositoryEvidenceRequirements';
 import { getWorkflow } from '../src/workflows';
 import { makeReadyRunFolder } from './readyContextTestHelpers';
+import { evaluateRunIntegrityGate } from '../src/runIntegrityGate';
 
 const implementationRequirement = STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS.find(
   (requirement) => requirement.stageId === 'stage.feature.implementation',
@@ -202,6 +203,30 @@ const historicalCases: HistoricalCase[] = [
         raw.freshness = { role: 'implementation', state: 'unknown', comparedIdentities: [] };
       }),
   },
+  {
+    // v1.2.3 Batch 1 / Batch 4 section 7.3: the last adequate witness for a
+    // required v1.10.4 role condition is lost. Distinct from generic
+    // "required evidence truncation" above -- this must trip the dedicated
+    // CONTEXT_REQUIRED_CONDITION_WITNESS_LOST code even when
+    // truncationRequiredEvidenceLost itself is left false.
+    name: 'last adequate witness lost for a required role condition (v1.10.4)',
+    kind: 'implementation',
+    expectedCode: 'CONTEXT_REQUIRED_CONDITION_WITNESS_LOST',
+    expectedClassification: 'required-evidence-incomplete',
+    mutate: (runFolder) =>
+      mutateRaw(runFolder, 'implementation', (raw) => {
+        raw.roleConditionCoverage = [
+          {
+            conditionId: 'implementation.required-contract',
+            role: 'implementation',
+            required: true,
+            retainedWitnessIds: [],
+            conditionSatisfied: false,
+            lostRequiredCondition: true,
+          },
+        ];
+      }),
+  },
 ];
 
 describe('historical producer/readiness semantic matrix', () => {
@@ -232,6 +257,21 @@ describe('historical producer/readiness semantic matrix', () => {
             evidenceTarget: expect.any(String),
           }),
         );
+
+        // v1.2.3 Batch 4 (section 10 cross-surface agreement): the
+        // canonical RunIntegrityGate must classify the same evidence the
+        // same way readiness itself just did -- it is a pure projection of
+        // this same result, not a second authority.
+        const gate = evaluateRunIntegrityGate({
+          mode: 'feature',
+          runFolder,
+          workflowStageNames: getWorkflow('feature').stages.map((s) => s.name),
+          ...(projectRoot ? { projectRoot } : {}),
+        });
+        expect(gate.contextReady).toBe(false);
+        expect(gate.expectedJudgeVerdict).toBe('NEED_CONTEXT');
+        const expectedStageName = kind === 'implementation' ? 'implementation' : 'test-implementation';
+        expect(gate.blockedStageNames).toContain(expectedStageName);
       } finally {
         fs.rmSync(runFolder, { recursive: true, force: true });
       }

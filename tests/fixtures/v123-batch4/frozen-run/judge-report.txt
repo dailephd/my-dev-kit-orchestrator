@@ -1,0 +1,12 @@
+Artifact: JudgeReport
+Workflow mode: feature
+Verdict: PASS
+Recommended next stage if not PASS: implementation
+Status: complete
+
+Note: repository context readiness was refresh-required (implementation
+context reported "context insufficient and more retrieval required", and
+test context's raw responsibilityMappings.truncated was true). This verdict
+was authored as PASS under a user-authorized prose exception rather than the
+required NEED_CONTEXT. This is the exact historical defect this fixture
+freezes -- see tests/fixtures/v123-batch4/frozen-run/README.md.

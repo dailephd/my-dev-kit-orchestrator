@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "tool": { "name": "my-dev-kit", "version": "1.10.4" },
+  "index": { "indexPath": "<FIXTURE_INDEX>", "manifestPath": "<FIXTURE_INDEX>/manifest.json" },
+  "request": { "role": "implementation" },
+  "roleContext": { "role": "implementation" },
+  "roleAdequacy": { "status": "context sufficient for implementation" },
+  "freshness": {
+    "role": "implementation",
+    "state": "fresh",
+    "comparedIdentities": [{ "label": "afterIndexPath", "value": "<FIXTURE_INDEX>" }]
+  },
+  "responsibilityMappings": { "mappings": [], "truncated": false },
+  "truncation": { "truncated": true, "records": [{ "requiredEvidenceLost": false }] },
+  "roleConditionCoverage": [
+    {
+      "conditionId": "implementation.selected-owner",
+      "role": "implementation",
+      "required": true,
+      "retainedWitnessIds": ["owner-1"],
+      "conditionSatisfied": true,
+      "lostRequiredCondition": false
+    },
+    {
+      "conditionId": "implementation.required-contract",
+      "role": "implementation",
+      "required": true,
+      "retainedWitnessIds": ["contract-1"],
+      "conditionSatisfied": true,
+      "lostRequiredCondition": false
+    }
+  ],
+  "fullFileFallback": { "used": 0 },
+  "provenance": [{ "id": "p1" }],
+  "warnings": []
+}

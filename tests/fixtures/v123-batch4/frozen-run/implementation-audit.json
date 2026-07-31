@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "tool": { "name": "my-dev-kit", "version": "1.10.3" },
+  "index": { "indexPath": "<FIXTURE_INDEX>", "manifestPath": "<FIXTURE_INDEX>/manifest.json" },
+  "request": { "role": "implementation" },
+  "roleContext": { "role": "implementation" },
+  "roleAdequacy": { "status": "context insufficient and more retrieval required" },
+  "freshness": {
+    "role": "implementation",
+    "state": "fresh",
+    "comparedIdentities": [{ "label": "afterIndexPath", "value": "<FIXTURE_INDEX>" }]
+  },
+  "responsibilityMappings": { "mappings": [], "truncated": false },
+  "truncation": { "truncated": true, "records": [{ "requiredEvidenceLost": true }] },
+  "fullFileFallback": { "used": 0 },
+  "provenance": [{ "id": "p1" }],
+  "warnings": []
+}
