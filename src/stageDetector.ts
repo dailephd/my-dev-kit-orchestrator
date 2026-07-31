@@ -180,20 +180,28 @@ function allArtifactsEffectivelyCompleteWithRunIntegrity(
   allStages: StageDefinition[],
   stateFile: ArtifactStateFile,
   gate: RunIntegrityGateResult,
+  finalReportEligible: boolean,
 ): boolean {
   const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
   return files.every(
-    (f) => resolveArtifactStateWithRunIntegrity(runFolder, f, allStages, stateFile, gate) === 'complete',
+    (f) => resolveArtifactStateWithRunIntegrity(runFolder, f, allStages, stateFile, gate, finalReportEligible) === 'complete',
   );
 }
 
+// finalReportEligible (v1.2.3 Batch 3) defaults to true so every Batch 2
+// call site that does not yet evaluate judge/final-report integrity is
+// unaffected; a caller that has computed FinalReportEligibilityResult
+// passes its `eligible` field here so the final-report artifact is forced
+// to "blocked" -- exactly like a context-blocked stage -- when the judge
+// verdict was not accepted as PASS (invariants 10.1/6.6).
 export function getNextStageWithRunIntegrity(
   meta: RunMetadata,
   stateFile: ArtifactStateFile,
   gate: RunIntegrityGateResult,
+  finalReportEligible = true,
 ): StageDefinition | null {
   for (const stage of meta.stages) {
-    if (!allArtifactsEffectivelyCompleteWithRunIntegrity(meta.runFolder, stage, meta.stages, stateFile, gate)) {
+    if (!allArtifactsEffectivelyCompleteWithRunIntegrity(meta.runFolder, stage, meta.stages, stateFile, gate, finalReportEligible)) {
       return stage;
     }
   }
@@ -204,14 +212,16 @@ export function isRunCompleteWithRunIntegrity(
   meta: RunMetadata,
   stateFile: ArtifactStateFile,
   gate: RunIntegrityGateResult,
+  finalReportEligible = true,
 ): boolean {
-  return getNextStageWithRunIntegrity(meta, stateFile, gate) === null;
+  return getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligible) === null;
 }
 
 export function getArtifactLifecycleStatusesWithRunIntegrity(
   meta: RunMetadata,
   stateFile: ArtifactStateFile,
   gate: RunIntegrityGateResult,
+  finalReportEligible = true,
 ): ArtifactLifecycleStatus[] {
   const statuses: ArtifactLifecycleStatus[] = [];
   for (const stage of meta.stages) {
@@ -223,6 +233,7 @@ export function getArtifactLifecycleStatusesWithRunIntegrity(
         meta.stages,
         stateFile,
         gate,
+        finalReportEligible,
       );
       const record = stateFile.artifacts[artifactFile];
       let reason: string | undefined;
@@ -242,9 +253,10 @@ export function resolveCurrentArtifactStatesWithRunIntegrity(
   stateFile: ArtifactStateFile,
   stage: StageDefinition,
   gate: RunIntegrityGateResult,
+  finalReportEligible = true,
 ): ArtifactLifecycleState[] {
   const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
-  return files.map((f) => resolveArtifactStateWithRunIntegrity(meta.runFolder, f, meta.stages, stateFile, gate));
+  return files.map((f) => resolveArtifactStateWithRunIntegrity(meta.runFolder, f, meta.stages, stateFile, gate, finalReportEligible));
 }
 
 // ─── Original file-existence helpers (preserved for backward compat) ─────────

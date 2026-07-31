@@ -124,6 +124,12 @@ describe('v1.2.1 prompt structure compatibility (Batch 3)', () => {
     for (const entry of fixture.entries) {
       const key = `${entry.mode}:${entry.stage}`;
       if (DIRECT_CONTEXT_SENSITIVE_KEYS.has(key)) continue;
+      // v1.2.3 Batch 3: final-report now also diverges from the frozen
+      // baseline for this same fake-runFolder reason -- it only renders its
+      // normal packet-backed prompt once FinalReportEligibility is true,
+      // and this fixture's fake runFolder never has a real judge-report.txt.
+      // See tests/correctedReadyReplay.test.ts for its normal rendering.
+      if (entry.stage === 'final-report') continue;
       const current = currentStructure(entry.mode as typeof VALID_MODES[number], entry.stage);
       if (current.normalizedHeaderHash !== entry.normalizedHeaderHash) mismatches.push({ key, field: 'header' });
       if (current.inputsBlockHash !== entry.inputsBlockHash) mismatches.push({ key, field: 'inputs' });

@@ -69,6 +69,23 @@ describe('all 79 native stages are packet-backed (except the documented legacy e
           continue;
         }
 
+        // v1.2.3 Batch 3: final-report only renders its normal packet-backed
+        // prompt once FinalReportEligibility is true. This fixture's fake
+        // runFolder never has a real judge-report.txt, so every mode's
+        // final-report always hits the blocked path -- see
+        // tests/correctedReadyReplay.test.ts and
+        // tests/judgeIntegrityCliIntegration.test.ts for its normal
+        // rendering once a PASS verdict is accepted.
+        if (stage.name === 'final-report') {
+          it(`${stage.name}: renders a final-report-ineligible prompt (no accepted judge verdict)`, () => {
+            const prompt = generateStagePrompt(meta, stage.name);
+            expect(prompt).not.toContain('Workflow instruction packet:');
+            expect(prompt).toContain('Final-report generation is BLOCKED');
+            expect(prompt).toContain('Return format:');
+          });
+          continue;
+        }
+
         it(`${stage.name}: prompt contains exactly one workflow instruction packet block with the exact IDs`, () => {
           const prompt = generateStagePrompt(meta, stage.name);
           const occurrences = prompt.split('Workflow instruction packet:').length - 1;

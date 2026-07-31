@@ -180,7 +180,7 @@ describe('check --all - greenfield', () => {
       expect(output).toContain('=== Artifact contracts ===');
       expect(output).toContain('=== Stage gates ===');
       expect(output).toContain('=== Trace checks ===');
-      expect(output).toContain('=== Correction routing ===');
+      expect(output).toContain('=== Judge and final-report integrity ===');
       expect(output).toContain('=== Summary ===');
     } finally {
       cleanup(tmp);

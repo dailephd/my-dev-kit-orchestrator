@@ -19,6 +19,9 @@ import {
 import { writeSupplementalContextTemplates } from './instructions/supplementalContextTemplates';
 import { ContextReadinessBlockerSummary, ContextReadinessResult } from './instructions/contextReadiness';
 import { RunContextReadinessSummary } from './instructions/runContextReadiness';
+import { evaluateRunIntegrityGate } from './runIntegrityGate';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, FinalReportEligibilityResult } from './judgeIntegrity';
+import { readArtifactStateFile } from './artifactLifecycle';
 
 interface PromptContext {
   stage: string;
@@ -248,6 +251,71 @@ function renderContextRefreshOnlyPrompt(ctx: PromptContext, readiness: ContextRe
   lines.push('');
   lines.push('After refreshing, rerun `my-dev-kit-orchestrator prompt` for this stage and `my-dev-kit-orchestrator check` to confirm readiness.');
   return lines.join('\n');
+}
+
+// Renders a blocked prompt for the "final-report" stage instead of its
+// normal FinalReport-authoring prompt (v1.2.3 Batch 3, invariants 9.2/9.3).
+// Fires whenever FinalReportEligibilityResult.eligible is false -- missing,
+// malformed, or unknown judge verdict; an authored PASS that contradicts
+// the canonical expected NEED_CONTEXT; any accepted non-PASS verdict; an
+// active correction route; or an incomplete required prior artifact. No
+// final-report.txt is written and the coding agent is never told the run
+// succeeded.
+function renderFinalReportBlockedPrompt(ctx: PromptContext, eligibility: FinalReportEligibilityResult): string {
+  const { judgeIntegrity } = eligibility;
+  const lines: string[] = [header(ctx)];
+  lines.push('Final-report generation is BLOCKED. This run is not eligible for a normal final report.');
+  lines.push('');
+  lines.push(`Expected judge verdict: ${judgeIntegrity.expectedJudgeVerdict}`);
+  lines.push(`Judge artifact present: ${judgeIntegrity.judgeArtifactPresent}`);
+  lines.push(`Judge verdict parse status: ${judgeIntegrity.judgeVerdictParseStatus}`);
+  if (judgeIntegrity.authoredJudgeVerdict) {
+    lines.push(`Authored judge verdict: ${judgeIntegrity.authoredJudgeVerdict}`);
+    lines.push(`Judge verdict matches expected: ${judgeIntegrity.judgeVerdictMatchesExpected}`);
+  }
+  lines.push(`Judge verdict accepted: ${judgeIntegrity.judgeVerdictAccepted}`);
+  lines.push(`Prior native artifacts valid: ${eligibility.priorArtifactsValid}`);
+  lines.push('');
+  if (eligibility.blockingCodes.length > 0) {
+    lines.push('Blocking issues:');
+    for (const code of eligibility.blockingCodes) lines.push(`  - ${code}`);
+    if (eligibility.primaryReason) lines.push(`  Reason: ${eligibility.primaryReason}`);
+    lines.push('');
+  }
+  if (judgeIntegrity.acceptedCorrectionStage) {
+    lines.push(`Recommended correction stage: ${judgeIntegrity.acceptedCorrectionStage}`);
+    lines.push('Run `my-dev-kit-orchestrator prompt` (no stage argument) to receive that stage\'s correction prompt.');
+    lines.push('');
+  }
+  lines.push('Stop conditions:');
+  lines.push('  - do not write artifacts/final-report.txt');
+  lines.push('  - do not claim this run is complete or successful');
+  lines.push('  - do not summarize the run as passed');
+  lines.push('  - resolve the blocking issue above, then rerun `my-dev-kit-orchestrator check` to confirm eligibility');
+  lines.push('');
+  lines.push('Return format:');
+  lines.push('Do not write a new artifact file for this report. In your response, report:');
+  lines.push('  Final-report eligibility check');
+  lines.push('  Stage: final-report');
+  lines.push('  Blocking issues: ...');
+  lines.push('  Actions taken: ...');
+  return lines.join('\n');
+}
+
+// Evaluates FinalReportEligibilityResult for the current on-disk state of a
+// run, without recomputing readiness or judge-verdict policy elsewhere --
+// used by both generateStagePrompt() (final-report stage) and
+// writeStagePrompts() (initial prompt generation at run creation).
+function evaluateFinalReportEligibilityForRun(meta: RunMetadata): FinalReportEligibilityResult {
+  const gate = evaluateRunIntegrityGate({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
+  });
+  const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+  const stateFile = readArtifactStateFile(meta.runFolder);
+  return evaluateFinalReportEligibility({ gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages, stateFile });
 }
 
 function header(ctx: PromptContext): string {
@@ -1775,6 +1843,18 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     bundle.repositoryContextReadiness?.decision === 'refresh-required'
   ) {
     return renderContextRefreshOnlyPrompt(ctx, bundle.repositoryContextReadiness);
+  }
+
+  // v1.2.3 Batch 3: final-report is never rendered as its normal
+  // FinalReport-authoring prompt unless the canonical FinalReportEligibility
+  // decision is true (accepted PASS judge verdict, no active correction
+  // route, and every required prior native artifact valid) -- see
+  // AGENTS.txt Batch 3 sections 6/8/9.
+  if (stageName === 'final-report') {
+    const eligibility = evaluateFinalReportEligibilityForRun(meta);
+    if (!eligibility.eligible) {
+      return renderFinalReportBlockedPrompt(ctx, eligibility);
+    }
   }
 
   const isExtraction = meta.mode === 'extraction';

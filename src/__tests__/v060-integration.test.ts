@@ -285,14 +285,30 @@ describe('generateCorrectionPrompt', () => {
 // ─── CLI integration: status with judge reports ───────────────────────────────
 
 describeIfBuilt('CLI status with judge report', () => {
-  it('shows PASS correction status when judge report has PASS', () => {
+  it('shows PASS correction status when judge report has PASS and context is ready', () => {
     withTempDir((projectRoot) => {
       cli(['init'], projectRoot);
       cli(['start', '--mode', 'feature', 'v060 correction test'], projectRoot);
       const runFolder = getRunFolder(projectRoot);
+      // v1.2.3 Batch 3: an authored PASS is only accepted once repository
+      // context is ready -- see the dedicated rejection test below for the
+      // unready case, which is exactly the defect this batch fixes.
+      makeReadyRunFolder(runFolder, 'feature');
       writeJudgeReport(runFolder, 'Verdict: PASS');
       const status = cli(['status'], projectRoot);
       expect(status).toContain('Judge correction: PASS');
+    });
+  });
+
+  it('rejects an authored PASS when repository context is refresh-required (v1.2.3 Batch 3)', () => {
+    withTempDir((projectRoot) => {
+      cli(['init'], projectRoot);
+      cli(['start', '--mode', 'feature', 'v060 pass contradiction test'], projectRoot);
+      const runFolder = getRunFolder(projectRoot);
+      writeJudgeReport(runFolder, 'Verdict: PASS');
+      const status = cli(['status'], projectRoot);
+      expect(status).not.toContain('Judge correction: PASS - no correction required');
+      expect(status).toContain('Verdict accepted: false');
     });
   });
 

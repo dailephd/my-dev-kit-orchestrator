@@ -21,9 +21,10 @@ import * as path from 'path';
 import * as os from 'os';
 import { RunMetadata } from '../src/run';
 import { generateStagePrompt } from '../src/promptGenerator';
-import { evaluateRunIntegrityGate, isContextBlockedArtifactFile } from '../src/runIntegrityGate';
+import { evaluateRunIntegrityGate, isContextBlockedArtifactFile, isRunIntegrityBlockedArtifactFile } from '../src/runIntegrityGate';
 import { getNextStageWithRunIntegrity } from '../src/stageDetector';
 import { readArtifactStateFile } from '../src/artifactLifecycle';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../src/judgeIntegrity';
 
 const FROZEN_RUN_SOURCE = 'Z:/Users/newuser/Projects/context-readiness-fix-investigation/runtime-evidence/failed-run';
 const FROZEN_BATCH_CONTEXT_SOURCE = 'Z:/Users/newuser/Projects/context-readiness-fix-investigation/runtime-evidence/batch-context';
@@ -170,6 +171,92 @@ maybeDescribe('RunIntegrityGate: frozen failed-run replay (v1.11.0 Batch 1)', ()
       });
       expect(gate.contextReady).toBe(false);
       expect(gate.expectedJudgeVerdict).toBe('NEED_CONTEXT');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  // v1.2.3 Batch 3: the frozen run's authored judge-report.txt says
+  // "Verdict: PASS" under a user-authorized prose exception, and its
+  // final-report.txt also claims PASS. Neither was a legitimate outcome --
+  // canonical readiness was (and still is, replayed here) NEED_CONTEXT.
+  it('the canonical expected judge verdict is NEED_CONTEXT and the frozen authored PASS is rejected', () => {
+    const { tmp, meta } = makeFrozenRunReplayFixture();
+    try {
+      const gate = evaluateRunIntegrityGate({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
+      expect(gate.expectedJudgeVerdict).toBe('NEED_CONTEXT');
+      const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+      expect(judgeIntegrity.judgeArtifactPresent).toBe(true);
+      expect(judgeIntegrity.authoredJudgeVerdict).toBe('PASS');
+      expect(judgeIntegrity.judgeVerdictAccepted).toBe(false);
+      expect(judgeIntegrity.blockingCodes).toContain('JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY');
+      // Correction recommendation returns to the canonical context-sensitive
+      // stage (implementation is blocked here), not the judge's own prose.
+      expect(judgeIntegrity.acceptedCorrectionStage).toBe('implementation');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('the frozen final-report.txt (also PASS) is ineligible', () => {
+    const { tmp, meta } = makeFrozenRunReplayFixture();
+    try {
+      const gate = evaluateRunIntegrityGate({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
+      const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+      const stateFile = readArtifactStateFile(meta.runFolder);
+      const eligibility = evaluateFinalReportEligibility({
+        gate,
+        judgeIntegrity,
+        runFolder: meta.runFolder,
+        stages: meta.stages,
+        stateFile,
+      });
+      expect(eligibility.eligible).toBe(false);
+      expect(eligibility.blockingCodes).toContain('JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY');
+
+      // The existing final-report.txt (present, "Status: complete") must
+      // not make the run complete.
+      expect(isRunIntegrityBlockedArtifactFile(gate, meta.stages, 'artifacts/final-report.txt', eligibility.eligible)).toBe(true);
+      const next = getNextStageWithRunIntegrity(meta, stateFile, gate, eligibility.eligible);
+      expect(next?.name).toBe('implementation');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('explicit final-report prompt is rejected and manual final-report complete would be rejected', () => {
+    const { tmp, meta } = makeFrozenRunReplayFixture();
+    try {
+      const promptText = generateStagePrompt(meta, 'final-report');
+      expect(promptText).toContain('Final-report generation is BLOCKED');
+      expect(promptText).not.toContain('Required output artifact: FinalReport');
+
+      const gate = evaluateRunIntegrityGate({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
+      const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+      const stateFile = readArtifactStateFile(meta.runFolder);
+      const eligibility = evaluateFinalReportEligibility({
+        gate,
+        judgeIntegrity,
+        runFolder: meta.runFolder,
+        stages: meta.stages,
+        stateFile,
+      });
+      expect(isRunIntegrityBlockedArtifactFile(gate, meta.stages, 'artifacts/final-report.txt', eligibility.eligible)).toBe(true);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

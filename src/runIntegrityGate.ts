@@ -187,19 +187,58 @@ export function blockingReasonForArtifactFile(
   return evaluateStageRunIntegrity(gate, stage.name).blockingReason;
 }
 
+// True when artifactFile is the "final-report" stage's artifact and
+// finalReportEligible is false (v1.2.3 Batch 3). finalReportEligible is
+// computed elsewhere (src/judgeIntegrity.ts, on top of this gate plus the
+// authored judge report) and threaded in here so this remains the single
+// override point -- final-report blocking is layered onto the same
+// resolver that already forces implementation/test-implementation to
+// "blocked", not a second parallel one.
+export function isFinalReportIneligibleArtifactFile(
+  stages: readonly StageDefinition[],
+  artifactFile: string,
+  finalReportEligible: boolean,
+): boolean {
+  if (finalReportEligible) return false;
+  const stage = stageForArtifactFile(stages, artifactFile);
+  return stage?.name === 'final-report';
+}
+
+// Combined "is this artifact file blocked from completion by canonical run
+// integrity" check: context-blocked (implementation/test-implementation) OR
+// final-report-ineligible. Every artifact-file-shaped consumer (lifecycle
+// resolution, mark) should use this rather than isContextBlockedArtifactFile
+// alone once final-report eligibility is in scope.
+export function isRunIntegrityBlockedArtifactFile(
+  gate: RunIntegrityGateResult,
+  stages: readonly StageDefinition[],
+  artifactFile: string,
+  finalReportEligible = true,
+): boolean {
+  return (
+    isContextBlockedArtifactFile(gate, stages, artifactFile) ||
+    isFinalReportIneligibleArtifactFile(stages, artifactFile, finalReportEligible)
+  );
+}
+
 // Gate-aware counterpart to artifactLifecycle.ts's resolveArtifactState():
 // a context-blocked artifact never resolves to "complete" merely because
 // the file exists or carries a manual "complete" record -- it is forced to
-// "blocked" instead (invariants 6.2/6.4/6.5). An existing manual "blocked"
-// state is unaffected (it was already "blocked"). This is the single
-// override point every lifecycle/stage-detection/status consumer shares.
+// "blocked" instead (invariants 6.2/6.4/6.5), and -- when finalReportEligible
+// is explicitly supplied as false (Batch 3) -- neither does the
+// final-report artifact. An existing manual "blocked" state is unaffected
+// (it was already "blocked"). This is the single override point every
+// lifecycle/stage-detection/status/mark consumer shares. finalReportEligible
+// defaults to true so every Batch 2 call site that does not yet know about
+// judge/final-report integrity keeps its exact prior behavior.
 export function resolveArtifactStateWithRunIntegrity(
   runFolder: string,
   artifactFile: string,
   stages: readonly StageDefinition[],
   stateFile: ArtifactStateFile,
   gate: RunIntegrityGateResult,
+  finalReportEligible = true,
 ): ArtifactLifecycleState {
-  if (isContextBlockedArtifactFile(gate, stages, artifactFile)) return 'blocked';
+  if (isRunIntegrityBlockedArtifactFile(gate, stages, artifactFile, finalReportEligible)) return 'blocked';
   return resolveArtifactState(runFolder, artifactFile, stages as StageDefinition[], stateFile);
 }

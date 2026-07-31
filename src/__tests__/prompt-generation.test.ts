@@ -19,7 +19,7 @@ function makeFakeRun(mode: typeof VALID_MODES[number]): RunMetadata {
   const workflow = getWorkflow(mode);
   const runFolder = fs.mkdtempSync(path.join(os.tmpdir(), `mdko-prompt-gen-${mode}-`));
   makeReadyRunFolder(runFolder, mode);
-  return {
+  const meta: RunMetadata = {
     runId: `20240101T120000-test-run`,
     mode,
     request: 'test request',
@@ -30,6 +30,23 @@ function makeFakeRun(mode: typeof VALID_MODES[number]): RunMetadata {
     stages: workflow.stages,
     status: 'created',
   };
+  // v1.2.3 Batch 3: final-report only renders its normal prompt once
+  // finalReportEligible is true, so every prior native artifact (including
+  // an accepted PASS judge-report.txt) is populated here -- this file's
+  // assertions are about normal-prompt content for every stage, matching
+  // the same "give every stage a legitimately ready precondition" approach
+  // makeReadyRunFolder already takes for repository context above.
+  const judgeIndex = workflow.stages.findIndex((s) => s.name === 'judge');
+  if (judgeIndex !== -1) {
+    for (const s of workflow.stages.slice(0, judgeIndex)) {
+      fs.writeFileSync(path.join(runFolder, s.artifactFile), 'done', 'utf8');
+      for (const additional of s.additionalArtifactFiles ?? []) {
+        fs.writeFileSync(path.join(runFolder, additional), 'done', 'utf8');
+      }
+    }
+    fs.writeFileSync(path.join(runFolder, 'artifacts', 'judge-report.txt'), 'Verdict: PASS', 'utf8');
+  }
+  return meta;
 }
 
 describe('generateStagePrompt - required sections', () => {

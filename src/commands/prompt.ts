@@ -13,8 +13,8 @@ import {
 } from '../stageDetector';
 import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 import { StageDefinition } from '../workflows';
-import { readCorrectionState } from '../correctionState';
 import { generateCorrectionPrompt } from '../promptGenerator';
 
 function buildLifecycleContextBlock(
@@ -102,6 +102,19 @@ export function makePromptCommand(): Command {
         workflowStageNames: meta.stages.map((s) => s.name),
         projectRoot: meta.projectRoot,
       });
+      // Canonical judge-integrity / final-report eligibility (v1.2.3
+      // Batch 3): computed once from the same gate, reused for the
+      // "complete" check, correction routing, and stage-detection paths
+      // below so every decision in this command traces back to one
+      // accepted judge state -- never raw authored text alone.
+      const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+      const finalReportEligibility = evaluateFinalReportEligibility({
+        gate,
+        judgeIntegrity,
+        runFolder: meta.runFolder,
+        stages: meta.stages,
+        stateFile,
+      });
 
       if (stage) {
         const stageExists = meta.stages.some((s) => s.name === stage);
@@ -123,7 +136,7 @@ export function makePromptCommand(): Command {
         }
 
         const stageObj = meta.stages.find((s) => s.name === stage)!;
-        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, stageObj, gate);
+        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, stageObj, gate, finalReportEligibility.eligible);
         const lifecycleBlock = buildLifecycleContextBlock(stageObj, states, stateFile);
 
         try {
@@ -134,7 +147,7 @@ export function makePromptCommand(): Command {
           process.exit(1);
         }
       } else {
-        if (isRunCompleteWithRunIntegrity(meta, stateFile, gate)) {
+        if (isRunCompleteWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible)) {
           if (isRunComplete(meta)) {
             console.log(
               `Run ${meta.runId} is complete - all expected artifacts are present.\n\n` +
@@ -151,11 +164,15 @@ export function makePromptCommand(): Command {
           return;
         }
 
-        // Check for active correction routing (judge-report.txt with non-PASS verdict)
-        const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
-        if (correctionState && correctionState.routeStatus === 'correction_required' && correctionState.routedStage) {
+        // Canonical judge-integrity-aware correction routing (v1.2.3
+        // Batch 3 / AGENTS.txt section 7): renders through the accepted
+        // route (never raw authored text alone), so an authored PASS that
+        // contradicts the canonical expected NEED_CONTEXT still routes back
+        // to the canonical recommended context-repair stage instead of
+        // clearing correction state.
+        if (judgeIntegrity.correctionRequired && judgeIntegrity.acceptedCorrectionRoute) {
           try {
-            const correctionPrompt = generateCorrectionPrompt(meta, correctionState);
+            const correctionPrompt = generateCorrectionPrompt(meta, judgeIntegrity.acceptedCorrectionRoute);
             process.stdout.write(correctionPrompt);
           } catch (err) {
             console.error(`Error generating correction prompt: ${(err as Error).message}`);
@@ -164,9 +181,9 @@ export function makePromptCommand(): Command {
           return;
         }
 
-        if (correctionState && correctionState.routeStatus === 'blocked') {
+        if (judgeIntegrity.correctionBlocked) {
           console.log(
-            `Run ${meta.runId} is blocked by judge verdict: ${correctionState.verdict}\n\n` +
+            `Run ${meta.runId} is blocked by judge verdict: ${judgeIntegrity.authoredJudgeVerdict}\n\n` +
             `This run requires external resolution (e.g. scope clarification or design restart)\n` +
             `before it can continue automatically.\n\n` +
             `Inspect the judge report:\n  ${meta.runFolder}/artifacts/judge-report.txt\n\n` +
@@ -175,13 +192,13 @@ export function makePromptCommand(): Command {
           return;
         }
 
-        const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate);
+        const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
         if (!nextStage) {
           console.log('No missing stage artifact remains.');
           return;
         }
 
-        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, nextStage, gate);
+        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, nextStage, gate, finalReportEligibility.eligible);
         const lifecycleBlock = buildLifecycleContextBlock(nextStage, states, stateFile);
 
         try {
