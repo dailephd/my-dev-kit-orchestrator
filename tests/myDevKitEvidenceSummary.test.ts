@@ -173,6 +173,116 @@ describe('readRawContextCapsule / readRawRetrievalAudit', () => {
   });
 });
 
+describe('v1.10.4 roleConditionCoverage (v1.2.3 Batch 1)', () => {
+  const SATISFIED_CONDITION = {
+    conditionId: 'implementation.selected-owner',
+    role: 'implementation',
+    required: true,
+    retainedWitnessIds: ['owner-1'],
+    conditionSatisfied: true,
+    lostRequiredCondition: false,
+  };
+  const LOST_CONDITION = {
+    conditionId: 'implementation.required-contract',
+    role: 'implementation',
+    required: true,
+    retainedWitnessIds: [],
+    conditionSatisfied: false,
+    lostRequiredCondition: true,
+  };
+
+  it('accepts a v1.10.4 capsule declaring fully satisfied condition coverage', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.roleConditionCoverage).toEqual([SATISFIED_CONDITION]);
+        expect(result.projection.requiredConditionWitnessLost).toBe(false);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('derives requiredConditionWitnessLost when a required condition reports lostRequiredCondition', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION, LOST_CONDITION] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.requiredConditionWitnessLost).toBe(true);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('treats a schema-major-1 capsule that omits roleConditionCoverage entirely as legacy-compatible', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule(), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.roleConditionCoverage).toEqual([]);
+        expect(result.projection.requiredConditionWitnessLost).toBe(false);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed when roleConditionCoverage is present but not an array', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: 'not-an-array' }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed when a roleConditionCoverage entry is missing required fields', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [{ conditionId: 'x' }] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('detects a roleConditionCoverage mismatch between capsule and audit', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION] }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION, LOST_CONDITION] }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain('requiredConditionCoverage');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('findCapsuleAuditInconsistencies', () => {
   it('reports no mismatches for identical projections', () => {
     const tmp = makeTempDir();
