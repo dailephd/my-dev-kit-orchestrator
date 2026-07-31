@@ -7,11 +7,12 @@ import {
   getNextStage,
   isRunComplete,
   getMissingPriorArtifacts,
-  getNextStageWithLifecycle,
-  isRunCompleteWithLifecycle,
-  resolveCurrentArtifactStates,
+  getNextStageWithRunIntegrity,
+  isRunCompleteWithRunIntegrity,
+  resolveCurrentArtifactStatesWithRunIntegrity,
 } from '../stageDetector';
 import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
+import { evaluateRunIntegrityGate } from '../runIntegrityGate';
 import { StageDefinition } from '../workflows';
 import { readCorrectionState } from '../correctionState';
 import { generateCorrectionPrompt } from '../promptGenerator';
@@ -90,6 +91,17 @@ export function makePromptCommand(): Command {
       }
 
       const stateFile = readArtifactStateFile(meta.runFolder);
+      // Canonical run-integrity gate (v1.2.3 Batch 2): computed once per
+      // invocation from Batch 1's corrected readiness evidence, and used for
+      // both the explicit-stage path and the auto-selected-stage path below
+      // so the decision is identical regardless of how the stage was
+      // selected (AGENTS.txt Batch 2 section 6.1).
+      const gate = evaluateRunIntegrityGate({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
 
       if (stage) {
         const stageExists = meta.stages.some((s) => s.name === stage);
@@ -111,7 +123,7 @@ export function makePromptCommand(): Command {
         }
 
         const stageObj = meta.stages.find((s) => s.name === stage)!;
-        const states = resolveCurrentArtifactStates(meta, stateFile, stageObj);
+        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, stageObj, gate);
         const lifecycleBlock = buildLifecycleContextBlock(stageObj, states, stateFile);
 
         try {
@@ -122,7 +134,7 @@ export function makePromptCommand(): Command {
           process.exit(1);
         }
       } else {
-        if (isRunCompleteWithLifecycle(meta, stateFile)) {
+        if (isRunCompleteWithRunIntegrity(meta, stateFile, gate)) {
           if (isRunComplete(meta)) {
             console.log(
               `Run ${meta.runId} is complete - all expected artifacts are present.\n\n` +
@@ -163,13 +175,13 @@ export function makePromptCommand(): Command {
           return;
         }
 
-        const nextStage = getNextStageWithLifecycle(meta, stateFile);
+        const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate);
         if (!nextStage) {
           console.log('No missing stage artifact remains.');
           return;
         }
 
-        const states = resolveCurrentArtifactStates(meta, stateFile, nextStage);
+        const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, nextStage, gate);
         const lifecycleBlock = buildLifecycleContextBlock(nextStage, states, stateFile);
 
         try {

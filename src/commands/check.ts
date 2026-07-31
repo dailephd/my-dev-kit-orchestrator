@@ -21,6 +21,7 @@ import {
 import { readCorrectionState } from '../correctionState';
 import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
 import { ContextReadinessResult } from '../instructions/contextReadiness';
+import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -267,12 +268,31 @@ export function makeCheckCommand(): Command {
             lines.push('Summary:');
             lines.push(...summarizeContracts(contractResult.results));
           }
+          lines.push('');
+
+          // Canonical run-integrity gate (v1.2.3 Batch 2 / invariant 6.7):
+          // structural artifact-contract validity and repository-context
+          // run eligibility are separate concerns. An artifact can pass
+          // every file/section check above while the run is still blocked
+          // from progression -- so --artifacts consults the same canonical
+          // gate every other command surface uses, rather than treating
+          // contract-pass as run-eligible.
+          const contractContextCheck = formatContextReadinessCheck(
+            evaluateRunContextReadiness({
+              mode: meta.mode,
+              runFolder: meta.runFolder,
+              workflowStageNames: meta.stages.map((s) => s.name),
+              projectRoot: meta.projectRoot,
+            }),
+          );
+          lines.push(...contractContextCheck.lines);
 
           console.log(lines.join('\n'));
 
           const anyFail = !contractResult.modeValid ||
             contractResult.results.some((r) => !r.passed) ||
-            contractResult.modeIssues.some((i) => i.severity === 'fail');
+            contractResult.modeIssues.some((i) => i.severity === 'fail') ||
+            contractContextCheck.hasFail;
           const anyWarn = contractResult.results.some((r) =>
             r.issues.some((i) => i.severity === 'warn'),
           );

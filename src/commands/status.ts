@@ -5,8 +5,8 @@ import { getMostRecentRun, loadRun, getRunFolder } from '../run';
 import {
   getArtifactStatuses,
   getSupportingReportStatuses,
-  getArtifactLifecycleStatuses,
-  getNextStageWithLifecycle,
+  getArtifactLifecycleStatusesWithRunIntegrity,
+  getNextStageWithRunIntegrity,
   ArtifactLifecycleStatus,
 } from '../stageDetector';
 import { readArtifactStateFile } from '../artifactLifecycle';
@@ -14,6 +14,7 @@ import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
 import { readCorrectionState } from '../correctionState';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
+import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -54,9 +55,21 @@ export function makeStatusCommand(): Command {
       }
 
       const stateFile = readArtifactStateFile(meta.runFolder);
-      const lifecycleStatuses = getArtifactLifecycleStatuses(meta, stateFile);
+      // Canonical run-integrity gate (v1.2.3 Batch 2): computed once, up
+      // front, from the same readiness evaluation rendered in the
+      // "Repository context readiness" section below, so the artifact list
+      // and "Current / next stage" line can never contradict it (invariant
+      // 6.5 -- avoid duplicate contradictory readiness sections).
+      const readiness = evaluateRunContextReadiness({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
+      const gate = deriveRunIntegrityGateResult(meta.mode, readiness);
+      const lifecycleStatuses = getArtifactLifecycleStatusesWithRunIntegrity(meta, stateFile, gate);
       const legacyStatuses = getArtifactStatuses(meta);
-      const nextStage = getNextStageWithLifecycle(meta, stateFile);
+      const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate);
       const presentArtifacts = legacyStatuses.filter((s) => s.present);
       const nonCompleteArtifacts = lifecycleStatuses.filter((s) => s.lifecycleState !== 'complete');
       const supportingReports = getSupportingReportStatuses(meta);
@@ -148,15 +161,10 @@ export function makeStatusCommand(): Command {
         lines.push(``);
       }
 
-      // Repository context readiness (Batch 5). Read-only: recomputed in
-      // memory from whatever supplemental/raw evidence currently exists on
-      // disk; never written back, never triggers my-dev-kit.
-      const readiness = evaluateRunContextReadiness({
-        mode: meta.mode,
-        runFolder: meta.runFolder,
-        workflowStageNames: meta.stages.map((s) => s.name),
-        projectRoot: meta.projectRoot,
-      });
+      // Repository context readiness (Batch 5). Read-only, and reuses the
+      // same `readiness` evaluated above for the canonical gate -- never
+      // recomputed a second time, never written back, never triggers
+      // my-dev-kit.
       if (readiness.overallDecision === 'not-required') {
         lines.push(`Repository context: not required`);
       } else {

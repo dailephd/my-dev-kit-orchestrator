@@ -10,6 +10,7 @@ import {
   ManualArtifactLifecycleState,
 } from '../artifactLifecycle';
 import { resolveArtifactState } from '../artifactLifecycle';
+import { evaluateRunIntegrityGate, isContextBlockedArtifactFile } from '../runIntegrityGate';
 
 function resolveArtifactKey(
   artifactName: string,
@@ -109,6 +110,37 @@ export function makeMarkCommand(): Command {
             knownArtifacts.map((f) => `  - ${path.basename(f)}`).join('\n'),
           );
           process.exit(1);
+        }
+
+        // Canonical run-integrity gate (v1.2.3 Batch 2 / invariant 6.3):
+        // manual completion must never override machine readiness. A
+        // refresh-required implementation/test-implementation artifact is
+        // rejected before any state mutation -- artifact-state.json is not
+        // touched, matching the "rejected mark does not mutate lifecycle
+        // state" acceptance criterion.
+        if (state === 'complete') {
+          const gate = evaluateRunIntegrityGate({
+            mode: meta.mode,
+            runFolder: meta.runFolder,
+            workflowStageNames: meta.stages.map((s) => s.name),
+            projectRoot: meta.projectRoot,
+          });
+          if (isContextBlockedArtifactFile(gate, meta.stages, artifactKey)) {
+            console.error(
+              `Error: cannot mark "${path.basename(artifactKey)}" complete -- repository context is refresh-required.\n` +
+              `  Readiness classification: ${gate.readinessClassification}\n` +
+              (gate.primaryBlocker
+                ? `  Primary blocker: ${gate.primaryBlocker.primaryCode}\n` +
+                  `  Reason: ${gate.primaryBlocker.primaryReason}\n` +
+                  `  Corrective action: ${gate.primaryBlocker.correctiveAction}\n`
+                : '') +
+              `  Recommended next stage: ${gate.recommendedCorrectionStage ?? '(none)'}\n\n` +
+              `Manual completion cannot override machine readiness. Refresh the repository context and rerun\n` +
+              `  my-dev-kit-orchestrator check\n` +
+              `before marking this artifact complete.`,
+            );
+            process.exit(1);
+          }
         }
 
         setArtifactManualState(meta.runFolder, artifactKey, state, {
