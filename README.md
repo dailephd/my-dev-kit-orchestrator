@@ -31,6 +31,37 @@ release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 summaries, historical readiness-matrix coverage, and preservation-manifest
 checks for the blocker contract and context-identity claims.
 
+`v1.2.3` (run-integrity and judge-verdict enforcement) is implemented on the
+`fix/v1.2.3-run-integrity` branch and durably regression-tested, but it is
+**not yet published**: `package.json` and the published npm package both
+remain `1.2.2`, no `v1.2.3` git tag or GitHub Release exists, and release
+preparation has not started. See
+[docs/ROADMAP.md](docs/ROADMAP.md#implemented-unreleased-v123) for its scope.
+
+## Run-integrity enforcement (v1.2.3, implemented and unpublished)
+
+A one-time producer-adequacy defect let a repository-context-blocked run
+reach a normal `PASS` final report. `v1.2.3` closes that gap with one
+canonical run-integrity decision that every readiness-sensitive command
+consults instead of recomputing readiness itself:
+
+- optional evidence truncation still does not block a stage, but an actual
+  lost required-condition witness does, independently of general truncation;
+- an authored judge `Verdict: PASS` is rejected whenever canonical readiness
+  still requires `NEED_CONTEXT`, and routes back to the exact blocked stage
+  rather than clearing correction state;
+- a normal final report requires an accepted `PASS` verdict with no active
+  correction and no remaining readiness blocker -- artifact presence, a
+  manual `complete` mark, or an otherwise structurally valid final-report
+  file cannot substitute for that;
+- `status`, `check`, `check --all`, `prompt`, `mark`, and `export` all read
+  the same canonical decision, so none of them can disagree about whether a
+  run is ready, blocked, or eligible for a final report.
+
+Legacy runs, schema-major-1 producer evidence, `greenfield`'s exemption from
+repository-context requirements, and existing correction routing for
+non-context judge verdicts all remain compatible.
+
 The current release supports seven workflow modes:
 
 - `feature`

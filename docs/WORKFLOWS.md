@@ -424,6 +424,14 @@ order. Direct prompts, `status`, `check`, verification, judge, correction
 routing, and `export` consume that same summary rather than selecting their
 own blocker.
 
+`v1.2.3` (implemented and unpublished) makes this one canonical run-integrity
+decision, not just a shared summary: automatic stage detection, explicit
+prompt selection, lifecycle resolution, `mark`, `status`, `check`, and
+`export` all evaluate it once and cannot disagree. A refresh-required
+`implementation`/`test-implementation` artifact is forced to `blocked` for
+lifecycle purposes regardless of file presence or a manual `complete`
+record, so it cannot advance the run while required context is not ready.
+
 ### Verification, judge, and correction flow
 
 Verification and judge in `feature`, `repair`, `refactor`, `harden`, and
@@ -441,6 +449,17 @@ The recommendation overrides the older default table through existing
 correction routing. There is no correction-specific instruction-packet
 sidecar and no correction-specific context file.
 
+`v1.2.3` (implemented and unpublished) rejects an authored `Verdict: PASS`
+whenever the canonical expected verdict is still `NEED_CONTEXT`, routing back
+to the recommended stage above rather than clearing correction state. An
+accepted `NEED_CONTEXT` always uses that same canonical recommendation, even
+when the judge report's own `Recommended next stage:` names a different
+stage. Every other supported verdict -- including `SCOPE_VIOLATION` and
+`BLOCKED`, which remain terminal -- keeps its existing routing unchanged. A
+normal `final-report` requires the accepted verdict to be `PASS` with no
+active correction route and no remaining readiness blocker; artifact
+presence and a manual `complete` mark cannot substitute for that.
+
 ## Shared stage gates and completion rules
 
 - The CLI generates one prompt file per stage when a run starts.
@@ -448,6 +467,11 @@ sidecar and no correction-specific context file.
 - `prompt <stage>` requires prior stage artifacts to exist (file-existence check).
 - The implementation and test-implementation stages are meant to consume the same design context rather than reinterpret the request independently.
 - `my-dev-kit-orchestrator` does not execute a coding agent or `my-dev-kit` automatically.
+- (`v1.2.3`, implemented and unpublished) a context-blocked implementation/
+  test-implementation stage, or a final-report stage that is not eligible,
+  is never treated as `complete` for advancement purposes by the canonical
+  run-integrity decision, even when its artifact file exists or carries a
+  manual `complete` record.
 
 ## Lifecycle-aware progression (v0.3.0)
 

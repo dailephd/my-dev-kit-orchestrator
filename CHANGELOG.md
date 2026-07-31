@@ -1,5 +1,56 @@
 # Changelog
 
+## v1.2.3 - Run-Integrity and Judge-Verdict Enforcement (implemented, unreleased)
+
+Not yet released. Implemented on `fix/v1.2.3-run-integrity`; `package.json`
+and the published npm package remain `1.2.2`.
+
+### Added
+
+- one canonical run-integrity decision consumed by prompt selection,
+  lifecycle resolution, stage detection, `mark`, `status`, `check`,
+  `check --all`, and `export`, replacing per-command readiness recomputation
+- canonical judge-verdict acceptance: the expected verdict is derived from
+  the same run-integrity decision, and correction routing for an accepted
+  `NEED_CONTEXT` uses the canonical recovery stage
+- final-report eligibility requiring an accepted `PASS` verdict, no active
+  correction route, and no remaining readiness blocker
+- consumption of the corrected `my-dev-kit` v1.10.4 producer contract's
+  additive evidence when present (condition-aware role adequacy and dedicated
+  required-condition-witness-loss diagnostics, independent of general
+  truncation); v1.10.4 is itself implemented but not yet published, and the
+  currently published `1.10.3` remains fully compatible
+- a permanent frozen-defect regression fixture and a corrected-evidence
+  positive replay fixture, plus the full required positive/negative
+  compatibility matrix
+
+### Changed
+
+- an authored judge `Verdict: PASS` is now rejected when canonical readiness
+  still requires `NEED_CONTEXT`, and routes back to the blocked stage instead
+  of clearing correction state
+- `export` now reports the same accepted judge state as `status` and `check`
+  instead of an unreconciled authored verdict
+- supplemental packet/report declarations that agree with each other but
+  contradict raw producer evidence now fail closed instead of being accepted
+
+### Fixed
+
+- a repository-context-blocked run could previously reach a normal `PASS`
+  final report through an authored judge verdict that contradicted canonical
+  readiness; artifact presence and a manual `complete` mark could also make a
+  blocked or ineligible stage appear complete. Both are now rejected across
+  every readiness-sensitive command.
+
+### Compatibility and limits
+
+- schema-major-1 producer evidence, legacy runs without a repository-context
+  requirement, `greenfield`'s context exemption, `test` mode's test-context-only
+  requirement, extraction's source/target separation, and existing non-context
+  correction routing all remain compatible
+- no new workflow, native stage, schema major, or public judge verdict was
+  added; no package version was bumped
+
 ## v1.2.2 - Context Readiness and Documentation Safeguards
 
 Release date: 2026-07-28.

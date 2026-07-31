@@ -147,10 +147,23 @@ Important implementation files:
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation
-- `src/promptGenerator.ts`: packet/context prompt integration and refresh-only
+- `src/promptGenerator.ts`: packet/context prompt integration, refresh-only
+  rendering, and (`v1.2.3`, implemented and unpublished) final-report blocked
   rendering
-- `src/commands/status.ts`, `check.ts`, and `export.ts`: readiness presentation,
-  validation, and portable summary
+- `src/commands/status.ts`, `check.ts`, and `export.ts`: readiness
+  presentation, validation, and portable summary, all consuming the same
+  canonical run-integrity and judge-integrity decision
+- `src/runIntegrityGate.ts` (`v1.2.3`, implemented and unpublished): the sole
+  canonical run-integrity evaluator; every readiness-sensitive command reads
+  its result instead of recomputing readiness
+- `src/judgeIntegrity.ts` (`v1.2.3`, implemented and unpublished): authored
+  judge-verdict acceptance against the gate's expected verdict, canonical
+  `NEED_CONTEXT` correction routing, and final-report eligibility
+- `src/instructions/supplementalPairReconciliation.ts`: packet/report pair
+  reconciliation shared by `contextReadiness.ts`
+- `src/artifactLifecycle.ts` and `src/stageDetector.ts`: artifact lifecycle
+  resolution and stage detection, with gate-aware variants consumed by
+  `prompt.ts`, `mark.ts`, and `status.ts`
 
 ## Validation and compatibility fixtures
 
@@ -190,12 +203,34 @@ schema-major-1 evidence, and legacy runs. Consumer integration tests must
 confirm that prompts, `status`, `check`, verification, judge, correction
 routing, and `export` preserve the canonical primary blocker.
 
+Run-integrity, judge-integrity, and final-report-eligibility changes
+(`v1.2.3`, implemented and unpublished) additionally require:
+
+```bash
+npx jest tests/contextReadiness.test.ts tests/myDevKitEvidenceSummary.test.ts tests/contextReadinessHistoricalMatrix.test.ts --runInBand
+npx jest tests/runIntegrityGate.test.ts tests/runIntegrityGateCliIntegration.test.ts tests/runIntegrityGateFrozenRunReplay.test.ts --runInBand
+npx jest tests/judgeIntegrity.test.ts tests/judgeIntegrityCliIntegration.test.ts tests/correctedReadyReplay.test.ts --runInBand
+npx jest tests/v123Batch4FrozenRegression.test.ts tests/v123Batch4NegativeMatrix.test.ts tests/v123Batch4LegacyCompatibility.test.ts --runInBand
+```
+
+`tests/fixtures/v123-batch4/{frozen-run,corrected-run}/` are permanent,
+committed regression fixtures: a distillation of a real historical defect
+(an authored `PASS` judge verdict accepted while repository context was
+refresh-required) and its corrected counterpart. Tests copy their contents
+into a disposable directory before any mutation and assert the fixture files
+are unchanged afterward; never edit them except to correct an error in the
+distillation itself.
+
 ### Manual my-dev-kit integration caveat
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
 and run manually. The published `@dailephd/my-dev-kit@1.10.3` package is the
 verified authority for the corrected role-aware producer behavior; no local
-worktree path is part of the public contract.
+worktree path is part of the public contract. `v1.2.3` (implemented and
+unpublished) additionally consumes the corrected `my-dev-kit` v1.10.4
+producer contract's additive, condition-aware evidence when a capsule/audit
+declares it; v1.10.4 is itself implemented but not yet published, and
+`1.10.3` evidence remains fully compatible without it.
 
 ### Known instruction and context limitations
 

@@ -4,7 +4,9 @@ Versions are listed in chronological order.
 
 `v1.2.2` is the current published release. `v1.2.1`, `v1.2.0`, `v1.1.0`,
 `v1.0.0`, and the `v0.x.0` releases remain part of the published project
-history. Versions after `v1.2.2` are planned milestones.
+history. `v1.2.3` is implemented and durably regression-tested but not yet
+published (see "Implemented, unreleased v1.2.3"). Versions after `v1.2.3` are
+planned milestones.
 
 ## Version summary
 
@@ -20,6 +22,7 @@ history. Versions after `v1.2.2` are planned milestones.
 - `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
+- `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Implemented and regression-tested; not yet published (see "Implemented, unreleased v1.2.3").
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -521,6 +524,75 @@ Compatibility and exclusions:
 - old runs and schema-major-1 producer evidence remain supported
 - verified against the published `@dailephd/my-dev-kit@1.10.3` producer
   package; users must continue to select and verify the producer CLI manually
+
+## Implemented, unreleased v1.2.3
+
+### v1.2.3 - Run-Integrity and Judge-Verdict Enforcement
+
+Status:
+Implemented on `fix/v1.2.3-run-integrity` and durably regression-tested.
+Not published: `package.json` and the published npm package remain `1.2.2`,
+no `v1.2.3` git tag or GitHub Release exists, and release preparation has not
+started.
+
+Goal:
+Close a producer-adequacy defect that let a repository-context-blocked run
+reach a normal `PASS` final report, by making one canonical run-integrity
+decision -- not raw artifact presence, manual lifecycle state, or an authored
+judge verdict alone -- govern every readiness-sensitive command.
+
+High-level scope:
+
+- consumes the corrected `my-dev-kit` v1.10.4 producer contract's additive,
+  condition-aware role-adequacy evidence when present, while preserving
+  schema-major-1 compatibility (including the currently published `1.10.3`)
+  and treating producer role adequacy and required-evidence-loss decisions as
+  authoritative
+- reconciles supplemental packet/report declarations against raw producer
+  evidence so a packet/report pair cannot mask a contradiction with the raw
+  capsule or audit
+- adds one canonical run-integrity evaluator that every readiness-sensitive
+  surface (prompt, lifecycle resolution, stage detection, `mark`, `status`,
+  `check`, `check --all`, `export`) consults instead of independently
+  recomputing readiness
+- adds canonical judge-verdict acceptance: the expected verdict is derived
+  from the same run-integrity decision, an authored `PASS` is rejected when
+  `NEED_CONTEXT` is expected, and accepted `NEED_CONTEXT` routes to the
+  canonical recovery stage rather than an authored recommendation
+- adds final-report eligibility: a normal final report requires an accepted
+  `PASS` verdict with no active correction and no remaining readiness
+  blocker; artifact presence, a manual `complete` mark, and an otherwise
+  structurally valid final-report file cannot substitute for that
+- adds a permanent regression fixture pair (a frozen historical defect replay
+  and a corrected-evidence positive replay) alongside the full required
+  positive and negative matrix
+
+Dependency:
+Consumes the corrected `my-dev-kit` v1.10.4 producer contract's additive,
+condition-aware evidence when present. The published `my-dev-kit` package is
+currently `1.10.3`; v1.10.4 is itself implemented but not yet published in
+that project. Schema-major-1 producer evidence predating v1.10.4 (including
+the currently published `1.10.3`) remains fully compatible and does not block
+on the absence of the additive fields alone.
+
+Compatibility expectations:
+
+- native CLI commands, workflow modes, stage order, and artifact filenames
+  are unchanged
+- historical runs without a repository-context requirement remain usable
+  through existing file-existence and manual-lifecycle behavior
+- `greenfield` continues to require neither implementation nor test context
+- `test` mode continues to require test context only
+- `extraction` continues to keep source and target evidence separate
+- existing correction routing for verdicts other than `NEED_CONTEXT` is
+  unchanged, including honoring a valid authored recommended-stage override
+
+Exclusions:
+
+- no new workflow, native stage, schema major, or public judge verdict
+- no producer-adequacy recomputation and no second run-integrity, judge-
+  integrity, or readiness authority
+- no package-version bump, release branch, tag, or publication
 
 ## Planned milestones
 
