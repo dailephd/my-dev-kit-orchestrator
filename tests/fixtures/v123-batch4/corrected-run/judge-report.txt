@@ -1,0 +1,4 @@
+Artifact: JudgeReport
+Workflow mode: feature
+Verdict: PASS
+Status: complete

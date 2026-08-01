@@ -376,9 +376,9 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const usage = byPath['docs/USAGE.md'];
   const development = byPath['docs/DEVELOPMENT.md'];
 
-  requireTokens(issues, 'README.md', readme, [pkg.name, 'latest published package', '1.2.1', 'eight commands', 'seven workflow modes', '79 native stages']);
-  requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.2', 'Release date: 2026-07-28', 'v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
-  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.2.2', 'Published as `1.2.2`', '2026-07-28', 'Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
+  requireTokens(issues, 'README.md', readme, [pkg.name, 'current release', '1.2.3', 'eight commands', 'seven workflow modes', '79 native stages']);
+  requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.3', 'Release date: 2026-08-01', 'v1.2.2', 'Release date: 2026-07-28', 'v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
+  requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.2.3', 'Released as `1.2.3`', '2026-08-01', 'Published v1.2.2', 'Published as `1.2.2`', '2026-07-28', 'Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages']);
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths]);
@@ -436,11 +436,11 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
       addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'implemented current-source behavior', 'v1.2.1 described as future work', 'Replace planned-future framing with current implemented behavior.');
     }
   }
-  if (!/latest published package[\s\S]{0,100}1\.2\.2/i.test(readme)) {
-    addIssue(issues, 'V122_PUBLISHED_CLAIM_MISSING', 'README.md', 'latest published package v1.2.2', 'missing', 'Restore the release-state claim.');
+  if (!/current release[\s\S]{0,100}1\.2\.3/i.test(readme)) {
+    addIssue(issues, 'V123_PUBLISHED_CLAIM_MISSING', 'README.md', 'current release v1.2.3', 'missing', 'Restore the release-state claim.');
   }
-  if (containsUnnegatedClaim(readme, /v(?!1\.2\.2\b)\d+\.\d+\.\d+[^\n]{0,45}current published/i)) {
-    addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', 'v1.2.2 is the current published version', 'older current-published claim found', 'Historically scope or remove the stale publication claim.');
+  if (containsUnnegatedClaim(readme, /v(?!1\.2\.3\b)\d+\.\d+\.\d+[^\n]{0,45}current (?:published )?(?:stable )?release/i)) {
+    addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', 'v1.2.3 is the current release', 'older current-release claim found', 'Historically scope or remove the stale publication claim.');
   }
   for (const [documentPath, content] of [['README.md', readme], ['CHANGELOG.md', changelog], ['docs/ROADMAP.md', roadmap]]) {
     if (/\bv1\.2\.1\b[^\n.]{0,80}\b(?:is|remains|was)\s+(?:not published|unreleased|not yet published)\b|\b(?:not published|unreleased|not yet published)\s+\bv1\.2\.1\b/i.test(content)) {
@@ -450,6 +450,10 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     if (/\bv1\.2\.2\b[^\n.]{0,80}\b(?:is|remains|was)\s+(?:not published|unreleased|not yet published)\b|\b(?:not published|unreleased|not yet published)\s+\bv1\.2\.2\b/i.test(content)) {
       addIssue(issues, 'V122_RELEASE_STATUS_CONTRADICTION', documentPath, 'v1.2.2 released', 'unreleased claim found', 'Remove the transitional release-state claim.');
       addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'v1.2.2 released', 'unreleased claim found', 'Keep the current release state consistent.');
+    }
+    if (/\bv1\.2\.3\b[^\n.]{0,80}\b(?:is|remains|was)\s+(?:not published|unreleased|not yet published)\b|\b(?:not published|unreleased|not yet published)\s+\bv1\.2\.3\b/i.test(content)) {
+      addIssue(issues, 'V123_RELEASE_STATUS_CONTRADICTION', documentPath, 'v1.2.3 released', 'unreleased claim found', 'Remove the transitional release-state claim.');
+      addIssue(issues, 'DOC_VERSION_CONTRADICTORY_STATUS', documentPath, 'v1.2.3 released', 'unreleased claim found', 'Keep the current release state consistent.');
     }
   }
 

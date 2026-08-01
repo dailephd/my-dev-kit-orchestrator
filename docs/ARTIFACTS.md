@@ -183,9 +183,18 @@ Recommended next stage: implementation
 **Unknown verdicts** fail the parser - they are not guessed.
 **Missing verdict** field returns `missing_verdict` status without error.
 
-The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage.
+The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage, **except** for an accepted `NEED_CONTEXT` (`v1.2.3`): the canonical run-integrity recommendation always wins there, overriding both the table default and a conflicting authored value.
 
 Correction routing is computed fresh on each `status` or `prompt` call. No additional persistence file is required.
+
+**`v1.2.3` judge-verdict acceptance:** a literal
+`Verdict: PASS` is no longer accepted as-is. It is compared against the
+canonical expected verdict (`PASS` when repository context is ready or not
+required, `NEED_CONTEXT` otherwise); when it contradicts `NEED_CONTEXT` it is
+rejected and routed back to the blocked stage instead of clearing correction
+state. A missing verdict field, an unknown verdict token, and a missing
+`judge-report.txt` file are each represented as their own distinct,
+never-guessed state.
 
 ## trace-check-results.json (v0.5.0)
 
@@ -636,3 +645,5 @@ external evidence files merely because a supplemental document names them.
 - the pseudocode packet is the shared design source for implementation and test implementation
 - the test strategy packet is the source for test implementation
 - verification and final report artifacts should contain command evidence and unresolved risks, but the CLI does not enforce that automatically
+- (`v1.2.3`) `final-report.txt` existing, an `artifact-state.json` `complete` record, or structurally valid content is not sufficient by itself: a normal final report additionally requires an accepted `PASS` judge verdict, no active correction route, and every required prior artifact complete under the same gate-aware lifecycle rules; a manual `mark final-report.txt --state complete` is rejected before any mutation when that eligibility is not met
+- (`v1.2.3`) the same rule applies to the repository-context-sensitive `implementation`/`test-implementation` artifacts: their file existing or carrying a manual `complete` record does not advance the run while required repository context remains refresh-required

@@ -1,4 +1,5 @@
 import { execFileSync } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 
 // Runs `npm pack --dry-run --json` once and validates package contents
@@ -26,18 +27,21 @@ describe('v1.2.1 package regression (npm pack --dry-run)', () => {
     };
   }, 60000);
 
-  it('package identity matches the v1.2.2 release', () => {
+  it('package identity matches the v1.2.3 release', () => {
     expect(packageInfo?.name).toBe('@dailephd/my-dev-kit-orchestrator');
-    expect(packageInfo?.version).toBe('1.2.2');
+    expect(packageInfo?.version).toBe('1.2.3');
   });
 
-  it('every included file is under dist/, is package.json, or is npm\'s auto-included README', () => {
+  it('every included file is under dist/ or is an explicitly allowed root package file', () => {
     // npm always auto-includes README.md/LICENSE regardless of the "files"
     // field -- that is existing, unmodified package policy, not something
     // this batch added.
     for (const f of files) {
-      expect(f === 'package.json' || f === 'README.md' || f.startsWith('dist/')).toBe(true);
+      expect(f === 'package.json' || f === 'README.md' || f === 'LICENSE' || f.startsWith('dist/')).toBe(true);
     }
+
+    expect(files.filter((f) => f === 'LICENSE')).toHaveLength(1);
+    expect(fs.readFileSync(path.join(__dirname, '..', 'LICENSE'), 'utf8').trim()).not.toBe('');
   });
 
   it('includes no test files, fixtures, or generated worktrees', () => {

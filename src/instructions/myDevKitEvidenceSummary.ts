@@ -22,6 +22,20 @@ export interface RawResponsibilityMappingEntry {
   mappingStatus: string;
 }
 
+// Bounded projection of my-dev-kit v1.10.4's additive `roleConditionCoverage`
+// (AGENTS.txt Batch 1 / v1.2.3): condition-aware role adequacy with retained
+// required-condition witnesses and lost-required-condition diagnostics. Not
+// present on schema-major-1 artifacts from older producers (v1.10.1-1.10.3);
+// absence is legacy-compatible and yields an empty array, never a rejection.
+export interface RawRoleConditionCoverageEntry {
+  conditionId: string;
+  role: string;
+  required: boolean;
+  retainedWitnessIds: string[];
+  conditionSatisfied: boolean;
+  lostRequiredCondition: boolean;
+}
+
 export interface RawEvidenceProjection {
   schemaVersion: string;
   schemaMajor: number;
@@ -44,6 +58,13 @@ export interface RawEvidenceProjection {
   responsibilityMappingsTruncated: boolean;
   truncated: boolean;
   truncationRequiredEvidenceLost: boolean;
+  roleConditionCoverage: RawRoleConditionCoverageEntry[];
+  // Derived: true when any *required* condition reports lostRequiredCondition
+  // (v1.10.4's corrected requiredEvidenceLost signal). Kept independent from
+  // truncationRequiredEvidenceLost so readiness can surface a required
+  // role-condition witness loss even when it does not want to conflate the
+  // two diagnostics.
+  requiredConditionWitnessLost: boolean;
   fullFileFallbackUsed: boolean;
   provenanceCount: number;
   warnings: string[];
@@ -71,7 +92,47 @@ function asBoolean(value: unknown): boolean {
   return value === true;
 }
 
-function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number): RawEvidenceProjection {
+// Validates the additive v1.10.4 `roleConditionCoverage` field. Absence is
+// legacy-compatible ([]). Presence with the wrong shape is a malformed raw
+// evidence document, not a value to silently drop or reinterpret -- a
+// producer that emits this field at all is expected to emit it correctly.
+function validateRoleConditionCoverage(value: unknown): RawRoleConditionCoverageEntry[] | 'malformed' {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return 'malformed';
+  const entries: RawRoleConditionCoverageEntry[] = [];
+  for (const item of value) {
+    if (!isPlainObject(item)) return 'malformed';
+    const { conditionId, role, required, retainedWitnessIds, conditionSatisfied, lostRequiredCondition } = item;
+    if (
+      typeof conditionId !== 'string' ||
+      conditionId.length === 0 ||
+      typeof role !== 'string' ||
+      role.length === 0 ||
+      typeof required !== 'boolean' ||
+      typeof conditionSatisfied !== 'boolean' ||
+      typeof lostRequiredCondition !== 'boolean' ||
+      !Array.isArray(retainedWitnessIds) ||
+      !retainedWitnessIds.every((w) => typeof w === 'string')
+    ) {
+      return 'malformed';
+    }
+    entries.push({
+      conditionId,
+      role,
+      required,
+      retainedWitnessIds: [...retainedWitnessIds],
+      conditionSatisfied,
+      lostRequiredCondition,
+    });
+  }
+  return entries;
+}
+
+function projectRawEvidence(
+  data: Record<string, unknown>,
+  schemaMajor: number,
+  roleConditionCoverage: RawRoleConditionCoverageEntry[],
+): RawEvidenceProjection {
   const tool = isPlainObject(data.tool) ? data.tool : {};
   const index = isPlainObject(data.index) ? data.index : {};
   const request = isPlainObject(data.request) ? data.request : {};
@@ -147,6 +208,8 @@ function projectRawEvidence(data: Record<string, unknown>, schemaMajor: number):
     responsibilityMappingsTruncated: asBoolean(responsibilityMappingsRaw.truncated),
     truncated: asBoolean(truncation.truncated),
     truncationRequiredEvidenceLost,
+    roleConditionCoverage,
+    requiredConditionWitnessLost: roleConditionCoverage.some((c) => c.required && c.lostRequiredCondition),
     fullFileFallbackUsed: (typeof fullFileFallback.used === 'number' ? fullFileFallback.used : 0) > 0,
     provenanceCount,
     warnings: Array.isArray(data.warnings) ? data.warnings.filter((w): w is string => typeof w === 'string') : [],
@@ -175,7 +238,11 @@ function parseRawEvidenceText(text: string, supportedMajor: number): RawEvidence
       message: `Unsupported schema major ${major}; supported major is ${supportedMajor}.`,
     };
   }
-  return { ok: true, projection: projectRawEvidence(data, major) };
+  const roleConditionCoverage = validateRoleConditionCoverage(data.roleConditionCoverage);
+  if (roleConditionCoverage === 'malformed') {
+    return { ok: false, status: 'malformed', message: 'Raw evidence JSON declares a malformed "roleConditionCoverage" field.' };
+  }
+  return { ok: true, projection: projectRawEvidence(data, major, roleConditionCoverage) };
 }
 
 // Path safety: reject traversal sequences in the raw declared string (before
@@ -230,6 +297,20 @@ export function readRawRetrievalAudit(declaredPath: string, runFolder: string): 
   return readRawEvidenceFile(declaredPath, runFolder, RAW_RETRIEVAL_AUDIT_SUPPORTED_MAJOR);
 }
 
+// Stable, order-independent signature for a roleConditionCoverage array, used
+// to detect capsule/audit disagreement on any condition's fields -- not just
+// the derived requiredConditionWitnessLost rollup (v1.10.4 capsule/audit
+// parity, AGENTS.txt Batch 1 / v1.2.3).
+function roleConditionCoverageSignature(entries: RawRoleConditionCoverageEntry[]): string {
+  return entries
+    .map(
+      (e) =>
+        `${e.conditionId}:${e.role}:${e.required}:${e.conditionSatisfied}:${e.lostRequiredCondition}:${[...e.retainedWitnessIds].sort().join(',')}`,
+    )
+    .sort()
+    .join('|');
+}
+
 // Deterministic consistency check between capsule and audit projections
 // (AGENTS.txt Batch 5 section 8.5). Returns the field names that disagree,
 // in a stable order.
@@ -258,5 +339,8 @@ export function findCapsuleAuditInconsistencies(
   if (capsule.fullFileFallbackUsed !== audit.fullFileFallbackUsed) mismatches.push('fallback');
   if (capsule.provenanceCount !== audit.provenanceCount) mismatches.push('provenance');
   if (capsule.responsibilityMappingsTruncated !== audit.responsibilityMappingsTruncated) mismatches.push('responsibilityMappings');
+  if (roleConditionCoverageSignature(capsule.roleConditionCoverage) !== roleConditionCoverageSignature(audit.roleConditionCoverage)) {
+    mismatches.push('requiredConditionCoverage');
+  }
   return mismatches;
 }

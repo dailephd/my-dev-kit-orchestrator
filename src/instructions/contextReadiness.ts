@@ -310,6 +310,11 @@ const CONTEXT_READINESS_ISSUE_DEFINITIONS: Readonly<Record<string, ContextReadin
     correctiveAction: 'Rerun retrieval with sufficient limits so no required evidence is lost.',
     evidenceTarget: 'raw required-evidence truncation record',
   },
+  CONTEXT_REQUIRED_CONDITION_WITNESS_LOST: {
+    priority: 71,
+    correctiveAction: 'Rerun retrieval with sufficient limits so no required role-condition witness is lost.',
+    evidenceTarget: 'raw role-condition coverage',
+  },
   CONTEXT_PROVENANCE_MISSING: {
     priority: 80,
     correctiveAction: 'Regenerate evidence with producer provenance records.',
@@ -612,6 +617,7 @@ const RAW_SUMMARY_MISMATCH_CLASSIFICATION: Record<string, ContextReadinessClassi
   beforeIndexIdentity: 'index-identity-mismatch',
   afterIndexIdentity: 'index-identity-mismatch',
   repositoryIdentity: 'repository-scope-mismatch',
+  requiredConditionCoverage: 'required-evidence-incomplete',
 };
 
 const ADEQUACY_TEXT_MAP: Record<string, ContextReadinessResult['evaluatedAdequacy']> = {
@@ -1086,6 +1092,20 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     setPrimary('incompatible');
   }
 
+  // v1.10.4 condition-aware coverage (v1.2.3 Batch 1): a lost required-role
+  // condition witness is reported independently of the generic
+  // truncationRequiredEvidenceLost rollup above -- it must block even in the
+  // (now-possible) case where optional-only truncation coexists with
+  // "sufficient with assumptions" producer adequacy. Legacy producers that
+  // never declare roleConditionCoverage report an empty array here, so this
+  // never fires for schema-major-1 artifacts predating v1.10.4.
+  if (capsule.requiredConditionWitnessLost) {
+    issues.push(
+      issue('CONTEXT_REQUIRED_CONDITION_WITNESS_LOST', 'error', 'Producer role-condition coverage reports a lost required-condition witness.', stageId, kind),
+    );
+    setPrimary('required-evidence-incomplete');
+  }
+
   if (capsule.provenanceCount === 0) {
     issues.push(issue('CONTEXT_PROVENANCE_MISSING', 'error', 'Raw evidence has no provenance records.', stageId, kind));
     setPrimary('provenance-missing');
@@ -1115,6 +1135,37 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
           stageId,
           kind,
           { field: 'responsibilityMappingsTruncated', expected: responsibilityTruncatedOutcome.packetValue, actual: responsibilityTruncatedOutcome.reportValue },
+        ),
+      );
+      setPrimary('responsibility-mappings-truncated');
+    }
+
+    // Raw-evidence reconciliation, continued (v1.2.3 Batch 1): packet/report
+    // agreement is not enough on its own -- both must also agree with raw
+    // producer evidence. A packet/report pair that agrees "Responsibility
+    // mappings truncated: no" while the raw capsule/audit actually truncated
+    // responsibility mappings must fail closed rather than being masked by
+    // supplemental agreement.
+    const declaredResponsibilityMappingsTruncated =
+      responsibilityTruncatedOutcome.status === 'agree' ||
+      responsibilityTruncatedOutcome.status === 'packet-only' ||
+      responsibilityTruncatedOutcome.status === 'report-only'
+        ? (responsibilityTruncatedOutcome.value as DeclaredTruncation)
+        : undefined;
+    const rawResponsibilityMappingsTruncated: DeclaredTruncation = capsule.responsibilityMappingsTruncated ? 'yes' : 'no';
+    if (
+      declaredResponsibilityMappingsTruncated &&
+      declaredResponsibilityMappingsTruncated !== 'unknown' &&
+      declaredResponsibilityMappingsTruncated !== rawResponsibilityMappingsTruncated
+    ) {
+      issues.push(
+        issue(
+          'CONTEXT_SOURCE_SUMMARY_MISMATCH',
+          'error',
+          `Declared "Responsibility mappings truncated: ${declaredResponsibilityMappingsTruncated}" does not match raw evidence "${rawResponsibilityMappingsTruncated}".`,
+          stageId,
+          kind,
+          { field: 'responsibilityMappingsTruncated', expected: rawResponsibilityMappingsTruncated, actual: declaredResponsibilityMappingsTruncated },
         ),
       );
       setPrimary('responsibility-mappings-truncated');
@@ -1168,7 +1219,7 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
       affectedResponsibilityIds = criticalResponsibilitySummary.unmappedCriticalIds;
       for (const w of criticalResponsibilitySummary.noncriticalMappingWarnings) warnings.push(w);
 
-      responsibilityMappingsTruncated = capsule.responsibilityMappingsTruncated ? 'yes' : 'no';
+      responsibilityMappingsTruncated = rawResponsibilityMappingsTruncated;
       const criticalFullyMapped = allCriticalResponsibilitiesFullyMapped(criticalResponsibilitySummary);
       if (capsule.responsibilityMappingsTruncated) {
         if (criticalFullyMapped) {

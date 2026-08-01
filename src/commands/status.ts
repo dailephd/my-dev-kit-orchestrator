@@ -5,15 +5,16 @@ import { getMostRecentRun, loadRun, getRunFolder } from '../run';
 import {
   getArtifactStatuses,
   getSupportingReportStatuses,
-  getArtifactLifecycleStatuses,
-  getNextStageWithLifecycle,
+  getArtifactLifecycleStatusesWithRunIntegrity,
+  getNextStageWithRunIntegrity,
   ArtifactLifecycleStatus,
 } from '../stageDetector';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
-import { readCorrectionState } from '../correctionState';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
+import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -54,9 +55,34 @@ export function makeStatusCommand(): Command {
       }
 
       const stateFile = readArtifactStateFile(meta.runFolder);
-      const lifecycleStatuses = getArtifactLifecycleStatuses(meta, stateFile);
+      // Canonical run-integrity gate (v1.2.3 Batch 2): computed once, up
+      // front, from the same readiness evaluation rendered in the
+      // "Repository context readiness" section below, so the artifact list
+      // and "Current / next stage" line can never contradict it (invariant
+      // 6.5 -- avoid duplicate contradictory readiness sections).
+      const readiness = evaluateRunContextReadiness({
+        mode: meta.mode,
+        runFolder: meta.runFolder,
+        workflowStageNames: meta.stages.map((s) => s.name),
+        projectRoot: meta.projectRoot,
+      });
+      const gate = deriveRunIntegrityGateResult(meta.mode, readiness);
+      // Canonical judge-integrity / final-report eligibility (v1.2.3
+      // Batch 3): computed once here, reused for the artifact list,
+      // current/next stage, and the single "Judge and final-report
+      // integrity" section below -- never a second, contradictory summary
+      // (invariant 11.1).
+      const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+      const finalReportEligibility = evaluateFinalReportEligibility({
+        gate,
+        judgeIntegrity,
+        runFolder: meta.runFolder,
+        stages: meta.stages,
+        stateFile,
+      });
+      const lifecycleStatuses = getArtifactLifecycleStatusesWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
       const legacyStatuses = getArtifactStatuses(meta);
-      const nextStage = getNextStageWithLifecycle(meta, stateFile);
+      const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
       const presentArtifacts = legacyStatuses.filter((s) => s.present);
       const nonCompleteArtifacts = lifecycleStatuses.filter((s) => s.lifecycleState !== 'complete');
       const supportingReports = getSupportingReportStatuses(meta);
@@ -123,40 +149,47 @@ export function makeStatusCommand(): Command {
       }
       lines.push(``);
 
-      // Judge correction routing summary
-      const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
-      if (correctionState) {
-        if (correctionState.routeStatus === 'pass') {
-          lines.push(`Judge correction: PASS - no correction required`);
-        } else if (correctionState.routeStatus === 'correction_required') {
-          lines.push(`Judge correction: ${correctionState.verdict} → correction required`);
-          lines.push(`  Routed stage: ${correctionState.routedStage}`);
-          if (correctionState.warnings.length > 0) {
-            lines.push(`  Warning: ${correctionState.warnings[0]}`);
+      // Judge and final-report integrity (v1.2.3 Batch 3, invariant 11.1):
+      // one coherent section covering expected verdict, authored verdict
+      // (or parse state), acceptance, correction state, and final-report
+      // eligibility -- never split across sections that could disagree.
+      if (judgeIntegrity.judgeArtifactPresent) {
+        lines.push(`Judge and final-report integrity:`);
+        lines.push(`  Expected judge verdict: ${judgeIntegrity.expectedJudgeVerdict}`);
+        if (judgeIntegrity.judgeVerdictParseStatus === 'parsed') {
+          lines.push(`  Authored judge verdict: ${judgeIntegrity.authoredJudgeVerdict}`);
+          lines.push(`  Verdict accepted: ${judgeIntegrity.judgeVerdictAccepted}`);
+          if (!judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.primaryReason) {
+            lines.push(`  Mismatch reason: ${judgeIntegrity.primaryReason}`);
           }
-        } else if (correctionState.routeStatus === 'blocked') {
-          lines.push(`Judge correction: ${correctionState.verdict} - run is blocked`);
-          lines.push(`  This run requires external resolution before it can continue.`);
-        } else if (correctionState.routeStatus === 'unknown_verdict') {
-          lines.push(`Judge correction: unrecognized verdict in judge-report.txt`);
-          if (correctionState.errors.length > 0) {
-            lines.push(`  Error: ${correctionState.errors[0]}`);
+          if (judgeIntegrity.correctionBlocked) {
+            lines.push(`  Judge correction: ${judgeIntegrity.authoredJudgeVerdict} - run is blocked`);
+            lines.push(`  This run requires external resolution before it can continue.`);
+          } else if (judgeIntegrity.correctionRequired) {
+            lines.push(`  Judge correction: correction required`);
+            lines.push(`  Routed stage: ${judgeIntegrity.acceptedCorrectionStage}`);
+          } else if (judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.authoredJudgeVerdict === 'PASS') {
+            lines.push(`  Judge correction: PASS - no correction required`);
           }
-        } else if (correctionState.routeStatus === 'missing_verdict') {
-          lines.push(`Judge correction: no verdict found in judge-report.txt`);
+        } else if (judgeIntegrity.judgeVerdictParseStatus === 'unknown-verdict') {
+          lines.push(`  Verdict accepted: false`);
+          lines.push(`  Unrecognized verdict in judge-report.txt`);
+          if (judgeIntegrity.primaryReason) lines.push(`  Reason: ${judgeIntegrity.primaryReason}`);
+        } else if (judgeIntegrity.judgeVerdictParseStatus === 'missing-verdict') {
+          lines.push(`  Verdict accepted: false`);
+          lines.push(`  No verdict found in judge-report.txt`);
+        }
+        lines.push(`  Final-report eligible: ${finalReportEligibility.eligible}`);
+        if (!finalReportEligibility.eligible && finalReportEligibility.blockingCodes.length > 0) {
+          lines.push(`  Final-report blocking codes: ${finalReportEligibility.blockingCodes.join(', ')}`);
         }
         lines.push(``);
       }
 
-      // Repository context readiness (Batch 5). Read-only: recomputed in
-      // memory from whatever supplemental/raw evidence currently exists on
-      // disk; never written back, never triggers my-dev-kit.
-      const readiness = evaluateRunContextReadiness({
-        mode: meta.mode,
-        runFolder: meta.runFolder,
-        workflowStageNames: meta.stages.map((s) => s.name),
-        projectRoot: meta.projectRoot,
-      });
+      // Repository context readiness (Batch 5). Read-only, and reuses the
+      // same `readiness` evaluated above for the canonical gate -- never
+      // recomputed a second time, never written back, never triggers
+      // my-dev-kit.
       if (readiness.overallDecision === 'not-required') {
         lines.push(`Repository context: not required`);
       } else {

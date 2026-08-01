@@ -10,6 +10,8 @@ import {
   ManualArtifactLifecycleState,
 } from '../artifactLifecycle';
 import { resolveArtifactState } from '../artifactLifecycle';
+import { evaluateRunIntegrityGate, isRunIntegrityBlockedArtifactFile } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 
 function resolveArtifactKey(
   artifactName: string,
@@ -109,6 +111,64 @@ export function makeMarkCommand(): Command {
             knownArtifacts.map((f) => `  - ${path.basename(f)}`).join('\n'),
           );
           process.exit(1);
+        }
+
+        // Canonical run-integrity gate (v1.2.3 Batch 2 / invariant 6.3) and
+        // final-report eligibility (v1.2.3 Batch 3 / invariant 10.2):
+        // manual completion must never override machine readiness or an
+        // unaccepted judge verdict. A refresh-required
+        // implementation/test-implementation artifact, or an ineligible
+        // final-report artifact, is rejected before any state mutation --
+        // artifact-state.json is not touched, matching the "rejected mark
+        // does not mutate lifecycle state" acceptance criterion.
+        if (state === 'complete') {
+          const gate = evaluateRunIntegrityGate({
+            mode: meta.mode,
+            runFolder: meta.runFolder,
+            workflowStageNames: meta.stages.map((s) => s.name),
+            projectRoot: meta.projectRoot,
+          });
+          const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+          const preMarkStateFile = readArtifactStateFile(meta.runFolder);
+          const finalReportEligibility = evaluateFinalReportEligibility({
+            gate,
+            judgeIntegrity,
+            runFolder: meta.runFolder,
+            stages: meta.stages,
+            stateFile: preMarkStateFile,
+          });
+          if (isRunIntegrityBlockedArtifactFile(gate, meta.stages, artifactKey, finalReportEligibility.eligible)) {
+            const isFinalReport = path.basename(artifactKey) === 'final-report.txt';
+            if (isFinalReport) {
+              console.error(
+                `Error: cannot mark "${path.basename(artifactKey)}" complete -- this run is not eligible for a final report.\n` +
+                `  Expected judge verdict: ${judgeIntegrity.expectedJudgeVerdict}\n` +
+                `  Judge verdict parse status: ${judgeIntegrity.judgeVerdictParseStatus}\n` +
+                (judgeIntegrity.authoredJudgeVerdict ? `  Authored judge verdict: ${judgeIntegrity.authoredJudgeVerdict}\n` : '') +
+                `  Judge verdict accepted: ${judgeIntegrity.judgeVerdictAccepted}\n` +
+                (finalReportEligibility.primaryReason ? `  Reason: ${finalReportEligibility.primaryReason}\n` : '') +
+                (judgeIntegrity.acceptedCorrectionStage ? `  Recommended correction stage: ${judgeIntegrity.acceptedCorrectionStage}\n` : '') +
+                `\nManual completion cannot override an unaccepted judge verdict. Resolve the blocking issue and rerun\n` +
+                `  my-dev-kit-orchestrator check\n` +
+                `before marking this artifact complete.`,
+              );
+            } else {
+              console.error(
+                `Error: cannot mark "${path.basename(artifactKey)}" complete -- repository context is refresh-required.\n` +
+                `  Readiness classification: ${gate.readinessClassification}\n` +
+                (gate.primaryBlocker
+                  ? `  Primary blocker: ${gate.primaryBlocker.primaryCode}\n` +
+                    `  Reason: ${gate.primaryBlocker.primaryReason}\n` +
+                    `  Corrective action: ${gate.primaryBlocker.correctiveAction}\n`
+                  : '') +
+                `  Recommended next stage: ${gate.recommendedCorrectionStage ?? '(none)'}\n\n` +
+                `Manual completion cannot override machine readiness. Refresh the repository context and rerun\n` +
+                `  my-dev-kit-orchestrator check\n` +
+                `before marking this artifact complete.`,
+              );
+            }
+            process.exit(1);
+          }
         }
 
         setArtifactManualState(meta.runFolder, artifactKey, state, {

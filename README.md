@@ -22,14 +22,38 @@ is `my-dev-kit-orchestrator`.
 
 ## Current release
 
-The latest published package is
-`@dailephd/my-dev-kit-orchestrator@1.2.2`. See [CHANGELOG.md](CHANGELOG.md) for
+The current release is
+`@dailephd/my-dev-kit-orchestrator@1.2.3`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.2.2` ships context-readiness and documentation safeguards on top of the
-`v1.2.1` workflow-instruction foundation: canonical actionable context-blocker
-summaries, historical readiness-matrix coverage, and preservation-manifest
-checks for the blocker contract and context-identity claims.
+`v1.2.3` ships run-integrity and judge-verdict enforcement on top of the
+`v1.2.2` context-readiness safeguards. It is compatible with the released
+`@dailephd/my-dev-kit@1.10.4` producer contract and requires Node.js 24 or
+later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v123) for its scope.
+
+## Run-integrity enforcement (v1.2.3)
+
+A one-time producer-adequacy defect let a repository-context-blocked run
+reach a normal `PASS` final report. `v1.2.3` closes that gap with one
+canonical run-integrity decision that every readiness-sensitive command
+consults instead of recomputing readiness itself:
+
+- optional evidence truncation still does not block a stage, but an actual
+  lost required-condition witness does, independently of general truncation;
+- an authored judge `Verdict: PASS` is rejected whenever canonical readiness
+  still requires `NEED_CONTEXT`, and routes back to the exact blocked stage
+  rather than clearing correction state;
+- a normal final report requires an accepted `PASS` verdict with no active
+  correction and no remaining readiness blocker -- artifact presence, a
+  manual `complete` mark, or an otherwise structurally valid final-report
+  file cannot substitute for that;
+- `status`, `check`, `check --all`, `prompt`, `mark`, and `export` all read
+  the same canonical decision, so none of them can disagree about whether a
+  run is ready, blocked, or eligible for a final report.
+
+Legacy runs, schema-major-1 producer evidence, `greenfield`'s exemption from
+repository-context requirements, and existing correction routing for
+non-context judge verdicts all remain compatible.
 
 The current release supports seven workflow modes:
 
@@ -74,7 +98,7 @@ are not persisted.
 
 ## Quick start
 
-Prerequisite: a supported Node.js installation with npm.
+Prerequisite: Node.js 24 or later with npm.
 
 Run the published package without installing it globally:
 

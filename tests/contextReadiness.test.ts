@@ -446,6 +446,173 @@ describe('evaluateContextReadiness: raw capsule/audit contradictions fail closed
   });
 });
 
+describe('evaluateContextReadiness: v1.10.4 condition-aware producer contract (v1.2.3 Batch 1)', () => {
+  const SATISFIED_ROLE_CONDITION_COVERAGE = [
+    {
+      conditionId: 'implementation.selected-owner',
+      role: 'implementation',
+      required: true,
+      retainedWitnessIds: ['owner-1'],
+      conditionSatisfied: true,
+      lostRequiredCondition: false,
+    },
+    {
+      conditionId: 'implementation.required-contract',
+      role: 'implementation',
+      required: true,
+      retainedWitnessIds: ['contract-1'],
+      conditionSatisfied: true,
+      lostRequiredCondition: false,
+    },
+  ];
+
+  const LOST_ROLE_CONDITION_COVERAGE = [
+    SATISFIED_ROLE_CONDITION_COVERAGE[0],
+    {
+      conditionId: 'implementation.required-contract',
+      role: 'implementation',
+      required: true,
+      retainedWitnessIds: [],
+      conditionSatisfied: false,
+      lostRequiredCondition: true,
+    },
+  ];
+
+  it('a v1.10.4 producer artifact with fully satisfied condition coverage remains ready', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation', { roleConditionCoverage: SATISFIED_ROLE_CONDITION_COVERAGE });
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+  });
+
+  it('a schema-major-1 producer artifact predating v1.10.4 (no roleConditionCoverage) remains supported', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation');
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+  });
+
+  it('optional-only truncation remains acceptable alongside sufficient-with-assumptions adequacy', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation', {
+      roleAdequacy: { status: 'context sufficient with listed assumptions' },
+      truncation: { truncated: true, records: [{ requiredEvidenceLost: false }] },
+      roleConditionCoverage: SATISFIED_ROLE_CONDITION_COVERAGE,
+    });
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+    expect(result.readyWithAssumptions).toBe(true);
+    expect(result.warnings.some((w) => w.toLowerCase().includes('truncat'))).toBe(true);
+  });
+
+  it('retained required-condition witnesses remain sufficient even when other evidence was truncated', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation', {
+      truncation: { truncated: true, records: [{ requiredEvidenceLost: false }] },
+      roleConditionCoverage: SATISFIED_ROLE_CONDITION_COVERAGE,
+    });
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('ready');
+  });
+
+  it('required-condition witness loss blocks independently of the generic truncation flag', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation', { roleConditionCoverage: LOST_ROLE_CONDITION_COVERAGE });
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('refresh-required');
+    expect(result.blockingIssueCodes).toContain('CONTEXT_REQUIRED_CONDITION_WITNESS_LOST');
+  });
+
+  it('capsule roleConditionCoverage disagreeing with the audit fails closed', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(
+      runFolder,
+      'implementation',
+      { roleConditionCoverage: LOST_ROLE_CONDITION_COVERAGE },
+      { roleConditionCoverage: SATISFIED_ROLE_CONDITION_COVERAGE },
+    );
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('refresh-required');
+    expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+  });
+
+  it('audit roleConditionCoverage disagreeing with the capsule fails closed', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(
+      runFolder,
+      'implementation',
+      { roleConditionCoverage: SATISFIED_ROLE_CONDITION_COVERAGE },
+      { roleConditionCoverage: LOST_ROLE_CONDITION_COVERAGE },
+    );
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('refresh-required');
+    expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+  });
+
+  it('a malformed roleConditionCoverage field fails closed as malformed evidence, not silently ignored', () => {
+    const runFolder = makeRunFolder();
+    populateWithRawEvidence(runFolder, 'implementation', { roleConditionCoverage: 'not-an-array' });
+    const result = evaluateContextReadiness({ requirement: implRequirement, stageId: implRequirement.stageId, runFolder, mode: 'feature' });
+    expect(result.decision).toBe('refresh-required');
+    expect(result.classification).toBe('source-evidence-malformed');
+  });
+
+  describe('responsibility-mapping raw/supplemental reconciliation (v1.2.3 Batch 1)', () => {
+    const CRITICAL_STRATEGY = `
+test responsibility ID: TST-COND-001
+criticality: critical
+traces to: x
+setup: x
+action or trigger: x
+expected result: x
+test level: unit
+`;
+
+    function declareResponsibilityMappingsTruncated(runFolder: string, value: 'yes' | 'no') {
+      for (const rel of ['artifacts/test-context-packet.txt', 'reports/test-context-retrieval-report.txt']) {
+        const p = path.join(runFolder, rel);
+        const text = fs.readFileSync(p, 'utf8').replace('Responsibility mappings truncated: unknown', `Responsibility mappings truncated: ${value}`);
+        fs.writeFileSync(p, text, 'utf8');
+      }
+    }
+
+    it('packet/report agreeing "no" while raw evidence truncated the mappings fails closed', () => {
+      const runFolder = makeRunFolder();
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'test-strategy-packet.txt'), CRITICAL_STRATEGY, 'utf8');
+      populateWithRawEvidence(runFolder, 'test', {
+        responsibilityMappings: { mappings: [{ responsibilityId: 'TST-COND-001', mappingStatus: 'mapped' }], truncated: true },
+      });
+      declareResponsibilityMappingsTruncated(runFolder, 'no');
+      const result = evaluateContextReadiness({ requirement: testRequirement, stageId: testRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+    });
+
+    it('packet/report agreeing "yes" while raw evidence was not truncated fails closed', () => {
+      const runFolder = makeRunFolder();
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'test-strategy-packet.txt'), CRITICAL_STRATEGY, 'utf8');
+      populateWithRawEvidence(runFolder, 'test', {
+        responsibilityMappings: { mappings: [{ responsibilityId: 'TST-COND-001', mappingStatus: 'mapped' }], truncated: false },
+      });
+      declareResponsibilityMappingsTruncated(runFolder, 'yes');
+      const result = evaluateContextReadiness({ requirement: testRequirement, stageId: testRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('refresh-required');
+      expect(result.blockingIssueCodes).toContain('CONTEXT_SOURCE_SUMMARY_MISMATCH');
+    });
+
+    it('packet/report agreeing "no" while raw evidence was not truncated remains ready', () => {
+      const runFolder = makeRunFolder();
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'test-strategy-packet.txt'), CRITICAL_STRATEGY, 'utf8');
+      populateWithRawEvidence(runFolder, 'test', {
+        responsibilityMappings: { mappings: [{ responsibilityId: 'TST-COND-001', mappingStatus: 'mapped' }], truncated: false },
+      });
+      declareResponsibilityMappingsTruncated(runFolder, 'no');
+      const result = evaluateContextReadiness({ requirement: testRequirement, stageId: testRequirement.stageId, runFolder, mode: 'feature' });
+      expect(result.decision).toBe('ready');
+    });
+  });
+});
+
 describe('evaluateContextReadiness: identity enforcement (v1.2.2 Batch 2 / F-006)', () => {
   const ACTIVE_REPO = '/repo/orchestrator';
 

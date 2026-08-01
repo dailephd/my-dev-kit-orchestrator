@@ -365,6 +365,20 @@ function makeExtractionMeta() {
   const runFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-extraction-meta-'));
   extractionMetaTempDirs.push(runFolder);
   makeReadyRunFolder(runFolder, 'extraction');
+  // v1.2.3 Batch 3: final-report only renders its normal prompt once
+  // finalReportEligible is true -- populate every prior native artifact
+  // (including an accepted PASS judge-report.txt) the same way
+  // makeReadyRunFolder already does for repository context above.
+  const judgeIndex = wf.stages.findIndex((s) => s.name === 'judge');
+  if (judgeIndex !== -1) {
+    for (const s of wf.stages.slice(0, judgeIndex)) {
+      fs.writeFileSync(path.join(runFolder, s.artifactFile), 'done', 'utf8');
+      for (const additional of s.additionalArtifactFiles ?? []) {
+        fs.writeFileSync(path.join(runFolder, additional), 'done', 'utf8');
+      }
+    }
+    fs.writeFileSync(path.join(runFolder, 'artifacts', 'judge-report.txt'), 'Verdict: PASS', 'utf8');
+  }
   return {
     runId: '20240101T120000-extraction-test',
     mode: 'extraction' as const,

@@ -2,10 +2,11 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
-import { readCorrectionState } from '../correctionState';
 import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
+import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, JudgeIntegrityResult } from '../judgeIntegrity';
 import type { WorkflowMode } from '../types';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
@@ -61,25 +62,36 @@ function artifactChecklist(
   return lines.join('\n');
 }
 
-function formatCorrectionState(runFolder: string, mode: WorkflowMode): string {
-  const state = readCorrectionState(runFolder, { workflowMode: mode });
-  if (!state) return '  no judge report';
-  if (state.routeStatus === 'pass') return '  PASS -- no correction required';
-  if (state.routeStatus === 'correction_required') {
-    return `  ${state.verdict} -> correction required (routed stage: ${state.routedStage})`;
+// v1.2.3 Batch 4: reports the *accepted* judge-integrity state (Batch 3),
+// never the raw authored text alone -- otherwise export could claim
+// "PASS -- no correction required" for a run status/check correctly reject
+// as NEED_CONTEXT, the exact cross-surface disagreement AGENTS.txt Batch 4
+// section 10 forbids. See tests/v123Batch4NegativeMatrix.test.ts.
+function formatCorrectionState(judgeIntegrity: JudgeIntegrityResult): string {
+  if (!judgeIntegrity.judgeArtifactPresent) return '  no judge report';
+  if (judgeIntegrity.judgeVerdictParseStatus !== 'parsed') {
+    return `  judge verdict ${judgeIntegrity.judgeVerdictParseStatus.replace('-', ' ')}`;
   }
-  if (state.routeStatus === 'blocked') {
-    return `  ${state.verdict} -- run is blocked (external resolution required)`;
+  if (judgeIntegrity.correctionBlocked) {
+    return `  ${judgeIntegrity.authoredJudgeVerdict} -- run is blocked (external resolution required)`;
   }
-  return `  ${state.routeStatus}`;
+  if (judgeIntegrity.correctionRequired) {
+    return `  ${judgeIntegrity.authoredJudgeVerdict} -> correction required (routed stage: ${judgeIntegrity.acceptedCorrectionStage})`;
+  }
+  if (judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.authoredJudgeVerdict === 'PASS') {
+    return '  PASS -- no correction required';
+  }
+  // Authored PASS rejected because it contradicts the canonical expected
+  // verdict (Batch 3 section 6.2) -- never reported as accepted.
+  return `  ${judgeIntegrity.authoredJudgeVerdict} -- rejected (expected ${judgeIntegrity.expectedJudgeVerdict}: ${judgeIntegrity.primaryReason ?? 'does not match canonical expected verdict'})`;
 }
 
-function readJudgeVerdict(runFolder: string, mode: WorkflowMode): string {
-  const p = path.join(runFolder, 'artifacts', 'judge-report.txt');
-  if (!fs.existsSync(p)) return '  no judge report';
-  const state = readCorrectionState(runFolder, { workflowMode: mode });
-  if (!state || !state.verdict) return '  judge report present but verdict not parsed';
-  return `  ${state.verdict}`;
+function readJudgeVerdict(judgeIntegrity: JudgeIntegrityResult): string {
+  if (!judgeIntegrity.judgeArtifactPresent) return '  no judge report';
+  if (judgeIntegrity.judgeVerdictParseStatus !== 'parsed') {
+    return `  judge report present but verdict not parsed (${judgeIntegrity.judgeVerdictParseStatus})`;
+  }
+  return `  ${judgeIntegrity.authoredJudgeVerdict} (accepted: ${judgeIntegrity.judgeVerdictAccepted})`;
 }
 
 function readVerificationEvidence(runFolder: string): string {
@@ -184,17 +196,19 @@ function formatContextReadinessSummary(meta: {
   return lines.join('\n');
 }
 
-function formatNextCommand(meta: {
-  runId: string;
-  mode: WorkflowMode;
-  currentStage: string;
-  runFolder: string;
-}): string {
-  const correctionState = readCorrectionState(meta.runFolder, { workflowMode: meta.mode });
-  if (correctionState && correctionState.routeStatus === 'correction_required') {
-    return `  my-dev-kit-orchestrator prompt --run ${meta.runId}  # correction: ${correctionState.routedStage}`;
+function formatNextCommand(
+  meta: {
+    runId: string;
+    mode: WorkflowMode;
+    currentStage: string;
+    runFolder: string;
+  },
+  judgeIntegrity: JudgeIntegrityResult,
+): string {
+  if (judgeIntegrity.correctionRequired) {
+    return `  my-dev-kit-orchestrator prompt --run ${meta.runId}  # correction: ${judgeIntegrity.acceptedCorrectionStage}`;
   }
-  if (correctionState && correctionState.routeStatus === 'blocked') {
+  if (judgeIntegrity.correctionBlocked) {
     return `  # run is blocked -- resolve externally, then: my-dev-kit-orchestrator status --run ${meta.runId}`;
   }
   return `  my-dev-kit-orchestrator prompt --run ${meta.runId}`;
@@ -214,6 +228,17 @@ export function buildExportText(meta: {
   stages: Array<{ name: string; artifactFile: string }>;
 }): string {
   const parts: string[] = [];
+
+  // Canonical judge-integrity state (v1.2.3 Batch 4), computed once and
+  // reused for every section below so export cannot disagree with
+  // status/check on whether a verdict was actually accepted.
+  const gate = evaluateRunIntegrityGate({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
+  });
+  const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
 
   parts.push('my-dev-kit-orchestrator run handoff export');
   parts.push(`Generated: ${new Date().toISOString()}`);
@@ -236,10 +261,10 @@ export function buildExportText(meta: {
   parts.push(listMissingArtifacts(meta.runFolder, meta.stages));
 
   parts.push(sectionHeader('Judge verdict'));
-  parts.push(readJudgeVerdict(meta.runFolder, meta.mode));
+  parts.push(readJudgeVerdict(judgeIntegrity));
 
   parts.push(sectionHeader('Correction state'));
-  parts.push(formatCorrectionState(meta.runFolder, meta.mode));
+  parts.push(formatCorrectionState(judgeIntegrity));
 
   parts.push(sectionHeader('Verification evidence'));
   parts.push(readVerificationEvidence(meta.runFolder));
@@ -252,7 +277,7 @@ export function buildExportText(meta: {
   parts.push(formatContextReadinessSummary(meta));
 
   parts.push(sectionHeader('Next command'));
-  parts.push(formatNextCommand(meta));
+  parts.push(formatNextCommand(meta, judgeIntegrity));
 
   parts.push('');
   return parts.join('\n');

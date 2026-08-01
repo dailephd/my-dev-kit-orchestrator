@@ -1,8 +1,8 @@
 # Release Checklist
 
 Use this checklist for release-readiness work. This file is a checklist
-template, not evidence that the listed steps have already run. The latest
-published package is `v1.2.2`; older releases remain historical baselines.
+template, not evidence that the listed steps have already run. The current
+release is `v1.2.3`; older releases remain historical baselines.
 
 ## Current release baseline
 
@@ -11,7 +11,7 @@ published package is `v1.2.2`; older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify latest-published `v1.2.2` and scope older versions historically
+- [ ] docs identify current `v1.2.3` and scope older versions historically
 
 ## Required local validation
 
@@ -61,8 +61,9 @@ published package is `v1.2.2`; older releases remain historical baselines.
   truncated, unmapped, stale, schema-major-1, and legacy evidence
 - [ ] docs claim only repository and index identity checks implemented by the
   raw and supplemental context contracts, not workflow, stage, or run identity
-- [ ] the configured Node.js 24 validation matrix and Node.js 26 pre-release
-  matrix are described separately from local Node.js 24.11.0 evidence
+- [ ] Node.js 24 is the required runtime and blocking cross-platform matrix;
+  Node.js 26 coverage is supplementary and described separately from local
+  Node.js 24.11.0 evidence
 
 ## Temporary-directory smoke
 
@@ -96,9 +97,10 @@ request, in a separate temporary directory:
 
 ## Cross-platform and security gates
 
-- [ ] ordinary validation covers `windows-latest`, `macos-15`, and
-  `ubuntu-latest` with Node.js 22 and Node.js 24
-- [ ] pre-release validation covers the same operating systems with Node.js 26
+- [ ] required validation covers `windows-latest`, `macos-15`, and
+  `ubuntu-latest` with Node.js 24
+- [ ] pre-release validation covers the same operating systems with Node.js 24
+  and supplementary Node.js 26 jobs
 - [ ] after the branch is pushed, record the actual live CI result separately
 - [ ] `my-dev-kit-lab` self-validation passes
 - [ ] `my-dev-kit-lab` target security validation passes
@@ -112,8 +114,8 @@ request, in a separate temporary directory:
 - [ ] `src/__tests__/*.test.ts` and `tests/**/*.spec.ts` remain intentionally split
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
 - [ ] release notes disclose manual `my-dev-kit` execution and that the
-  published `@dailephd/my-dev-kit@1.10.3` package is the verified corrected
-  producer authority
+  released `@dailephd/my-dev-kit@1.10.4` package is the verified producer
+  authority
 
 ### v1.2.2 release preparation and publication procedure
 

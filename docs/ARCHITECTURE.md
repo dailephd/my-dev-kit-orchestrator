@@ -6,8 +6,10 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The latest published release is `v1.2.2`. Architecture is organized by current
-responsibility rather than by release version.
+The current release is `v1.2.3` (run-integrity and judge-verdict enforcement),
+validated against the released `@dailephd/my-dev-kit@1.10.4` package.
+Architecture is organized by current responsibility rather than by release
+version.
 
 ## System boundaries
 
@@ -105,6 +107,8 @@ The implemented deterministic contract versions are:
 | Supplemental context packet | `1.0.0` |
 | Supplemental context retrieval report | `1.0.0` |
 | `ContextReadiness` | `1.0.0` |
+| `RunIntegrityGate` | `1.0.0` |
+| `JudgeIntegrity` | `1.0.0` |
 
 ## WorkflowInstructionPacket
 
@@ -197,6 +201,22 @@ independently compute repository freshness. Missing, stale, inadequate,
 truncated, or critically unmapped required evidence produces deterministically
 ordered issues and a blocked decision.
 
+`src/instructions/myDevKitEvidenceSummary.ts` parses the corrected
+`my-dev-kit` v1.10.4 producer contract's additive `roleConditionCoverage[]`
+field (condition-aware role adequacy with retained required-condition witness
+IDs) when present. The released `@dailephd/my-dev-kit@1.10.4` package emits
+the additive field when applicable; its absence on older schema-major-1
+evidence -- including `1.10.3` -- remains legacy-compatible and never blocks
+by itself. Producer
+`roleAdequacy` and `requiredEvidenceLost` remain authoritative and are never
+recomputed. Optional-only evidence truncation is nonblocking whenever producer
+adequacy remains sufficient; an actual lost required-condition witness raises
+a dedicated code independent of general truncation. Capsule/audit parity
+checks extend to the additive field, and packet/report declarations (for
+example, responsibility-mapping-truncation claims) are reconciled against raw
+producer evidence, not only against each other -- an agreeing packet/report
+pair cannot mask a contradiction with the raw capsule or audit.
+
 Every refresh-required result is finalized with an actionable canonical
 blocker summary. The summary contains `contextKind`, `primaryCode`,
 `primaryReason`, `correctiveAction`, `evidenceTarget`, `blockingIssueCodes`,
@@ -219,6 +239,41 @@ stage artifacts. Editing or deleting them creates no artifact-state transition.
 They can affect readiness, rendered prompts, checks, and exported readiness
 summaries without changing the native lifecycle graph.
 
+## RunIntegrityGate and judge integrity
+
+`src/runIntegrityGate.ts` is the sole canonical run-integrity evaluator. It
+derives `contextReady`, `blockedStageNames`, deterministic blocking codes, the
+recommended correction stage, and `expectedJudgeVerdict` (`PASS` when context
+is ready or not required, `NEED_CONTEXT` otherwise) directly from `Context
+Readiness`/`RunContextReadiness` results -- it never recomputes readiness
+itself. Every readiness-sensitive command (automatic and explicit prompt
+selection, lifecycle resolution, stage detection, `mark`, `status`, `check`,
+`check --all`, `check --artifacts`, and `export`) evaluates this gate once per
+invocation and threads the same result through every decision it makes,
+rather than rediscovering readiness or the expected verdict independently.
+`resolveArtifactStateWithRunIntegrity` is the single override point: it forces
+a context-blocked implementation/test-implementation artifact, and, given a
+computed final-report eligibility, an ineligible final-report artifact, to
+`blocked` regardless of file presence or a manual `complete` record.
+
+`src/judgeIntegrity.ts` composes on top of the gate. It parses the authored
+judge verdict through the existing judge parser and compares it with
+`expectedJudgeVerdict`: an authored `PASS` is rejected when `NEED_CONTEXT` is
+expected and routes back to the gate's recommended stage rather than clearing
+correction state; an accepted `NEED_CONTEXT` uses that same recommended stage,
+overriding both the routing table's default and a conflicting authored
+recommendation; every other supported verdict (including `SCOPE_VIOLATION`
+and `BLOCKED`, which remain terminal) is accepted as authored and routed
+through the existing correction table unchanged. Missing, malformed, and
+unknown verdicts fail closed and are never guessed.
+
+A normal final report is eligible only when the accepted verdict is `PASS`,
+no correction route is active, and every required prior native artifact
+resolves to `complete` under the same gate-aware lifecycle resolution.
+Artifact presence, a manual `complete` mark, an explicit `prompt final-report`
+request, and a structurally valid final-report file cannot substitute for
+that decision.
+
 ## Status, check, and export
 
 `status` reports human-readable implementation and test readiness, freshness,
@@ -236,7 +291,9 @@ read-only.
 state, including the canonical primary blocker fields when blocked. It does not
 embed full raw capsule or audit content and does not copy external evidence
 merely because a supplemental file references it. Existing path-safety checks
-remain in effect.
+remain in effect. `export` reports the same accepted judge state and
+final-report eligibility as `status` and `check`, rather than an unreconciled
+authored verdict.
 
 ## Judge and correction routing
 
@@ -249,7 +306,10 @@ A blocked judge uses the existing `NEED_CONTEXT` verdict and includes an exact
 implementation context is blocked, then `test-implementation` when only test
 context is blocked. Test mode recommends `test-implementation`.
 
-Existing correction routing honors a valid recommendation override. There is no
+Existing correction routing honors a valid recommendation override for every
+verdict other than an accepted `NEED_CONTEXT`, where the gate's recommended
+stage wins over both the routing table's default and a conflicting authored
+recommendation (see "RunIntegrityGate and judge integrity"). There is no
 new verdict, correction-specific sidecar, correction-specific context file, or
 automatic correction execution.
 

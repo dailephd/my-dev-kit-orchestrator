@@ -229,10 +229,9 @@ or `extraction`; test mode uses only the test-context pair.
 8. Print the target prompt again.
 9. Proceed with implementation or test work only when readiness is `ready`.
 
-The published `@dailephd/my-dev-kit@1.10.3` package is the verified authority
-for the corrected role-aware context producer behavior. Select and verify an
-appropriate producer CLI manually; no local worktree path is part of this
-public contract.
+The released `@dailephd/my-dev-kit@1.10.4` package is the verified producer
+authority. Select and verify the exact producer CLI manually; no local
+worktree path is part of this public contract.
 
 The fixed files are:
 
@@ -346,6 +345,11 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 - implementation and test context decisions, freshness, adequacy, blocking
   issue summaries, and the recommended next stage when applicable
 - suggested next command
+- (`v1.2.3`) one "Judge and final-report
+  integrity" section showing the expected judge verdict, the authored verdict
+  and whether it was accepted, the correction state, and final-report
+  eligibility -- the same canonical decision `check`, `prompt`, `mark`, and
+  `export` use, so none of these can disagree
 
 `status` is human-readable. The current CLI has no JSON option.
 
@@ -480,11 +484,27 @@ Judge correction: IMPLEMENTATION_MISMATCH -> correction required
   Routed stage: implementation
 ```
 
-For PASS:
+For an accepted PASS (repository context ready or not required):
 
 ```text
 Judge correction: PASS - no correction required
 ```
+
+For an authored PASS that canonical readiness rejects (context still
+`NEED_CONTEXT`; `v1.2.3`):
+
+```text
+Expected judge verdict: NEED_CONTEXT
+Authored judge verdict: PASS
+Verdict accepted: false
+Mismatch reason: Authored verdict "PASS" contradicts the canonical expected verdict "NEED_CONTEXT".
+Judge correction: correction required
+Routed stage: implementation
+```
+
+The authored `PASS` is never treated as accepted in this case, and routing
+returns to the canonical recommended stage rather than clearing correction
+state.
 
 For SCOPE_VIOLATION or BLOCKED:
 
@@ -529,6 +549,11 @@ exact valid `Recommended next stage`: `implementation` takes priority when
 implementation context is blocked, otherwise `test-implementation` is used
 (and test mode always uses `test-implementation`). The existing recommended-
 stage override honors that value; no new verdict or correction file is added.
+In `v1.2.3`, an accepted `NEED_CONTEXT` always
+uses this canonical recommended stage -- it overrides both the table default
+and a conflicting `Recommended next stage:` value authored in the judge
+report itself. Every other verdict's recommended-stage override is
+unaffected.
 | `SCOPE_VIOLATION` | blocked (no correction stage) |
 | `BLOCKED` | blocked (no correction stage) |
 | `PASS` | no correction (run continues normally) |
@@ -561,6 +586,35 @@ Suggestions are deterministic - they map trace ID prefixes to owning stages with
 - correction routing does not restart the run automatically
 
 After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
+
+### Final-report eligibility (v1.2.3)
+
+A normal `final-report` prompt renders, and `final-report.txt` can complete
+the run, only when the judge verdict is accepted `PASS`, no correction route
+is active, and every required prior artifact is complete. When it is not
+eligible:
+
+```bash
+my-dev-kit-orchestrator prompt final-report
+```
+
+prints a blocked report instead of the normal `FinalReport` prompt:
+
+```text
+Final-report generation is BLOCKED. This run is not eligible for a normal final report.
+
+Expected judge verdict: NEED_CONTEXT
+Judge artifact present: true
+Judge verdict parse status: parsed
+Authored judge verdict: PASS
+Judge verdict matches expected: false
+Judge verdict accepted: false
+```
+
+An existing `final-report.txt` file, an `artifact-state.json` `complete`
+record, or `mark final-report.txt --state complete` cannot make an ineligible
+run reach the completed state; `mark` rejects the manual completion attempt
+before it changes any lifecycle state.
 
 ## Check trace links
 
@@ -745,12 +799,24 @@ Each stage is checked for:
 - predecessor artifact missing (CONTRACT_PREDECESSOR_MISSING; fail in strict mode)
 - no section contract defined for this artifact kind (CONTRACT_STAGE_NO_CONTRACT; fail in strict mode)
 
+`check --artifacts` also reports repository-context readiness and (`v1.2.3`)
+judge and final-report integrity: structural
+section checks passing does not make the command exit 0 when the run is
+still context-blocked or the judge verdict was not accepted -- structural
+artifact validity and run eligibility are checked separately.
+
 Use `check --all` to run all checks in one pass:
 
 ```bash
 my-dev-kit-orchestrator check --all
 my-dev-kit-orchestrator check --all --strict
 ```
+
+`check --all` includes a "Judge and final-report integrity" section
+alongside contracts, stage gates, trace checks, and repository context
+readiness. It fails when the authored judge verdict was rejected, is
+malformed, or is unknown; an ordinary accepted correction-required verdict
+(for example `IMPLEMENTATION_MISMATCH`) does not fail the command by itself.
 
 `check --all` includes:
 
@@ -779,8 +845,10 @@ The export includes:
 - original request
 - artifact checklist (present or missing per stage)
 - missing artifact list
-- judge verdict
-- correction state
+- judge verdict, and (`v1.2.3`) whether it was
+  accepted -- never a raw authored `PASS` that canonical readiness rejected
+- correction state, derived from the same accepted judge state `status` and
+  `check` use
 - verification evidence excerpt
 - content check and trace check summaries
 - structured implementation/test context-readiness summary
