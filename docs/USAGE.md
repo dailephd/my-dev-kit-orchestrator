@@ -229,10 +229,9 @@ or `extraction`; test mode uses only the test-context pair.
 8. Print the target prompt again.
 9. Proceed with implementation or test work only when readiness is `ready`.
 
-The published `@dailephd/my-dev-kit@1.10.3` package is the verified authority
-for the corrected role-aware context producer behavior. Select and verify an
-appropriate producer CLI manually; no local worktree path is part of this
-public contract.
+The released `@dailephd/my-dev-kit@1.10.4` package is the verified producer
+authority. Select and verify the exact producer CLI manually; no local
+worktree path is part of this public contract.
 
 The fixed files are:
 
@@ -346,7 +345,7 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 - implementation and test context decisions, freshness, adequacy, blocking
   issue summaries, and the recommended next stage when applicable
 - suggested next command
-- (`v1.2.3`, implemented and unpublished) one "Judge and final-report
+- (`v1.2.3`) one "Judge and final-report
   integrity" section showing the expected judge verdict, the authored verdict
   and whether it was accepted, the correction state, and final-report
   eligibility -- the same canonical decision `check`, `prompt`, `mark`, and
@@ -492,7 +491,7 @@ Judge correction: PASS - no correction required
 ```
 
 For an authored PASS that canonical readiness rejects (context still
-`NEED_CONTEXT`; `v1.2.3`, implemented and unpublished):
+`NEED_CONTEXT`; `v1.2.3`):
 
 ```text
 Expected judge verdict: NEED_CONTEXT
@@ -550,7 +549,7 @@ exact valid `Recommended next stage`: `implementation` takes priority when
 implementation context is blocked, otherwise `test-implementation` is used
 (and test mode always uses `test-implementation`). The existing recommended-
 stage override honors that value; no new verdict or correction file is added.
-In `v1.2.3` (implemented and unpublished), an accepted `NEED_CONTEXT` always
+In `v1.2.3`, an accepted `NEED_CONTEXT` always
 uses this canonical recommended stage -- it overrides both the table default
 and a conflicting `Recommended next stage:` value authored in the judge
 report itself. Every other verdict's recommended-stage override is
@@ -588,7 +587,7 @@ Suggestions are deterministic - they map trace ID prefixes to owning stages with
 
 After the correction prompt is used, the coding agent revises the artifact manually. The run resumes normally from the corrected stage.
 
-### Final-report eligibility (v1.2.3, implemented and unpublished)
+### Final-report eligibility (v1.2.3)
 
 A normal `final-report` prompt renders, and `final-report.txt` can complete
 the run, only when the judge verdict is accepted `PASS`, no correction route
@@ -800,8 +799,8 @@ Each stage is checked for:
 - predecessor artifact missing (CONTRACT_PREDECESSOR_MISSING; fail in strict mode)
 - no section contract defined for this artifact kind (CONTRACT_STAGE_NO_CONTRACT; fail in strict mode)
 
-`check --artifacts` also reports repository-context readiness and (`v1.2.3`,
-implemented and unpublished) judge and final-report integrity: structural
+`check --artifacts` also reports repository-context readiness and (`v1.2.3`)
+judge and final-report integrity: structural
 section checks passing does not make the command exit 0 when the run is
 still context-blocked or the judge verdict was not accepted -- structural
 artifact validity and run eligibility are checked separately.
@@ -846,7 +845,7 @@ The export includes:
 - original request
 - artifact checklist (present or missing per stage)
 - missing artifact list
-- judge verdict, and (`v1.2.3`, implemented and unpublished) whether it was
+- judge verdict, and (`v1.2.3`) whether it was
   accepted -- never a raw authored `PASS` that canonical readiness rejected
 - correction state, derived from the same accepted judge state `status` and
   `check` use

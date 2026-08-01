@@ -26,9 +26,9 @@ describe('v1.2.1 package regression (npm pack --dry-run)', () => {
     };
   }, 60000);
 
-  it('package identity matches the v1.2.2 release', () => {
+  it('package identity matches the v1.2.3 release', () => {
     expect(packageInfo?.name).toBe('@dailephd/my-dev-kit-orchestrator');
-    expect(packageInfo?.version).toBe('1.2.2');
+    expect(packageInfo?.version).toBe('1.2.3');
   });
 
   it('every included file is under dist/, is package.json, or is npm\'s auto-included README', () => {

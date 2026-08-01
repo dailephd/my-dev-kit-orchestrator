@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-The package does not declare a Node.js version range in `package.json`. The
-ordinary validation workflow runs on Node.js 22 and Node.js 24, while the
-pre-release matrix uses Node.js 26 as supplementary forward-compatibility
-evidence before publication. Both
+Node.js 24 or later is required, and `package.json` declares `>=24`. The
+ordinary validation workflow requires Node.js 24, while the pre-release
+matrix also uses Node.js 26 as supplementary forward-compatibility evidence.
+Both
 workflows cover `ubuntu-latest`, `windows-latest`, and `macos-15`. Local
 compatibility validation used Node.js 24.11.0. The completed feature branch also
 has live cross-platform CI evidence from its validation checkpoint.
@@ -148,15 +148,15 @@ Important implementation files:
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation
 - `src/promptGenerator.ts`: packet/context prompt integration, refresh-only
-  rendering, and (`v1.2.3`, implemented and unpublished) final-report blocked
+  rendering, and (`v1.2.3`) final-report blocked
   rendering
 - `src/commands/status.ts`, `check.ts`, and `export.ts`: readiness
   presentation, validation, and portable summary, all consuming the same
   canonical run-integrity and judge-integrity decision
-- `src/runIntegrityGate.ts` (`v1.2.3`, implemented and unpublished): the sole
+- `src/runIntegrityGate.ts` (`v1.2.3`): the sole
   canonical run-integrity evaluator; every readiness-sensitive command reads
   its result instead of recomputing readiness
-- `src/judgeIntegrity.ts` (`v1.2.3`, implemented and unpublished): authored
+- `src/judgeIntegrity.ts` (`v1.2.3`): authored
   judge-verdict acceptance against the gate's expected verdict, canonical
   `NEED_CONTEXT` correction routing, and final-report eligibility
 - `src/instructions/supplementalPairReconciliation.ts`: packet/report pair
@@ -204,7 +204,7 @@ confirm that prompts, `status`, `check`, verification, judge, correction
 routing, and `export` preserve the canonical primary blocker.
 
 Run-integrity, judge-integrity, and final-report-eligibility changes
-(`v1.2.3`, implemented and unpublished) additionally require:
+(`v1.2.3`) additionally require:
 
 ```bash
 npx jest tests/contextReadiness.test.ts tests/myDevKitEvidenceSummary.test.ts tests/contextReadinessHistoricalMatrix.test.ts --runInBand
@@ -224,13 +224,11 @@ distillation itself.
 ### Manual my-dev-kit integration caveat
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
-and run manually. The published `@dailephd/my-dev-kit@1.10.3` package is the
-verified authority for the corrected role-aware producer behavior; no local
-worktree path is part of the public contract. `v1.2.3` (implemented and
-unpublished) additionally consumes the corrected `my-dev-kit` v1.10.4
-producer contract's additive, condition-aware evidence when a capsule/audit
-declares it; v1.10.4 is itself implemented but not yet published, and
-`1.10.3` evidence remains fully compatible without it.
+and run manually. The released `@dailephd/my-dev-kit@1.10.4` package is the
+verified producer authority; no local worktree path is part of the public
+contract. `v1.2.3` consumes v1.10.4's additive, condition-aware evidence when
+a capsule/audit declares it; older schema-major-1 evidence remains fully
+compatible without it.
 
 ### Known instruction and context limitations
 
@@ -424,8 +422,8 @@ from source when a profile is added or removed.
   CLI smoke checks) and intentionally excludes the test suite, so running
   both does not execute the suite twice. `npm run verify` alone is not a
   substitute for `npm test`.
-- Keep ordinary validation on Node.js 22 and Node.js 24, with the supplementary
-  Node.js 26 pre-release matrix, across `ubuntu-latest`, `windows-latest`, and
+- Keep required validation on Node.js 24, with supplementary Node.js 26
+  pre-release coverage, across `ubuntu-latest`, `windows-latest`, and
   `macos-15`.
 - Report skipped checks and unresolved risks clearly in release work.
 

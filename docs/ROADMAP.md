@@ -2,11 +2,9 @@
 
 Versions are listed in chronological order.
 
-`v1.2.2` is the current published release. `v1.2.1`, `v1.2.0`, `v1.1.0`,
+`v1.2.3` is the current release. `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`,
 `v1.0.0`, and the `v0.x.0` releases remain part of the published project
-history. `v1.2.3` is implemented and durably regression-tested but not yet
-published (see "Implemented, unreleased v1.2.3"). Versions after `v1.2.3` are
-planned milestones.
+history. Versions after `v1.2.3` are planned milestones.
 
 ## Version summary
 
@@ -22,7 +20,7 @@ planned milestones.
 - `v1.2.0` adds `android-compose` as an explicit, opt-in greenfield starter profile alongside `typescript-cli` and `nextjs-app`, with profile-guided stack defaults, scaffold-plan/validation-command guidance, and profile-conditional docs validation. It does not add a CLI profile flag or automatic signal-based routing to Android Compose; profile selection stays explicit (see "Published v1.2.0" for what shipped versus what was originally planned).
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
-- `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Implemented and regression-tested; not yet published (see "Implemented, unreleased v1.2.3").
+- `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Released on 2026-08-01 and revalidated against `@dailephd/my-dev-kit@1.10.4`.
 - `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
@@ -525,15 +523,12 @@ Compatibility and exclusions:
 - verified against the published `@dailephd/my-dev-kit@1.10.3` producer
   package; users must continue to select and verify the producer CLI manually
 
-## Implemented, unreleased v1.2.3
+## Published v1.2.3
 
 ### v1.2.3 - Run-Integrity and Judge-Verdict Enforcement
 
-Status:
-Implemented on `fix/v1.2.3-run-integrity` and durably regression-tested.
-Not published: `package.json` and the published npm package remain `1.2.2`,
-no `v1.2.3` git tag or GitHub Release exists, and release preparation has not
-started.
+Released as `1.2.3` on 2026-08-01 after published-producer compatibility,
+package, documentation, local Node.js 24, and cross-platform validation.
 
 Goal:
 Close a producer-adequacy defect that let a repository-context-blocked run
@@ -545,7 +540,7 @@ High-level scope:
 
 - consumes the corrected `my-dev-kit` v1.10.4 producer contract's additive,
   condition-aware role-adequacy evidence when present, while preserving
-  schema-major-1 compatibility (including the currently published `1.10.3`)
+  schema-major-1 compatibility (including the earlier `1.10.3` release)
   and treating producer role adequacy and required-evidence-loss decisions as
   authoritative
 - reconciles supplemental packet/report declarations against raw producer
@@ -568,11 +563,9 @@ High-level scope:
   positive and negative matrix
 
 Dependency:
-Consumes the corrected `my-dev-kit` v1.10.4 producer contract's additive,
-condition-aware evidence when present. The published `my-dev-kit` package is
-currently `1.10.3`; v1.10.4 is itself implemented but not yet published in
-that project. Schema-major-1 producer evidence predating v1.10.4 (including
-the currently published `1.10.3`) remains fully compatible and does not block
+Consumes the released `@dailephd/my-dev-kit@1.10.4` producer contract's
+additive, condition-aware evidence when present. Schema-major-1 producer
+evidence predating v1.10.4 (including `1.10.3`) remains fully compatible and does not block
 on the absence of the additive fields alone.
 
 Compatibility expectations:
@@ -592,7 +585,7 @@ Exclusions:
 - no new workflow, native stage, schema major, or public judge verdict
 - no producer-adequacy recomputation and no second run-integrity, judge-
   integrity, or readiness authority
-- no package-version bump, release branch, tag, or publication
+- no automatic package release or publication behavior in the CLI
 
 ## Planned milestones
 

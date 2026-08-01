@@ -6,10 +6,10 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The latest published release is `v1.2.2`. `v1.2.3` (run-integrity and
-judge-verdict enforcement) is implemented at repository HEAD and durably
-regression-tested, but is not yet published. Architecture is organized by
-current responsibility rather than by release version.
+The current release is `v1.2.3` (run-integrity and judge-verdict enforcement),
+validated against the released `@dailephd/my-dev-kit@1.10.4` package.
+Architecture is organized by current responsibility rather than by release
+version.
 
 ## System boundaries
 
@@ -204,10 +204,10 @@ ordered issues and a blocked decision.
 `src/instructions/myDevKitEvidenceSummary.ts` parses the corrected
 `my-dev-kit` v1.10.4 producer contract's additive `roleConditionCoverage[]`
 field (condition-aware role adequacy with retained required-condition witness
-IDs) when present. The published `my-dev-kit` package is currently `1.10.3`;
-v1.10.4 is itself implemented but not yet published in that project, so its
-absence on schema-major-1 evidence -- including the currently published
-`1.10.3` -- remains legacy-compatible and never blocks by itself. Producer
+IDs) when present. The released `@dailephd/my-dev-kit@1.10.4` package emits
+the additive field when applicable; its absence on older schema-major-1
+evidence -- including `1.10.3` -- remains legacy-compatible and never blocks
+by itself. Producer
 `roleAdequacy` and `requiredEvidenceLost` remain authoritative and are never
 recomputed. Optional-only evidence truncation is nonblocking whenever producer
 adequacy remains sufficient; an actual lost required-condition witness raises

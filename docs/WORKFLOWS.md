@@ -424,7 +424,7 @@ order. Direct prompts, `status`, `check`, verification, judge, correction
 routing, and `export` consume that same summary rather than selecting their
 own blocker.
 
-`v1.2.3` (implemented and unpublished) makes this one canonical run-integrity
+`v1.2.3` makes this one canonical run-integrity
 decision, not just a shared summary: automatic stage detection, explicit
 prompt selection, lifecycle resolution, `mark`, `status`, `check`, and
 `export` all evaluate it once and cannot disagree. A refresh-required
@@ -449,7 +449,7 @@ The recommendation overrides the older default table through existing
 correction routing. There is no correction-specific instruction-packet
 sidecar and no correction-specific context file.
 
-`v1.2.3` (implemented and unpublished) rejects an authored `Verdict: PASS`
+`v1.2.3` rejects an authored `Verdict: PASS`
 whenever the canonical expected verdict is still `NEED_CONTEXT`, routing back
 to the recommended stage above rather than clearing correction state. An
 accepted `NEED_CONTEXT` always uses that same canonical recommendation, even
@@ -467,7 +467,7 @@ presence and a manual `complete` mark cannot substitute for that.
 - `prompt <stage>` requires prior stage artifacts to exist (file-existence check).
 - The implementation and test-implementation stages are meant to consume the same design context rather than reinterpret the request independently.
 - `my-dev-kit-orchestrator` does not execute a coding agent or `my-dev-kit` automatically.
-- (`v1.2.3`, implemented and unpublished) a context-blocked implementation/
+- (`v1.2.3`) a context-blocked implementation/
   test-implementation stage, or a final-report stage that is not eligible,
   is never treated as `complete` for advancement purposes by the canonical
   run-integrity decision, even when its artifact file exists or carries a

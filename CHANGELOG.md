@@ -1,9 +1,8 @@
 # Changelog
 
-## v1.2.3 - Run-Integrity and Judge-Verdict Enforcement (implemented, unreleased)
+## v1.2.3 - Run-Integrity and Judge-Verdict Enforcement
 
-Not yet released. Implemented on `fix/v1.2.3-run-integrity`; `package.json`
-and the published npm package remain `1.2.2`.
+Release date: 2026-08-01.
 
 ### Added
 
@@ -18,14 +17,18 @@ and the published npm package remain `1.2.2`.
 - consumption of the corrected `my-dev-kit` v1.10.4 producer contract's
   additive evidence when present (condition-aware role adequacy and dedicated
   required-condition-witness-loss diagnostics, independent of general
-  truncation); v1.10.4 is itself implemented but not yet published, and the
-  currently published `1.10.3` remains fully compatible
+  truncation), revalidated against the released
+  `@dailephd/my-dev-kit@1.10.4` package
 - a permanent frozen-defect regression fixture and a corrected-evidence
   positive replay fixture, plus the full required positive/negative
   compatibility matrix
 
 ### Changed
 
+- Node.js 24 is now the minimum runtime and the required local, CI, and release
+  validation version; Node.js 20 and Node.js 22 were removed from active
+  support and workflow requirements, while the existing Node.js 26
+  pre-release jobs remain supplementary forward-compatibility coverage
 - an authored judge `Verdict: PASS` is now rejected when canonical readiness
   still requires `NEED_CONTEXT`, and routes back to the blocked stage instead
   of clearing correction state
@@ -49,7 +52,7 @@ and the published npm package remain `1.2.2`.
   requirement, extraction's source/target separation, and existing non-context
   correction routing all remain compatible
 - no new workflow, native stage, schema major, or public judge verdict was
-  added; no package version was bumped
+  added
 
 ## v1.2.2 - Context Readiness and Documentation Safeguards
 

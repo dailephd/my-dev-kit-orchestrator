@@ -22,23 +22,16 @@ is `my-dev-kit-orchestrator`.
 
 ## Current release
 
-The latest published package is
-`@dailephd/my-dev-kit-orchestrator@1.2.2`. See [CHANGELOG.md](CHANGELOG.md) for
+The current release is
+`@dailephd/my-dev-kit-orchestrator@1.2.3`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.2.2` ships context-readiness and documentation safeguards on top of the
-`v1.2.1` workflow-instruction foundation: canonical actionable context-blocker
-summaries, historical readiness-matrix coverage, and preservation-manifest
-checks for the blocker contract and context-identity claims.
+`v1.2.3` ships run-integrity and judge-verdict enforcement on top of the
+`v1.2.2` context-readiness safeguards. It is compatible with the released
+`@dailephd/my-dev-kit@1.10.4` producer contract and requires Node.js 24 or
+later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v123) for its scope.
 
-`v1.2.3` (run-integrity and judge-verdict enforcement) is implemented on the
-`fix/v1.2.3-run-integrity` branch and durably regression-tested, but it is
-**not yet published**: `package.json` and the published npm package both
-remain `1.2.2`, no `v1.2.3` git tag or GitHub Release exists, and release
-preparation has not started. See
-[docs/ROADMAP.md](docs/ROADMAP.md#implemented-unreleased-v123) for its scope.
-
-## Run-integrity enforcement (v1.2.3, implemented and unpublished)
+## Run-integrity enforcement (v1.2.3)
 
 A one-time producer-adequacy defect let a repository-context-blocked run
 reach a normal `PASS` final report. `v1.2.3` closes that gap with one
@@ -105,7 +98,7 @@ are not persisted.
 
 ## Quick start
 
-Prerequisite: a supported Node.js installation with npm.
+Prerequisite: Node.js 24 or later with npm.
 
 Run the published package without installing it globally:
 
