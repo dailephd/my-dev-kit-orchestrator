@@ -33,6 +33,9 @@ export interface ProfileValidationResult {
 /** Distinct name per PseudocodePacket PSE-018; same immutable shape as ProfileValidationResult. */
 export type ProfileRegistryValidationResult = ProfileValidationResult;
 
+/** Distinct name per PseudocodePacket PSE-019; same immutable shape as ProfileValidationResult. */
+export type ScaffoldPlanValidationResult = ProfileValidationResult;
+
 /**
  * One alias->profile mapping entry. Modeled as an array (rather than the
  * runtime `Record<string, GreenfieldProfileId>` PROFILE_ALIASES uses) so the

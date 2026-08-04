@@ -10,6 +10,7 @@ import {
   PROFILE_ALIASES,
 } from '../../src/greenfield/profiles/resolveGreenfieldProfile';
 import { GreenfieldProfileAliasEntry } from '../../src/greenfield/profiles/profileValidationTypes';
+import { GreenfieldTargetExpectation } from '../../src/greenfield/profiles/profileTypes';
 
 // TST-001, TST-002, TST-003: each current profile passes local validation
 // with zero issues and unchanged public fields.
@@ -67,9 +68,250 @@ function validProfileFixture(overrides: Partial<GreenfieldProfile> = {}): Greenf
     setupCommands: [{ command: 'npm install', purpose: 'Install dependencies.', required: true }],
     validationCommands: [{ command: 'npm test', purpose: 'Run tests.', required: true }],
     allowedDocumentationTerminology: [],
+    targetExpectations: [
+      {
+        id: 'package-manifest',
+        category: 'configuration',
+        matcher: { kind: 'exact', value: 'package.json' },
+        required: true,
+        purpose: 'Package manifest.',
+        evidenceKind: 'file',
+      },
+    ],
     ...overrides,
   };
 }
+
+// TST-012: malformed target expectation -> GF_TARGET_EXPECTATION_INVALID or
+// GF_PATH_INVALID_PATTERN, no throw.
+describe('validateGreenfieldProfile - malformed target expectation (TST-012)', () => {
+  it('flags a target expectation missing required fields', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [{} as unknown as GreenfieldTargetExpectation],
+    });
+    expect(() => validateGreenfieldProfile(malformed)).not.toThrow();
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.valid).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].id' }),
+    );
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].category' }),
+    );
+  });
+
+  it('flags an invalid matcher.kind', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'glob' as unknown as 'exact', value: 'src/*' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].matcher.kind' }),
+    );
+  });
+
+  it('flags a non-boolean "required" value', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: 'yes' as unknown as boolean,
+          purpose: 'test',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].required' }),
+    );
+  });
+
+  it('flags an unsupported evidenceKind', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'directory' as unknown as 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].evidenceKind' }),
+    );
+  });
+
+  it('flags an absolute path in an exact matcher with GF_PATH_ABSOLUTE', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'exact', value: '/etc/passwd' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_PATH_ABSOLUTE' }));
+  });
+
+  it('flags a traversal path in an exact matcher with GF_PATH_TRAVERSAL', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'exact', value: '../secrets.txt' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_PATH_TRAVERSAL' }));
+  });
+
+  it('flags invalid bounded-pattern syntax with GF_PATH_INVALID_PATTERN', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'bounded-pattern', value: 'src/**/foo/**/bar' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_PATH_INVALID_PATTERN' }));
+  });
+
+  it('accepts a valid bounded-pattern expectation', () => {
+    const valid = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'source-file',
+          category: 'source',
+          matcher: { kind: 'bounded-pattern', value: 'src/*' },
+          required: false,
+          purpose: 'Any direct source file.',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(valid);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('flags an unsupported target-expectation extension key', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'bad',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'test',
+          evidenceKind: 'file',
+          extension: { unapproved: 'value' },
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_EXPECTATION_INVALID', affectedContract: 'targetExpectations[0].extension' }),
+    );
+  });
+
+  it('does not mutate the profile it validates', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [{} as unknown as GreenfieldTargetExpectation],
+    });
+    const before = JSON.parse(JSON.stringify(malformed));
+    validateGreenfieldProfile(malformed);
+    expect(malformed).toEqual(before);
+  });
+});
+
+// PSE-008: duplicate and overlapping target expectations within one profile.
+describe('validateGreenfieldProfile - duplicate and overlapping target expectations', () => {
+  it('flags a duplicate exact target expectation', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'a',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'a',
+          evidenceKind: 'file',
+        },
+        {
+          id: 'b',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'b',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_DUPLICATE' }));
+  });
+
+  it('flags overlap between an exact expectation and a bounded-pattern expectation that also matches it', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'exact-one',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'a',
+          evidenceKind: 'file',
+        },
+        {
+          id: 'pattern-one',
+          category: 'source',
+          matcher: { kind: 'bounded-pattern', value: 'src/*' },
+          required: false,
+          purpose: 'b',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+
+  it('does not flag distinct, non-overlapping expectations', () => {
+    const result = validateGreenfieldProfile(validProfileFixture());
+    expect(result.issues.filter((i) => i.code === 'GF_TARGET_DUPLICATE' || i.code === 'GF_TARGET_OVERLAP')).toEqual([]);
+  });
+});
 
 // Batch 2 correction: allowedDocumentationTerminology closed-vocabulary
 // runtime validation. TypeScript's GreenfieldDocumentationTerminologyTag

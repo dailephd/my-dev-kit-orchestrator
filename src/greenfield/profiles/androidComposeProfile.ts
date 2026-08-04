@@ -1,4 +1,70 @@
-import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile } from './profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldTargetExpectation } from './profileTypes';
+
+// v1.3.0 Batch 3 (PSE-010): adapts the existing templateTargets below into
+// required exact expectations. templateTargets itself is unchanged. All
+// seven remain required -- the instrumented-test source file is still part
+// of the standard project skeleton even though *running*
+// connectedAndroidTest is optional (device/emulator-dependent); that
+// optionality belongs to the validation command, not to whether the file is
+// scaffolded.
+const ANDROID_COMPOSE_TARGET_EXPECTATIONS: readonly GreenfieldTargetExpectation[] = [
+  {
+    id: 'gradle-settings',
+    category: 'configuration',
+    matcher: { kind: 'exact', value: 'settings.gradle.kts' },
+    required: true,
+    purpose: 'Gradle settings file declaring included modules.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'gradle-root-build',
+    category: 'configuration',
+    matcher: { kind: 'exact', value: 'build.gradle.kts' },
+    required: true,
+    purpose: 'Root Gradle build script.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'gradle-app-build',
+    category: 'configuration',
+    matcher: { kind: 'exact', value: 'app/build.gradle.kts' },
+    required: true,
+    purpose: 'App module Gradle build script.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'android-manifest',
+    category: 'configuration',
+    matcher: { kind: 'exact', value: 'app/src/main/AndroidManifest.xml' },
+    required: true,
+    purpose: 'Android application manifest.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'main-activity',
+    category: 'entry-point',
+    matcher: { kind: 'exact', value: 'app/src/main/java/MainActivity.kt' },
+    required: true,
+    purpose: 'Compose entry-point activity.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'unit-test-example',
+    category: 'test',
+    matcher: { kind: 'exact', value: 'app/src/test/java/ExampleUnitTest.kt' },
+    required: true,
+    purpose: 'JVM unit test example under app/src/test (no device required).',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'instrumented-test-example',
+    category: 'test',
+    matcher: { kind: 'exact', value: 'app/src/androidTest/java/ExampleInstrumentedTest.kt' },
+    required: true,
+    purpose: 'Instrumentation test example under app/src/androidTest.',
+    evidenceKind: 'file',
+  },
+];
 
 /**
  * The Android Compose starter profile (v1.2.0), selected only when
@@ -76,4 +142,5 @@ export const ANDROID_COMPOSE_PROFILE: GreenfieldProfile = {
     },
   ],
   allowedDocumentationTerminology: [GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK],
+  targetExpectations: ANDROID_COMPOSE_TARGET_EXPECTATIONS,
 };

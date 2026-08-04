@@ -96,6 +96,48 @@ export interface GreenfieldProfile {
    * externally constructed or malformed profile objects.
    */
   allowedDocumentationTerminology: readonly GreenfieldDocumentationTerminologyTag[];
+  /**
+   * v1.3.0 Batch 3: profile-owned target expectations, validated by
+   * validateGreenfieldProfile() (structural shape) and consumed by
+   * validateGreenfieldScaffoldPlan() (plan conformance). Per PSE-010,
+   * `templateTargets` above is preserved unchanged as the existing public
+   * contract that buildScaffoldPlan.ts and existing tests already consume;
+   * `targetExpectations` adapts those same current values into required
+   * exact expectations during this compatibility migration rather than
+   * replacing or duplicating `templateTargets`'s meaning.
+   */
+  targetExpectations: readonly GreenfieldTargetExpectation[];
+}
+
+/**
+ * v1.3.0 Batch 3: PseudocodePacket Decision 1 -- a bounded combination of
+ * exact normalized paths and anchored bounded patterns, with `category`
+ * retained as descriptive/grouping metadata only (it can never by itself
+ * satisfy an expectation; see targetPathMatching.ts).
+ */
+export type GreenfieldTargetExpectationMatcherKind = 'exact' | 'bounded-pattern';
+
+export interface GreenfieldTargetExpectationMatcher {
+  kind: GreenfieldTargetExpectationMatcherKind;
+  /** Root-relative normalized path (`kind: 'exact'`) or anchored bounded pattern (`kind: 'bounded-pattern'`). */
+  value: string;
+}
+
+/** `file` by default; `directory` evidence is unsupported in v1.3.0 (PseudocodePacket, target expectation shape). */
+export type GreenfieldTargetEvidenceKind = 'file';
+
+export interface GreenfieldTargetExpectation {
+  /** Stable profile-local identifier. */
+  id: string;
+  /** Descriptive semantic group (e.g. configuration, source, test, documentation, entry-point). Metadata only. */
+  category: string;
+  matcher: GreenfieldTargetExpectationMatcher;
+  required: boolean;
+  /** Nonblank corrective context. */
+  purpose: string;
+  evidenceKind: GreenfieldTargetEvidenceKind;
+  /** Optional bounded profile-owned metadata; no shared allowlist entries are approved in v1.3.0. */
+  extension?: Readonly<Record<string, string>>;
 }
 
 export type GreenfieldProfileResolutionStatus = 'selected' | 'unresolved' | 'unsupported';

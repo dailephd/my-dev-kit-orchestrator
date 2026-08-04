@@ -7,6 +7,31 @@
 // their own phases rather than re-deriving ordering elsewhere.
 import { ProfileValidationIssue, ProfileValidationSeverity } from './profileValidationTypes';
 
+// v1.3.0 Batch 3: GF_TARGET_ and GF_PLAN_ codes span two different PSE-021
+// phases each (profile-local expectation shape vs. scaffold-plan
+// conformance), so prefix matching alone can no longer distinguish them.
+// Codes with a single unambiguous phase stay on PHASE_WEIGHT_BY_PREFIX;
+// codes needing a specific phase are listed explicitly here and checked
+// first.
+const PHASE_WEIGHT_BY_CODE: ReadonlyMap<string, number> = new Map([
+  // phase: target/command/doc contracts (profile-owned expectation shape)
+  ['GF_TARGET_EXPECTATION_INVALID', 3],
+  ['GF_TARGET_DUPLICATE', 3],
+  ['GF_TARGET_OVERLAP', 3],
+  // phase: plan identity
+  ['GF_PLAN_PROFILE_MISMATCH', 5],
+  // phase: paths/targets (scaffold-plan conformance)
+  ['GF_TARGET_REQUIRED_MISSING', 6],
+  ['GF_TARGET_UNSUPPORTED', 6],
+  ['GF_TARGET_AMBIGUOUS', 6],
+  ['GF_PATH_ABSOLUTE', 6],
+  ['GF_PATH_TRAVERSAL', 6],
+  ['GF_PATH_INVALID_PATTERN', 6],
+  // phase: commands (scaffold-plan command conformance)
+  ['GF_PLAN_COMMAND_MISSING', 7],
+  ['GF_PLAN_CONTRADICTORY_CLAIM', 7],
+]);
+
 const PHASE_WEIGHT_BY_PREFIX: ReadonlyArray<{ prefix: string; weight: number }> = [
   // phase: profile-local fields
   { prefix: 'GF_PROFILE_', weight: 2 },
@@ -21,6 +46,10 @@ const PHASE_WEIGHT_BY_PREFIX: ReadonlyArray<{ prefix: string; weight: number }> 
 const UNKNOWN_PHASE_WEIGHT = Number.MAX_SAFE_INTEGER;
 
 function phaseWeight(code: string): number {
+  const explicit = PHASE_WEIGHT_BY_CODE.get(code);
+  if (explicit !== undefined) {
+    return explicit;
+  }
   const match = PHASE_WEIGHT_BY_PREFIX.find((entry) => code.startsWith(entry.prefix));
   return match ? match.weight : UNKNOWN_PHASE_WEIGHT;
 }

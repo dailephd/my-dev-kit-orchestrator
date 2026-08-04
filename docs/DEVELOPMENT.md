@@ -366,7 +366,7 @@ profile:
 
 - register the new profile id in `GreenfieldProfileId`
   (`src/greenfield/profiles/profileTypes.ts`)
-- provide every required `GreenfieldProfile` field, including these three:
+- provide every required `GreenfieldProfile` field, including these four:
   - `setupCommands: GreenfieldProfileCommand[]` -- setup guidance (may be
     `[]` if the toolchain needs no separate install step, as with Gradle's
     wrapper); never executed by the orchestrator
@@ -389,6 +389,19 @@ profile:
     domain) means adding one entry to `GREENFIELD_DOCUMENTATION_TERMINOLOGY`
     plus its corresponding rule in `validateBootstrapDocs.ts` -- do not add a
     profile-ID conditional to work around the closed vocabulary.
+  - `targetExpectations: readonly GreenfieldTargetExpectation[]` -- one
+    entry per scaffold target this profile requires or permits, each
+    `{ id, category, matcher: { kind: 'exact' | 'bounded-pattern', value }, required, purpose, evidenceKind }`.
+    Adapt the profile's existing `templateTargets` entries into required
+    `'exact'` expectations (`templateTargets` itself stays unchanged; it is
+    still what `buildScaffoldPlan.ts` and existing tests consume). Use
+    `'bounded-pattern'` only for a genuinely variable, language/package-
+    dependent source root (see `targetPatternMatching.ts` for the grammar:
+    literal segments, `*` for exactly one segment, at most one `**` for zero
+    to eight segments -- no regex, character classes, or brace expansion).
+    `category` is descriptive metadata only; it can never by itself satisfy
+    an expectation. `validateGreenfieldScaffoldPlan()` uses this list to
+    check the generated scaffold plan; it never reads the filesystem.
 - register the profile in `SUPPORTED_PROFILES`
   (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
 - add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the

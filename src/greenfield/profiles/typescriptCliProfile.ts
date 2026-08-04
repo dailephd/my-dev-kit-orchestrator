@@ -1,4 +1,42 @@
-import { GreenfieldProfile } from './profileTypes';
+import { GreenfieldProfile, GreenfieldTargetExpectation } from './profileTypes';
+
+// v1.3.0 Batch 3 (PSE-010): adapts the existing templateTargets below into
+// required exact expectations. templateTargets itself is unchanged and
+// remains the contract buildScaffoldPlan.ts and existing tests consume.
+const TYPESCRIPT_CLI_TARGET_EXPECTATIONS: readonly GreenfieldTargetExpectation[] = [
+  {
+    id: 'package-manifest',
+    category: 'configuration',
+    matcher: { kind: 'exact', value: 'package.json' },
+    required: true,
+    purpose: 'Package manifest declaring dependencies and the CLI bin entry.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'cli-entry-point',
+    category: 'entry-point',
+    matcher: { kind: 'exact', value: 'src/cli.ts' },
+    required: true,
+    purpose: 'CLI entry point invoked via the package bin field.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'library-entry-point',
+    category: 'source',
+    matcher: { kind: 'exact', value: 'src/index.ts' },
+    required: true,
+    purpose: 'Library entry point exporting reusable functionality.',
+    evidenceKind: 'file',
+  },
+  {
+    id: 'readme',
+    category: 'documentation',
+    matcher: { kind: 'exact', value: 'README.md' },
+    required: true,
+    purpose: 'Project usage and command-reference documentation.',
+    evidenceKind: 'file',
+  },
+];
 
 /**
  * The TypeScript CLI starter profile. Chosen as the deterministic fallback
@@ -28,4 +66,5 @@ export const TYPESCRIPT_CLI_PROFILE: GreenfieldProfile = {
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
   allowedDocumentationTerminology: [],
+  targetExpectations: TYPESCRIPT_CLI_TARGET_EXPECTATIONS,
 };
