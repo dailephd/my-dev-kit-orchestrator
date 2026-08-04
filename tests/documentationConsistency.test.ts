@@ -24,6 +24,7 @@ function createIsolatedRoot(): string {
     'src/workflows.ts',
     'src/program.ts',
     'src/greenfield/modes/greenfieldStages.ts',
+    'src/greenfield/modes/greenfieldMode.ts',
     'src/greenfield/profiles/resolveGreenfieldProfile.ts',
     'src/instructions/catalogTypes.ts',
     'src/instructions/workflowInstructionPacket.ts',
@@ -108,6 +109,14 @@ describe('documentation consistency gate', () => {
     ['v1.2.2 roadmap batch log', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.2.2 - Context Readiness and Documentation Safeguards', '### v1.2.2 - Context Readiness and Documentation Safeguards\n\nBatch 4 implementation log.'), 'ROADMAP_BATCH_LOG_CONTAMINATION'],
     ['changelog batch history', 'CHANGELOG.md', (text: string) => replace(text, '## v1.2.1 - Workflow Instruction and Context Readiness', '## v1.2.1 - Workflow Instruction and Context Readiness\n\nBatch 6 implementation history.'), 'DOC_CHANGELOG_BATCH_LOG_CONTAMINATION'],
     ['v1.2.2 changelog batch history', 'CHANGELOG.md', (text: string) => replace(text, '## v1.2.2 - Context Readiness and Documentation Safeguards', '## v1.2.2 - Context Readiness and Documentation Safeguards\n\nBatch 4 implementation history.'), 'DOC_CHANGELOG_BATCH_LOG_CONTAMINATION'],
+    ['stale extraction artifact count', 'docs/USAGE.md', (text: string) => replace(text, 'all six gate artifact files', 'all five gate artifact files'), 'EXTRACTION_GATE_FILE_COUNT_DRIFT'],
+    ['collapsed artifact formats', 'docs/ARTIFACTS.md', (text: string) => replace(text, /Artifacts are inspectable[\s\S]*?use text\./, 'Artifacts are plain-text handoff files stored in each run folder.'), 'ARTIFACT_FORMAT_COLLAPSE'],
+    ['resolved producer mismatch as current', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '## Non-goals', '- The my-dev-kit 1.10.2 mismatch remains a current limitation.\n\n## Non-goals'), 'RESOLVED_PRODUCER_LIMITATION_STILL_CURRENT'],
+    ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, /`prompt` without a stage selects[\s\S]*?remain current/, '`prompt` without a stage prints the first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
+    ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'They cannot rediscover or select a custom-output', 'They cannot select a custom-output'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
+    ['android xml moved into v1.5.0', 'docs/ROADMAP.md', (text: string) => replace(text, /- `react-native`(\r?\n)(\r?\n)Decision criteria:/, '- `react-native`$1- `android-xml`$1$2Decision criteria:'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
+    ['planned v1.3.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.3.0 - Mobile Profile Expansion and Scaffold Verification', '### v1.3.0 - Mobile Profile Expansion and Scaffold Verification\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
   ])('detects %s', (_name, relativePath, mutation, issueCode) => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);
   });

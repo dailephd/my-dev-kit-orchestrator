@@ -350,11 +350,10 @@ not grant evidence authority beyond the explicit stage requirements.
 - Extraction has no generic architecture-context stage; exact `NEED_CONTEXT`
   recommendations use implementation or test-implementation, while generic
   non-`NEED_CONTEXT` architecture routing retains a pre-existing edge case.
-- Repository evidence retrieval remains manual.
+- Repository evidence retrieval and producer CLI selection remain manual; the
+  orchestrator does not execute `my-dev-kit` automatically.
 - The current CLI has no status JSON output.
 - There is no shared cross-repository schema package or lab runtime integration.
-- A verified `my-dev-kit` CLI must be selected manually because the published
-  package labeled 1.10.2 showed a CLI mismatch from the verified source contract.
 
 ## Non-goals
 

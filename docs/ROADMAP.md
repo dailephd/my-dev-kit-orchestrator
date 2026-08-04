@@ -21,9 +21,13 @@ history. Versions after `v1.2.3` are planned milestones.
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
 - `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Released on 2026-08-01 and revalidated against `@dailephd/my-dev-kit@1.10.4`.
-- `v1.3.0` will expand greenfield scaffold verification and profile readiness so additional starter profiles can plug into the platform-neutral bootstrap workflow without duplicating Android-specific behavior.
+- `v1.3.0` will expand greenfield scaffold verification and profile readiness,
+  including possible `android-xml` and `python-cli` evaluation and stronger
+  `typescript-cli` and `nextjs-app` profiles.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
-- `v1.5.0` will evaluate optional additional mobile profiles such as Android XML, Flutter, React Native, and iOS SwiftUI only if the greenfield profile architecture proves reusable.
+- `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
+  `react-native` profiles only if the greenfield profile architecture proves
+  reusable.
 
 ## Published releases through v1.0.0
 
@@ -471,12 +475,14 @@ Delivered scope:
 
 Dependencies and evaluation boundaries:
 
-- the verified `my-dev-kit` 1.10.2 source contract is the repository-context
-  authority; the published 1.10.2 CLI mismatch remains an upstream integration
-  risk, so users must select a verified CLI manually
-- `my-dev-kit-lab` v0.4.3 is the latest published evaluation baseline;
-  the v0.4.4 producer-readiness bridge is implemented but unpublished and is
-  undergoing its separate pre-release correction and revalidation workflow
+- At the time `v1.2.1` was released, the verified `my-dev-kit` 1.10.2 source
+  contract was the repository-context authority, while the published 1.10.2
+  CLI showed an identity/command mismatch. Users therefore had to select a
+  verified CLI manually.
+- At that release point, `my-dev-kit-lab` v0.4.3 was the published evaluation
+  baseline and its v0.4.4 producer-readiness bridge was still unpublished and
+  undergoing separate correction and revalidation. These were historical
+  ecosystem conditions, not current orchestrator dependencies.
 - the orchestrator has no runtime dependency on `my-dev-kit-lab`
 
 Exclusions:

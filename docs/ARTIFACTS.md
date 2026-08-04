@@ -1,6 +1,10 @@
 # Artifacts
 
-Artifacts are plain-text handoff files stored in each run folder.
+Artifacts are inspectable handoff files stored in each run folder. Most native
+artifact contracts use plain text. Greenfield uses structured JSON for
+`artifacts/idea-brief.json`, `artifacts/starter-profile.json`, and
+`artifacts/bootstrap-bundle.json`; its remaining native artifacts and reports
+use text.
 
 `my-dev-kit-orchestrator` uses artifact file existence and lifecycle state, not schema-heavy validation, to determine workflow progress.
 
@@ -265,7 +269,12 @@ Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifac
 
 ## Artifact contract checks (v1.0.0)
 
-`my-dev-kit-orchestrator check --artifacts` checks every stage artifact against its mode-aware plain-text contract. It reports missing or empty files, required sections, placeholder or blank content, missing predecessor artifacts, and unsupported modes or stages. Warnings remain warnings in normal mode and cause exit code 1 with `--strict`.
+`my-dev-kit-orchestrator check --artifacts` checks every stage artifact against
+its mode-aware contract. It applies text-section checks where applicable and
+the implemented structured checks to selected greenfield JSON contracts. It
+reports missing or empty files, required content, placeholder or blank
+content, missing predecessor artifacts, and unsupported modes or stages.
+Warnings remain warnings in normal mode and cause exit code 1 with `--strict`.
 
 `my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. Contract and stage-gate checks inspect the run but do not change lifecycle state or advance stages.
 
@@ -434,7 +443,8 @@ All extraction artifacts live under:
 <target-repo-root>/.my-dev-kit-orchestrator/runs/<run-id>/artifacts/
 ```
 
-The six pre-implementation extraction gates are:
+Five pre-implementation analysis stages produce these six extraction gate
+artifact files. The `porting-map` stage produces both items 3 and 4:
 
 1. `artifacts/source-architecture-context-packet.txt`
 2. `artifacts/source-workflow-map.txt`
@@ -637,8 +647,9 @@ external evidence files merely because a supplemental document names them.
 
 ## Shared completion expectations
 
-- Artifacts are plain text.
-- The CLI does not validate artifact contents against JSON schemas.
+- Most native artifacts are plain text; the three greenfield JSON contracts
+  named above are structured JSON.
+- The CLI does not apply full schema-heavy validation to every artifact.
 - `reports/architecture-context-retrieval-report.txt` and `reports/source-architecture-context-retrieval-report.txt` are supporting evidence for context acquisition.
 - `artifacts/architecture-context-packet.txt` and `artifacts/source-architecture-context-packet.txt` are required downstream workflow artifacts.
 - later stages should consume the synthesized architecture packets rather than raw `my-dev-kit` output

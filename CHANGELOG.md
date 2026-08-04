@@ -148,9 +148,10 @@ Release date: 2026-07-21.
 
 - `my-dev-kit` retrieval remains manual; the orchestrator does not execute an
   external context engine.
-- The published package labeled `my-dev-kit` 1.10.2 showed a CLI identity/
-  command mismatch from the verified role-aware 1.10.2 source contract, so
-  manual integration must use a verified CLI.
+- At the time `v1.2.1` was released, the published package labeled
+  `my-dev-kit` 1.10.2 showed a CLI identity/command mismatch from the verified
+  role-aware 1.10.2 source contract, so manual integration required a verified
+  CLI.
 - Extraction command examples are not fully promoted into command catalog
   entries, and generic non-`NEED_CONTEXT` extraction architecture-context
   routing remains a pre-existing edge case.

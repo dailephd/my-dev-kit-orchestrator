@@ -96,8 +96,8 @@
       "test:security",
       "Node.js 24",
       "Node.js 26",
-      "Node.js 24.11.0",
-      "live cross-platform CI evidence",
+      "src/__tests__/",
+      "tests/greenfield/",
       "released `@dailephd/my-dev-kit@1.10.4`",
       "historical readiness matrix"
     ],
@@ -173,6 +173,23 @@
     "nextjs-app",
     "android-compose"
   ],
+  "extractionGateArtifacts": [
+    "artifacts/source-architecture-context-packet.txt",
+    "artifacts/source-workflow-map.txt",
+    "artifacts/source-to-target-porting-map.txt",
+    "artifacts/do-not-port-list.txt",
+    "artifacts/golden-behavior-contract.txt",
+    "artifacts/target-architecture-proposal.txt"
+  ],
+  "structuredGreenfieldArtifacts": [
+    "artifacts/idea-brief.json",
+    "artifacts/starter-profile.json",
+    "artifacts/bootstrap-bundle.json"
+  ],
+  "roadmapCandidateAssignments": {
+    "v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"],
+    "v1.5.0": ["ios-swiftui", "flutter", "react-native"]
+  },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
     "packageMetadataVersion": "1.2.3",
@@ -191,6 +208,8 @@
     "nativeStageCount": 79,
     "greenfieldStageCount": 13,
     "greenfieldProfileCount": 3,
+    "extractionAnalysisStageCount": 5,
+    "extractionGateArtifactCount": 6,
     "contextSensitiveStageCount": 11,
     "implementationContextStageCount": 5,
     "testContextStageCount": 6,
@@ -215,6 +234,8 @@
     "taskStatePersisted": false,
     "stageContextBundlePersisted": false,
     "statusJsonSupported": false,
+    "customOutputRunRediscoverySupported": false,
+    "currentProducerVersion": "1.10.4",
     "generalizedPacketRendererStageCount": 77,
     "specializedRendererStages": [
       "stage.greenfield.scaffold-plan",
@@ -239,6 +260,11 @@
     "no status JSON option",
     "two specialized greenfield scaffold renderer exceptions",
     "roadmap and changelog remain free of implementation-batch chronology",
+    "five extraction analysis stages produce six gate artifact files",
+    "selected greenfield native artifacts use structured JSON",
+    "v1.3.0 and v1.5.0 candidate assignments remain separate",
+    "custom-output runs are not rediscoverable by follow-up commands in v1.2.3",
+    "resolved my-dev-kit 1.10.2 mismatch is not a current limitation",
     "source-derived actionable context blocker fields",
     "no unsupported workflow, stage, or run identity claim"
   ],

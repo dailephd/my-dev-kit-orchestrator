@@ -46,7 +46,8 @@ release is `v1.2.3`; older releases remain historical baselines.
 - [ ] all instruction/context schemas are documented as `1.0.0`
 - [ ] all four fixed supplemental context paths match source constants
 - [ ] docs state that repository retrieval is manual and use
-  `<MY_DEV_KIT_CLI>` rather than guaranteeing a mismatched published executable
+  `<MY_DEV_KIT_CLI>` because the orchestrator does not select or execute the
+  producer CLI automatically
 - [ ] docs state that supplemental context files and sidecars are not native
   lifecycle artifacts
 - [ ] docs state that `TaskState` and `StageContextBundle` are not persisted
