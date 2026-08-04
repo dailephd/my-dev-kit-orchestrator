@@ -10,6 +10,9 @@ import { ProfileValidationIssue, ProfileValidationSeverity } from './profileVali
 const PHASE_WEIGHT_BY_PREFIX: ReadonlyArray<{ prefix: string; weight: number }> = [
   // phase: profile-local fields
   { prefix: 'GF_PROFILE_', weight: 2 },
+  // phase: target/command/doc contracts
+  { prefix: 'GF_COMMAND_', weight: 3 },
+  { prefix: 'GF_DOC_', weight: 3 },
   // phase: registry identity/aliases
   { prefix: 'GF_REGISTRY_', weight: 4 },
   { prefix: 'GF_ALIAS_', weight: 4 },

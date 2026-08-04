@@ -75,4 +75,5 @@ export const ANDROID_COMPOSE_PROFILE: GreenfieldProfile = {
       environmentNotes: 'Requires a connected Android device or running emulator; the orchestrator does not provide or manage one.',
     },
   ],
+  allowedDocumentationTerminology: ['android-jetpack'],
 };

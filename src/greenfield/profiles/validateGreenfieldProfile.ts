@@ -1,11 +1,13 @@
-// v1.3.0 Batch 1 shared profile-local validator. Validates one GreenfieldProfile
-// value in isolation (required top-level fields, allowed shapes, unsupported
-// extension fields). Command-level and target-pattern contracts (duplicate
-// commands, classification, target expectations) are Batch 2/3 scope --
-// see PseudocodePacket PSE-017 and the v1.3.0 Batch 0 design report, Batch 1
-// section. Never throws for expected/malformed input; never mutates the
+// v1.3.0 Batch 1/2 shared profile-local validator. Validates one
+// GreenfieldProfile value in isolation: required top-level fields, allowed
+// shapes, unsupported extension fields (Batch 1), and setupCommands/
+// validationCommands entry-level contracts -- required/blank fields,
+// required-vs-optional classification, and duplicate command text (Batch 2).
+// Target-pattern/scaffold-plan contracts remain Batch 3 scope -- see
+// PseudocodePacket PSE-017 and the v1.3.0 Batch 0 design report, Batch 1/2
+// sections. Never throws for expected/malformed input; never mutates the
 // profile it validates.
-import { GreenfieldProfile } from './profileTypes';
+import { GreenfieldProfile, GreenfieldProfileCommand } from './profileTypes';
 import { ProfileValidationIssue, ProfileValidationResult } from './profileValidationTypes';
 import { finalizeProfileValidationResult } from './profileValidationOrdering';
 
@@ -30,6 +32,10 @@ const REQUIRED_NONEMPTY_STRING_ARRAY_CONTRACTS: readonly string[] = [
   'unsupportedConditions',
 ];
 
+// Required present as an array of strings; may be empty (most profiles use
+// no special documentation terminology).
+const OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS: readonly string[] = ['allowedDocumentationTerminology'];
+
 // Required present as an array (each entry is a GreenfieldProfileCommand
 // object, not a string); must be non-empty, per PseudocodePacket "required
 // arrays are nonempty except explicitly valid empty setupCommands".
@@ -39,9 +45,17 @@ const REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS: readonly string[] = ['validatio
 // no setup step because the Gradle wrapper needs none).
 const OPTIONAL_EMPTY_COMMAND_ARRAY_CONTRACTS: readonly string[] = ['setupCommands'];
 
+const COMMAND_ARRAY_CONTRACTS: readonly string[] = [
+  ...REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS,
+  ...OPTIONAL_EMPTY_COMMAND_ARRAY_CONTRACTS,
+];
+
+const KNOWN_COMMAND_FIELDS: ReadonlySet<string> = new Set(['command', 'purpose', 'required', 'environmentNotes']);
+
 const KNOWN_PROFILE_FIELDS: ReadonlySet<string> = new Set([
   ...REQUIRED_TEXT_CONTRACTS,
   ...REQUIRED_NONEMPTY_STRING_ARRAY_CONTRACTS,
+  ...OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS,
   ...REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS,
   ...OPTIONAL_EMPTY_COMMAND_ARRAY_CONTRACTS,
 ]);
@@ -59,6 +73,10 @@ export function validateGreenfieldProfile(profile: GreenfieldProfile): ProfileVa
     validateRequiredStringArray(record, contract, profileId, issues);
   }
 
+  for (const contract of OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS) {
+    validateOptionalStringArray(record, contract, profileId, issues);
+  }
+
   for (const contract of REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS) {
     validateRequiredArrayPresence(record, contract, profileId, issues, { allowEmpty: false });
   }
@@ -72,6 +90,8 @@ export function validateGreenfieldProfile(profile: GreenfieldProfile): ProfileVa
       issues.push(unsupportedFieldIssue(profileId, key));
     }
   }
+
+  validateCommandArrays(record, profileId, issues);
 
   return finalizeProfileValidationResult(issues);
 }
@@ -109,6 +129,28 @@ function validateRequiredStringArray(
     return;
   }
   if (!Array.isArray(value) || value.length === 0) {
+    issues.push(emptyFieldIssue(profileId, contract));
+    return;
+  }
+  value.forEach((entry, index) => {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      issues.push(emptyFieldIssue(profileId, `${contract}[${index}]`));
+    }
+  });
+}
+
+function validateOptionalStringArray(
+  record: Record<string, unknown>,
+  contract: string,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  const value = record[contract];
+  if (value === undefined || value === null) {
+    issues.push(missingFieldIssue(profileId, contract));
+    return;
+  }
+  if (!Array.isArray(value)) {
     issues.push(emptyFieldIssue(profileId, contract));
     return;
   }
@@ -173,5 +215,172 @@ function unsupportedFieldIssue(profileId: string, fieldName: string): ProfileVal
     reason: `Profile declares field "${fieldName}", which is not part of the current profile contract.`,
     correctiveAction: `Remove "${fieldName}" or register it in the shared profile extension allowlist.`,
     evidenceKey: fieldName,
+  };
+}
+
+// ─── Command-array validation (Batch 2: TST-009, TST-010, TST-011) ──────────
+
+interface CommandLocation {
+  readonly arrayName: string;
+  readonly index: number;
+  readonly contract: string;
+  readonly command: GreenfieldProfileCommand;
+}
+
+function validateCommandArrays(
+  record: Record<string, unknown>,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  const locations: CommandLocation[] = [];
+
+  for (const arrayName of COMMAND_ARRAY_CONTRACTS) {
+    const value = record[arrayName];
+    if (!Array.isArray(value)) {
+      continue; // already reported by validateRequiredArrayPresence
+    }
+    value.forEach((entry, index) => {
+      const contract = `${arrayName}[${index}]`;
+      validateCommandShape(entry, arrayName, contract, profileId, issues);
+      if (entry && typeof entry === 'object') {
+        locations.push({ arrayName, index, contract, command: entry as GreenfieldProfileCommand });
+      }
+    });
+  }
+
+  validateDuplicateCommands(locations, profileId, issues);
+}
+
+function validateCommandShape(
+  entry: unknown,
+  arrayName: string,
+  contract: string,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  if (entry === null || entry === undefined || typeof entry !== 'object' || Array.isArray(entry)) {
+    issues.push(commandMalformedIssue(profileId, contract, 'Command entry is missing or not an object.'));
+    return;
+  }
+
+  const commandRecord = entry as Record<string, unknown>;
+
+  const commandText = commandRecord['command'];
+  if (typeof commandText !== 'string' || commandText.trim().length === 0) {
+    issues.push(commandMalformedIssue(profileId, `${contract}.command`, 'Command text is missing or blank.'));
+  }
+
+  const purpose = commandRecord['purpose'];
+  if (typeof purpose !== 'string' || purpose.trim().length === 0) {
+    issues.push(commandMalformedIssue(profileId, `${contract}.purpose`, 'Command purpose is missing or blank.'));
+  }
+
+  const required = commandRecord['required'];
+  if (typeof required !== 'boolean') {
+    issues.push(
+      commandClassificationInvalidIssue(
+        profileId,
+        `${contract}.required`,
+        'Command "required" must be an explicit boolean.',
+      ),
+    );
+  } else if (required === false) {
+    const environmentNotes = commandRecord['environmentNotes'];
+    if (typeof environmentNotes !== 'string' || environmentNotes.trim().length === 0) {
+      issues.push(
+        commandClassificationInvalidIssue(
+          profileId,
+          `${contract}.environmentNotes`,
+          'An optional command must declare a non-blank environmentNotes explaining the prerequisite that makes it optional.',
+        ),
+      );
+    }
+  }
+
+  for (const key of Object.keys(commandRecord)) {
+    if (!KNOWN_COMMAND_FIELDS.has(key)) {
+      issues.push(unsupportedFieldIssue(profileId, `${arrayName} entry field "${key}" (${contract}.${key})`));
+    }
+  }
+}
+
+function validateDuplicateCommands(
+  locations: readonly CommandLocation[],
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  const groups = new Map<string, CommandLocation[]>();
+  for (const location of locations) {
+    const commandText = location.command?.command;
+    if (typeof commandText !== 'string' || commandText.trim().length === 0) {
+      continue; // already reported as GF_COMMAND_MALFORMED
+    }
+    const key = commandText.trim();
+    const group = groups.get(key);
+    if (group) {
+      group.push(location);
+    } else {
+      groups.set(key, [location]);
+    }
+  }
+
+  for (const [commandText, group] of groups) {
+    if (group.length <= 1) {
+      continue;
+    }
+    const conflicting = group.some(
+      (location) =>
+        location.command.purpose !== group[0].command.purpose || location.command.required !== group[0].command.required,
+    );
+    // TST-010: exactly one GF_COMMAND_DUPLICATE issue per duplicate command
+    // group, with a stable evidenceKey -- not one per participant (unlike
+    // the registry-wide duplicate-id/alias checks, which must show every
+    // participant).
+    issues.push(commandDuplicateIssue(profileId, group, commandText, conflicting));
+  }
+}
+
+function commandMalformedIssue(profileId: string, contract: string, reason: string): ProfileValidationIssue {
+  return {
+    code: 'GF_COMMAND_MALFORMED',
+    severity: 'error',
+    profileId,
+    affectedContract: contract,
+    reason,
+    correctiveAction: 'Provide a well-formed { command, purpose, required } command entry.',
+    evidenceKey: contract,
+  };
+}
+
+function commandClassificationInvalidIssue(profileId: string, contract: string, reason: string): ProfileValidationIssue {
+  return {
+    code: 'GF_COMMAND_CLASSIFICATION_INVALID',
+    severity: 'error',
+    profileId,
+    affectedContract: contract,
+    reason,
+    correctiveAction:
+      'Set "required" to an explicit boolean, and give every optional command a non-blank environmentNotes explaining its prerequisite.',
+    evidenceKey: contract,
+  };
+}
+
+function commandDuplicateIssue(
+  profileId: string,
+  group: readonly CommandLocation[],
+  commandText: string,
+  conflicting: boolean,
+): ProfileValidationIssue {
+  const locations = group.map((location) => location.contract).join(', ');
+  return {
+    code: 'GF_COMMAND_DUPLICATE',
+    severity: conflicting ? 'error' : 'warning',
+    profileId,
+    affectedContract: group[0].contract,
+    reason: conflicting
+      ? `Command "${commandText}" is declared ${group.length} times (${locations}) with differing purpose/required values.`
+      : `Command "${commandText}" is declared ${group.length} times (${locations}).`,
+    correctiveAction: 'Remove the duplicate command entry or consolidate it into a single declaration.',
+    evidenceKey: commandText,
   };
 }

@@ -66,6 +66,7 @@ function validProfileFixture(overrides: Partial<GreenfieldProfile> = {}): Greenf
     notesForBootstrapBundle: 'Minimal layout.',
     setupCommands: [{ command: 'npm install', purpose: 'Install dependencies.', required: true }],
     validationCommands: [{ command: 'npm test', purpose: 'Run tests.', required: true }],
+    allowedDocumentationTerminology: [],
     ...overrides,
   };
 }

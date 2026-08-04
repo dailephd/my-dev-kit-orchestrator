@@ -25,4 +25,5 @@ export const NEXTJS_APP_PROFILE: GreenfieldProfile = {
     { command: 'npm run build', purpose: 'Build the project.', required: true },
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
+  allowedDocumentationTerminology: ['nextjs-react'],
 };

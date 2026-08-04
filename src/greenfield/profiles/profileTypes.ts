@@ -59,6 +59,15 @@ export interface GreenfieldProfile {
    * buildScaffoldPlan.ts in place of its current keyword-sniffing logic.
    */
   validationCommands: GreenfieldProfileCommand[];
+  /**
+   * v1.3.0 Batch 2: bounded tags naming the platform/framework terminology
+   * this profile's generated documentation is allowed to use (e.g.
+   * `'android-jetpack'`, `'nextjs-react'`). Replaces the previous hardcoded
+   * `selectedProfileId === 'android-compose'` branch in
+   * validateBootstrapDocs.ts with profile-owned data; most profiles declare
+   * no special terminology and use an empty array.
+   */
+  allowedDocumentationTerminology: readonly string[];
 }
 
 export type GreenfieldProfileResolutionStatus = 'selected' | 'unresolved' | 'unsupported';

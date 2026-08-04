@@ -27,4 +27,5 @@ export const TYPESCRIPT_CLI_PROFILE: GreenfieldProfile = {
     { command: 'npm run build', purpose: 'Build the project.', required: true },
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
+  allowedDocumentationTerminology: [],
 };
