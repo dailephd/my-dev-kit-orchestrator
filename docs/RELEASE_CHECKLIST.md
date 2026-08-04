@@ -2,7 +2,7 @@
 
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The current
-release is `v1.2.3`; older releases remain historical baselines.
+release is `v1.3.0`; older releases remain historical baselines.
 
 ## Current release baseline
 
@@ -11,7 +11,7 @@ release is `v1.2.3`; older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify current `v1.2.3` and scope older versions historically
+- [ ] docs identify current `v1.3.0` and scope older versions historically
 
 ## Required local validation
 

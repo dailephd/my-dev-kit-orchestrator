@@ -6,10 +6,11 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.2.3` (run-integrity and judge-verdict enforcement),
-validated against the released `@dailephd/my-dev-kit@1.10.4` package.
-Architecture is organized by current responsibility rather than by release
-version.
+The current release is `v1.3.0` (mobile profile expansion and scaffold
+verification), which builds on the `v1.2.3` run-integrity and judge-verdict
+enforcement validated against the released `@dailephd/my-dev-kit@1.10.4`
+package. Architecture is organized by current responsibility rather than by
+release version.
 
 ## System boundaries
 

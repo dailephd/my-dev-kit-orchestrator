@@ -2,10 +2,9 @@
 
 Versions are listed in chronological order.
 
-`v1.2.3` is the current published release. `v1.2.2`, `v1.2.1`, `v1.2.0`,
-`v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part of the published
-project history. `v1.3.0` is implemented on the feature branch but not yet
-published. Versions after `v1.3.0` are planned milestones.
+`v1.3.0` is the current published release. `v1.2.3`, `v1.2.2`, `v1.2.1`,
+`v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part of the
+published project history. Versions after `v1.3.0` are planned milestones.
 
 ## Version summary
 
@@ -22,14 +21,14 @@ published. Versions after `v1.3.0` are planned milestones.
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
 - `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Released on 2026-08-01 and revalidated against `@dailephd/my-dev-kit@1.10.4`.
-- `v1.3.0` is implemented but not yet published. It strengthens the existing
-  `typescript-cli` and `nextjs-app` profiles (and confirms `android-compose`
-  shared compliance) with shared profile and registry validation, explicit
-  command and documentation contracts, exact and bounded-pattern
-  scaffold-target expectations with path safety, scaffold-plan and
-  persisted-scaffold-plan validation, layered generated-file and
-  verification-command evidence, first-vertical-slice readiness, and
-  `status`/`check` readiness integration. It does not add a new starter
+- `v1.3.0` strengthens the existing `typescript-cli` and `nextjs-app`
+  profiles (and confirms `android-compose` shared compliance) with shared
+  profile and registry validation, explicit command and documentation
+  contracts, exact and bounded-pattern scaffold-target expectations with
+  path safety, scaffold-plan and persisted-scaffold-plan validation, layered
+  generated-file and verification-command evidence, first-vertical-slice
+  readiness, and `status`/`check` readiness integration. Released on
+  2026-08-04. It does not add a new starter
   profile; possible `android-xml` and `python-cli` evaluation remains a
   future candidate decision (see "Planned milestones").
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
@@ -601,12 +600,12 @@ Exclusions:
   integrity, or readiness authority
 - no automatic package release or publication behavior in the CLI
 
-## Implemented v1.3.0 (not yet published)
+## Published v1.3.0
 
 ### v1.3.0 - Mobile Profile Expansion and Scaffold Verification
 
 Status:
-Implemented on the feature branch; not yet published to npm.
+Published as `1.3.0` on 2026-08-04.
 
 Goal:
 Strengthen the greenfield profile system so additional starter profiles can be added later without duplicating platform-specific logic.

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.3.0 - Mobile Profile Expansion and Scaffold Verification
+
+Release date: 2026-08-04.
+
 ### Added
 
 - shared, immutable profile-local and registry-wide validation for every

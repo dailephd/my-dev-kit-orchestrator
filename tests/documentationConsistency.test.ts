@@ -95,7 +95,7 @@ describe('documentation consistency gate', () => {
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
     ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
     ['contradictory v1.2.3 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.3 is unreleased.\n`, 'V123_RELEASE_STATUS_CONTRADICTION'],
-    ['missing v1.2.3 publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.2.3', '@dailephd/my-dev-kit-orchestrator@1.2.2'), 'V123_PUBLISHED_CLAIM_MISSING'],
+    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.3.0', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
     ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
@@ -120,7 +120,11 @@ describe('documentation consistency gate', () => {
     // so this drift case now targets v1.5.0, which remains genuinely
     // planned -- "implemented" wording there is still a real drift.
     ['planned v1.5.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Optional Mobile Profile Candidates', '### v1.5.0 - Optional Mobile Profile Candidates\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['v1.3.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.3.0 - Mobile Profile Expansion and Scaffold Verification', '### v1.3.0 - Mobile Profile Expansion and Scaffold Verification\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    // v1.3.0 became the genuinely published current release at release time
+    // (see manifest.protectedFacts.packageMetadataVersion / latestPublishedVersion),
+    // so this drift case now targets v1.5.0, which remains genuinely planned
+    // and unpublished -- "Published." wording there is still a real drift.
+    ['v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Optional Mobile Profile Candidates', '### v1.5.0 - Optional Mobile Profile Candidates\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
   ])('detects %s', (_name, relativePath, mutation, issueCode) => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);
