@@ -433,6 +433,49 @@ executed by the orchestrator. For `android-compose`, `setupCommands` is `[]`
 lists `./gradlew build` and `./gradlew testDebugUnitTest` as required, plus an
 optional, device/emulator-dependent `./gradlew connectedAndroidTest`.
 
+`scaffold-plan.txt` carries bounded, deterministically parseable sections
+inside its native "Heading: body" text format, alongside the free-prose
+fields (`Planned file groups`, `First runnable behavior`, `Test
+expectations`, `Documentation expectations`, `Unresolved decisions`,
+`Non-goals`):
+
+- `Profile: <selected profile id>` -- must match the run's selected profile.
+- `Target paths:` -- one normalized relative path per line (`- <path>`).
+- `Setup commands:` / `Validation commands:` -- one command per line in the
+  form `- <command text>: required` or
+  `- <command text>: optional, <nonblank note>`.
+
+`checkGreenfieldRunReadiness()` reads and parses this artifact into a
+`GreenfieldScaffoldPlan` (`parseGreenfieldScaffoldPlanArtifact()` in
+`src/greenfield/readiness/parseGreenfieldEvidence.ts`) and validates it
+through the same `validateGreenfieldScaffoldPlan()` used during the
+scaffold-plan stage itself, for every run whose scaffold implementation
+report is not legacy. A missing or malformed plan on a current-format run
+surfaces through the plan validator's existing profile-identity check rather
+than a new issue code.
+
+The scaffold implementation report, verification report, and first vertical
+slice artifacts carry their own bounded structured sections that
+`checkGreenfieldRunReadiness()` reads for evidence:
+
+- `ScaffoldImplementationReport`: `Profile: <selected profile id>` and
+  `Files changed:` (one `- <path>` per generated file, matched against the
+  profile's required target expectations).
+- `VerificationReport`: `Commands verified:` (one
+  `- <command text>: passed|failed|skipped[, <reason>]` per line; an optional
+  command may pass with evidence or skip with a nonblank reason, but a
+  required command must show `passed`).
+- `FirstVerticalSlice`: `Profile:`, `Minimal behavior:`, `Entry point:`, and
+  `Tied to product boundary:` -- all required and non-placeholder for
+  readiness.
+
+A run whose scaffold implementation report has no `Profile:` section
+predates this evidence model. It is treated as legacy: readiness reports
+`GF_LEGACY_EVIDENCE_NOT_EVALUATED` (a warning, not a failure) and skips
+generated-file, scaffold-plan, and first-slice-profile-identity evidence for
+that run, rather than retroactively failing it for fields it could not have
+written.
+
 ## Extraction mode artifacts
 
 Extraction mode is implemented in `v0.2.1`.

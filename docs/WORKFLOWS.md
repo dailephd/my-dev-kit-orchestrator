@@ -413,6 +413,18 @@ Project-doc bootstrap returns structured in-memory content rather than writing
 template files. Component documentation remains empty until the brief schema
 has module or component hints.
 
+Implemented but unpublished work strengthens greenfield readiness checking
+for all three current profiles. The scaffold plan, scaffold implementation
+report, verification report, and first vertical slice are validated against
+the selected profile's exact contract: required targets, required and
+optional commands, generated-file evidence, and first-slice completeness.
+`status` and `check`/`check --all` surface the result. A run created before
+this validation existed (no `Profile:` section in its scaffold
+implementation report) is treated as legacy: it is not retroactively failed
+for evidence it could not have produced. See
+[docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts) for the exact
+structured sections each artifact carries.
+
 ## Instruction packets and context-sensitive behavior
 
 The seven workflow definitions contain 79 native stages in total. The stage

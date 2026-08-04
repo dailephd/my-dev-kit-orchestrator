@@ -23,13 +23,28 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.2.3`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.3.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.2.3` ships run-integrity and judge-verdict enforcement on top of the
-`v1.2.2` context-readiness safeguards. It is compatible with the released
-`@dailephd/my-dev-kit@1.10.4` producer contract and requires Node.js 24 or
-later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v123) for its scope.
+`v1.3.0` strengthens greenfield profile and scaffold verification on top of
+the `v1.2.3` run-integrity and judge-verdict enforcement, which itself built
+on the `v1.2.2` context-readiness safeguards. It requires Node.js 24 or
+later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for its scope.
+
+## Greenfield profile and scaffold verification
+
+`v1.3.0` adds shared profile and registry validation, explicit command and
+documentation contracts, exact and bounded-pattern scaffold-target
+expectations with path safety, scaffold-plan and persisted-scaffold-plan
+validation, layered generated-file and verification-command evidence, and
+first-vertical-slice readiness, applied to all three current starter
+profiles. `status` and `check`/`check --all` surface the result using the
+existing deterministic issue model, and a run created before this validation
+existed receives explicit legacy compatibility treatment rather than being
+retroactively failed. No new starter profile, CLI command, workflow mode, or
+native stage
+was added, and no command is executed by any of this. See
+[docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for delivered scope.
 
 ## Run-integrity enforcement (v1.2.3)
 

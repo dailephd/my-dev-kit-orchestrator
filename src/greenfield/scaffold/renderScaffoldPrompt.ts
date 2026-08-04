@@ -36,10 +36,18 @@ Task:
 Produce ${ctx.runFolder}/artifacts/scaffold-plan.txt (artifact: ScaffoldPlan), a platform-neutral scaffold plan derived from the bootstrap bundle and project docs report.
 
 The ScaffoldPlan must define:
+- the selected profile id
 - planned file groups (illustrative paths only; this stage does not create files)
+- target paths, one normalized relative path per line, matching the
+  selected profile's target expectations (used by
+  validateGreenfieldScaffoldPlan() for required-target and path-safety
+  checks; do not invent paths beyond scaffoldPlanningInputs)
 - first runnable behavior
-- setup commands
-- validation commands
+- setup commands, one per line in the exact form
+  "- <command text>: required" / "- <command text>: optional, <nonblank environment-note or reason>",
+  using the command text exactly as it appears in the selected profile's
+  setupCommands
+- validation commands, in the same "- <command text>: required|optional[, reason]" form
 - test expectations
 - documentation expectations
 - unresolved decisions
@@ -61,7 +69,9 @@ Return format:
 Produce the artifact as a plain-text file using the template:
   Artifact: ScaffoldPlan
   Workflow mode: greenfield
+  Profile: <selected profile id>
   Planned file groups: ...
+  Target paths: ...
   First runnable behavior: ...
   Setup commands: ...
   Validation commands: ...
@@ -84,8 +94,12 @@ Task:
 Implement the scaffold exactly as described in scaffold-plan.txt and record the result in ${ctx.runFolder}/reports/scaffold-implementation-report.txt (artifact: ScaffoldImplementationReport).
 
 The ScaffoldImplementationReport must include:
-- files changed
-- commands run, if any
+- the selected profile id
+- files changed, one normalized relative path per line (e.g. "- src/cli.ts")
+- commands run, if any, one per line in the exact form
+  "- <command text>: passed" / "- <command text>: failed" /
+  "- <command text>: skipped, <nonblank reason>", using the command text
+  exactly as it appears in the selected profile's setupCommands
 - deviations from the scaffold plan
 - blockers
 - risks
@@ -102,6 +116,7 @@ Return format:
 Produce the artifact as a plain-text file using the template:
   Artifact: ScaffoldImplementationReport
   Workflow mode: greenfield
+  Profile: <selected profile id>
   Files changed: ...
   Commands run: ...
   Deviations: ...

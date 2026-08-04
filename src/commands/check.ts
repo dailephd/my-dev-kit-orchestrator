@@ -23,6 +23,8 @@ import { ContextReadinessResult } from '../instructions/contextReadiness';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult, FinalReportEligibilityResult } from '../judgeIntegrity';
 import { RunMetadata } from '../run';
+import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
+import { GreenfieldReadinessResult } from '../greenfield/readiness/greenfieldReadinessTypes';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -237,6 +239,47 @@ function formatJudgeIntegrityCheck(
 
   const hasFail = !judgeIntegrity.judgeVerdictAccepted;
   return { lines, hasFail };
+}
+
+// v1.3.0 Batch 4: summarized, not a raw issue dump (section 9.1), scoped
+// identically to runContextCheck/runJudgeCheck above -- greenfield-only,
+// full default-mode check invocation only. Returns null for non-greenfield
+// runs and for a greenfield run with no profile selected yet (an ordinary
+// earlier-stage state, not a defect).
+function formatGreenfieldReadinessCheck(
+  result: GreenfieldReadinessResult | undefined,
+): { lines: string[]; hasFail: boolean } | null {
+  if (!result) {
+    return null;
+  }
+  const lines: string[] = ['=== Greenfield readiness ==='];
+  const state = result.legacyRun
+    ? 'legacy-compatible'
+    : result.ready
+      ? 'ready'
+      : result.valid
+        ? 'incomplete'
+        : 'invalid';
+  lines.push(`  State: ${state}`);
+  lines.push(
+    `  Filesystem corroboration: ${result.filesystemCorroborationPerformed ? 'performed' : 'not performed'}`,
+  );
+  const errorIssues = result.issues.filter((i) => i.severity === 'error');
+  const warningIssues = result.issues.filter((i) => i.severity === 'warning');
+  if (errorIssues.length > 0) {
+    lines.push(`  Errors (${errorIssues.length}):`);
+    for (const issue of errorIssues) {
+      lines.push(`    [${issue.code}] ${issue.reason}`);
+    }
+  }
+  if (warningIssues.length > 0) {
+    lines.push(`  Warnings (${warningIssues.length}):`);
+    for (const issue of warningIssues) {
+      lines.push(`    [${issue.code}] ${issue.reason}`);
+    }
+  }
+  lines.push('');
+  return { lines, hasFail: errorIssues.length > 0 };
 }
 
 function resolveArtifactTarget(
@@ -473,6 +516,14 @@ export function makeCheckCommand(): Command {
           // Repository context readiness
           lines.push(...contextCheck.lines);
 
+          // v1.3.0 Batch 4: greenfield readiness (no-op / null for
+          // non-greenfield runs and runs with no profile selected yet).
+          const allGreenfieldReadinessResult = checkGreenfieldRunReadiness(meta);
+          const allGreenfieldReadinessCheck = formatGreenfieldReadinessCheck(allGreenfieldReadinessResult);
+          if (allGreenfieldReadinessCheck) {
+            lines.push(...allGreenfieldReadinessCheck.lines);
+          }
+
           // Persist trace results
           try {
             writeTraceCheckResults(meta.runFolder, {
@@ -504,6 +555,9 @@ export function makeCheckCommand(): Command {
           lines.push(...summarizeTrace(traceResults));
           lines.push(`  Repository context: ${contextCheck.hasFail ? 'fail' : 'pass'}`);
           lines.push(`  Judge and final-report integrity: ${allJudgeCheck.hasFail ? 'fail' : 'pass'}`);
+          if (allGreenfieldReadinessCheck) {
+            lines.push(`  Greenfield readiness: ${allGreenfieldReadinessCheck.hasFail ? 'fail' : 'pass'}`);
+          }
 
           console.log(lines.join('\n'));
 
@@ -520,7 +574,13 @@ export function makeCheckCommand(): Command {
           );
           const hasGateViolations = gateViolations.length > 0;
 
-          const hasFail = anyContractFail || anyTraceFail || hasGateViolations || contextCheck.hasFail || allJudgeCheck.hasFail;
+          const hasFail =
+            anyContractFail ||
+            anyTraceFail ||
+            hasGateViolations ||
+            contextCheck.hasFail ||
+            allJudgeCheck.hasFail ||
+            Boolean(allGreenfieldReadinessCheck?.hasFail);
           const hasWarn = anyContractWarn || anyTraceWarn;
 
           if (hasFail || (options.strict && hasWarn)) {
@@ -671,6 +731,9 @@ export function makeCheckCommand(): Command {
         const runJudgeCheck = runJudgeState
           ? formatJudgeIntegrityCheck(runJudgeState.judgeIntegrity, runJudgeState.eligibility)
           : null;
+        const greenfieldReadinessResult =
+          !options.artifact && !options.prompts ? checkGreenfieldRunReadiness(meta) : undefined;
+        const greenfieldReadinessCheck = formatGreenfieldReadinessCheck(greenfieldReadinessResult);
 
         const lines: string[] = [`Check results for run: ${meta.runId}`, ``];
 
@@ -696,6 +759,10 @@ export function makeCheckCommand(): Command {
 
         if (runJudgeCheck) {
           lines.push(...runJudgeCheck.lines);
+        }
+
+        if (greenfieldReadinessCheck) {
+          lines.push(...greenfieldReadinessCheck.lines);
         }
 
         lines.push(...summarize(artifactResults, promptResults));
@@ -726,7 +793,12 @@ export function makeCheckCommand(): Command {
           r.issues.some((i) => i.severity === 'warn'),
         );
 
-        const hasFail = anyArtifactFail || anyPromptFail || Boolean(runContextCheck?.hasFail) || Boolean(runJudgeCheck?.hasFail);
+        const hasFail =
+          anyArtifactFail ||
+          anyPromptFail ||
+          Boolean(runContextCheck?.hasFail) ||
+          Boolean(runJudgeCheck?.hasFail) ||
+          Boolean(greenfieldReadinessCheck?.hasFail);
         const hasWarn = anyArtifactWarn || anyPromptWarn;
 
         if (hasFail || (options.strict && hasWarn)) {

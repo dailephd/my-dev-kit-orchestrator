@@ -15,9 +15,35 @@
 // Compose Multiplatform claims remain forbidden unconditionally, for every
 // profile, always -- Android Compose is single-platform Android, not a
 // multiplatform/cross-platform technology.
+//
+// v1.3.0 Batch 2: the profile-aware Android/Jetpack check below is now
+// data-driven from GreenfieldProfile.allowedDocumentationTerminology instead
+// of a hardcoded `selectedProfileId === 'android-compose'` comparison, and a
+// symmetric Next.js/React terminology check was added for the same reason
+// (see profileTypes.ts). validateGreenfieldProfileDocumentation() at the
+// bottom of this file bridges this validator's findings into the shared
+// v1.3.0 profile validation issue system (GF_DOC_REQUIREMENT_MISSING /
+// GF_DOC_UNSUPPORTED_CLAIM) without replacing this function's existing
+// signature or return shape, which callers and existing tests already rely
+// on.
+//
+// v1.3.0 Batch 2 correction: `allowedDocumentationTerminology` now draws
+// from the closed `GREENFIELD_DOCUMENTATION_TERMINOLOGY` vocabulary in
+// profileTypes.ts instead of independent raw string literals here, and
+// validateGreenfieldProfileDocumentation() no longer checks for a
+// `status: 'skipped'` state on guidance-bearing docs -- the real generator
+// (populateProjectDocsFromBrief.ts) never produces that status for those
+// docs, and no other production, historical, or external path constructs
+// this in-memory-only result shape, so that check protected no reachable
+// behavior. Recognizing thin-but-present ('partial') guidance as
+// insufficient requires real artifact/readiness semantics and is Batch 4
+// scope, not Batch 2's static per-profile contract validation.
 
-import { GreenfieldProfileId } from '../profiles/profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldProfileId } from '../profiles/profileTypes';
+import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
 import { GreenfieldDocSection, GreenfieldProjectDocBootstrapResult, GreenfieldProjectDocName } from './projectDocBootstrapTypes';
+import { ProfileValidationIssue, ProfileValidationResult } from '../profiles/profileValidationTypes';
+import { finalizeProfileValidationResult } from '../profiles/profileValidationOrdering';
 
 const REQUIRED_DOC_NAMES: GreenfieldProjectDocName[] = [
   'product-boundary',
@@ -37,21 +63,34 @@ const REQUIRED_DOC_NAMES: GreenfieldProjectDocName[] = [
 // Compose profile.
 const UNSUPPORTED_PLATFORM_RE = /\b(ios|react-native|flutter|kotlin multiplatform|compose-multiplatform)\b/i;
 
-// Only meaningful for a non-android-compose profile's docs; permitted when
-// the selected profile is android-compose.
+// Gated by GreenfieldProfile.allowedDocumentationTerminology including
+// 'android-jetpack' (currently only android-compose).
 const ANDROID_JETPACK_RE = /\b(android|jetpack)\b/i;
 
+// Gated by GreenfieldProfile.allowedDocumentationTerminology including
+// 'nextjs-react' (currently only nextjs-app). Symmetric with the Android
+// check above (TST-029).
+const NEXTJS_REACT_RE = /\b(next\.?js|react)\b/i;
+
 const RELEASE_SECURITY_PUBLISH_RE =
-  /\b(released?|publish(ed|ing)?|security[- ]validated|passed all tests|production[- ]ready|shipped)\b/i;
+  /\b(released?|publish(ed|ing)?|security[- ]validated|statically analyzed|static analysis (passed|complete)|passed all tests|production[- ]ready|shipped)\b/i;
 
 const PLAY_STORE_RELEASE_READINESS_RE = /\b(play store|app release|release[- ]ready)\b/i;
+
+// v1.3.0 Batch 2 (TST-031): the orchestrator only plans and prompts; it
+// never installs dependencies, runs commands, or generates a scaffold on its
+// own. Generated docs must never claim otherwise.
+const AUTONOMOUS_EXECUTION_CLAIM_RE =
+  /\b(automatically (installs?|runs?|executes?|scaffolds?|builds?|generates?)|installs? dependencies for you|runs? commands? (for you|automatically)|generates? the project automatically)\b/i;
 
 export type GreenfieldDocValidationIssueKind =
   | 'missing-required-section'
   | 'unsupported-platform-claim'
   | 'android-mobile-claim'
+  | 'nextjs-web-claim'
   | 'release-security-publish-claim'
-  | 'play-store-release-readiness-claim';
+  | 'play-store-release-readiness-claim'
+  | 'autonomous-execution-claim';
 
 export interface GreenfieldDocValidationIssue {
   docName: string;
@@ -64,14 +103,23 @@ export interface GreenfieldDocValidationResult {
   issues: GreenfieldDocValidationIssue[];
 }
 
+function resolveAllowedDocumentationTerminology(selectedProfileId?: GreenfieldProfileId): readonly string[] {
+  if (!selectedProfileId) {
+    return [];
+  }
+  const profile = SUPPORTED_PROFILES[selectedProfileId];
+  return profile ? profile.allowedDocumentationTerminology : [];
+}
+
 /**
  * Validates generated doc content.
  *
  * @param result the generated docs to validate
  * @param selectedProfileId the profile the bundle was built from, if known.
- *   When `'android-compose'`, Android/Jetpack mentions are permitted; for any
- *   other profile id (or when omitted), they are flagged the same way they
- *   always were before v1.2.0.
+ *   Terminology this profile's `allowedDocumentationTerminology` permits
+ *   (e.g. Android/Jetpack for android-compose, Next.js/React for nextjs-app)
+ *   is not flagged; for any other profile id (or when omitted), it is
+ *   flagged the same way it always was before v1.2.0.
  */
 export function validateBootstrapDocs(
   result: GreenfieldProjectDocBootstrapResult,
@@ -79,7 +127,9 @@ export function validateBootstrapDocs(
 ): GreenfieldDocValidationResult {
   const issues: GreenfieldDocValidationIssue[] = [];
   const presentNames = new Set(result.targets.map((t) => t.docName));
-  const androidJetpackAllowed = selectedProfileId === 'android-compose';
+  const allowedTerminology = resolveAllowedDocumentationTerminology(selectedProfileId);
+  const androidJetpackAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK);
+  const nextjsReactAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT);
 
   for (const required of REQUIRED_DOC_NAMES) {
     if (!presentNames.has(required)) {
@@ -110,6 +160,14 @@ export function validateBootstrapDocs(
       });
     }
 
+    if (!nextjsReactAllowed && NEXTJS_REACT_RE.test(text)) {
+      issues.push({
+        docName: target.docName,
+        kind: 'nextjs-web-claim',
+        message: `Doc "${target.docName}" contains a Next.js/React claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
+      });
+    }
+
     if (RELEASE_SECURITY_PUBLISH_RE.test(text)) {
       issues.push({
         docName: target.docName,
@@ -125,6 +183,14 @@ export function validateBootstrapDocs(
         message: `Doc "${target.docName}" makes a Play Store/release-readiness claim, which this runtime must not assert for any profile.`,
       });
     }
+
+    if (AUTONOMOUS_EXECUTION_CLAIM_RE.test(text)) {
+      issues.push({
+        docName: target.docName,
+        kind: 'autonomous-execution-claim',
+        message: `Doc "${target.docName}" claims autonomous command/dependency/scaffold execution, which the orchestrator never performs.`,
+      });
+    }
   }
 
   return { valid: issues.length === 0, issues };
@@ -132,4 +198,83 @@ export function validateBootstrapDocs(
 
 function flattenSections(sections: GreenfieldDocSection[]): string {
   return sections.map((s) => `${s.heading}\n${s.content}`).join('\n');
+}
+
+// ─── Shared v1.3.0 issue-system bridge (TST-028..TST-031, TST-033; reachable
+// portion of TST-032) ─────────────────────────────────────────────────────
+
+const CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM: ReadonlySet<GreenfieldDocValidationIssueKind> = new Set([
+  'unsupported-platform-claim',
+  'android-mobile-claim',
+  'nextjs-web-claim',
+  'release-security-publish-claim',
+  'play-store-release-readiness-claim',
+  'autonomous-execution-claim',
+]);
+
+/**
+ * Bridges validateBootstrapDocs()'s findings into the shared v1.3.0
+ * ProfileValidationIssue system (GF_DOC_REQUIREMENT_MISSING /
+ * GF_DOC_UNSUPPORTED_CLAIM). Does not replace validateBootstrapDocs(), which
+ * keeps its existing signature and GreenfieldDocValidationResult shape for
+ * existing callers/tests.
+ *
+ * Covers TST-032 only for a required doc that is structurally absent from
+ * `result.targets` (translated from validateBootstrapDocs()'s existing
+ * `missing-required-section` finding). It does not evaluate whether a
+ * *present* doc's content is sufficiently detailed ('partial' vs
+ * 'generated') -- that requires real artifact/readiness semantics and is
+ * Batch 4 scope.
+ *
+ * Not currently called from any production greenfield run path; neither is
+ * validateBootstrapDocs() itself (confirmed at baseline, before v1.3.0).
+ * Wiring documentation findings into status/check/artifact readiness is
+ * Batch 4's explicit ownership per the v1.3.0 Batch 0 design report.
+ */
+export function validateGreenfieldProfileDocumentation(
+  result: GreenfieldProjectDocBootstrapResult,
+  profile?: GreenfieldProfile,
+): ProfileValidationResult {
+  const baseResult = validateBootstrapDocs(result, profile?.id);
+  const profileId = profile?.id ?? 'unresolved-profile';
+  const issues: ProfileValidationIssue[] = [];
+
+  for (const baseIssue of baseResult.issues) {
+    if (baseIssue.kind === 'missing-required-section') {
+      issues.push(docRequirementMissingIssue(profileId, baseIssue.docName, baseIssue.message));
+    } else if (CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM.has(baseIssue.kind)) {
+      issues.push(docUnsupportedClaimIssue(profileId, baseIssue.docName, baseIssue.kind, baseIssue.message));
+    }
+  }
+
+  return finalizeProfileValidationResult(issues);
+}
+
+function docRequirementMissingIssue(profileId: string, docName: string, reason: string): ProfileValidationIssue {
+  return {
+    code: 'GF_DOC_REQUIREMENT_MISSING',
+    severity: 'error',
+    profileId,
+    affectedContract: docName,
+    reason,
+    correctiveAction: `Generate required guidance content for the "${docName}" doc.`,
+    evidenceKey: docName,
+  };
+}
+
+function docUnsupportedClaimIssue(
+  profileId: string,
+  docName: string,
+  kind: GreenfieldDocValidationIssueKind,
+  reason: string,
+): ProfileValidationIssue {
+  return {
+    code: 'GF_DOC_UNSUPPORTED_CLAIM',
+    severity: 'error',
+    profileId,
+    affectedContract: docName,
+    reason,
+    correctiveAction: `Remove the unsupported claim from the "${docName}" doc.`,
+    evidenceKey: `${docName}:${kind}`,
+  };
 }

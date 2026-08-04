@@ -2,7 +2,7 @@
 
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The current
-release is `v1.2.3`; older releases remain historical baselines.
+release is `v1.3.0`; older releases remain historical baselines.
 
 ## Current release baseline
 
@@ -11,7 +11,7 @@ release is `v1.2.3`; older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify current `v1.2.3` and scope older versions historically
+- [ ] docs identify current `v1.3.0` and scope older versions historically
 
 ## Required local validation
 
@@ -78,6 +78,26 @@ release is `v1.2.3`; older releases remain historical baselines.
 - [ ] run `export --out greenfield-export.txt`
 - [ ] run `export --out ../unsafe-export.txt` and confirm rejection
 - [ ] remove the temporary directory
+
+## v1.3.0 profile and scaffold verification checklist
+
+- [ ] `validateGreenfieldProfile()`/`validateGreenfieldProfileRegistry()` pass
+  for all three current profiles with zero issues
+- [ ] `validateGreenfieldScaffoldPlan()` passes for a real plan per profile,
+  including `android-compose`'s empty `setupCommands` and optional
+  `connectedAndroidTest`
+- [ ] a persisted `scaffold-plan.txt` (with `Profile:`/`Target paths:`
+  sections) is read and validated by `checkGreenfieldRunReadiness()` for a
+  real run, not only injected in-memory into the pure evaluator
+- [ ] `evaluateGreenfieldReadiness()` reports `ready: true` with zero issues
+  for a complete run per profile, including android-compose's honestly
+  skipped optional `connectedAndroidTest`
+- [ ] a legacy run (no `Profile:` section in the scaffold implementation
+  report) receives `GF_LEGACY_EVIDENCE_NOT_EVALUATED` and is not
+  retroactively failed
+- [ ] `status` and `check`/`check --all` present the same readiness result
+  for a given run
+- [ ] `npx jest --runInBand tests/greenfield` passes in full
 
 ## v1.2.0 Android Compose greenfield smoke
 
