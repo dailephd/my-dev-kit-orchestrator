@@ -18,10 +18,11 @@ scope or unrelated plans.
 
 Committed technical documentation describes the current repository: public
 usage, implemented architecture, workflow behavior, file contracts,
-contributor guidance, release history, and current limitations. Detailed
-version planning, implementation tracking, pending decisions, and publication
-tracking belong in a local untracked plain-text plan. The committed roadmap is
-the sole planning exception and remains high level.
+contributor guidance, release history, and current limitations. The committed
+roadmap owns version goals, feature assignments, dependencies, exclusions,
+acceptance criteria, and deferred or version-TBD work. Per-batch implementation
+tracking, command transcripts, changed-file lists, temporary branch state, and
+publication tracking belong in a local untracked plain-text plan.
 
 The local plan is not canonical documentation, is not linked from public
 documents, is not required in ordinary clones, and is not included in package

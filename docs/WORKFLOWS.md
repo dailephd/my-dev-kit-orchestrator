@@ -6,6 +6,14 @@ syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
 Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
 
+Choose a mode by the change's primary goal. `feature` changes behavior;
+`repair` reconciles observed and intended behavior; `test` adds or improves
+tests without a production implementation stage; `refactor` preserves
+behavior while changing structure; `harden` strengthens failure handling;
+`extraction` transfers bounded behavior between repositories; and `greenfield`
+plans a new project before useful code exists. Every mode uses the shared
+lifecycle, context-readiness, judge-correction, and final-report rules below.
+
 ## Content check layer (v0.4.0)
 
 A separate content check layer is available via `my-dev-kit-orchestrator check`. Content checks are deterministic text-based checks that report whether artifact files contain the expected section headers. They run independently and do not block stage advancement.
@@ -26,6 +34,7 @@ In this model, `my-dev-kit` is used during context acquisition and `my-dev-kit-o
 ## Feature
 
 Use `feature` for new behavior or intentional behavior changes.
+Do not use it for a behavior-preserving structural change or a new project.
 
 Command:
 
@@ -52,9 +61,14 @@ Stage order:
 9. `judge`
 10. `final-report`
 
+Completion requires verified implementation and tests, an accepted judge
+`PASS`, no active correction, and an eligible `final-report`.
+
 ## Repair
 
 Use `repair` when observed behavior diverges from intended behavior.
+Do not use it for unfocused defect hunting without an observed/expected
+behavior comparison.
 
 Command:
 
@@ -76,9 +90,14 @@ Stage order:
 10. `judge`
 11. `final-report`
 
+The correction design and regression strategy gate implementation. Completion
+requires evidence that the first divergence was corrected without breaking the
+intended behavior.
+
 ## Test
 
 Use `test` for behavior-derived test planning or test implementation for existing behavior.
+Do not use it when production behavior must change; use `feature` or `repair`.
 
 Command:
 
@@ -98,9 +117,13 @@ Stage order:
 8. `judge`
 9. `final-report`
 
+Completion requires verification and an accepted judge `PASS`; this mode has
+no production `implementation` stage.
+
 ## Refactor
 
 Use `refactor` for structure changes that must preserve behavior.
+Do not use it when externally visible behavior is intended to change.
 
 Command:
 
@@ -122,9 +145,13 @@ Stage order:
 10. `judge`
 11. `final-report`
 
+The preserved-invariant list and compatibility strategy gate implementation.
+Completion requires verification that the declared behavior remained intact.
+
 ## Harden
 
 Use `harden` for validation, resilience, and failure-handling improvements.
+Do not use it to hide an architectural defect behind silent fallback behavior.
 
 Command:
 
@@ -145,6 +172,10 @@ Stage order:
 9. `verification`
 10. `judge`
 11. `final-report`
+
+The failure-mode matrix, guard design, and resilience strategy gate
+implementation. Completion requires verification of the intended failure
+handling and an accepted judge `PASS`.
 
 ## Extraction
 
@@ -210,6 +241,8 @@ npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root
 ```
 
 Do not use target repository indexing to infer source behavior. Source and target indices must stay separate.
+Write the synthesized result to
+`artifacts/source-architecture-context-packet.txt`.
 
 #### `source-workflow-map`
 
@@ -308,7 +341,11 @@ Summarize:
 - Do not recreate the old architecture wholesale inside the target project.
 - Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly in scope.
 - Do not preserve old UI labels if they conflict with the new workflow.
-- Do not implement before all five extraction artifacts are complete.
+- Five pre-implementation analysis stages produce six extraction gate files:
+  `source-architecture-context`, `source-workflow-map`, `porting-map` (which
+  produces both the porting map and `do-not-port-list.txt`),
+  `golden-behavior-contract`, and `target-architecture`. Do not implement until
+  all six files are complete.
 - Do not mark the run as passed unless the judge report confirms that the target implementation satisfies the golden behavior contract.
 - Modify only the target repository unless the user explicitly permits source repository changes.
 

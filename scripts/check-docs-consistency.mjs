@@ -44,9 +44,29 @@ function extractWorkflowFacts(root) {
     /GREENFIELD_STAGE_NAMES:\s*string\[\]\s*=\s*\[([\s\S]*?)\]/,
     'GREENFIELD_STAGE_NAMES',
   );
+  const artifactMapBody = source.match(/const ARTIFACT_MAP:[\s\S]*?=\s*\{([\s\S]*?)\.\.\.GREENFIELD_ARTIFACT_MAP,/);
+  if (!artifactMapBody) throw new Error('Could not extract ARTIFACT_MAP');
+  const artifactFilesByStage = Object.fromEntries(
+    [...artifactMapBody[1].matchAll(/'([^']+)':\s*'([^']+)'/g)].map((match) => [match[1], match[2]]),
+  );
+  const additionalMapBody = source.match(/const ADDITIONAL_ARTIFACT_MAP:[\s\S]*?=\s*\{([\s\S]*?)\};/);
+  if (!additionalMapBody) throw new Error('Could not extract ADDITIONAL_ARTIFACT_MAP');
+  const additionalArtifactFilesByStage = Object.fromEntries(
+    [...additionalMapBody[1].matchAll(/'([^']+)':\s*\[([^\]]+)\]/g)].map((match) => [match[1], quotedItems(match[2])]),
+  );
+  const extractionAnalysisStages = workflows.extraction.slice(
+    workflows.extraction.indexOf('source-architecture-context'),
+    workflows.extraction.indexOf('behavior-model'),
+  );
+  const extractionGateArtifacts = extractionAnalysisStages.flatMap((stage) => [
+    artifactFilesByStage[stage],
+    ...(additionalArtifactFilesByStage[stage] ?? []),
+  ]);
   return {
     stageOrderByMode: workflows,
     nativeStageCount: Object.values(workflows).reduce((total, stages) => total + stages.length, 0),
+    extractionAnalysisStages,
+    extractionGateArtifacts,
   };
 }
 
@@ -68,6 +88,18 @@ function extractGreenfieldProfiles(root) {
     /SUPPORTED_PROFILES:\s*Record<GreenfieldProfileId,\s*GreenfieldProfile>\s*=\s*\{([\s\S]*?)\}/,
     'SUPPORTED_PROFILES',
   );
+}
+
+function extractStructuredGreenfieldArtifacts(root) {
+  const source = readText(root, 'src/greenfield/modes/greenfieldMode.ts');
+  const mapBody = source.match(/GREENFIELD_ARTIFACT_MAP:[\s\S]*?=\s*\{([\s\S]*?)\};/);
+  if (!mapBody) throw new Error('Could not extract GREENFIELD_ARTIFACT_MAP');
+  return [...mapBody[1].matchAll(/'[^']+':\s*'([^']+\.json)'/g)].map((match) => match[1]);
+}
+
+function customOutputRunRediscoverySupported(root) {
+  const followupCommands = ['prompt', 'status', 'list', 'mark', 'check', 'export'];
+  return followupCommands.every((command) => readText(root, `src/commands/${command}.ts`).includes('--output-dir'));
 }
 
 function extractContextFacts(root) {
@@ -299,6 +331,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const workflowFacts = extractWorkflowFacts(root);
   const cliCommands = extractCliCommands(root);
   const greenfieldProfiles = extractGreenfieldProfiles(root);
+  const structuredGreenfieldArtifacts = extractStructuredGreenfieldArtifacts(root);
+  const customOutputRediscovery = customOutputRunRediscoverySupported(root);
   const contextFacts = extractContextFacts(root);
   const schemaVersions = extractSchemaVersions(root);
   const contextReadinessBlockerFields = extractInterfaceFields(
@@ -332,6 +366,11 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'nativeStageCount', workflowFacts.nativeStageCount, facts.nativeStageCount);
   compareFact(issues, manifestPath, 'greenfieldStageCount', workflowFacts.stageOrderByMode.greenfield.length, facts.greenfieldStageCount);
   compareFact(issues, manifestPath, 'greenfieldProfileCount', greenfieldProfiles.length, facts.greenfieldProfileCount);
+  compareFact(issues, manifestPath, 'extractionAnalysisStageCount', workflowFacts.extractionAnalysisStages.length, facts.extractionAnalysisStageCount);
+  compareFact(issues, manifestPath, 'extractionGateArtifactCount', workflowFacts.extractionGateArtifacts.length, facts.extractionGateArtifactCount);
+  compareFact(issues, manifestPath, 'extractionGateArtifacts', workflowFacts.extractionGateArtifacts, manifest.extractionGateArtifacts);
+  compareFact(issues, manifestPath, 'structuredGreenfieldArtifacts', structuredGreenfieldArtifacts, manifest.structuredGreenfieldArtifacts);
+  compareFact(issues, manifestPath, 'customOutputRunRediscoverySupported', customOutputRediscovery, facts.customOutputRunRediscoverySupported);
   compareFact(issues, manifestPath, 'contextSensitiveStageCount', contextFacts.contextSensitiveStages.length, facts.contextSensitiveStageCount);
   compareFact(issues, manifestPath, 'implementationContextStageCount', contextFacts.implementationStages.length, facts.implementationContextStageCount);
   compareFact(issues, manifestPath, 'testContextStageCount', contextFacts.testStages.length, facts.testContextStageCount);
@@ -379,11 +418,11 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   requireTokens(issues, 'README.md', readme, [pkg.name, 'current release', '1.2.3', 'eight commands', 'seven workflow modes', '79 native stages']);
   requireTokens(issues, 'CHANGELOG.md', changelog, ['v1.2.3', 'Release date: 2026-08-01', 'v1.2.2', 'Release date: 2026-07-28', 'v1.2.1', 'Release date: 2026-07-21', 'v1.2.0']);
   requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.2.3', 'Released as `1.2.3`', '2026-08-01', 'Published v1.2.2', 'Published as `1.2.2`', '2026-07-28', 'Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
-  requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages']);
+  requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages', ...workflowFacts.extractionGateArtifacts]);
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
-  requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths]);
+  requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths, ...workflowFacts.extractionGateArtifacts, ...structuredGreenfieldArtifacts]);
   requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'no JSON option', 'refresh-only', ...contextFacts.fixedPaths]);
-  requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'Node.js 24.11.0', 'live cross-platform CI evidence']);
+  requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'src/__tests__/', 'tests/greenfield/']);
   for (const documentPath of ['docs/ARCHITECTURE.md', 'docs/ARTIFACTS.md']) {
     requireTokens(
       issues,
@@ -490,6 +529,75 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   for (const profile of greenfieldProfiles) {
     if (!readme.includes(`\`${profile}\``) && !workflowsText.includes(`\`${profile}\``)) {
       addIssue(issues, 'GREENFIELD_PROFILE_CLAIM_MISSING', 'README.md; docs/WORKFLOWS.md', `current profile ${profile}`, 'missing', 'Document every source-defined greenfield profile.');
+    }
+  }
+
+  const versionSummary = section(roadmap, '## Version summary', 2);
+  const roadmapCandidateTokens = [...new Set(Object.values(manifest.roadmapCandidateAssignments).flat())];
+  for (const [version, expectedCandidates] of Object.entries(manifest.roadmapCandidateAssignments)) {
+    const detail = section(roadmap, `### ${version}`, 3);
+    const escapedVersion = version.replace(/\./g, '\\.');
+    const summaryLine = versionSummary.match(new RegExp('^- `' + escapedVersion + '`[\\s\\S]*?(?=\\r?\\n- `v|(?![\\s\\S]))', 'm'))?.[0] ?? '';
+    for (const candidate of expectedCandidates) {
+      if (!detail.includes(`\`${candidate}\``) || !summaryLine.includes(`\`${candidate}\``)) {
+        addIssue(issues, 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT', 'docs/ROADMAP.md', `${candidate} assigned to ${version} in summary and detail`, 'candidate missing from one owner', 'Restore the preserved version assignment without moving other candidates.');
+      }
+    }
+    for (const candidate of roadmapCandidateTokens.filter((value) => !expectedCandidates.includes(value))) {
+      if (detail.includes(`\`${candidate}\``) || summaryLine.includes(`\`${candidate}\``)) {
+        addIssue(issues, 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT', 'docs/ROADMAP.md', `${candidate} absent from ${version}`, 'candidate assigned to the wrong version', 'Keep v1.3.0 and v1.5.0 candidate inventories separate.');
+      }
+    }
+    if (/\b(?:implemented|published|released as)\b/i.test(detail)) {
+      addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'implemented or published wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
+    }
+  }
+
+  for (const [documentPath, content] of [
+    ['docs/USAGE.md', usage],
+    ['docs/WORKFLOWS.md', workflowsText],
+    ['docs/ARTIFACTS.md', artifacts],
+  ]) {
+    if (/all\s+five[^\n]{0,80}(?:extraction|pre-implementation)?\s*artifacts/i.test(content)) {
+      addIssue(issues, 'EXTRACTION_GATE_FILE_COUNT_DRIFT', documentPath, 'five analysis stages produce six gate artifact files', 'five artifact files claimed', 'Distinguish stage count from artifact-file count.');
+    }
+    const describesFiveAndSix = /five\s+pre-implementation\s+analysis\s+stages[\s\S]{0,180}six\s+(?:extraction\s+)?gate\s+(?:artifact\s+)?files/i.test(content)
+      || /five\s+pre-implementation\s+analysis\s+stages[\s\S]{0,180}all\s+six/i.test(content);
+    if (!describesFiveAndSix) {
+      addIssue(issues, 'EXTRACTION_GATE_FILE_COUNT_DRIFT', documentPath, 'five analysis stages and six gate artifact files', 'relationship missing or ambiguous', 'Document the dual output of the porting-map stage semantically.');
+    }
+  }
+
+  if (/^Artifacts are plain-text handoff files/m.test(artifacts)
+      || !/Most native[\s\S]{0,100}plain text/i.test(artifacts)
+      || !/structured JSON/i.test(artifacts)) {
+    addIssue(issues, 'ARTIFACT_FORMAT_COLLAPSE', 'docs/ARTIFACTS.md', 'mostly text artifacts plus selected structured greenfield JSON contracts', 'universal plain-text claim or missing format distinction', 'Describe both implemented formats without implying universal schema-heavy validation.');
+  }
+
+  const knownLimitations = section(architecture, '## Known limitations', 2);
+  if (/1\.10\.2/.test(knownLimitations)) {
+    addIssue(issues, 'RESOLVED_PRODUCER_LIMITATION_STILL_CURRENT', 'docs/ARCHITECTURE.md', 'manual retrieval and producer CLI selection as the current limitation', 'resolved 1.10.2 mismatch described as current', 'Keep the 1.10.2 mismatch only in explicitly historical release material.');
+  }
+  if (!/retrieval[\s\S]{0,120}CLI selection[\s\S]{0,120}manual/i.test(knownLimitations)) {
+    addIssue(issues, 'CURRENT_PRODUCER_LIMITATION_MISSING', 'docs/ARCHITECTURE.md', 'manual repository retrieval and producer CLI selection', 'current manual boundary missing', 'Document the implemented manual integration boundary.');
+  }
+
+  const outputDirSection = section(usage, '## Start a run', 2);
+  if (!/--output-dir[\s\S]{0,900}(?:cannot|can not)[\s\S]{0,80}rediscover/i.test(outputDirSection)) {
+    addIssue(issues, 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING', 'docs/USAGE.md', 'custom-output runs cannot be rediscovered by follow-up commands in v1.2.3', 'limitation missing', 'Document the safe default-directory sequence.');
+  }
+
+  const promptSection = section(usage, '## Print prompts', 2);
+  if (/first stage whose expected artifact file is missing/i.test(promptSection)
+      || !/effective[\s\S]{0,60}gate-aware[\s\S]{0,80}not complete/i.test(promptSection)) {
+    addIssue(issues, 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT', 'docs/USAGE.md', 'first stage whose effective gate-aware state is not complete', 'missing-file-only selection wording', 'Describe lifecycle, context, and final-report eligibility semantics.');
+  }
+
+  const staleCurrentResidue = /v1\.2\.3\s+(?:is|remains|was|is described as)\s+(?:unpublished|pending|release-prepared|awaiting|blocked)\b|GITHUB_ACTIONS_FAILED_ON_RELEASE_PR|PR #5|LICENSE[^\n]{0,50}allowlist/i;
+  for (const documentPath of currentTechnicalDocs) {
+    const match = (byPath[documentPath] ?? '').match(staleCurrentResidue);
+    if (match) {
+      addIssue(issues, 'CURRENT_RELEASE_RESIDUE', documentPath, 'published v1.2.3 current state', match[0], 'Remove temporary release blockers from current-state documentation.');
     }
   }
 

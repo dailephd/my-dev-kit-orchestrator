@@ -70,11 +70,19 @@ Use a readable run suffix:
 my-dev-kit-orchestrator start --name prompt-hardening "guard invalid run IDs in prompt command"
 ```
 
-Write runs outside the default workspace:
+`start --output-dir <path>` can place a run outside the default workspace:
 
 ```bash
 my-dev-kit-orchestrator start --output-dir /tmp/orchestrator-runs "add release summary output"
 ```
+
+In `v1.2.3`, this is a placement-only option. `prompt`, `status`, `list`,
+`mark`, `check`, and `export` search only
+`.my-dev-kit-orchestrator/runs/` under the selected project root, and none of
+them accepts `--output-dir`. They cannot rediscover or select a custom-output
+run, even with `--run`. For a resumable workflow, omit `--output-dir` and use
+the default run directory. If a custom-output run already exists, its files
+remain inspectable on disk, but the public CLI cannot advance that run.
 
 Result:
 
@@ -161,8 +169,13 @@ my-dev-kit-orchestrator prompt verification --run 20260621T120000-release-docs
 
 Behavior notes:
 
-- `prompt` without a stage prints the first stage whose expected artifact file is missing
-- `prompt <stage>` refuses to continue if prior required artifacts are missing
+- `prompt` without a stage selects the first stage whose effective,
+  gate-aware artifact state is not complete; incomplete, blocked, stale,
+  context-blocked, and final-report-ineligible stages remain current
+- `prompt <stage>` refuses to continue when a prior required artifact file is
+  missing; selecting a stage explicitly does not bypass that stage's lifecycle
+  or run-integrity decision, so a context-blocked implementation or test stage
+  produces recovery guidance instead of normal work
 - completed runs print a completion message instead of another stage prompt
 
 ## Save artifacts between prompts
@@ -307,7 +320,9 @@ The current runtime loop is:
 1. start the extraction run
 2. work through the extraction stages in order
 3. save each extraction artifact before moving to the next stage
-4. no implementation until all five pre-implementation artifacts are complete
+4. no implementation until the five pre-implementation analysis stages have
+   produced all six gate artifact files; `porting-map` produces both the
+   source-to-target map and the do-not-port list
 5. implement only in the target repository
 6. verify against the golden behavior contract in the judge stage
 
@@ -870,6 +885,8 @@ Export behavior:
   `check`, or `export`.
 - If a selected run cannot be found, confirm the value passed to `--run` and
   the project selected by `--root`.
+- If a run was created with `start --output-dir`, current follow-up commands
+  cannot rediscover it. Use the default run directory for resumable runs.
 - A new run can make `check --artifacts` or `check --all` exit with status 1
   because required artifacts are missing. The result is a completed structural
   check with findings, not evidence of a CLI crash.

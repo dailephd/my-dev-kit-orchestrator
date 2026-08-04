@@ -24,6 +24,7 @@ function makeFixture(): string {
     'src/workflows.ts',
     'src/program.ts',
     'src/greenfield/modes/greenfieldStages.ts',
+    'src/greenfield/modes/greenfieldMode.ts',
     'src/greenfield/profiles/resolveGreenfieldProfile.ts',
     'src/instructions/catalogTypes.ts',
     'src/instructions/workflowInstructionPacket.ts',

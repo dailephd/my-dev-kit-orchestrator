@@ -116,7 +116,7 @@ generated stage prompt to a coding agent, save the requested artifact, and run
 To work from this repository instead:
 
 ```bash
-npm install
+npm ci
 npm run build
 node dist/cli.js init
 node dist/cli.js start "Add audit logging"
@@ -189,6 +189,9 @@ or release workflows.
   specialized greenfield scaffold renderer; they still receive catalog
   entries and instruction-packet sidecars.
 - `status` is human-readable and has no JSON option.
+- `start --output-dir` creates a run in the requested directory, but the other
+  commands in `v1.2.3` cannot rediscover custom-output runs. Omit this option
+  for a run that must be resumed through the CLI.
 
 ## Documentation
 

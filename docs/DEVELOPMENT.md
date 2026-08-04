@@ -3,12 +3,9 @@
 ## Prerequisites
 
 Node.js 24 or later is required, and `package.json` declares `>=24`. The
-ordinary validation workflow requires Node.js 24, while the pre-release
-matrix also uses Node.js 26 as supplementary forward-compatibility evidence.
-Both
-workflows cover `ubuntu-latest`, `windows-latest`, and `macos-15`. Local
-compatibility validation used Node.js 24.11.0. The completed feature branch also
-has live cross-platform CI evidence from its validation checkpoint.
+ordinary validation workflow requires Node.js 24. The pre-release matrix also
+uses Node.js 26 as supplementary forward-compatibility evidence. Both workflows
+cover `ubuntu-latest`, `windows-latest`, and `macos-15`.
 
 ## Local setup
 
@@ -92,7 +89,8 @@ Important implementation files:
 - `src/workflows.ts`: workflow stage order and artifact mappings
 - `src/promptGenerator.ts`: stage-specific prompt text generation
 - `src/run.ts`: run creation and run metadata handling
-- `src/stageDetector.ts`: artifact presence checks and next-stage detection
+- `src/stageDetector.ts`: effective lifecycle and run-integrity-aware next-stage
+  detection, with file-presence helpers retained for backward compatibility
 - `src/workspace.ts`: workspace creation and config handling
 - `src/artifactChecker.ts`: artifact content checks and section requirement registry (v0.4.0)
 - `src/promptChecker.ts`: prompt quality checks and check-results persistence (v0.4.0)
@@ -119,6 +117,11 @@ Important implementation files:
 - Keep run folders local and untracked.
 - When behavior changes, keep docs aligned with real CLI output, stage definitions, artifact paths, and package metadata.
 - Run `npm run docs:check` when changing user-facing documentation.
+- Update the preservation manifest when a canonical document role, protected
+  structure, or source-owned inventory changes; extend the existing checker
+  instead of adding a parallel documentation framework.
+- Review `git status`, stage exact files, and keep generated reports, build
+  output, coverage, package archives, and local run/index state untracked.
 
 ## Instruction and context source ownership
 
