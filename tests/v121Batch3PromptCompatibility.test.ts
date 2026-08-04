@@ -26,6 +26,22 @@ const DIRECT_CONTEXT_SENSITIVE_KEYS = new Set(
   }),
 );
 
+// v1.3.0 Batch 4: these four greenfield prompts' return-format templates
+// were deliberately extended with the new structured evidence sections
+// (Profile / Files changed / Commands run / Commands verified / per-doc-name
+// sections) so evaluateGreenfieldReadiness() has a well-defined,
+// machine-parseable encoding to consume -- see
+// src/greenfield/readiness/. This is intentional, approved return-format
+// drift, not a regression; the frozen prompt-structure.json baseline
+// predates it and is not regenerated (same convention as the `final-report`
+// exclusion below).
+const BATCH_4_RETURN_FORMAT_CHANGED_KEYS = new Set([
+  'greenfield:project-docs',
+  'greenfield:scaffold-implementation',
+  'greenfield:first-vertical-slice',
+  'greenfield:verification',
+]);
+
 interface PromptStructureEntry {
   mode: string;
   stage: string;
@@ -136,7 +152,8 @@ describe('v1.2.1 prompt structure compatibility (Batch 3)', () => {
       if (current.requiredOutputArtifactLine !== entry.requiredOutputArtifactLine)
         mismatches.push({ key, field: 'requiredOutputArtifactLine' });
       if (current.outputFileLine !== entry.outputFileLine) mismatches.push({ key, field: 'outputFileLine' });
-      if (current.returnFormatHash !== entry.returnFormatHash) mismatches.push({ key, field: 'returnFormat' });
+      if (!BATCH_4_RETURN_FORMAT_CHANGED_KEYS.has(key) && current.returnFormatHash !== entry.returnFormatHash)
+        mismatches.push({ key, field: 'returnFormat' });
     }
     expect(mismatches).toEqual([]);
   });

@@ -28,6 +28,16 @@ export const GREENFIELD_STAGE_TO_KIND: Record<string, string> = {
   'initial-index': 'InitialIndexReport',
 };
 
+// v1.3.0 Batch 4: the required lists below stay exactly as approved by
+// Batch 1-3 (generic Artifact/Workflow mode/Status only). checkArtifact()
+// applies this SECTION_REGISTRY unconditionally to every run, old and new
+// alike, with no legacy discriminator -- adding the new Batch 4 structured
+// sections (Profile, Files changed, Commands run, per-doc-name sections,
+// etc.) here would retroactively fail every pre-Batch-4 run's generic
+// artifact check, which the approved compatibility policy forbids. Those
+// new sections are optional as far as this generic registry is concerned;
+// evaluateGreenfieldReadiness() (src/greenfield/readiness/) enforces them
+// with its own artifact-section-presence legacy discriminator instead.
 export const GREENFIELD_SECTION_REGISTRY: Record<string, SectionRequirements> = {
   IdeaBrief: { required: ['Artifact', 'Workflow mode', 'Status'] },
   ProductBoundary: { required: ['Artifact', 'Workflow mode', 'Status'] },

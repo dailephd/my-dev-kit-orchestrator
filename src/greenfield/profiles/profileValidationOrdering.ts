@@ -30,6 +30,22 @@ const PHASE_WEIGHT_BY_CODE: ReadonlyMap<string, number> = new Map([
   // phase: commands (scaffold-plan command conformance)
   ['GF_PLAN_COMMAND_MISSING', 7],
   ['GF_PLAN_CONTRADICTORY_CLAIM', 7],
+  // phase: report evidence
+  ['GF_SCAFFOLD_REPORT_MISSING', 8],
+  ['GF_SCAFFOLD_REPORT_STALE', 8],
+  ['GF_GENERATED_EVIDENCE_MISSING', 8],
+  ['GF_GENERATED_EVIDENCE_CONFLICT', 8],
+  // phase: first slice
+  ['GF_FIRST_SLICE_MISSING', 9],
+  ['GF_FIRST_SLICE_INCOMPLETE', 9],
+  ['GF_FIRST_SLICE_BOILERPLATE', 9],
+  ['GF_FIRST_SLICE_PROFILE_MISMATCH', 9],
+  // phase: verification
+  ['GF_COMMAND_EVIDENCE_MISSING', 10],
+  ['GF_COMMAND_PASS_UNSUPPORTED', 10],
+  ['GF_OPTIONAL_SKIP_REASON_MISSING', 10],
+  // phase: lifecycle/compatibility
+  ['GF_LEGACY_EVIDENCE_NOT_EVALUATED', 11],
 ]);
 
 const PHASE_WEIGHT_BY_PREFIX: ReadonlyArray<{ prefix: string; weight: number }> = [

@@ -84,8 +84,12 @@ Task:
 Implement the scaffold exactly as described in scaffold-plan.txt and record the result in ${ctx.runFolder}/reports/scaffold-implementation-report.txt (artifact: ScaffoldImplementationReport).
 
 The ScaffoldImplementationReport must include:
-- files changed
-- commands run, if any
+- the selected profile id
+- files changed, one normalized relative path per line (e.g. "- src/cli.ts")
+- commands run, if any, one per line in the exact form
+  "- <command text>: passed" / "- <command text>: failed" /
+  "- <command text>: skipped, <nonblank reason>", using the command text
+  exactly as it appears in the selected profile's setupCommands
 - deviations from the scaffold plan
 - blockers
 - risks
@@ -102,6 +106,7 @@ Return format:
 Produce the artifact as a plain-text file using the template:
   Artifact: ScaffoldImplementationReport
   Workflow mode: greenfield
+  Profile: <selected profile id>
   Files changed: ...
   Commands run: ...
   Deviations: ...

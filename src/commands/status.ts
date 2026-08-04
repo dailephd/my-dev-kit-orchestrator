@@ -15,6 +15,7 @@ import { readTraceCheckResults } from '../traceChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
+import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -229,6 +230,28 @@ export function makeStatusCommand(): Command {
         }
       }
       lines.push(``);
+
+      // v1.3.0 Batch 4: greenfield readiness (section 9.1). Read-only;
+      // no-op for non-greenfield runs and for a greenfield run with no
+      // profile selected yet.
+      const greenfieldReadiness = checkGreenfieldRunReadiness(meta);
+      if (greenfieldReadiness) {
+        const state = greenfieldReadiness.legacyRun
+          ? 'legacy-compatible'
+          : greenfieldReadiness.ready
+            ? 'ready'
+            : greenfieldReadiness.valid
+              ? 'incomplete'
+              : 'invalid';
+        lines.push(`Greenfield readiness: ${state}`);
+        lines.push(
+          `  Filesystem corroboration: ${greenfieldReadiness.filesystemCorroborationPerformed ? 'performed' : 'not performed'}`,
+        );
+        const errorCount = greenfieldReadiness.issues.filter((i) => i.severity === 'error').length;
+        const warningCount = greenfieldReadiness.issues.filter((i) => i.severity === 'warning').length;
+        lines.push(`  Issues: ${errorCount} error(s), ${warningCount} warning(s)  (run: my-dev-kit-orchestrator check)`);
+        lines.push(``);
+      }
 
       if (nextStage) {
         lines.push(`Next:`);

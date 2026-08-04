@@ -66,12 +66,14 @@ describe('v1.2.0 prompt compatibility (Batch 2 baseline fixture)', () => {
   // proves it still faithfully records the original v1.2.0 output; it is no
   // longer used to assert byte-identical prompts for non-migrated stages,
   // because after Batch 3 there are no non-migrated native stages left.
-  // scaffold-plan/scaffold-implementation render via
-  // src/greenfield/scaffold/renderScaffoldPrompt.ts, a forbidden file for
-  // this batch (see the Batch 3 final report's "narrow proposed resolution"
-  // for these two stages) -- they remain on legacy rendering and are the one
-  // documented exception to full migration.
-  const DOCUMENTED_LEGACY_EXCEPTIONS = new Set(['greenfield:scaffold-plan', 'greenfield:scaffold-implementation']);
+  // scaffold-plan renders via src/greenfield/scaffold/renderScaffoldPrompt.ts
+  // and remains on legacy rendering -- the one documented exception to full
+  // migration. scaffold-implementation (same file) was intentionally
+  // modified in v1.3.0 Batch 4 to add the new structured evidence template
+  // (Profile / Files changed / Commands run) that evaluateGreenfieldReadiness()
+  // consumes, so it is no longer byte-identical to its v1.2.0 baseline and
+  // is removed from this exception set below.
+  const DOCUMENTED_LEGACY_EXCEPTIONS = new Set(['greenfield:scaffold-plan']);
 
   it('every stage prompt has migrated away from its v1.2.0 baseline hash, except the documented legacy exceptions', () => {
     const stillIdentical: string[] = [];
