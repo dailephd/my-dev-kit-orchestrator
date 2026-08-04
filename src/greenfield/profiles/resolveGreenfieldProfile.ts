@@ -25,8 +25,16 @@ import {
 import { TYPESCRIPT_CLI_PROFILE } from './typescriptCliProfile';
 import { NEXTJS_APP_PROFILE } from './nextjsAppProfile';
 import { ANDROID_COMPOSE_PROFILE } from './androidComposeProfile';
+import { normalizeGreenfieldProfileIdentifier } from './profileIdentifierNormalization';
+import { ProfileRegistryValidationResult } from './profileValidationTypes';
+import { validateGreenfieldProfileRegistry } from './validateGreenfieldProfileRegistry';
 
-const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> = {
+// Exported (v1.3.0) so the shared profile/registry validator
+// (validateGreenfieldProfileRegistry.ts) can validate the single current
+// registry without a second registry being created. Resolution behavior
+// below is unchanged; this is an additive, read-only export of the existing
+// private table.
+export const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> = {
   'typescript-cli': TYPESCRIPT_CLI_PROFILE,
   'nextjs-app': NEXTJS_APP_PROFILE,
   'android-compose': ANDROID_COMPOSE_PROFILE,
@@ -38,7 +46,9 @@ const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> = {
 // "android compose" and "kotlin compose"/"jetpack compose" (spaced) already
 // normalize to their exact catalog/alias key via the existing
 // lowercase+dash-join step, so they do not need separate entries here.
-const PROFILE_ALIASES: Record<string, GreenfieldProfileId> = {
+//
+// Exported (v1.3.0) for the same reason as SUPPORTED_PROFILES above.
+export const PROFILE_ALIASES: Record<string, GreenfieldProfileId> = {
   android: 'android-compose',
   'kotlin-compose': 'android-compose',
   'jetpack-compose': 'android-compose',
@@ -71,11 +81,25 @@ export function resolveGreenfieldProfile(
   return resolveFallbackProfile(normalized);
 }
 
+/**
+ * v1.3.0 Batch 1: validates the current built-in registry (SUPPORTED_PROFILES
+ * and PROFILE_ALIASES above) with the shared profile/registry validator. This
+ * is the registry-boundary integration point Batch 0 assigned to Batch 1; it
+ * does not change resolveGreenfieldProfile's resolution behavior and is not
+ * yet wired into any command, status, or check surface (that integration is
+ * Batch 4's shared artifact/contract-checking scope).
+ */
+export function validateSupportedGreenfieldProfileRegistry(): ProfileRegistryValidationResult {
+  const entries = Object.values(SUPPORTED_PROFILES);
+  const aliases = Object.entries(PROFILE_ALIASES).map(([alias, profileId]) => ({ alias, profileId }));
+  return validateGreenfieldProfileRegistry(entries, aliases);
+}
+
 function resolveExplicitProfile(
   normalized: NormalizedGreenfieldBrief,
   requested: string,
 ): GreenfieldProfileSelection {
-  const normalizedId = requested.trim().toLowerCase().replace(/\s+/g, '-');
+  const normalizedId = normalizeGreenfieldProfileIdentifier(requested);
 
   if (AMBIGUOUS_MOBILE_PROFILE_IDS.has(normalizedId)) {
     return {
