@@ -548,8 +548,12 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
         addIssue(issues, 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT', 'docs/ROADMAP.md', `${candidate} absent from ${version}`, 'candidate assigned to the wrong version', 'Keep v1.3.0 and v1.5.0 candidate inventories separate.');
       }
     }
-    if (/\b(?:implemented|published|released as)\b/i.test(detail)) {
-      addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'implemented or published wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
+    const implementedUnpublished = (manifest.protectedFacts.implementedUnpublishedVersions ?? []).includes(version);
+    if (containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i)) {
+      addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} is not published`, 'published or released-as wording found', 'Restore not-yet-published wording; do not present unpublished work as shipped.');
+    }
+    if (!implementedUnpublished && /\bimplemented\b/i.test(detail)) {
+      addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'implemented wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
     }
   }
 

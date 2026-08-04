@@ -31,6 +31,22 @@ release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 `@dailephd/my-dev-kit@1.10.4` producer contract and requires Node.js 24 or
 later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v123) for its scope.
 
+## Greenfield profile and scaffold verification (implemented, unpublished)
+
+The current source implements v1.3.0 work not yet published to npm: shared
+profile and registry validation, explicit command and documentation
+contracts, exact and bounded-pattern scaffold-target expectations with path
+safety, scaffold-plan and persisted-scaffold-plan validation, layered
+generated-file and verification-command evidence, and first-vertical-slice
+readiness, applied to all three current starter profiles. `status` and
+`check`/`check --all` surface the result using the existing deterministic
+issue model, and a run created before this validation existed receives
+explicit legacy compatibility treatment rather than being retroactively
+failed. No new starter profile, CLI command, workflow mode, or native stage
+was added, and no command is executed by any of this. See
+[docs/ROADMAP.md](docs/ROADMAP.md#implemented-v130-not-yet-published) for
+delivered scope.
+
 ## Run-integrity enforcement (v1.2.3)
 
 A one-time producer-adequacy defect let a repository-context-blocked run

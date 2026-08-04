@@ -1,5 +1,51 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- shared, immutable profile-local and registry-wide validation for every
+  current greenfield starter profile, with stable `GF_*` issue codes
+  (code, severity, profile, affected contract, reason, corrective action)
+- explicit command contracts (`setupCommands`/`validationCommands`) with
+  required-versus-optional classification and honest `environmentNotes`
+  applicability guidance, plus a closed, profile-owned documentation
+  terminology vocabulary
+- exact and bounded-pattern target expectations per profile, including
+  path-safety normalization (traversal/absolute rejection) and bounded
+  overlap detection between expectations
+- scaffold-plan conformance validation against the selected profile's
+  targets and commands, and deterministic parsing of a persisted
+  `scaffold-plan.txt` artifact back into a validated plan
+- layered generated-file evidence: profile-required targets are checked
+  against the scaffold implementation report, with optional read-only
+  filesystem corroboration that never treats a directory or symlink as
+  satisfying a file expectation
+- verification-command evidence parsing, including honest optional-command
+  skip reasons and detection of unsupported "passed" claims with no
+  recorded evidence
+- first-vertical-slice readiness checks tied to the selected profile and
+  product boundary
+- `status` and `check`/`check --all` now surface greenfield scaffold and
+  readiness findings using the same shared, deterministic issue model as
+  every other check
+- explicit, deterministic compatibility treatment for greenfield runs
+  created before this validation existed, so older runs are not
+  retroactively failed for evidence they could not have produced
+- strengthened fixture coverage across all three current starter profiles
+  (`typescript-cli`, `nextjs-app`, `android-compose`), including disk-backed
+  readiness coverage through the real run-reading path, not only in-memory
+  evaluation
+
+### Compatibility and limits
+
+- no new CLI command, workflow mode, or native stage
+- no new starter profile; three profiles remain supported
+- no command execution is performed by any of the above; profile setup and
+  validation commands remain descriptive guidance only
+- old runs, existing artifact filenames, and existing lifecycle behavior
+  remain compatible
+
 ## v1.2.3 - Run-Integrity and Judge-Verdict Enforcement
 
 Release date: 2026-08-01.

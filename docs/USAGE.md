@@ -146,6 +146,13 @@ handoff used by other modes. `--out` rejects raw `..` path-traversal segments
 in the given argument and refuses symlink or directory targets before writing
 anything.
 
+Once a profile is selected, `status` and `check`/`check --all` also report
+scaffold and readiness findings for the run: whether the scaffold plan
+conforms to the selected profile, whether generated-file and
+verification-command evidence is present, and whether the first vertical
+slice is complete. A run created before this validation existed receives
+explicit legacy treatment instead of being retroactively failed.
+
 ## Print prompts
 
 Print the next prompt for the most recent run:

@@ -2,9 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.2.3` is the current release. `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`,
-`v1.0.0`, and the `v0.x.0` releases remain part of the published project
-history. Versions after `v1.2.3` are planned milestones.
+`v1.2.3` is the current published release. `v1.2.2`, `v1.2.1`, `v1.2.0`,
+`v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part of the published
+project history. `v1.3.0` is implemented on the feature branch but not yet
+published. Versions after `v1.3.0` are planned milestones.
 
 ## Version summary
 
@@ -21,9 +22,16 @@ history. Versions after `v1.2.3` are planned milestones.
 - `v1.2.1` publishes a stable instruction catalog, deterministic per-stage packets and sidecars, manually supplied repository-context contracts, readiness gates, and additive status/check/export/judge integration without changing the CLI or native workflows.
 - `v1.2.2` implements actionable fail-closed readiness blockers, consistent consumer propagation, responsibility-parser hardening, a historical readiness matrix, and permanent documentation anti-drift checks.
 - `v1.2.3` corrects a producer-adequacy defect that let a repository-context-blocked run reach a normal `PASS` final report; it adds one canonical run-integrity decision, canonical judge-verdict acceptance, and final-report eligibility enforcement across every readiness-sensitive command. Released on 2026-08-01 and revalidated against `@dailephd/my-dev-kit@1.10.4`.
-- `v1.3.0` will expand greenfield scaffold verification and profile readiness,
-  including possible `android-xml` and `python-cli` evaluation and stronger
-  `typescript-cli` and `nextjs-app` profiles.
+- `v1.3.0` is implemented but not yet published. It strengthens the existing
+  `typescript-cli` and `nextjs-app` profiles (and confirms `android-compose`
+  shared compliance) with shared profile and registry validation, explicit
+  command and documentation contracts, exact and bounded-pattern
+  scaffold-target expectations with path safety, scaffold-plan and
+  persisted-scaffold-plan validation, layered generated-file and
+  verification-command evidence, first-vertical-slice readiness, and
+  `status`/`check` readiness integration. It does not add a new starter
+  profile; possible `android-xml` and `python-cli` evaluation remains a
+  future candidate decision (see "Planned milestones").
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -593,36 +601,59 @@ Exclusions:
   integrity, or readiness authority
 - no automatic package release or publication behavior in the CLI
 
-## Planned milestones
+## Implemented v1.3.0 (not yet published)
 
 ### v1.3.0 - Mobile Profile Expansion and Scaffold Verification
 
+Status:
+Implemented on the feature branch; not yet published to npm.
+
 Goal:
-Strengthen the greenfield profile system so additional starter profiles can be added without duplicating platform-specific logic.
+Strengthen the greenfield profile system so additional starter profiles can be added later without duplicating platform-specific logic.
 
-Planned features:
+Delivered scope:
 
-- profile contract validation
-- scaffold-plan validation across profiles
-- profile-specific verification command registry
-- profile-specific docs template validation
-- first-vertical-slice readiness checks
-- generated-file expectation checks
-- profile fixture tests
-- improved failure messages for incomplete starter profiles
-
-Possible additional profiles:
-
-- `android-xml`
-- `python-cli`
-- stronger `typescript-cli`
-- stronger `nextjs-app`
+- shared, immutable profile-local and registry-wide validation (required
+  fields, duplicate IDs, alias collisions) with stable `GF_*` issue codes
+- explicit command contracts: required-versus-optional classification,
+  duplicate/malformed command detection, and honest `environmentNotes`
+  applicability guidance for commands the orchestrator cannot verify
+- a closed, profile-owned documentation terminology vocabulary and
+  documentation-requirement/unsupported-claim validation
+- exact and bounded-pattern scaffold-target expectations per profile, lexical
+  path-safety normalization (traversal/absolute rejection before any
+  filesystem access), and bounded-pattern overlap detection
+- scaffold-plan conformance validation against the selected profile, and
+  deterministic parsing of a persisted `scaffold-plan.txt` artifact into a
+  validated plan
+- layered generated-file evidence (profile-required targets checked against
+  the scaffold implementation report, with optional read-only filesystem
+  corroboration that rejects directories and symlinks as file evidence)
+- verification-command evidence parsing, honest optional-skip reasons, and
+  detection of unsupported "passed" claims with no recorded evidence
+- first-vertical-slice readiness tied to the selected profile and product
+  boundary
+- `status` and `check`/`check --all` readiness integration using the shared
+  issue model, with explicit compatibility treatment for runs created before
+  this validation existed
+- strengthened, symmetric fixture coverage across all three current starter
+  profiles, including disk-backed readiness coverage through the real
+  run-reading path
 
 Boundary:
 
-- add new profiles only when the profile contract is stable enough to avoid one-off implementation
-- do not turn profiles into full application generators
-- do not create a large app skeleton by default
+- no new starter profile was added; three profiles remain supported
+- no command execution was added anywhere in this scope
+- profiles were not turned into full application generators; no large app
+  skeleton was added by default
+
+Possible additional profiles (unchanged; still requires separate approval):
+
+- `android-xml`
+- `python-cli`
+- stronger `typescript-cli` and `nextjs-app` (delivered above)
+
+## Planned milestones
 
 ### v1.4.0 - Greenfield-to-Feature Workflow Handoff Hardening
 

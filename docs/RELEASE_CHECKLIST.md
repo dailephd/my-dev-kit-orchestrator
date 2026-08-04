@@ -79,6 +79,26 @@ release is `v1.2.3`; older releases remain historical baselines.
 - [ ] run `export --out ../unsafe-export.txt` and confirm rejection
 - [ ] remove the temporary directory
 
+## v1.3.0 profile and scaffold verification checklist
+
+- [ ] `validateGreenfieldProfile()`/`validateGreenfieldProfileRegistry()` pass
+  for all three current profiles with zero issues
+- [ ] `validateGreenfieldScaffoldPlan()` passes for a real plan per profile,
+  including `android-compose`'s empty `setupCommands` and optional
+  `connectedAndroidTest`
+- [ ] a persisted `scaffold-plan.txt` (with `Profile:`/`Target paths:`
+  sections) is read and validated by `checkGreenfieldRunReadiness()` for a
+  real run, not only injected in-memory into the pure evaluator
+- [ ] `evaluateGreenfieldReadiness()` reports `ready: true` with zero issues
+  for a complete run per profile, including android-compose's honestly
+  skipped optional `connectedAndroidTest`
+- [ ] a legacy run (no `Profile:` section in the scaffold implementation
+  report) receives `GF_LEGACY_EVIDENCE_NOT_EVALUATED` and is not
+  retroactively failed
+- [ ] `status` and `check`/`check --all` present the same readiness result
+  for a given run
+- [ ] `npx jest --runInBand tests/greenfield` passes in full
+
 ## v1.2.0 Android Compose greenfield smoke
 
 Repeat the temporary-directory smoke above with an explicit Android Compose

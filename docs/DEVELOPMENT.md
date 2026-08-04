@@ -440,9 +440,15 @@ profile-resolution tests (explicit id, each alias, near-miss non-matches,
 regression for existing profiles), bootstrap-bundle tests (profile-
 conditional validation rules), project-docs bootstrap tests (profile-aware
 `validateBootstrapDocs` behavior for the new profile's declared terminology),
-and scaffold-plan tests (the new profile's `setupCommands`/
+scaffold-plan tests (the new profile's `setupCommands`/
 `validationCommands` flow through unchanged, with no hardcoded assumption
-from another profile leaking in).
+from another profile leaking in), and readiness fixtures: a complete,
+valid-readiness case in `evaluateGreenfieldReadiness.spec.ts` and a real
+disk-backed case in `checkGreenfieldRunReadiness.spec.ts` (writing actual
+`scaffold-plan.txt`/scaffold-implementation-report/first-vertical-slice/
+verification-report files to a temp run folder) -- an in-memory-only
+readiness fixture is not sufficient proof that a new profile works through
+the real run-reading path.
 
 Do not hardcode a profile list in documentation or in
 `scripts/check-docs-consistency.mjs`; extract supported profile ids from

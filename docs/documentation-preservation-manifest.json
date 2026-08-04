@@ -194,6 +194,7 @@
     "packageName": "@dailephd/my-dev-kit-orchestrator",
     "packageMetadataVersion": "1.2.3",
     "latestPublishedVersion": "1.2.3",
+    "implementedUnpublishedVersions": ["v1.3.0"],
     "cliCommands": [
       "init",
       "start",
@@ -294,7 +295,7 @@
         "Documentation"
       ],
       "allowedTopLevelHeadingPatterns": [
-        "^(What it helps you do|Current release|Run-integrity enforcement \\(v[0-9]+\\.[0-9]+\\.[0-9]+\\)|Workflow instruction and context readiness|Quick start|Greenfield starter profiles|Command overview|Tool boundaries|Current limitations|Documentation)$"
+        "^(What it helps you do|Current release|Greenfield profile and scaffold verification \\(implemented, unpublished\\)|Run-integrity enforcement \\(v[0-9]+\\.[0-9]+\\.[0-9]+\\)|Workflow instruction and context readiness|Quick start|Greenfield starter profiles|Command overview|Tool boundaries|Current limitations|Documentation)$"
       ],
       "forbiddenTopLevelHeadingPatterns": [
         "^Planned:",
@@ -433,12 +434,12 @@
       "purpose": "High-level released, current, and future version roadmap.",
       "temporalLens": "Historical releases, current published status, and high-level future direction.",
       "planningDetailAllowed": "high-level-only",
-      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
-      "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
+      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Implemented v1.3.0 (not yet published)", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
+      "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Implemented v[0-9]+\\.[0-9]+\\.[0-9]+ \\(not yet published\\)|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
-      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.2.3 as the current milestone; future versions remain high level.",
+      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Implemented v1.3.0 (not yet published)", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
+      "versionStatusPolicy": "Keep v1.2.3 as the current published milestone; v1.3.0 is implemented but not yet published; later versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],

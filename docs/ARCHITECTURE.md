@@ -53,6 +53,43 @@ Android Compose support already shipped in `v1.2.0` as the explicit
 `nextjs-app`. It remains prompt and scaffold guidance only. The orchestrator
 does not run Gradle, require an Android SDK, or detect an emulator or device.
 
+Implemented but unpublished work strengthens all three current profiles with
+one shared validation architecture, owned by `src/greenfield/profiles/` and
+`src/greenfield/readiness/`:
+
+- `validateGreenfieldProfile()` and `validateGreenfieldProfileRegistry()`
+  validate a profile and the built-in registry (required fields, command
+  classification, target expectations, duplicate/alias/overlap detection)
+  and return an immutable `ProfileValidationResult`; they never throw for
+  expected failures.
+- `validateGreenfieldScaffoldPlan()` checks a `GreenfieldScaffoldPlan` against
+  the selected profile's targets and commands, using
+  `targetPathSafety.ts` (lexical normalization; traversal/absolute rejection
+  before any filesystem access) and `targetPatternMatching.ts` (exact and
+  bounded-pattern matching, including overlap detection).
+  `parseGreenfieldScaffoldPlanArtifact()` deterministically reconstructs a
+  plan from the persisted `scaffold-plan.txt` artifact so this validator runs
+  against real runs, not only in-memory callers.
+- `evaluateGreenfieldReadiness()` is a pure function combining profile
+  validation, scaffold-plan validation, generated-file evidence (matched
+  against the scaffold implementation report, with optional read-only
+  filesystem corroboration via `corroborateGeneratedTarget.ts` that rejects
+  directories and symlinks as file evidence), verification-command evidence,
+  first-vertical-slice readiness, and a documentation-findings bridge into
+  `validateGreenfieldProfileDocumentation()`.
+  `checkGreenfieldRunReadiness()` is the sole disk-reading boundary: it
+  resolves the selected profile, reads the run's native text artifacts, and
+  delegates to the pure evaluator.
+- All of the above reuse the shared `ProfileValidationIssue`
+  (code/severity/profileId/affectedContract/reason/correctiveAction) and
+  deterministic ordering from Batch 1; there is no second issue system, no
+  profile-ID branch inside a shared validator, and no parallel readiness
+  authority.
+- A run's evidence is treated as legacy (evaluated for compatibility, not
+  failed for missing v1.3.0-only fields) using the presence of a "Profile"
+  section in the scaffold implementation report as the sole discriminator --
+  not a timestamp.
+
 ## Workflow definitions
 
 The Workflow mode layer is owned by `src/workflows.ts`. It defines the seven
@@ -286,6 +323,14 @@ Blocking context issues fail the command, warning-only conditions do not, and
 duplicate failures for the same context kind are suppressed. Its failure
 message uses the same canonical blocker summary. `check` and `check --all` are
 read-only.
+
+For a greenfield run with a selected profile, `status` and
+`check`/`check --all` additionally surface `checkGreenfieldRunReadiness()`
+findings using the same shared, deterministic issue model as every other
+check. This is presentation only: it consumes the existing readiness
+evaluator rather than adding a second lifecycle, gate, or issue system, and a
+non-greenfield run or a greenfield run with no profile selected yet is
+unaffected.
 
 `export` includes a structured readiness summary and preserves an honest blocked
 state, including the canonical primary blocker fields when blocked. It does not
