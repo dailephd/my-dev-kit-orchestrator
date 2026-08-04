@@ -40,6 +40,10 @@ const BATCH_4_RETURN_FORMAT_CHANGED_KEYS = new Set([
   'greenfield:scaffold-implementation',
   'greenfield:first-vertical-slice',
   'greenfield:verification',
+  // v1.3.0 Batch 4 correction: scaffold-plan gained Profile/Target paths/
+  // structured command sections so its persisted artifact can be parsed
+  // back into a GreenfieldScaffoldPlan and actually validated.
+  'greenfield:scaffold-plan',
 ]);
 
 interface PromptStructureEntry {

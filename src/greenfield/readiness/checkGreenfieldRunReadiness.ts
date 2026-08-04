@@ -1,22 +1,28 @@
-// v1.3.0 Batch 4: the sole disk/lifecycle-reading boundary for greenfield
-// readiness. Resolves the selected profile from the existing structured
-// bootstrap-bundle.json artifact, reads the existing native text artifacts,
-// reuses the existing artifact-lifecycle stale detection, and delegates all
-// evaluation to the pure evaluateGreenfieldReadiness(). Read-only; does not
-// execute commands or write artifacts. scaffold-plan.txt is a rendered
-// prose artifact (not a structured GreenfieldScaffoldPlan serialization),
-// so plan conformance is intentionally not re-derived from disk here --
-// evaluateGreenfieldReadiness() accepts an in-memory plan only when a
-// caller already has one.
+// v1.3.0 Batch 4 (corrected): the sole disk/lifecycle-reading boundary for
+// greenfield readiness. Resolves the selected profile from the existing
+// structured bootstrap-bundle.json artifact, reads the existing native text
+// artifacts, reuses the existing artifact-lifecycle stale detection, and
+// delegates all evaluation to the pure evaluateGreenfieldReadiness().
+// Read-only; does not execute commands or write artifacts. scaffold-plan.txt
+// is a rendered prose artifact; it is parsed via
+// parseGreenfieldScaffoldPlanArtifact() (parseGreenfieldEvidence.ts) into a
+// GreenfieldScaffoldPlan before being handed to evaluateGreenfieldReadiness(),
+// the same "read text, parse bounded sections, reconstruct the in-memory
+// shape" pattern this file already uses for bootstrap-bundle.json and (via
+// the evaluator) the other native text artifacts.
 import * as fs from 'fs';
 import * as path from 'path';
 import { RunMetadata } from '../../run';
 import { readArtifactStateFile, getUpstreamArtifacts, isArtifactStale } from '../../artifactLifecycle';
+import { parseArtifact } from '../../artifactChecker';
 import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
 import { GreenfieldProfileId } from '../profiles/profileTypes';
 import { evaluateGreenfieldReadiness } from './evaluateGreenfieldReadiness';
+import { parseGreenfieldScaffoldPlanArtifact } from './parseGreenfieldEvidence';
 import { GreenfieldReadinessResult } from './greenfieldReadinessTypes';
+import { GreenfieldScaffoldPlan } from '../scaffold/scaffoldPlanTypes';
 
+const SCAFFOLD_PLAN_FILE = 'artifacts/scaffold-plan.txt';
 const SCAFFOLD_IMPLEMENTATION_REPORT_FILE = 'reports/scaffold-implementation-report.txt';
 const FIRST_VERTICAL_SLICE_FILE = 'artifacts/first-vertical-slice.txt';
 const VERIFICATION_REPORT_FILE = 'reports/verification-report.txt';
@@ -30,6 +36,21 @@ function readTextIfExists(runFolder: string, relativePath: string): string | und
   } catch {
     return undefined;
   }
+}
+
+function readScaffoldPlan(runFolder: string): GreenfieldScaffoldPlan | undefined {
+  const raw = readTextIfExists(runFolder, SCAFFOLD_PLAN_FILE);
+  if (raw === undefined) {
+    // File absent entirely. evaluateGreenfieldReadiness() only skips plan
+    // validation when the caller supplies no plan at all; for a legacy run
+    // that is correct (the plan predates the structured template). For a
+    // non-legacy run this still needs a defined plan so
+    // validateGreenfieldScaffoldPlan() can report GF_PLAN_PROFILE_MISMATCH
+    // instead of the gap silently passing -- an empty parse (all sections
+    // absent) reconstructs to profileId: undefined, which does exactly that.
+    return parseGreenfieldScaffoldPlanArtifact(parseArtifact(''));
+  }
+  return parseGreenfieldScaffoldPlanArtifact(parseArtifact(raw));
 }
 
 function resolveSelectedProfileId(runFolder: string): GreenfieldProfileId | undefined {
@@ -68,6 +89,7 @@ export function checkGreenfieldRunReadiness(meta: RunMetadata): GreenfieldReadin
 
   return evaluateGreenfieldReadiness({
     profile,
+    scaffoldPlan: readScaffoldPlan(meta.runFolder),
     scaffoldImplementationReportContent: readTextIfExists(meta.runFolder, SCAFFOLD_IMPLEMENTATION_REPORT_FILE),
     scaffoldImplementationReportStale: isArtifactStale(
       meta.runFolder,

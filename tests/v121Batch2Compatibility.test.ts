@@ -73,7 +73,11 @@ describe('v1.2.0 prompt compatibility (Batch 2 baseline fixture)', () => {
   // (Profile / Files changed / Commands run) that evaluateGreenfieldReadiness()
   // consumes, so it is no longer byte-identical to its v1.2.0 baseline and
   // is removed from this exception set below.
-  const DOCUMENTED_LEGACY_EXCEPTIONS = new Set(['greenfield:scaffold-plan']);
+  // v1.3.0 Batch 4 correction: greenfield:scaffold-plan migrated off its
+  // v1.2.0 baseline (Profile/Target paths/structured command sections
+  // added so its persisted artifact can be parsed back into a
+  // GreenfieldScaffoldPlan) -- no legacy exceptions remain.
+  const DOCUMENTED_LEGACY_EXCEPTIONS = new Set<string>([]);
 
   it('every stage prompt has migrated away from its v1.2.0 baseline hash, except the documented legacy exceptions', () => {
     const stillIdentical: string[] = [];

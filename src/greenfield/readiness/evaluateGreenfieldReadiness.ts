@@ -31,9 +31,6 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
   const issues: ProfileValidationIssue[] = [];
 
   issues.push(...validateGreenfieldProfile(profile).issues);
-  if (inputs.scaffoldPlan) {
-    issues.push(...validateGreenfieldScaffoldPlan(profile, inputs.scaffoldPlan).issues);
-  }
 
   const reportContent = inputs.scaffoldImplementationReportContent;
   const reportMissing = !reportContent || isPlaceholderContent(reportContent);
@@ -68,6 +65,20 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
       issues.push(...corroboration.issues);
       filesystemCorroborationPerformed = corroboration.filesystemCorroborationPerformed;
     }
+  }
+
+  // v1.3.0 Batch 4 correction: scaffold-plan validation is gated on
+  // !legacyRun (not on reportMissing), mirroring generated-target and
+  // first-vertical-slice evidence -- a legacy run's plan predates the
+  // structured "Profile"/"Target paths"/command sections this evaluator's
+  // caller now reconstructs from, so it is left unevaluated, the same
+  // compatibility treatment every other structured-evidence check already
+  // gives a legacy run. A non-legacy run always validates its plan; when the
+  // caller could not supply one (missing/unparseable scaffold-plan.txt),
+  // validateGreenfieldScaffoldPlan() naturally reports it via its existing
+  // "plan does not declare a profile id" branch of GF_PLAN_PROFILE_MISMATCH.
+  if (!legacyRun && inputs.scaffoldPlan) {
+    issues.push(...validateGreenfieldScaffoldPlan(profile, inputs.scaffoldPlan).issues);
   }
 
   const sliceContent = inputs.firstVerticalSliceContent;
