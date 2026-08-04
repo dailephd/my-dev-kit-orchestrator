@@ -1,4 +1,4 @@
-import { GreenfieldProfile } from './profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile } from './profileTypes';
 
 /**
  * The Next.js app starter profile, selected when the brief indicates a
@@ -25,5 +25,5 @@ export const NEXTJS_APP_PROFILE: GreenfieldProfile = {
     { command: 'npm run build', purpose: 'Build the project.', required: true },
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
-  allowedDocumentationTerminology: ['nextjs-react'],
+  allowedDocumentationTerminology: [GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT],
 };

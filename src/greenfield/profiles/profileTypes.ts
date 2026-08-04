@@ -12,6 +12,30 @@
 export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose';
 
 /**
+ * v1.3.0 Batch 2 (corrected): the closed, centrally defined vocabulary of
+ * documentation terminology tags a profile may declare in
+ * `GreenfieldProfile.allowedDocumentationTerminology`. This is the single
+ * canonical source of truth -- profile definitions and
+ * validateBootstrapDocs.ts both reference these named values (or the
+ * derived `GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS` list for membership
+ * checks) rather than declaring independent literal strings. Extending the
+ * vocabulary (a genuinely new documentation domain, not a new profile)
+ * means adding one entry here plus the corresponding rule in
+ * validateBootstrapDocs.ts; it does not mean adding a profile-ID branch.
+ */
+export const GREENFIELD_DOCUMENTATION_TERMINOLOGY = {
+  ANDROID_JETPACK: 'android-jetpack',
+  NEXTJS_REACT: 'nextjs-react',
+} as const;
+
+export type GreenfieldDocumentationTerminologyTag =
+  (typeof GREENFIELD_DOCUMENTATION_TERMINOLOGY)[keyof typeof GREENFIELD_DOCUMENTATION_TERMINOLOGY];
+
+/** Derived membership list for runtime validation; do not declare independently. */
+export const GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS: readonly GreenfieldDocumentationTerminologyTag[] =
+  Object.values(GREENFIELD_DOCUMENTATION_TERMINOLOGY);
+
+/**
  * A single setup or validation command a profile recommends, described but
  * never executed by the orchestrator itself (see buildScaffoldPlan.ts and
  * artifacts/v1.2.0-android-compose-profile-contract.txt). Kept intentionally
@@ -60,14 +84,18 @@ export interface GreenfieldProfile {
    */
   validationCommands: GreenfieldProfileCommand[];
   /**
-   * v1.3.0 Batch 2: bounded tags naming the platform/framework terminology
-   * this profile's generated documentation is allowed to use (e.g.
-   * `'android-jetpack'`, `'nextjs-react'`). Replaces the previous hardcoded
+   * v1.3.0 Batch 2 (corrected): bounded tags, drawn only from
+   * `GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS`, naming the platform/
+   * framework terminology this profile's generated documentation is
+   * allowed to use. Replaces the previous hardcoded
    * `selectedProfileId === 'android-compose'` branch in
    * validateBootstrapDocs.ts with profile-owned data; most profiles declare
-   * no special terminology and use an empty array.
+   * no special terminology and use an empty array. TypeScript enforces this
+   * at the built-in profile definitions; validateGreenfieldProfile()
+   * additionally rejects unsupported or duplicate values at runtime for
+   * externally constructed or malformed profile objects.
    */
-  allowedDocumentationTerminology: readonly string[];
+  allowedDocumentationTerminology: readonly GreenfieldDocumentationTerminologyTag[];
 }
 
 export type GreenfieldProfileResolutionStatus = 'selected' | 'unresolved' | 'unsupported';

@@ -7,7 +7,7 @@
 // PseudocodePacket PSE-017 and the v1.3.0 Batch 0 design report, Batch 1/2
 // sections. Never throws for expected/malformed input; never mutates the
 // profile it validates.
-import { GreenfieldProfile, GreenfieldProfileCommand } from './profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS, GreenfieldProfile, GreenfieldProfileCommand } from './profileTypes';
 import { ProfileValidationIssue, ProfileValidationResult } from './profileValidationTypes';
 import { finalizeProfileValidationResult } from './profileValidationOrdering';
 
@@ -52,6 +52,13 @@ const COMMAND_ARRAY_CONTRACTS: readonly string[] = [
 
 const KNOWN_COMMAND_FIELDS: ReadonlySet<string> = new Set(['command', 'purpose', 'required', 'environmentNotes']);
 
+// v1.3.0 Batch 2 correction: TypeScript's GreenfieldDocumentationTerminologyTag
+// union protects built-in profile literals at compile time but not runtime/
+// externally-constructed profile objects; this closed-set membership check
+// covers that gap. Derived from the single canonical declaration in
+// profileTypes.ts -- do not duplicate the tag list here.
+const KNOWN_DOCUMENTATION_TERMINOLOGY_TAGS: ReadonlySet<string> = new Set(GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS);
+
 const KNOWN_PROFILE_FIELDS: ReadonlySet<string> = new Set([
   ...REQUIRED_TEXT_CONTRACTS,
   ...REQUIRED_NONEMPTY_STRING_ARRAY_CONTRACTS,
@@ -76,6 +83,8 @@ export function validateGreenfieldProfile(profile: GreenfieldProfile): ProfileVa
   for (const contract of OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS) {
     validateOptionalStringArray(record, contract, profileId, issues);
   }
+
+  validateDocumentationTerminology(record, profileId, issues);
 
   for (const contract of REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS) {
     validateRequiredArrayPresence(record, contract, profileId, issues, { allowEmpty: false });
@@ -161,6 +170,35 @@ function validateOptionalStringArray(
   });
 }
 
+// v1.3.0 Batch 2 correction: rejects unsupported and duplicate
+// allowedDocumentationTerminology entries. Blank/non-string entries are
+// already reported by validateOptionalStringArray above and are skipped
+// here to avoid a redundant issue for the same malformed entry.
+function validateDocumentationTerminology(
+  record: Record<string, unknown>,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  const value = record['allowedDocumentationTerminology'];
+  if (!Array.isArray(value)) {
+    return; // already reported by validateOptionalStringArray
+  }
+
+  const seen = new Set<string>();
+  value.forEach((entry, index) => {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      return; // already reported by validateOptionalStringArray
+    }
+    if (!KNOWN_DOCUMENTATION_TERMINOLOGY_TAGS.has(entry)) {
+      issues.push(unsupportedTerminologyTagIssue(profileId, index, entry));
+    }
+    if (seen.has(entry)) {
+      issues.push(duplicateTerminologyTagIssue(profileId, index, entry));
+    }
+    seen.add(entry);
+  });
+}
+
 function validateRequiredArrayPresence(
   record: Record<string, unknown>,
   contract: string,
@@ -215,6 +253,36 @@ function unsupportedFieldIssue(profileId: string, fieldName: string): ProfileVal
     reason: `Profile declares field "${fieldName}", which is not part of the current profile contract.`,
     correctiveAction: `Remove "${fieldName}" or register it in the shared profile extension allowlist.`,
     evidenceKey: fieldName,
+  };
+}
+
+// Reuses GF_PROFILE_UNSUPPORTED_FIELD (no Batch 0-approved terminology-
+// specific code exists) rather than inventing a new issue code.
+function unsupportedTerminologyTagIssue(profileId: string, index: number, value: string): ProfileValidationIssue {
+  const supported = GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS.join(', ');
+  return {
+    code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+    severity: 'warning',
+    profileId,
+    affectedContract: 'allowedDocumentationTerminology',
+    reason: `Documentation terminology tag "${value}" is not part of the supported vocabulary.`,
+    correctiveAction: `Use one of the supported tags (${supported}), or extend GREENFIELD_DOCUMENTATION_TERMINOLOGY in profileTypes.ts for a genuinely new documentation domain.`,
+    evidenceKey: `allowedDocumentationTerminology[${index}]:unsupported:${value}`,
+    expected: supported,
+    actual: value,
+  };
+}
+
+function duplicateTerminologyTagIssue(profileId: string, index: number, value: string): ProfileValidationIssue {
+  return {
+    code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+    severity: 'warning',
+    profileId,
+    affectedContract: 'allowedDocumentationTerminology',
+    reason: `Documentation terminology tag "${value}" is declared more than once.`,
+    correctiveAction: 'Remove the duplicate tag so each terminology tag appears at most once.',
+    evidenceKey: `allowedDocumentationTerminology[${index}]:duplicate:${value}`,
+    actual: value,
   };
 }
 

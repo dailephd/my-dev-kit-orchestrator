@@ -71,6 +71,107 @@ function validProfileFixture(overrides: Partial<GreenfieldProfile> = {}): Greenf
   };
 }
 
+// Batch 2 correction: allowedDocumentationTerminology closed-vocabulary
+// runtime validation. TypeScript's GreenfieldDocumentationTerminologyTag
+// union protects the three built-in profile literals at compile time; these
+// tests prove validateGreenfieldProfile() also rejects unsupported/duplicate
+// values at runtime for externally constructed or malformed profile objects
+// (e.g. deserialized from JSON, or a future contributor casting past the
+// type system).
+describe('validateGreenfieldProfile - documentation terminology vocabulary', () => {
+  it('an empty terminology list is valid', () => {
+    const result = validateGreenfieldProfile(validProfileFixture({ allowedDocumentationTerminology: [] }));
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('["android-jetpack"] is valid', () => {
+    const result = validateGreenfieldProfile(
+      validProfileFixture({ allowedDocumentationTerminology: ['android-jetpack'] }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('["nextjs-react"] is valid', () => {
+    const result = validateGreenfieldProfile(
+      validProfileFixture({ allowedDocumentationTerminology: ['nextjs-react'] }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('rejects an unknown terminology value', () => {
+    // Runtime-only fixture: the closed GreenfieldDocumentationTerminologyTag
+    // union prevents constructing this directly without a cast; the cast
+    // simulates an externally supplied or malformed profile object.
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['flutter-dart'] as unknown as GreenfieldProfile['allowedDocumentationTerminology'],
+    });
+    expect(() => validateGreenfieldProfile(malformed)).not.toThrow();
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+        affectedContract: 'allowedDocumentationTerminology',
+        actual: 'flutter-dart',
+      }),
+    );
+  });
+
+  it('rejects a common typo of a supported value', () => {
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['andriod-jetpack'] as unknown as GreenfieldProfile['allowedDocumentationTerminology'],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_PROFILE_UNSUPPORTED_FIELD', actual: 'andriod-jetpack' }),
+    );
+  });
+
+  it('rejects a duplicate terminology value deterministically', () => {
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['android-jetpack', 'android-jetpack'],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    const duplicateIssues = result.issues.filter(
+      (i) => i.code === 'GF_PROFILE_UNSUPPORTED_FIELD' && i.reason.includes('more than once'),
+    );
+    expect(duplicateIssues).toHaveLength(1);
+  });
+
+  it('does not mutate the profile it validates', () => {
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['bogus-tag', 'bogus-tag'] as unknown as GreenfieldProfile['allowedDocumentationTerminology'],
+    });
+    const before = JSON.parse(JSON.stringify(malformed));
+    validateGreenfieldProfile(malformed);
+    expect(malformed).toEqual(before);
+  });
+
+  it('never throws for expected invalid terminology values', () => {
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['', '  ', 'unknown'] as unknown as GreenfieldProfile['allowedDocumentationTerminology'],
+    });
+    expect(() => validateGreenfieldProfile(malformed)).not.toThrow();
+  });
+
+  it('all three built-in profiles remain valid under the closed vocabulary', () => {
+    expect(validateGreenfieldProfile(TYPESCRIPT_CLI_PROFILE).valid).toBe(true);
+    expect(validateGreenfieldProfile(NEXTJS_APP_PROFILE).valid).toBe(true);
+    expect(validateGreenfieldProfile(ANDROID_COMPOSE_PROFILE).valid).toBe(true);
+  });
+
+  it('issue ordering remains deterministic for the same malformed input', () => {
+    const malformed = validProfileFixture({
+      allowedDocumentationTerminology: ['zeta-unknown', 'alpha-unknown'] as unknown as GreenfieldProfile['allowedDocumentationTerminology'],
+    });
+    const first = validateGreenfieldProfile(malformed);
+    const second = validateGreenfieldProfile(malformed);
+    expect(first).toEqual(second);
+  });
+});
+
 // TST-004: profile missing a required field -> GF_PROFILE_MISSING_FIELD, no throw.
 describe('validateGreenfieldProfile - missing required field (TST-004)', () => {
   it('flags a missing required text field with GF_PROFILE_MISSING_FIELD and does not throw', () => {

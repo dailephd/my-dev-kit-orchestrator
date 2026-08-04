@@ -366,8 +366,7 @@ profile:
 
 - register the new profile id in `GreenfieldProfileId`
   (`src/greenfield/profiles/profileTypes.ts`)
-- provide every required `GreenfieldProfile` field, including the two command
-  fields:
+- provide every required `GreenfieldProfile` field, including these three:
   - `setupCommands: GreenfieldProfileCommand[]` -- setup guidance (may be
     `[]` if the toolchain needs no separate install step, as with Gradle's
     wrapper); never executed by the orchestrator
@@ -376,6 +375,20 @@ profile:
     command `required: false` with an `environmentNotes` string when it
     depends on something the orchestrator cannot verify (e.g. a connected
     device or emulator)
+  - `allowedDocumentationTerminology: readonly GreenfieldDocumentationTerminologyTag[]`
+    -- the closed set of documentation terminology tags
+    (`GREENFIELD_DOCUMENTATION_TERMINOLOGY` in `profileTypes.ts`; currently
+    `ANDROID_JETPACK` and `NEXTJS_REACT`) this profile's generated docs may
+    use. Most profiles use `[]` (no special terminology). Use
+    `ANDROID_JETPACK` only for an Android/Jetpack-based profile and
+    `NEXTJS_REACT` only for a Next.js/React-based profile.
+    `validateGreenfieldProfile()` rejects unsupported or duplicate tags at
+    runtime (`GF_PROFILE_UNSUPPORTED_FIELD`); TypeScript rejects them at
+    compile time for the built-in profile literals. Adding a genuinely new
+    documentation domain (not just a new profile that reuses an existing
+    domain) means adding one entry to `GREENFIELD_DOCUMENTATION_TERMINOLOGY`
+    plus its corresponding rule in `validateBootstrapDocs.ts` -- do not add a
+    profile-ID conditional to work around the closed vocabulary.
 - register the profile in `SUPPORTED_PROFILES`
   (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
 - add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the
@@ -390,20 +403,27 @@ profile:
 
 If the new profile's content legitimately mentions a term that would
 otherwise look like a violation for other profiles (as Android/Jetpack/Kotlin
-terms do for `android-compose`), make the check profile-conditional rather
-than removing it globally:
+terms do for `android-compose`), keep the check global but make its
+*applicability* profile-owned data rather than adding a new conditional:
 
-- `buildBootstrapBundle.ts`'s validation-rules builder
+- `buildBootstrapBundle.ts`'s validation-rules builder still branches on
+  `selectedProfile.profile?.id` directly; follow that existing pattern there.
 - `validateBootstrapDocs()` (`src/greenfield/bootstrap/validateBootstrapDocs.ts`)
+  does **not** branch on profile id. It reads the selected profile's
+  `allowedDocumentationTerminology` and permits only the terminology tags
+  that profile declares. Declare the right tag on the new profile instead of
+  editing `validateBootstrapDocs.ts`; only touch that file if the new
+  profile needs a genuinely new terminology domain (see above).
 
 Required tests for a new profile: profile-shape tests (required fields,
-command fields, unsupported conditions), profile-resolution tests (explicit
-id, each alias, near-miss non-matches, regression for existing profiles),
-bootstrap-bundle tests (profile-conditional validation rules), project-docs
-bootstrap tests (profile-aware `validateBootstrapDocs` behavior), and
-scaffold-plan tests (the new profile's `setupCommands`/`validationCommands`
-flow through unchanged, with no hardcoded assumption from another profile
-leaking in).
+command fields, terminology-tag validity, unsupported conditions),
+profile-resolution tests (explicit id, each alias, near-miss non-matches,
+regression for existing profiles), bootstrap-bundle tests (profile-
+conditional validation rules), project-docs bootstrap tests (profile-aware
+`validateBootstrapDocs` behavior for the new profile's declared terminology),
+and scaffold-plan tests (the new profile's `setupCommands`/
+`validationCommands` flow through unchanged, with no hardcoded assumption
+from another profile leaking in).
 
 Do not hardcode a profile list in documentation or in
 `scripts/check-docs-consistency.mjs`; extract supported profile ids from

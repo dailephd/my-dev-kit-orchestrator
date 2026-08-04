@@ -1,4 +1,4 @@
-import { GreenfieldProfile } from './profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile } from './profileTypes';
 
 /**
  * The Android Compose starter profile (v1.2.0), selected only when
@@ -75,5 +75,5 @@ export const ANDROID_COMPOSE_PROFILE: GreenfieldProfile = {
       environmentNotes: 'Requires a connected Android device or running emulator; the orchestrator does not provide or manage one.',
     },
   ],
-  allowedDocumentationTerminology: ['android-jetpack'],
+  allowedDocumentationTerminology: [GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK],
 };

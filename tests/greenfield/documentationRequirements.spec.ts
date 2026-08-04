@@ -182,6 +182,16 @@ describe('validateGreenfieldProfileDocumentation - autonomous execution claims (
 });
 
 // TST-032: missing setup or verification guidance -> GF_DOC_REQUIREMENT_MISSING with affected requirement.
+//
+// Covers only the reachable case: a required doc structurally absent from
+// result.targets. A prior "skipped"-status sub-case was removed in the
+// Batch 2 correction -- populateProjectDocsFromBrief.ts never assigns
+// 'skipped' to these guidance-bearing docs, no other production, historical,
+// or external caller constructs this in-memory-only result shape, and no
+// source/type/artifact evidence authorized treating that state as a
+// supported defensive-validation boundary. Whether a *present* but thin
+// ('partial') doc counts as missing guidance requires real artifact/
+// readiness semantics and is deferred to Batch 4.
 describe('validateGreenfieldProfileDocumentation - missing guidance (TST-032)', () => {
   it('flags a guidance-bearing doc that was not generated (missing-required-section)', () => {
     const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'typescript-cli' });
@@ -197,18 +207,25 @@ describe('validateGreenfieldProfileDocumentation - missing guidance (TST-032)', 
     );
   });
 
-  it('flags a guidance-bearing doc with a "skipped" status as missing required guidance', () => {
+  it('does not flag a present doc with thin ("partial") content as missing guidance in Batch 2', () => {
+    // populateProjectDocsFromBrief.ts sources these three docs' content from
+    // the resolved profile's own required-nonempty fields (testExpectations/
+    // validationExpectations/scaffoldPlanningHints), so a bundle with a
+    // resolved profile always produces 'generated', never 'partial', here.
+    // This tampers a real, otherwise-valid result to 'partial' to prove
+    // Batch 2's structural-only check does not read doc status at all --
+    // content-sufficiency evaluation is deferred to Batch 4.
     const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'typescript-cli' });
     const result = bootstrapProjectDocs(bundle);
+    const testingExpectationsDoc = result.targets.find((t) => t.docName === 'testing-expectations');
+    expect(testingExpectationsDoc?.status).toBe('generated');
+
     const tampered: GreenfieldProjectDocBootstrapResult = {
       ...result,
-      targets: result.targets.map((t) => (t.docName === 'testing-expectations' ? { ...t, status: 'skipped' } : t)),
+      targets: result.targets.map((t) => (t.docName === 'testing-expectations' ? { ...t, status: 'partial' } : t)),
     };
     const sharedValidation = validateGreenfieldProfileDocumentation(tampered, TYPESCRIPT_CLI_PROFILE);
-    expect(sharedValidation.valid).toBe(false);
-    expect(sharedValidation.issues).toContainEqual(
-      expect.objectContaining({ code: 'GF_DOC_REQUIREMENT_MISSING', affectedContract: 'testing-expectations' }),
-    );
+    expect(sharedValidation.issues.filter((i) => i.code === 'GF_DOC_REQUIREMENT_MISSING')).toEqual([]);
   });
 });
 

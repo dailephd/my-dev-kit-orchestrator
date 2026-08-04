@@ -26,8 +26,20 @@
 // GF_DOC_UNSUPPORTED_CLAIM) without replacing this function's existing
 // signature or return shape, which callers and existing tests already rely
 // on.
+//
+// v1.3.0 Batch 2 correction: `allowedDocumentationTerminology` now draws
+// from the closed `GREENFIELD_DOCUMENTATION_TERMINOLOGY` vocabulary in
+// profileTypes.ts instead of independent raw string literals here, and
+// validateGreenfieldProfileDocumentation() no longer checks for a
+// `status: 'skipped'` state on guidance-bearing docs -- the real generator
+// (populateProjectDocsFromBrief.ts) never produces that status for those
+// docs, and no other production, historical, or external path constructs
+// this in-memory-only result shape, so that check protected no reachable
+// behavior. Recognizing thin-but-present ('partial') guidance as
+// insufficient requires real artifact/readiness semantics and is Batch 4
+// scope, not Batch 2's static per-profile contract validation.
 
-import { GreenfieldProfile, GreenfieldProfileId } from '../profiles/profileTypes';
+import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldProfileId } from '../profiles/profileTypes';
 import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
 import { GreenfieldDocSection, GreenfieldProjectDocBootstrapResult, GreenfieldProjectDocName } from './projectDocBootstrapTypes';
 import { ProfileValidationIssue, ProfileValidationResult } from '../profiles/profileValidationTypes';
@@ -116,8 +128,8 @@ export function validateBootstrapDocs(
   const issues: GreenfieldDocValidationIssue[] = [];
   const presentNames = new Set(result.targets.map((t) => t.docName));
   const allowedTerminology = resolveAllowedDocumentationTerminology(selectedProfileId);
-  const androidJetpackAllowed = allowedTerminology.includes('android-jetpack');
-  const nextjsReactAllowed = allowedTerminology.includes('nextjs-react');
+  const androidJetpackAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK);
+  const nextjsReactAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT);
 
   for (const required of REQUIRED_DOC_NAMES) {
     if (!presentNames.has(required)) {
@@ -188,17 +200,8 @@ function flattenSections(sections: GreenfieldDocSection[]): string {
   return sections.map((s) => `${s.heading}\n${s.content}`).join('\n');
 }
 
-// ─── Shared v1.3.0 issue-system bridge (TST-028..TST-033) ───────────────────
-
-// Docs whose content is expected to carry setup or verification guidance
-// for a selected profile (TST-032). A 'skipped' status on one of these for a
-// selected (non-undefined) profile means the corresponding guidance is
-// effectively absent, not merely thin.
-const GUIDANCE_BEARING_DOC_NAMES: readonly GreenfieldProjectDocName[] = [
-  'development-workflow',
-  'testing-expectations',
-  'validation-expectations',
-];
+// ─── Shared v1.3.0 issue-system bridge (TST-028..TST-031, TST-033; reachable
+// portion of TST-032) ─────────────────────────────────────────────────────
 
 const CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM: ReadonlySet<GreenfieldDocValidationIssueKind> = new Set([
   'unsupported-platform-claim',
@@ -210,12 +213,23 @@ const CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM: ReadonlySet<GreenfieldDocValidationIs
 ]);
 
 /**
- * Bridges validateBootstrapDocs()'s findings, plus profile-owned
- * required-guidance-presence checks, into the shared v1.3.0
+ * Bridges validateBootstrapDocs()'s findings into the shared v1.3.0
  * ProfileValidationIssue system (GF_DOC_REQUIREMENT_MISSING /
  * GF_DOC_UNSUPPORTED_CLAIM). Does not replace validateBootstrapDocs(), which
  * keeps its existing signature and GreenfieldDocValidationResult shape for
  * existing callers/tests.
+ *
+ * Covers TST-032 only for a required doc that is structurally absent from
+ * `result.targets` (translated from validateBootstrapDocs()'s existing
+ * `missing-required-section` finding). It does not evaluate whether a
+ * *present* doc's content is sufficiently detailed ('partial' vs
+ * 'generated') -- that requires real artifact/readiness semantics and is
+ * Batch 4 scope.
+ *
+ * Not currently called from any production greenfield run path; neither is
+ * validateBootstrapDocs() itself (confirmed at baseline, before v1.3.0).
+ * Wiring documentation findings into status/check/artifact readiness is
+ * Batch 4's explicit ownership per the v1.3.0 Batch 0 design report.
  */
 export function validateGreenfieldProfileDocumentation(
   result: GreenfieldProjectDocBootstrapResult,
@@ -230,22 +244,6 @@ export function validateGreenfieldProfileDocumentation(
       issues.push(docRequirementMissingIssue(profileId, baseIssue.docName, baseIssue.message));
     } else if (CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM.has(baseIssue.kind)) {
       issues.push(docUnsupportedClaimIssue(profileId, baseIssue.docName, baseIssue.kind, baseIssue.message));
-    }
-  }
-
-  if (profile) {
-    const presentTargets = new Map(result.targets.map((t) => [t.docName, t] as const));
-    for (const docName of GUIDANCE_BEARING_DOC_NAMES) {
-      const target = presentTargets.get(docName);
-      if (target && target.status === 'skipped') {
-        issues.push(
-          docRequirementMissingIssue(
-            profileId,
-            docName,
-            `Doc "${docName}" has no generated setup/verification guidance for the selected profile (status "skipped").`,
-          ),
-        );
-      }
     }
   }
 
