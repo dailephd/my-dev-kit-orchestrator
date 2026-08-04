@@ -7,6 +7,7 @@ import { makeListCommand } from './commands/list';
 import { makeMarkCommand } from './commands/mark';
 import { makeCheckCommand } from './commands/check';
 import { makeExportCommand } from './commands/export';
+import packageJson from '../package.json';
 
 export function createProgram(): Command {
   const program = new Command();
@@ -20,7 +21,7 @@ export function createProgram(): Command {
       '  -> test strategy -> implementation -> test implementation\n' +
       '  -> verification -> judge -> final report'
     )
-    .version('1.0.0');
+    .version(packageJson.version);
 
   program.addCommand(makeInitCommand());
   program.addCommand(makeStartCommand());

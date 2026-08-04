@@ -1,0 +1,76 @@
+Artifact: V120Batch2ProfileImplementationReport
+Batch: v1.2.0 Batch 2
+
+BRANCH
+- branch name: feature/v1.2.0-android-compose-profile-foundation
+- starting commit: 40a457b (Batch 1 planning commit)
+- ending commit: recorded in reports/v1.2.0-batch-2-final-report.txt after commit
+
+INPUTS USED
+- reports/v1.2.0-android-compose-architecture-audit.txt
+- artifacts/v1.2.0-android-compose-profile-contract.txt
+- artifacts/v1.2.0-android-compose-do-not-expand-list.txt
+- artifacts/v1.2.0-android-compose-test-plan.txt (Batch 2 section)
+- current v1.1.0 implementation files (src/greenfield/profiles/*, tests/greenfield/*)
+
+FILES READ
+- src/greenfield/profiles/profileTypes.ts -- reason: confirm exact current GreenfieldProfile/GreenfieldProfileId/GreenfieldProfileSelection shape before adding fields
+- src/greenfield/profiles/resolveGreenfieldProfile.ts -- reason: confirm exact current resolution logic (SUPPORTED_PROFILES, WEB_HINT_RE, resolveExplicitProfile/resolveFallbackProfile) before adding alias/ambiguity behavior
+- src/greenfield/profiles/typescriptCliProfile.ts, nextjsAppProfile.ts -- reason: confirm exact current field values to backfill setupCommands/validationCommands that preserve current behavior byte-for-byte
+- tests/greenfield/profileResolution.spec.ts -- reason: confirm existing test coverage and helper (baseNormalizedBrief) before extending
+- tests/greenfield/scaffoldPrompt.spec.ts -- reason: discovered (via a failing test run, not by reading in advance) that this file also used 'android-compose' as an unsupported-profile example
+No full-file-read justification needed beyond the above; every file was targeted per section 7.1 of this batch's own instructions.
+
+FILES CHANGED
+- src/greenfield/profiles/profileTypes.ts -- added `'android-compose'` to `GreenfieldProfileId`; added `GreenfieldProfileCommand` interface; added required `setupCommands`/`validationCommands: GreenfieldProfileCommand[]` fields to `GreenfieldProfile`
+- src/greenfield/profiles/typescriptCliProfile.ts -- backfilled `setupCommands: [{ command: 'npm install', ... }]` and `validationCommands` matching exactly what `buildScaffoldPlan.ts`'s current keyword-mapping already produces for this profile (`npm run typecheck`, `npm run build`, `npm test`)
+- src/greenfield/profiles/nextjsAppProfile.ts -- same backfill pattern, same command values (this profile's `validationExpectations` are identical: `['typecheck', 'build', 'test']`)
+- src/greenfield/profiles/androidComposeProfile.ts (new) -- full profile per the Batch 1 contract
+- src/greenfield/profiles/resolveGreenfieldProfile.ts -- registered `android-compose` in `SUPPORTED_PROFILES`; added `PROFILE_ALIASES` (android, kotlin-compose, jetpack-compose, compose-android); added `AMBIGUOUS_MOBILE_PROFILE_IDS` (mobile, mobile-app, phone-app) and `MOBILE_HINT_RE` for the new `'unresolved'` ambiguity branch, applied in both `resolveExplicitProfile` and `resolveFallbackProfile`; updated the "not in the supported v1.1.0 catalog" message to say "v1.2.0"
+- tests/greenfield/profileResolution.spec.ts -- extended with alias/ambiguity/regression coverage; updated 2 pre-existing tests whose "android-compose is unsupported" assumption is now stale (see "Deferred items" is not the right heading -- see "Stale test assumption fixes" below)
+- tests/greenfield/scaffoldPrompt.spec.ts -- updated 1 pre-existing test that used 'android-compose' as its unsupported-profile example, now uses 'flutter' instead (still genuinely unsupported)
+- tests/greenfield/androidComposeProfile.spec.ts (new) -- dedicated Android Compose profile + end-to-end resolution coverage
+
+STALE TEST ASSUMPTION FIXES (discovered via failing test runs, not predicted in Batch 1)
+- tests/greenfield/profileResolution.spec.ts: "returns unsupported (not a mobile fallback) for an Android Compose profile request" asserted `status: 'unsupported'` for `preferredProfile: 'android-compose'`. This was correct in v1.1.0 (before this batch) and is now false by design. Replaced with "selects the explicit Android Compose profile (v1.2.0)" (asserts `'selected'`) plus a new, differently-scoped test "does not leak Android/mobile stack details into an unrelated unsupported profile request" (using a genuinely unsupported id, `'rust-mobile-thing'`) that preserves the original test's real intent -- confirming no Android/Jetpack/Kotlin content leaks into an unrelated unsupported-profile result.
+- tests/greenfield/scaffoldPrompt.spec.ts: "leaves the plan incomplete rather than inventing a file tree when the profile is unsupported" used `preferredProfile: 'android-compose'` as its unsupported-profile example. Changed to `'flutter'` (still genuinely unsupported), preserving the test's real intent unchanged.
+Neither fix weakens what is actually being verified; both follow the same "narrowly fix stale assumptions invalidated by an intentional change, do not weaken real behavior" discipline already used for the v1.1.0 mode-count fixes in Batch 4.
+
+PROFILE CONTRACT CHANGES
+- GreenfieldProfileId change: `'typescript-cli' | 'nextjs-app'` -> `'typescript-cli' | 'nextjs-app' | 'android-compose'`.
+- setupCommands / validationCommands: added as required `GreenfieldProfileCommand[]` fields. `GreenfieldProfileCommand` is `{ command: string; purpose: string; required: boolean; environmentNotes?: string }` -- deliberately minimal (no command-execution model, no shell/argv structure), per section 8.3's "do not over-engineer command metadata."
+- existing profile backfill summary: typescript-cli and nextjs-app both received `setupCommands: [{ command: 'npm install', purpose: 'Install dependencies.', required: true }]` and `validationCommands` mirroring exactly what `buildScaffoldPlan.ts`'s current hardcoded/keyword-sniffed output already is for both profiles (`npm run typecheck`, `npm run build`, `npm test`, in that order). This is data-only; `buildScaffoldPlan.ts` itself was not modified and does not yet read these new fields (confirmed: `npx tsc --noEmit` passed with `buildScaffoldPlan.ts` untouched, and its own tests in scaffoldPrompt.spec.ts continue to pass using its existing hardcoded logic).
+
+ANDROID COMPOSE PROFILE
+- id: android-compose
+- stack assumptions: Kotlin, Jetpack Compose, Gradle, Android app module
+- setup commands: `[]` (Gradle wrapper needs no separate install step, per the profile contract)
+- validation commands: `./gradlew build` (required), `./gradlew testDebugUnitTest` (required), `./gradlew connectedAndroidTest` (not required, `environmentNotes` states it needs a connected device or emulator)
+- template targets: settings.gradle.kts, build.gradle.kts, app/build.gradle.kts, app/src/main/AndroidManifest.xml, app/src/main/java/MainActivity.kt, app/src/test/java/ExampleUnitTest.kt, app/src/androidTest/java/ExampleInstrumentedTest.kt
+- unsupported conditions: no Android SDK installed, Gradle unavailable, user asked for iOS, user asked for Flutter, user asked for React Native
+
+PROFILE RESOLUTION
+- aliases added (explicit, bounded, no fuzzy matching): `android`, `kotlin-compose`, `jetpack-compose`, `compose-android` (all normalized-form keys). Spaced variants ("android compose", "kotlin compose", "jetpack compose") are not separate alias entries -- they already normalize to their exact catalog/alias key via the pre-existing lowercase+dash-join step every profile request already goes through, so no duplicate alias entries were needed for them.
+- generic mobile ambiguity behavior: a request of exactly `mobile`, `mobile-app` (from "mobile app"), or `phone-app` (from "phone app") as an explicit `preferredProfile` value, or a `platformTarget`/`preferredStack` signal matching `/\b(mobile|phone app|phone-app)\b/i` with no `preferredProfile` at all, returns `status: 'unresolved'` (the pre-existing, previously-unused status value) with a reason naming android-compose as available-but-must-be-explicit and iOS/Flutter/React Native as unsupported. Deliberately narrow: does not match "android", "kotlin", or "compose" alone (those are handled by the alias table above, not this ambiguity path), and does not extend fallback (non-explicit) resolution to auto-select android-compose from a bare "android" signal in platformTarget/preferredStack the way the existing WEB_HINT_RE auto-selects nextjs-app from "web"/"react" signals -- this was a deliberate scope decision (see "Deferred items" below), not an oversight.
+- unsupported platform behavior: iOS, Flutter, and React Native (and their spaced/dashed variants) are not added to `SUPPORTED_PROFILES` or `PROFILE_ALIASES`, so they continue to fall through the pre-existing catalog-miss branch producing `status: 'unsupported'`, unchanged from v1.1.0.
+- no fuzzy matching confirmation: `PROFILE_ALIASES` and `AMBIGUOUS_MOBILE_PROFILE_IDS` are both plain object/Set exact-key lookups against the already-normalized request string; no regex-based partial matching is used for alias resolution (the `MOBILE_HINT_RE`/`WEB_HINT_RE` regexes are used only for the fallback path's free-text signal detection, which is a pre-existing pattern from v1.1.0, not new fuzzy-alias behavior). Regression-tested: `androidx`, `androidish`, `kotlin` (alone), `compose` (alone) do not resolve to android-compose.
+
+BRIEF SCHEMA DECISION
+- No brief schema changes were made. `briefTypes.ts` and `briefSchema.ts` were not modified.
+- Why sufficient: `preferredProfile` (free-text string) already carries explicit Android Compose requests and all new alias/ambiguity values without any schema change; `platformTarget` (free-text string) already carries the fallback-path "mobile" signal. Both fields pre-date this batch and required no changes to support any v1.2.0 resolution behavior.
+
+DEFERRED ITEMS (explicitly out of Batch 2 scope, per section 2.2/11)
+- bootstrap bundle profile-conditional validation (`buildBootstrapBundle.ts`'s `no-android-mobile-claims` rule split) -- Batch 3.
+- `validateBootstrapDocs.ts` Android/Jetpack regex profile-awareness update -- Batch 3.
+- `buildScaffoldPlan.ts` `setupCommands`/`validationCommands` integration (replacing its current hardcoded npm logic with the new profile fields added in this batch) -- Batch 3. This batch's new fields exist specifically so Batch 3 can remove the hardcoded npm assumptions; see section 11.2's required note, restated here explicitly.
+- docs consistency script (`scripts/check-docs-consistency.mjs`) source-derived profile extraction -- deferred to the documentation batch (Batch 5), not required in Batch 2 because `npm run docs:check` still passes today (see verification report) -- the script's hardcoded two-profile sentence check still finds its expected text in docs/WORKFLOWS.md because no doc content changed yet; it will only need updating once Batch 5 actually changes that sentence.
+- user-facing documentation update (README.md, docs/WORKFLOWS.md, etc.) -- Batch 5, untouched in this batch.
+- One additional, newly-identified deferred design question (not previously listed in Batch 1, surfaced during this batch's own resolver design): whether a bare technology-specific signal (e.g. `platformTarget: 'android'`, with no `preferredProfile`) should auto-select android-compose via the fallback path, the same way `platformTarget: 'web'` already auto-selects nextjs-app. This batch deliberately did NOT add that behavior, since it was not explicitly requested by either Batch 1's contract or this batch's own instructions (section 9.2 asks only for generic "mobile"/"mobile app"/"phone app" ambiguity handling in the fallback path, not technology-specific auto-selection). Flagged for Batch 3 or a later batch to decide explicitly, rather than silently added here.
+
+SCOPE CONTROL
+- no Gradle execution: confirmed. No test or source file in this batch invokes `gradle`/`./gradlew`; `androidComposeProfile.ts`'s validation commands are plain string data, never executed.
+- no Android SDK requirement: confirmed. All new tests pass in this environment, which has no Android SDK installed.
+- no Flutter/React Native/iOS support: confirmed. None of these were added to `SUPPORTED_PROFILES` or `PROFILE_ALIASES`; regression tests confirm they remain `'unsupported'`.
+- no mobile mode: confirmed. No changes were made to `src/types.ts`, `src/workflows.ts`, or any mode-registry file; Android Compose is profile-content within the existing greenfield mode only.
+
+STATUS: complete

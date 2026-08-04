@@ -5,8 +5,12 @@ import { execFileSync } from 'child_process';
 import { readCorrectionState, isCorrectionActive } from '../correctionState';
 import { generateCorrectionPrompt } from '../promptGenerator';
 import { parseAndRoute } from '../correctionRouter';
+import { getWorkflow } from '../workflows';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
 const CLI = path.resolve(__dirname, '../../dist/cli.js');
+const CLI_BUILT = fs.existsSync(CLI);
+const describeIfBuilt = CLI_BUILT ? describe : describe.skip;
 
 function cli(args: string[], cwd: string): string {
   return execFileSync(process.execPath, [CLI, ...args], {
@@ -166,7 +170,7 @@ describe('generateCorrectionPrompt', () => {
   it('generates a bounded stage-specific prompt for implementation correction', () => {
     withTempDir((dir) => {
       const runFolder = path.join(dir, 'run');
-      fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+      makeReadyRunFolder(runFolder, 'feature');
       const meta = {
         runId: 'test-run-001',
         mode: 'feature' as const,
@@ -175,7 +179,7 @@ describe('generateCorrectionPrompt', () => {
         runFolder,
         createdAt: new Date().toISOString(),
         currentStage: 'judge',
-        stages: [],
+        stages: getWorkflow('feature').stages,
         status: 'in_progress' as const,
       };
       const state = parseAndRoute('Verdict: IMPLEMENTATION_MISMATCH');
@@ -202,7 +206,7 @@ describe('generateCorrectionPrompt', () => {
         runFolder,
         createdAt: new Date().toISOString(),
         currentStage: 'judge',
-        stages: [],
+        stages: getWorkflow('feature').stages,
         status: 'in_progress' as const,
       };
       const state = parseAndRoute('Verdict: PSEUDOCODE_INCOMPLETE');
@@ -223,7 +227,7 @@ describe('generateCorrectionPrompt', () => {
         runFolder,
         createdAt: new Date().toISOString(),
         currentStage: 'judge',
-        stages: [],
+        stages: getWorkflow('feature').stages,
         status: 'in_progress' as const,
       };
       const state = parseAndRoute('Verdict: NEED_VERIFICATION');
@@ -244,7 +248,7 @@ describe('generateCorrectionPrompt', () => {
         runFolder,
         createdAt: new Date().toISOString(),
         currentStage: 'judge',
-        stages: [],
+        stages: getWorkflow('feature').stages,
         status: 'in_progress' as const,
       };
       const state = parseAndRoute('Verdict: TEST_COVERAGE_INCOMPLETE');
@@ -266,7 +270,7 @@ describe('generateCorrectionPrompt', () => {
         runFolder,
         createdAt: new Date().toISOString(),
         currentStage: 'judge',
-        stages: [],
+        stages: getWorkflow('feature').stages,
         status: 'in_progress' as const,
       };
       const state = parseAndRoute(
@@ -280,15 +284,31 @@ describe('generateCorrectionPrompt', () => {
 
 // ─── CLI integration: status with judge reports ───────────────────────────────
 
-describe('CLI status with judge report', () => {
-  it('shows PASS correction status when judge report has PASS', () => {
+describeIfBuilt('CLI status with judge report', () => {
+  it('shows PASS correction status when judge report has PASS and context is ready', () => {
     withTempDir((projectRoot) => {
       cli(['init'], projectRoot);
       cli(['start', '--mode', 'feature', 'v060 correction test'], projectRoot);
       const runFolder = getRunFolder(projectRoot);
+      // v1.2.3 Batch 3: an authored PASS is only accepted once repository
+      // context is ready -- see the dedicated rejection test below for the
+      // unready case, which is exactly the defect this batch fixes.
+      makeReadyRunFolder(runFolder, 'feature');
       writeJudgeReport(runFolder, 'Verdict: PASS');
       const status = cli(['status'], projectRoot);
       expect(status).toContain('Judge correction: PASS');
+    });
+  });
+
+  it('rejects an authored PASS when repository context is refresh-required (v1.2.3 Batch 3)', () => {
+    withTempDir((projectRoot) => {
+      cli(['init'], projectRoot);
+      cli(['start', '--mode', 'feature', 'v060 pass contradiction test'], projectRoot);
+      const runFolder = getRunFolder(projectRoot);
+      writeJudgeReport(runFolder, 'Verdict: PASS');
+      const status = cli(['status'], projectRoot);
+      expect(status).not.toContain('Judge correction: PASS - no correction required');
+      expect(status).toContain('Verdict accepted: false');
     });
   });
 
@@ -329,7 +349,7 @@ describe('CLI status with judge report', () => {
 
 // ─── CLI integration: prompt with correction ──────────────────────────────────
 
-describe('CLI prompt with correction routing', () => {
+describeIfBuilt('CLI prompt with correction routing', () => {
   it('normal prompt works with no judge report (backward compat)', () => {
     withTempDir((projectRoot) => {
       cli(['init'], projectRoot);

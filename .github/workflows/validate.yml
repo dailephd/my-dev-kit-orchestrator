@@ -38,17 +38,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Typecheck
-        run: npx tsc --noEmit
-
       - name: Test
         run: npm test
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Lint docs
-        run: npm run lint:docs
+      - name: Verify
+        run: npm run verify
 
       - name: CLI help
         run: node dist/cli.js --help
@@ -56,23 +50,5 @@ jobs:
       - name: CLI version
         run: node dist/cli.js --version
 
-      - name: CLI smoke check
-        run: npm run smoke:cli -- normal
-
-      - name: CLI lifecycle smoke check
-        run: npm run smoke:cli -- lifecycle
-
-      - name: CLI extraction smoke check
-        run: npm run smoke:cli -- extraction
-
-      - name: CLI check smoke
-        run: npm run smoke:cli -- check
-
-      - name: CLI trace smoke
-        run: npm run smoke:cli -- trace
-
-      - name: CLI correction smoke
-        run: npm run smoke:cli -- correction
-
-      - name: CLI export smoke
-        run: npm run smoke:cli -- export
+      - name: Package dry run
+        run: npm pack --dry-run

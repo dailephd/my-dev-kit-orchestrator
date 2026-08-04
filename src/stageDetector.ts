@@ -8,6 +8,11 @@ import {
   resolveArtifactState,
   getStaleReason,
 } from './artifactLifecycle';
+import {
+  RunIntegrityGateResult,
+  resolveArtifactStateWithRunIntegrity,
+  blockingReasonForArtifactFile,
+} from './runIntegrityGate';
 
 export interface ArtifactStatus {
   stageName: string;
@@ -152,6 +157,106 @@ export function resolveCurrentArtifactStates(
 ): ArtifactLifecycleState[] {
   const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
   return files.map((f) => resolveArtifactState(meta.runFolder, f, meta.stages, stateFile));
+}
+
+// ─── Canonical-run-integrity-aware stage detection (v1.2.3 Batch 2) ────────
+//
+// Gate-aware siblings of the Batch-5-era *WithLifecycle functions above.
+// They resolve every artifact's lifecycle state through
+// resolveArtifactStateWithRunIntegrity() instead of resolveArtifactState()
+// directly, so a context-blocked implementation/test-implementation stage
+// is never treated as "complete" merely because its artifact file exists or
+// carries a manual "complete" record (invariants 6.2/6.4). Because
+// getNextStageWithRunIntegrity() walks stages in fixed workflow order and
+// returns the first stage that is not effectively complete, forcing a
+// blocked stage's own state to "blocked" is sufficient on its own to keep
+// every stage after it (verification, judge, final-report, ...) from being
+// reported as the current/next stage -- no separate downstream-propagation
+// rule is needed.
+
+function allArtifactsEffectivelyCompleteWithRunIntegrity(
+  runFolder: string,
+  stage: StageDefinition,
+  allStages: StageDefinition[],
+  stateFile: ArtifactStateFile,
+  gate: RunIntegrityGateResult,
+  finalReportEligible: boolean,
+): boolean {
+  const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
+  return files.every(
+    (f) => resolveArtifactStateWithRunIntegrity(runFolder, f, allStages, stateFile, gate, finalReportEligible) === 'complete',
+  );
+}
+
+// finalReportEligible (v1.2.3 Batch 3) defaults to true so every Batch 2
+// call site that does not yet evaluate judge/final-report integrity is
+// unaffected; a caller that has computed FinalReportEligibilityResult
+// passes its `eligible` field here so the final-report artifact is forced
+// to "blocked" -- exactly like a context-blocked stage -- when the judge
+// verdict was not accepted as PASS (invariants 10.1/6.6).
+export function getNextStageWithRunIntegrity(
+  meta: RunMetadata,
+  stateFile: ArtifactStateFile,
+  gate: RunIntegrityGateResult,
+  finalReportEligible = true,
+): StageDefinition | null {
+  for (const stage of meta.stages) {
+    if (!allArtifactsEffectivelyCompleteWithRunIntegrity(meta.runFolder, stage, meta.stages, stateFile, gate, finalReportEligible)) {
+      return stage;
+    }
+  }
+  return null;
+}
+
+export function isRunCompleteWithRunIntegrity(
+  meta: RunMetadata,
+  stateFile: ArtifactStateFile,
+  gate: RunIntegrityGateResult,
+  finalReportEligible = true,
+): boolean {
+  return getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligible) === null;
+}
+
+export function getArtifactLifecycleStatusesWithRunIntegrity(
+  meta: RunMetadata,
+  stateFile: ArtifactStateFile,
+  gate: RunIntegrityGateResult,
+  finalReportEligible = true,
+): ArtifactLifecycleStatus[] {
+  const statuses: ArtifactLifecycleStatus[] = [];
+  for (const stage of meta.stages) {
+    const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
+    for (const artifactFile of files) {
+      const lifecycleState = resolveArtifactStateWithRunIntegrity(
+        meta.runFolder,
+        artifactFile,
+        meta.stages,
+        stateFile,
+        gate,
+        finalReportEligible,
+      );
+      const record = stateFile.artifacts[artifactFile];
+      let reason: string | undefined;
+      if (lifecycleState === 'stale') {
+        reason = getStaleReason(meta.runFolder, artifactFile, meta.stages, stateFile);
+      } else if (lifecycleState === 'blocked' || lifecycleState === 'incomplete') {
+        reason = record?.reason ?? blockingReasonForArtifactFile(gate, meta.stages, artifactFile);
+      }
+      statuses.push({ stageName: stage.name, artifactFile, lifecycleState, reason });
+    }
+  }
+  return statuses;
+}
+
+export function resolveCurrentArtifactStatesWithRunIntegrity(
+  meta: RunMetadata,
+  stateFile: ArtifactStateFile,
+  stage: StageDefinition,
+  gate: RunIntegrityGateResult,
+  finalReportEligible = true,
+): ArtifactLifecycleState[] {
+  const files = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
+  return files.map((f) => resolveArtifactStateWithRunIntegrity(meta.runFolder, f, meta.stages, stateFile, gate, finalReportEligible));
 }
 
 // ─── Original file-existence helpers (preserved for backward compat) ─────────

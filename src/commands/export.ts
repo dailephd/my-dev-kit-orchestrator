@@ -2,22 +2,34 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
-import { readCorrectionState } from '../correctionState';
 import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
+import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
+import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, JudgeIntegrityResult } from '../judgeIntegrity';
+import type { WorkflowMode } from '../types';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
-function isSafePath(outputPath: string): { safe: boolean; reason?: string } {
-  // Must be an absolute resolved path (caller should path.resolve first)
-  const resolved = path.resolve(outputPath);
+function isSafePath(rawInput: string, resolved: string): { safe: boolean; reason?: string } {
+  // Refuse path traversal sequences in the raw, pre-resolution argument.
+  // path.resolve() normalizes away ".." segments, so this must run against
+  // the raw CLI input, not the already-resolved path -- checking the
+  // resolved path here would always miss traversal attempts, since a
+  // resolved absolute path never contains ".." segments by construction.
+  // A plain substring check works identically regardless of OS path
+  // separator convention ("/" or "\"), so no separator-specific parsing is
+  // needed for this check to work cross-platform.
+  if (rawInput.includes('..')) {
+    return { safe: false, reason: 'output path contains path traversal (..)' };
+  }
 
-  // Refuse if the path is a directory
+  // Refuse if the resolved path is a directory
   if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
     return { safe: false, reason: 'output path is a directory' };
   }
 
-  // Refuse if the path is a symbolic link
+  // Refuse if the resolved path is a symbolic link
   try {
     const lstat = fs.lstatSync(resolved);
     if (lstat.isSymbolicLink()) {
@@ -25,11 +37,6 @@ function isSafePath(outputPath: string): { safe: boolean; reason?: string } {
     }
   } catch {
     // File does not exist -- that is fine
-  }
-
-  // Refuse path traversal sequences in the raw argument
-  if (outputPath.includes('..')) {
-    return { safe: false, reason: 'output path contains path traversal (..)' };
   }
 
   return { safe: true };
@@ -55,25 +62,36 @@ function artifactChecklist(
   return lines.join('\n');
 }
 
-function formatCorrectionState(runFolder: string): string {
-  const state = readCorrectionState(runFolder);
-  if (!state) return '  no judge report';
-  if (state.routeStatus === 'pass') return '  PASS -- no correction required';
-  if (state.routeStatus === 'correction_required') {
-    return `  ${state.verdict} -> correction required (routed stage: ${state.routedStage})`;
+// v1.2.3 Batch 4: reports the *accepted* judge-integrity state (Batch 3),
+// never the raw authored text alone -- otherwise export could claim
+// "PASS -- no correction required" for a run status/check correctly reject
+// as NEED_CONTEXT, the exact cross-surface disagreement AGENTS.txt Batch 4
+// section 10 forbids. See tests/v123Batch4NegativeMatrix.test.ts.
+function formatCorrectionState(judgeIntegrity: JudgeIntegrityResult): string {
+  if (!judgeIntegrity.judgeArtifactPresent) return '  no judge report';
+  if (judgeIntegrity.judgeVerdictParseStatus !== 'parsed') {
+    return `  judge verdict ${judgeIntegrity.judgeVerdictParseStatus.replace('-', ' ')}`;
   }
-  if (state.routeStatus === 'blocked') {
-    return `  ${state.verdict} -- run is blocked (external resolution required)`;
+  if (judgeIntegrity.correctionBlocked) {
+    return `  ${judgeIntegrity.authoredJudgeVerdict} -- run is blocked (external resolution required)`;
   }
-  return `  ${state.routeStatus}`;
+  if (judgeIntegrity.correctionRequired) {
+    return `  ${judgeIntegrity.authoredJudgeVerdict} -> correction required (routed stage: ${judgeIntegrity.acceptedCorrectionStage})`;
+  }
+  if (judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.authoredJudgeVerdict === 'PASS') {
+    return '  PASS -- no correction required';
+  }
+  // Authored PASS rejected because it contradicts the canonical expected
+  // verdict (Batch 3 section 6.2) -- never reported as accepted.
+  return `  ${judgeIntegrity.authoredJudgeVerdict} -- rejected (expected ${judgeIntegrity.expectedJudgeVerdict}: ${judgeIntegrity.primaryReason ?? 'does not match canonical expected verdict'})`;
 }
 
-function readJudgeVerdict(runFolder: string): string {
-  const p = path.join(runFolder, 'artifacts', 'judge-report.txt');
-  if (!fs.existsSync(p)) return '  no judge report';
-  const state = readCorrectionState(runFolder);
-  if (!state || !state.verdict) return '  judge report present but verdict not parsed';
-  return `  ${state.verdict}`;
+function readJudgeVerdict(judgeIntegrity: JudgeIntegrityResult): string {
+  if (!judgeIntegrity.judgeArtifactPresent) return '  no judge report';
+  if (judgeIntegrity.judgeVerdictParseStatus !== 'parsed') {
+    return `  judge report present but verdict not parsed (${judgeIntegrity.judgeVerdictParseStatus})`;
+  }
+  return `  ${judgeIntegrity.authoredJudgeVerdict} (accepted: ${judgeIntegrity.judgeVerdictAccepted})`;
 }
 
 function readVerificationEvidence(runFolder: string): string {
@@ -118,16 +136,79 @@ function listMissingArtifacts(
   return missing.map((s) => `  missing: ${s.artifactFile} (${s.name})`).join('\n');
 }
 
-function formatNextCommand(meta: {
-  runId: string;
-  currentStage: string;
+// Batch 5 section 21: structured, deterministic (aside from re-reading
+// current disk state) repository-context readiness summary. Metadata and
+// readiness only -- never embeds raw supplemental packet/report/capsule/
+// audit text, and never copies an externally referenced file.
+function formatContextReadinessSummary(meta: {
+  mode: string;
   runFolder: string;
+  projectRoot?: string;
+  stages: Array<{ name: string }>;
 }): string {
-  const correctionState = readCorrectionState(meta.runFolder);
-  if (correctionState && correctionState.routeStatus === 'correction_required') {
-    return `  my-dev-kit-orchestrator prompt --run ${meta.runId}  # correction: ${correctionState.routedStage}`;
+  const summary = evaluateRunContextReadiness({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
+  });
+
+  const lines: string[] = [
+    `  schemaVersion: 1.0.0`,
+    `  mode: ${summary.mode}`,
+    `  overallDecision: ${summary.overallDecision}`,
+    `  recommendedNextStage: ${summary.recommendedNextStage ?? '(none)'}`,
+  ];
+
+  for (const [label, result] of [
+    ['implementationContext', summary.implementationContext],
+    ['testContext', summary.testContext],
+  ] as const) {
+    if (!result) continue;
+    lines.push(`  ${label}:`);
+    lines.push(`    decision: ${result.decision}`);
+    lines.push(`    classification: ${result.classification}`);
+    lines.push(`    packetPath: ${result.packetPath}`);
+    lines.push(`    reportPath: ${result.reportPath}`);
+    lines.push(`    evaluatedFreshness: ${result.evaluatedFreshness}`);
+    lines.push(`    evaluatedAdequacy: ${result.evaluatedAdequacy}`);
+    lines.push(`    readyWithAssumptions: ${result.readyWithAssumptions}`);
+    if (result.blockerSummary) {
+      lines.push(`    primaryCode: ${result.blockerSummary.primaryCode}`);
+      lines.push(`    primaryReason: ${result.blockerSummary.primaryReason}`);
+      lines.push(`    correctiveAction: ${result.blockerSummary.correctiveAction}`);
+      lines.push(`    evidenceTarget: ${result.blockerSummary.evidenceTarget}`);
+      lines.push(`    blockingIssueCodes: ${result.blockerSummary.blockingIssueCodes.join(', ')}`);
+    }
   }
-  if (correctionState && correctionState.routeStatus === 'blocked') {
+
+  if (summary.primaryBlocker) {
+    lines.push(`  primaryContextKind: ${summary.primaryBlocker.contextKind}`);
+    lines.push(`  primaryCode: ${summary.primaryBlocker.primaryCode}`);
+    lines.push(`  primaryReason: ${summary.primaryBlocker.primaryReason}`);
+    lines.push(`  correctiveAction: ${summary.primaryBlocker.correctiveAction}`);
+    lines.push(`  evidenceTarget: ${summary.primaryBlocker.evidenceTarget}`);
+  }
+  lines.push(`  blockingIssueCodes: ${summary.blockingIssueCodes.length > 0 ? summary.blockingIssueCodes.join(', ') : '(none)'}`);
+  lines.push(`  warnings: ${summary.warnings.length > 0 ? summary.warnings.join('; ') : '(none)'}`);
+  lines.push(`  affectedStages: ${summary.affectedStages.length > 0 ? summary.affectedStages.join(', ') : '(none)'}`);
+
+  return lines.join('\n');
+}
+
+function formatNextCommand(
+  meta: {
+    runId: string;
+    mode: WorkflowMode;
+    currentStage: string;
+    runFolder: string;
+  },
+  judgeIntegrity: JudgeIntegrityResult,
+): string {
+  if (judgeIntegrity.correctionRequired) {
+    return `  my-dev-kit-orchestrator prompt --run ${meta.runId}  # correction: ${judgeIntegrity.acceptedCorrectionStage}`;
+  }
+  if (judgeIntegrity.correctionBlocked) {
     return `  # run is blocked -- resolve externally, then: my-dev-kit-orchestrator status --run ${meta.runId}`;
   }
   return `  my-dev-kit-orchestrator prompt --run ${meta.runId}`;
@@ -137,15 +218,27 @@ function formatNextCommand(meta: {
 
 export function buildExportText(meta: {
   runId: string;
-  mode: string;
+  mode: WorkflowMode;
   request: string;
   currentStage: string;
   status: string;
   createdAt: string;
   runFolder: string;
+  projectRoot?: string;
   stages: Array<{ name: string; artifactFile: string }>;
 }): string {
   const parts: string[] = [];
+
+  // Canonical judge-integrity state (v1.2.3 Batch 4), computed once and
+  // reused for every section below so export cannot disagree with
+  // status/check on whether a verdict was actually accepted.
+  const gate = evaluateRunIntegrityGate({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
+  });
+  const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
 
   parts.push('my-dev-kit-orchestrator run handoff export');
   parts.push(`Generated: ${new Date().toISOString()}`);
@@ -168,10 +261,10 @@ export function buildExportText(meta: {
   parts.push(listMissingArtifacts(meta.runFolder, meta.stages));
 
   parts.push(sectionHeader('Judge verdict'));
-  parts.push(readJudgeVerdict(meta.runFolder));
+  parts.push(readJudgeVerdict(judgeIntegrity));
 
   parts.push(sectionHeader('Correction state'));
-  parts.push(formatCorrectionState(meta.runFolder));
+  parts.push(formatCorrectionState(judgeIntegrity));
 
   parts.push(sectionHeader('Verification evidence'));
   parts.push(readVerificationEvidence(meta.runFolder));
@@ -180,8 +273,11 @@ export function buildExportText(meta: {
   parts.push(formatCheckResultsSummary(meta.runFolder));
   parts.push(formatTraceCheckSummary(meta.runFolder));
 
+  parts.push(sectionHeader('Repository context readiness'));
+  parts.push(formatContextReadinessSummary(meta));
+
   parts.push(sectionHeader('Next command'));
-  parts.push(formatNextCommand(meta));
+  parts.push(formatNextCommand(meta, judgeIntegrity));
 
   parts.push('');
   return parts.join('\n');
@@ -241,8 +337,8 @@ export function makeExportCommand(): Command {
 
         const outPath = path.resolve(options.out);
 
-        // Path safety checks
-        const safety = isSafePath(outPath);
+        // Path safety checks (must inspect the raw --out argument, not just the resolved path)
+        const safety = isSafePath(options.out, outPath);
         if (!safety.safe) {
           console.error(`Error: output path rejected: ${safety.reason}`);
           process.exit(1);

@@ -1,39 +1,87 @@
 # Documentation preservation policy
 
-## Classes and authority
+This policy protects the repository's public documentation from accidental
+deletion, compression, and status drift.
 
-Planning documents preserve agreed version-by-version scope. Current-state
-documents follow implementation, package metadata, CLI output, and tests.
-Historical documents follow tags, releases, registries, and Git history. Mixed
-documents apply the relevant authority to each section.
+## Document classes and authority
 
-Later explicit decisions override older conflicting plans. Implementation may
-update a plan's status, but must not erase future scope.
+- Planning documents preserve agreed version-by-version scope. Later explicit
+  planning decisions override older conflicting assignments.
+- Current-state documents follow package metadata, implementation, CLI help,
+  and tests.
+- Historical documents follow Git tags, GitHub Releases, npm publication
+  records, and Git history.
+- Mixed documents apply the relevant authority to each section.
 
-## Preservation rules
+Implementation may change a planned version's status. It must not erase future
+scope or unrelated plans.
 
-Documentation work is append-preserving by default. It must not remove or
-compress roadmap versions, planned features, release entries, command
-families, workflow stages, artifact lifecycle invariants, architecture domains,
-validation categories, project pillars, or canonical links.
+Committed technical documentation describes the current repository: public
+usage, implemented architecture, workflow behavior, file contracts,
+contributor guidance, release history, and current limitations. Detailed
+version planning, implementation tracking, pending decisions, and publication
+tracking belong in a local untracked plain-text plan. The committed roadmap is
+the sole planning exception and remains high level.
 
-Every documentation prompt that proposes removal must include
-`ALLOWED_DOCUMENT_REMOVALS`; its default value is `none`. Roadmap removals,
-future-version removals, release-history removals, and compression are also
-`none` unless explicitly authorized.
+The local plan is not canonical documentation, is not linked from public
+documents, is not required in ordinary clones, and is not included in package
+output. Its content never overrides implementation, tests, package metadata,
+or compatibility fixtures.
 
-Do not merge versions into ranges, reorder versions, move a feature between
-versions, or replace a detailed plan with a deferred-work summary without
-explicit evidence and authorization. A superseded assignment must record its
-former location, replacement/deferred location, and evidence.
+## Protected structure
 
-## Reconciliation and stop thresholds
+Documentation work must preserve:
 
-Reconciliation may correct current commands, statuses, architecture facts, and
-artifact contracts. It must not infer future scope from implementation or
-rewrite a multi-domain document as a latest-feature summary.
+- roadmap versions, goals, feature assignments, exclusions, and deferred work;
+- changelog releases and historical limitations;
+- command families, workflow modes, stage order, and stage gates;
+- artifact contracts, filenames, states, and lifecycle invariants;
+- architecture domains and companion-tool boundaries;
+- contributor validation categories;
+- project pillars, limitations, and canonical documentation links.
 
-Before commit, stop when an unapproved required structure disappears, a
-planning document loses more than 15% of nonblank lines, or a document becomes
-a materially shorter summary. Capture before/after inventories and report each
-authorized removal, source evidence, and unresolved ambiguity.
+Every documentation prompt that authorizes removal must include
+`ALLOWED_DOCUMENT_REMOVALS`. The default is `none`. Roadmap removals,
+future-version removals, release-history removals, and document compression
+also default to `none` unless the prompt explicitly authorizes exact items.
+
+## Reorganization and relocation
+
+Do not merge versions into ranges, reorder versions, move features between
+versions, or replace detailed plans with a generic deferred-work list without
+explicit evidence and authorization.
+
+Content may move to its canonical document when the destination preserves its
+complete meaning. Keep a summary and link at the source when readers still need
+context, and record the move in a relocation ledger. The preservation manifest
+is the permanent ledger for canonical document ownership, protected facts,
+required structure, and duplication boundaries; run-specific forensic notes
+belong in the run reports.
+
+## Reconciliation and stop threshold
+
+Documentation reconciliation may correct current status, commands,
+architecture descriptions, artifact contracts, and release state. It must not
+derive future plans from implementation or remove unimplemented plans.
+
+Before commit, stop when protected structure disappears, a deletion lacks
+authorization, or a planning document loses more than 15 percent of its
+nonblank lines without a documented relocation. Review before-and-after
+inventories and the complete diff before staging documentation changes.
+
+Run `npm run docs:check` after reconciliation. The checker must derive stable
+public facts from implementation owners where practical, compare them with the
+preservation manifest and canonical documents, and emit actionable stable
+issue codes for contradictions. It complements review; it does not make
+existing prose authoritative over current implementation.
+
+Each canonical document also has a structural contract covering purpose,
+temporal lens, planning policy, required and forbidden headings, forbidden
+content, major heading order, version-status policy, source owners, and
+duplication boundaries. The documentation gate validates required claims and
+the absence of contradictory or structurally invalid planning material.
+
+When a public contract is represented by a stable source interface, the
+checker should derive its field inventory from that owner and compare it with
+the manifest. Documentation must not claim workflow, stage, or run identity
+validation unless an implementation owner enforces that identity.

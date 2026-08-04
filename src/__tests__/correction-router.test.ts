@@ -95,6 +95,18 @@ describe('routeJudgeVerdict - correction-required verdicts', () => {
     expect(result.routedStage).toBe('architecture-context');
   });
 
+  it('routes extraction architecture and context defaults only to native extraction stages', () => {
+    const architecture = parseAndRoute('Verdict: ARCHITECTURE_MISMATCH', {
+      workflowMode: 'extraction',
+    });
+    const context = parseAndRoute('Verdict: NEED_CONTEXT', {
+      workflowMode: 'extraction',
+    });
+
+    expect(architecture.routedStage).toBe('target-architecture');
+    expect(context.routedStage).toBe('implementation');
+  });
+
   it('ARCHITECTURE_MISMATCH routes to pseudocode-packet when recommended', () => {
     const result = parseAndRoute(
       'Verdict: ARCHITECTURE_MISMATCH\nRecommended next stage: pseudocode-packet',

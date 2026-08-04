@@ -1,12 +1,249 @@
 # Changelog
 
-## Recovery publication correction
+## v1.2.3 - Run-Integrity and Judge-Verdict Enforcement
 
-External release evidence establishes that `v1.1.0` and `v1.2.0` were both
-published. `v1.2.0` shipped the Android Compose greenfield profile; it is not
-an Unreleased item. Earlier entries below remain chronological release history.
+Release date: 2026-08-01.
 
-## Unreleased
+### Added
+
+- one canonical run-integrity decision consumed by prompt selection,
+  lifecycle resolution, stage detection, `mark`, `status`, `check`,
+  `check --all`, and `export`, replacing per-command readiness recomputation
+- canonical judge-verdict acceptance: the expected verdict is derived from
+  the same run-integrity decision, and correction routing for an accepted
+  `NEED_CONTEXT` uses the canonical recovery stage
+- final-report eligibility requiring an accepted `PASS` verdict, no active
+  correction route, and no remaining readiness blocker
+- consumption of the corrected `my-dev-kit` v1.10.4 producer contract's
+  additive evidence when present (condition-aware role adequacy and dedicated
+  required-condition-witness-loss diagnostics, independent of general
+  truncation), revalidated against the released
+  `@dailephd/my-dev-kit@1.10.4` package
+- a permanent frozen-defect regression fixture and a corrected-evidence
+  positive replay fixture, plus the full required positive/negative
+  compatibility matrix
+
+### Changed
+
+- Node.js 24 is now the minimum runtime and the required local, CI, and release
+  validation version; Node.js 20 and Node.js 22 were removed from active
+  support and workflow requirements, while the existing Node.js 26
+  pre-release jobs remain supplementary forward-compatibility coverage
+- an authored judge `Verdict: PASS` is now rejected when canonical readiness
+  still requires `NEED_CONTEXT`, and routes back to the blocked stage instead
+  of clearing correction state
+- `export` now reports the same accepted judge state as `status` and `check`
+  instead of an unreconciled authored verdict
+- supplemental packet/report declarations that agree with each other but
+  contradict raw producer evidence now fail closed instead of being accepted
+
+### Fixed
+
+- a repository-context-blocked run could previously reach a normal `PASS`
+  final report through an authored judge verdict that contradicted canonical
+  readiness; artifact presence and a manual `complete` mark could also make a
+  blocked or ineligible stage appear complete. Both are now rejected across
+  every readiness-sensitive command.
+
+### Compatibility and limits
+
+- schema-major-1 producer evidence, legacy runs without a repository-context
+  requirement, `greenfield`'s context exemption, `test` mode's test-context-only
+  requirement, extraction's source/target separation, and existing non-context
+  correction routing all remain compatible
+- no new workflow, native stage, schema major, or public judge verdict was
+  added
+
+## v1.2.2 - Context Readiness and Documentation Safeguards
+
+Release date: 2026-07-28.
+
+### Added
+
+- canonical actionable context-blocker summaries with a primary code and
+  reason, corrective action, evidence target, and deterministic blocking and
+  supporting issue-code lists
+- production-level historical readiness-matrix coverage across valid,
+  contradictory, mismatched, truncated, unmapped, stale, and legacy evidence
+- preservation-manifest checks for the actionable blocker contract, unreleased
+  version status, and unsupported context-identity claims
+
+### Changed
+
+- `status`, `check`, prompts, verification, judge, correction routing, and
+  export now present the same canonical blocker information
+- test-responsibility parsing distinguishes actual responsibility entries from
+  packet preamble, coverage, risk, verification, downstream-use, and status
+  sections while retaining malformed, duplicate, and missing-ID diagnostics
+- documentation now distinguishes the published `v1.2.1` package history from
+  the shipped `v1.2.2` source state
+
+### Fixed
+
+- every refresh-required result now has an actionable issue and deterministic
+  primary blocker
+- raw and supplemental evidence contradictions, repository/index mismatch,
+  required truncation, missing provenance, and incomplete critical mappings
+  remain fail closed across all consumers
+- public architecture wording no longer claims unsupported workflow, stage, or
+  run identity validation
+
+### Compatibility and limits
+
+- schema-major-1 evidence, legacy runs, stage order, verdicts, CLI commands,
+  and manual `my-dev-kit` execution remain compatible
+- verified against the published `@dailephd/my-dev-kit@1.10.3` producer
+  package for role-aware producer behavior; manual retrieval still requires
+  selecting and running a verified producer CLI
+
+## v1.2.1 - Workflow Instruction and Context Readiness
+
+Release date: 2026-07-21.
+
+### Added
+
+- Added the typed `1.0.0` workflow-instruction catalog, stable exact IDs,
+  catalog validation, exact dependency resolution, and deterministic budget
+  accounting.
+- Added `WorkflowInstructionPacket` schema `1.0.0` and deterministic
+  instruction-packet sidecars for all 79 native stages.
+- Added in-memory `TaskState` and `StageContextBundle` schemas `1.0.0`.
+- Added `1.0.0` supplemental context packet and retrieval-report contracts,
+  templates, raw-evidence references, and the exact 11-stage implementation/
+  test repository-evidence requirement registry.
+- Added `ContextReadiness` schema `1.0.0`, including freshness, adequacy,
+  provenance, required-evidence truncation, and critical responsibility-
+  mapping checks.
+- Added structured context-readiness visibility to `status`, `check`,
+  `check --all`, and `export`.
+
+### Changed
+
+- Context-sensitive implementation and test-implementation prompts render
+  refresh-only work when required evidence is not ready.
+- Verification and judge prompts review mode-required context; blocked judge
+  prompts use the existing `NEED_CONTEXT` verdict with a deterministic exact
+  `Recommended next stage`.
+- `TestStrategyPacket` responsibilities now declare criticality, and critical
+  responsibilities require repository-evidence mappings before test
+  implementation can proceed.
+- Required packet content is preserved even when over budget; optional
+  truncation is explicit and deterministic.
+
+### Fixed
+
+- Fixed the stage-instruction placeholder completeness defect so every native
+  stage has complete catalog-owned instruction content.
+
+### Compatibility
+
+- Preserved all seven workflow modes, all 79 native stage names and ordering,
+  the eight CLI commands, prompt filenames, lifecycle behavior, judge
+  verdicts, correction routing, and legacy run loading.
+- Added deterministic, cross-platform, prompt-compatibility, package, and
+  legacy-run coverage. Two greenfield scaffold prompts retain their existing
+  specialized renderer while still receiving catalog entries and sidecars.
+
+### Known limitations
+
+- `my-dev-kit` retrieval remains manual; the orchestrator does not execute an
+  external context engine.
+- The published package labeled `my-dev-kit` 1.10.2 showed a CLI identity/
+  command mismatch from the verified role-aware 1.10.2 source contract, so
+  manual integration must use a verified CLI.
+- Extraction command examples are not fully promoted into command catalog
+  entries, and generic non-`NEED_CONTEXT` extraction architecture-context
+  routing remains a pre-existing edge case.
+
+## v1.2.0 - Android Compose Greenfield Profile
+
+- added `android-compose` as a third supported greenfield starter profile,
+  alongside `typescript-cli` and `nextjs-app`
+- added required `setupCommands` and `validationCommands` fields to the
+  `GreenfieldProfile` contract (a minimal, never-executed
+  `{ command, purpose, required, environmentNotes? }` shape); backfilled onto
+  the existing two profiles with no behavior change
+- added a small, explicit, bounded alias table for Android Compose requests
+  (`android`, `kotlin-compose`, `jetpack-compose`, `compose-android`); no
+  fuzzy matching
+- added the first real use of the `'unresolved'` profile-selection status:
+  generic "mobile", "mobile app", or "phone app" requests are reported as
+  unresolved rather than silently mapped to a profile
+- iOS, Flutter, and React Native remain unaliased and unsupported
+- made bootstrap-bundle validation rules and `validateBootstrapDocs()`
+  profile-conditional: Android/Jetpack/Kotlin/Gradle content is permitted
+  only when the selected profile is `android-compose`; iOS/React
+  Native/Flutter/multiplatform and Play Store/release-readiness claims
+  remain rejected for every profile
+- made `buildScaffoldPlan()` read `setupCommands`/`validationCommands`
+  directly from the selected profile instead of a hardcoded npm assumption;
+  Android Compose scaffold plans get an empty setup step and Gradle-based
+  validation commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and
+  an optional device/emulator-dependent `./gradlew connectedAndroidTest`)
+- corrected 6 stale static stage-prompt lines (in `src/promptGenerator.ts`
+  and `src/greenfield/scaffold/renderScaffoldPrompt.ts`) left over from when
+  Android Compose was out of scope, which had blanket-forbidden Android/
+  mobile content or listed only two supported profiles
+- added CLI-level, check-level, and export-level regression coverage proving
+  Android Compose works through the full user-facing command surface, with
+  no Gradle execution and no Android SDK requirement anywhere in the test
+  suite
+- hardened `scripts/check-docs-consistency.mjs` to extract the supported
+  greenfield profile list from source instead of a hardcoded two-profile
+  regex, and to distinguish legitimate "supports Android Compose" claims
+  from misleading generic-mobile/iOS/Flutter/React-Native claims
+- repaired README.md, docs/WORKFLOWS.md, docs/ARTIFACTS.md,
+  docs/ARCHITECTURE.md, docs/DEVELOPMENT.md, and docs/RELEASE_CHECKLIST.md
+  to describe the current three-profile greenfield foundation accurately
+
+Known limitations in `v1.2.0`:
+
+- `platformTarget`-only Android auto-selection (e.g. selecting
+  `android-compose` from a bare `platformTarget: "android"` with no explicit
+  profile request) remains an open, deliberately unimplemented design
+  question, not a silent default
+- component docs remain empty until the brief schema adds module/component
+  hints
+- the repository still has split `src/__tests__/*.test.ts` and
+  `tests/**/*.spec.ts` conventions
+- optional empirical `my-dev-kit` Kotlin-source indexing support has not
+  been checked; this does not block Android Compose profile support, which
+  is planning/prompt guidance only, not indexing
+
+## v1.1.0 - Greenfield Bootstrap Foundation
+
+Released.
+
+- added `greenfield` as the seventh workflow mode with 13 bounded stages
+- added project-brief loading and deterministic normalization
+- added the platform-neutral profile foundation with `typescript-cli` and
+  `nextjs-app` profiles
+- added the pure, deterministic `GreenfieldBootstrapBundle` runtime
+- added structured in-memory project-doc bootstrap and unsupported-claim
+  validation
+- added scaffold planning and implementation prompts, first-vertical-slice
+  guidance, and the initial `my-dev-kit` indexing handoff prompt
+- extended the shared mode, workflow, artifact, stage-kind, and section
+  registries rather than creating parallel greenfield infrastructure
+- added greenfield regression coverage for `check --artifacts`, `check --all`,
+  `export`, and existing modes
+- added a target-owned `test:security` contract for package metadata and
+  tarball-content validation
+- fixed the cross-mode `export --out` traversal guard so raw parent-path
+  traversal attempts such as `../x.txt` are rejected before path resolution
+- verified the Node 22 and Node 24 GitHub Actions matrix across
+  `windows-latest`, `macos-15`, and `ubuntu-latest`
+- completed `my-dev-kit-lab` security validation for release preparation
+- retained the shared artifact checker and contract checker; a separate
+  `validateGreenfieldArtifacts.ts` was intentionally unnecessary
+- deferred Android and mobile profiles to v1.2.0 or later
+
+Known limitations in the released `v1.1.0` line:
+
+- component docs remain empty until the brief schema adds module/component hints
+- the repository still has split `src/__tests__/*.test.ts` and
+  `tests/**/*.spec.ts` conventions
+- Android/mobile support remains deferred to v1.2.0 or later
 
 ## v1.0.0 - Stable Workflow Contract and Portable Run Handoff
 
@@ -15,7 +252,7 @@ an Unreleased item. Earlier entries below remain chronological release history.
 - `src/contractChecker.ts` - artifact contract checker model
   - `checkArtifactContract()`: deterministic checks per artifact (MISSING_FILE, EMPTY_FILE, MISSING_SECTION, BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, UNKNOWN_MODE, UNKNOWN_STAGE, STAGE_NO_CONTRACT)
   - `checkRunArtifactContracts()`: run-level contract check across all stages
-  - `checkStageGates()`: stage gate violation detection with CRITICAL_GATE_PAIRS for all five modes
+  - `checkStageGates()`: critical stage dependency checks across supported workflow modes
   - `resolveArtifactContractsForMode()`: returns ModeContractSummary with stage/artifact/predecessor/section metadata for all modes
   - Strict mode: promotes BLANK_SECTION, PLACEHOLDER_SECTION, PREDECESSOR_MISSING, STAGE_NO_CONTRACT from warn to fail
 - `check --artifacts`: run v1 artifact contract check for all stages in the current run
@@ -24,7 +261,9 @@ an Unreleased item. Earlier entries below remain chronological release history.
   - section-headered output, persists trace results, includes trace correction suggestions
 - `export` command: `my-dev-kit-orchestrator export [--run <id>] [--out <file>] [--overwrite]`
   - portable plain-text run handoff with run identity, request, artifact checklist, missing artifacts, judge verdict, correction state, verification evidence excerpt, content/trace check summaries, next command
-  - path safety: refuses symlinks, path traversal, existing files without --overwrite, non-existent parent directories
+  - path checks refuse symlinks, existing files without --overwrite, and
+    non-existent parent directories; complete traversal rejection is a known
+    follow-up
   - default: print to stdout; --out file: write to file
 
 ### Changed
@@ -48,7 +287,7 @@ an Unreleased item. Earlier entries below remain chronological release history.
   - `CORRECTABLE_STAGES` const: `['architecture-context','behavior-model','pseudocode-packet','test-strategy','test-implementation','implementation','verification']`
   - `routeJudgeVerdict(parsed, options)`: routes verdict to a correction stage
   - `parseAndRoute(content, options)`: parse + route in one call
-  - routing table: `NEED_CONTEXT→architecture-context`, `DESIGN_INCOMPLETE→behavior-model`, `PSEUDOCODE_INCOMPLETE→pseudocode-packet`, `IMPLEMENTATION_MISMATCH→implementation`, `TEST_COVERAGE_INCOMPLETE→test-strategy`, `ARCHITECTURE_MISMATCH→architecture-context`, `NEED_VERIFICATION→verification`
+  - routing table: `NEED_CONTEXT -> architecture-context`, `DESIGN_INCOMPLETE -> behavior-model`, `PSEUDOCODE_INCOMPLETE -> pseudocode-packet`, `IMPLEMENTATION_MISMATCH -> implementation`, `TEST_COVERAGE_INCOMPLETE -> test-strategy`, `ARCHITECTURE_MISMATCH -> architecture-context`, `NEED_VERIFICATION -> verification`
   - `SCOPE_VIOLATION` and `BLOCKED` route to `blocked` status - no correction stage
   - recommended stage overrides table default when it is a valid correctable stage
   - conflict between table and recommended stage: warning (normal mode) / `strictFail` + error (strict mode)
@@ -75,7 +314,7 @@ an Unreleased item. Earlier entries below remain chronological release history.
   - does not include unrelated workflow modes or giant instruction sets
 - `src/traceChecker.ts` extended with trace-aware correction suggestions
   - `suggestCorrectionStageFromTraceIssue(issue)`: deterministic prefix-to-stage mapping
-    - `TRACE_MISSING_LINK_TARGET`: maps target ID prefix to owning stage (`BEH→behavior-model`, `PSE→pseudocode-packet`, `TST→test-strategy`, `VER→verification`, etc.)
+    - `TRACE_MISSING_LINK_TARGET`: maps target ID prefix to owning stage (`BEH -> behavior-model`, `PSE -> pseudocode-packet`, `TST -> test-strategy`, `VER -> verification`, etc.)
     - `TRACE_MALFORMED_ID` and `TRACE_ORPHAN_ID`: suggest `design-map`
   - `buildTraceCorrectionSuggestions(results)`: returns deduplicated suggestion strings
 - `check --trace` and `check --design-map` output now includes correction suggestions when trace issues exist

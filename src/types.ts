@@ -1,4 +1,4 @@
-export const VALID_MODES = ['feature', 'repair', 'test', 'refactor', 'harden', 'extraction'] as const;
+export const VALID_MODES = ['feature', 'repair', 'test', 'refactor', 'harden', 'extraction', 'greenfield'] as const;
 
 export type WorkflowMode = typeof VALID_MODES[number];
 

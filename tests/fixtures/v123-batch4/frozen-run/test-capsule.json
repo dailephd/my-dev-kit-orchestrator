@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "tool": { "name": "my-dev-kit", "version": "1.10.3" },
+  "index": { "indexPath": "<FIXTURE_INDEX>", "manifestPath": "<FIXTURE_INDEX>/manifest.json" },
+  "request": { "role": "test-implementation" },
+  "roleContext": { "role": "test-implementation" },
+  "roleAdequacy": { "status": "context sufficient for test implementation" },
+  "freshness": {
+    "role": "test-implementation",
+    "state": "fresh",
+    "comparedIdentities": [{ "label": "afterIndexPath", "value": "<FIXTURE_INDEX>" }]
+  },
+  "responsibilityMappings": {
+    "mappings": [{ "responsibilityId": "TST-FROZEN-001", "mappingStatus": "mapped" }],
+    "truncated": true
+  },
+  "truncation": { "truncated": false, "records": [] },
+  "fullFileFallback": { "used": 0 },
+  "provenance": [{ "id": "p1" }],
+  "warnings": []
+}

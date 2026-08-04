@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "query": "evaluateContextReadiness actionable issue primary blocker",
+  "role": "implementation",
+  "mode": "subsystem",
+  "index": "Z:/Users/newuser/Projects/raw-evidence-identity-investigation/post-fix/after-index",
+  "beforeIndex": "Z:/Users/newuser/Projects/raw-evidence-identity-investigation/post-fix/before-index",
+  "afterIndex": "Z:/Users/newuser/Projects/raw-evidence-identity-investigation/post-fix/after-index",
+  "focusSymbols": [
+    "symbol:src/instructions/contextReadiness.ts#evaluateContextReadiness"
+  ],
+  "requestedEvidenceKinds": [
+    "owner"
+  ],
+  "limits": {
+    "candidates": 4,
+    "characters": 80000,
+    "evidenceGroupEntries": 4,
+    "files": 4,
+    "fullFileFallbacks": 2,
+    "graphDepth": 1,
+    "responsibilityMappings": 20,
+    "sourceLinesPerRange": 120,
+    "sourceRanges": 12,
+    "symbols": 8
+  },
+  "output": "Z:/Users/newuser/Projects/raw-evidence-identity-investigation/post-fix/context-capsule.json",
+  "auditOutput": "Z:/Users/newuser/Projects/raw-evidence-identity-investigation/post-fix/retrieval-audit-record.json"
+}

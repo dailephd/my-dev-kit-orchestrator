@@ -11,6 +11,7 @@ import { getWorkflow } from '../workflows';
 import { generateStagePrompt } from '../promptGenerator';
 import { getNextStage, getArtifactStatuses, getMissingPriorArtifacts, getSupportingReportStatuses } from '../stageDetector';
 import { isValidMode } from '../types';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-extraction-'));
@@ -348,14 +349,42 @@ describe('extraction supporting reports', () => {
 
 // ─── Prompt generation ────────────────────────────────────────────────────────
 
+// Batch 5: extraction's direct context-sensitive stages (implementation /
+// test-implementation) only render normally when repository context is
+// ready, so this fixture gets a real, ready-populated run folder instead of
+// the old nonexistent "/target/repo/..." path. sourceRepoRoot/targetRepoRoot
+// stay as the original literal strings -- several tests below assert those
+// exact values appear in the rendered prompt, independent of runFolder.
+const extractionMetaTempDirs: string[] = [];
+afterAll(() => {
+  for (const d of extractionMetaTempDirs) fs.rmSync(d, { recursive: true, force: true });
+});
+
 function makeExtractionMeta() {
   const wf = getWorkflow('extraction');
+  const runFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-extraction-meta-'));
+  extractionMetaTempDirs.push(runFolder);
+  makeReadyRunFolder(runFolder, 'extraction');
+  // v1.2.3 Batch 3: final-report only renders its normal prompt once
+  // finalReportEligible is true -- populate every prior native artifact
+  // (including an accepted PASS judge-report.txt) the same way
+  // makeReadyRunFolder already does for repository context above.
+  const judgeIndex = wf.stages.findIndex((s) => s.name === 'judge');
+  if (judgeIndex !== -1) {
+    for (const s of wf.stages.slice(0, judgeIndex)) {
+      fs.writeFileSync(path.join(runFolder, s.artifactFile), 'done', 'utf8');
+      for (const additional of s.additionalArtifactFiles ?? []) {
+        fs.writeFileSync(path.join(runFolder, additional), 'done', 'utf8');
+      }
+    }
+    fs.writeFileSync(path.join(runFolder, 'artifacts', 'judge-report.txt'), 'Verdict: PASS', 'utf8');
+  }
   return {
     runId: '20240101T120000-extraction-test',
     mode: 'extraction' as const,
     request: 'extract search and pagination workflow',
-    projectRoot: '/target/repo',
-    runFolder: '/target/repo/.my-dev-kit-orchestrator/runs/20240101T120000-extraction-test',
+    projectRoot: path.dirname(runFolder),
+    runFolder,
     createdAt: '2024-01-01T12:00:00.000Z',
     currentStage: 'request-brief',
     stages: wf.stages,
@@ -450,9 +479,16 @@ describe('extraction prompt generation - source/target context', () => {
   });
 
   it('target-architecture prompt instructs inspecting target repo separately', () => {
+    // This previously asserted the literal substring "/target/repo/.my-dev-kit",
+    // which only ever matched by coincidence: the old fake runFolder
+    // ("/target/repo/.my-dev-kit-orchestrator/runs/...") happened to start
+    // with that exact string. The catalog's actual guidance text (see
+    // src/instructions/stageInstructionContent.ts, stage.extraction.target-architecture)
+    // never substitutes a target-repo path -- it is static guidance to use
+    // my-dev-kit against the target repo separately from the source repo.
     const meta = makeExtractionMeta();
     const prompt = generateStagePrompt(meta, 'target-architecture');
-    expect(prompt).toContain('/target/repo/.my-dev-kit');
+    expect(prompt).toContain('use my-dev-kit to inspect it separately from the source repository');
   });
 
   it('behavior-model prompt uses GoldenBehaviorContract as source of truth', () => {

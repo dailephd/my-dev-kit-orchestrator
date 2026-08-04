@@ -1,0 +1,84 @@
+Artifact: V120AndroidComposeDoNotExpandList
+Batch: v1.2.0 Batch 1
+
+PURPOSE
+Prevent v1.2.0 implementation from drifting into unrelated mobile/platform scope beyond the single Android Compose greenfield profile.
+
+DO-NOT-EXPAND ITEMS
+
+- item: mobile workflow mode
+  reason: v1.2.0's entire purpose is to add Android Compose as a profile within the existing greenfield mode, not a new mode. Section 2.2 explicitly forbids a new top-level workflow mode.
+  risk if implemented: parallel workflow engine, duplicated stage/artifact registries, exactly the "parallel mobile workflow engine" section 2.2 forbids.
+  correct future handling: none needed; greenfield mode with a profile is the permanent home for this and any future platform profile.
+
+- item: React Native profile
+  reason: explicitly out of scope (section 7.2); no user request or roadmap commitment exists for it.
+  risk if implemented: scope creep, untested claims, unsupported-condition regressions if it's added half-finished.
+  correct future handling: if ever requested, it would follow this same profile-contract pattern in a future version; not v1.2.0.
+
+- item: Flutter profile
+  reason: explicitly out of scope (section 7.2).
+  risk if implemented: same as React Native above.
+  correct future handling: same as above, future version only.
+
+- item: iOS profile
+  reason: explicitly out of scope (section 7.2).
+  risk if implemented: same as above; also, iOS scaffold planning has no Node/npm/Gradle-equivalent tooling story defined anywhere in this codebase yet.
+  correct future handling: same as above, future version only.
+
+- item: generic mobile profile framework beyond Android Compose's own needs
+  reason: section 7.2 forbids "generic mobile framework support beyond what Android Compose requires." The new `MOBILE_HINT_RE` ambiguity-detection branch and the `setupCommands`/`validationCommands` profile fields are the only "mobile-shaped" additions in v1.2.0's contract, and both are already justified by Android Compose alone.
+  risk if implemented: an over-general "mobile profile base class" or shared mobile-profile-resolution module would be premature abstraction for a single profile (agents.txt rule 15: do not overconstrain; three similar lines is better than a premature abstraction -- here there is only one mobile profile, so there are not even three similar lines yet).
+  correct future handling: if a second mobile profile is ever added in a future version, extract shared logic then, from two concrete implementations, not now from one.
+
+- item: Android SDK installation
+  reason: explicitly out of scope (section 7.2); the orchestrator is a local CLI text/prompt-generation tool, not a build-environment provisioner.
+  risk if implemented: massive, unrelated scope increase; platform-specific installation logic; CI complexity; directly contradicts the profile contract's explicit "Android SDK is an external environment requirement" design decision.
+  correct future handling: never, by design. Document SDK/emulator prerequisites in generated docs and prompts; never install or verify them.
+
+- item: Gradle execution as a required orchestrator test
+  reason: explicitly out of scope (section 7.2); Gradle/Android builds require the Android SDK, which the orchestrator does not manage, and typically take much longer than this project's existing test suite.
+  risk if implemented: CI failures on any runner without the Android SDK/Gradle toolchain pre-installed (none of the current three GitHub Actions runners -- ubuntu-latest, windows-latest, macos-15 -- are guaranteed to have it); flaky, slow tests; false blockers on unrelated PRs.
+  correct future handling: validation commands (`./gradlew build`, etc.) are recommended text in generated docs/prompts, never invoked by the orchestrator's own build/test/lint/smoke pipeline.
+
+- item: complete Android project generation by the orchestrator itself
+  reason: section 2.2/7.2 -- the orchestrator plans and prompts; it does not autonomously write a full, buildable Android project to disk. This mirrors the existing typescript-cli/nextjs-app profiles, where scaffold-implementation is an agent-driven or human-driven stage, not an orchestrator-executed one.
+  risk if implemented: a fundamental architecture change (the orchestrator would need to become a code generator, not a workflow/prompt tool), far beyond a "starter profile" addition.
+  correct future handling: none anticipated; this is a permanent architectural boundary of the whole project (agents.txt: "the goal is not to create a large autonomous agent platform").
+
+- item: Play Store / release workflow
+  reason: explicitly out of scope (section 7.2); unrelated to greenfield bootstrap.
+  risk if implemented: scope creep into app-distribution concerns with no relationship to project scaffolding.
+  correct future handling: never in this project; app-store release is the generated project's own concern, not the orchestrator's.
+
+- item: app signing workflow
+  reason: same category as Play Store workflow above; not requested, not in scope.
+  risk if implemented: same as above.
+  correct future handling: never in this project.
+
+- item: device/emulator validation
+  reason: section 7.2 forbids requiring Gradle execution; instrumentation tests requiring a device/emulator are explicitly described as available-but-not-orchestrator-run in the profile contract.
+  risk if implemented: the orchestrator would need to manage emulator lifecycle, ADB, device provisioning -- an entirely different category of tooling.
+  correct future handling: never in this project; the profile contract already documents `connectedAndroidTest` as an unsupported-condition, not a validation command.
+
+- item: broad roadmap reorganization
+  reason: section 2.2/7.2 forbid reorganizing the roadmap or moving future planned features into v1.2.0.
+  risk if implemented: scope confusion between what v1.2.0 actually delivers and unrelated future-version planning; this batch itself must not edit docs/ROADMAP.md.
+  correct future handling: v1.2.0's own docs batch (Batch 5) marks v1.2.0 as implemented in ROADMAP.md the same narrow way v1.1.0's docs batch did, without touching other version sections.
+
+- item: pre-release workflow
+  reason: explicitly out of scope for all v1.2.0 implementation batches (section 2.2, 16.4); belongs to a separate pre-release prompt after Batch 5.
+  risk if implemented: mixes implementation work with release-readiness work, contradicting the workflow discipline document's stage-boundary rules.
+  correct future handling: a dedicated pre-release prompt after Batch 5, mirroring the v1.1.0 release-risk-repair prompt's structure.
+
+- item: security validation workflow (my-dev-kit-lab)
+  reason: explicitly out of scope for this batch and for implementation batches generally (section 16.4).
+  risk if implemented: same category as pre-release workflow above.
+  correct future handling: run as part of the same future pre-release prompt, mirroring v1.1.0's process.
+
+- item: publish workflow
+  reason: explicitly out of scope (section 2.2, 4.3, 18).
+  risk if implemented: irreversible, external action taken without a dedicated, explicit publish prompt.
+  correct future handling: a separate publish/tag/GitHub-release prompt after pre-release validation passes, per artifacts/v1.2.0-batch-sequence-plan.txt.
+
+STATUS: complete

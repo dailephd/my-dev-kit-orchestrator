@@ -1,0 +1,448 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import {
+  readRawContextCapsule,
+  readRawRetrievalAudit,
+  findCapsuleAuditInconsistencies,
+  resolveRawEvidencePath,
+  RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR,
+} from '../src/instructions/myDevKitEvidenceSummary';
+
+const FIXTURE_DIR = path.join(__dirname, 'fixtures', 'context-contracts', 'my-dev-kit-1.10.2');
+
+function makeTempDir(): string {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-raw-evidence-'));
+}
+
+function minimalCapsule(overrides: Record<string, unknown> = {}): string {
+  return JSON.stringify({
+    schemaVersion: '1.0.0',
+    tool: { name: 'my-dev-kit', version: '1.10.2' },
+    index: { indexPath: '/idx', manifestPath: '/idx/manifest.json' },
+    request: { role: 'implementation' },
+    roleContext: { role: 'implementation' },
+    roleAdequacy: { status: 'context sufficient for implementation' },
+    freshness: {
+      role: 'implementation',
+      state: 'fresh',
+      comparedIdentities: [{ label: 'afterIndexPath', value: '/idx' }],
+    },
+    responsibilityMappings: { mappings: [], truncated: false },
+    truncation: { truncated: false, records: [] },
+    fullFileFallback: { used: 0 },
+    provenance: [{ id: 'p1' }],
+    warnings: [],
+    ...overrides,
+  });
+}
+
+describe('readRawContextCapsule / readRawRetrievalAudit', () => {
+  it('parses a valid real implementation retrieval-audit fixture', () => {
+    const result = readRawRetrievalAudit(path.join(FIXTURE_DIR, 'implementation.retrieval-audit-record.json'), FIXTURE_DIR);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.projection.schemaMajor).toBe(RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR);
+      expect(result.projection.requestRole).toBe('implementation');
+      expect(result.projection.roleContextRole).toBe('implementation');
+      expect(result.projection.freshnessState).toBe('unknown');
+      expect(result.projection.roleAdequacyStatus).toBe('context insufficient and more retrieval required');
+      expect(result.projection.truncated).toBe(true);
+      expect(result.projection.truncationRequiredEvidenceLost).toBe(true);
+      expect(result.projection.toolName).toBe('my-dev-kit');
+      expect(result.projection.toolVersion).toBe('1.10.2');
+    }
+  });
+
+  it('parses a valid real test-implementation retrieval-audit fixture with responsibility mappings', () => {
+    const result = readRawRetrievalAudit(
+      path.join(FIXTURE_DIR, 'test-implementation.retrieval-audit-record.json'),
+      FIXTURE_DIR,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.projection.responsibilityMappings.length).toBe(4);
+      expect(result.projection.responsibilityMappings.map((m) => m.responsibilityId).sort()).toEqual([
+        'TST-V121-001',
+        'TST-V121-002',
+        'TST-V121-003',
+        'TST-V121-004',
+      ]);
+      expect(result.projection.responsibilityMappings.every((m) => m.mappingStatus === 'partially-mapped')).toBe(true);
+    }
+  });
+
+  it('accepts a minimal valid synthetic capsule', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule(), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.freshnessState).toBe('fresh');
+        expect(result.projection.freshnessAfterIndexDeclared).toBe(true);
+        expect(result.projection.freshnessAfterIndexPath).toBe('/idx');
+        expect(result.projection.provenanceCount).toBe(1);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports reference-missing for a nonexistent file', () => {
+    const tmp = makeTempDir();
+    try {
+      const result = readRawContextCapsule(path.join(tmp, 'nope.json'), tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('reference-missing');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed for invalid JSON', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'bad.json');
+      fs.writeFileSync(p, '{not json', 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed for non-object JSON', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'array.json');
+      fs.writeFileSync(p, '[1,2,3]', 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed for a missing schemaVersion', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'noversion.json');
+      fs.writeFileSync(p, JSON.stringify({ tool: { name: 'my-dev-kit' } }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports unsupported-schema for an unsupported major', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'v2.json');
+      fs.writeFileSync(p, minimalCapsule({ schemaVersion: '2.0.0' }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.status).toBe('unsupported-schema');
+        expect(result.declaredSchemaVersion).toBe('2.0.0');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects URL paths and traversal paths deterministically', () => {
+    const tmp = makeTempDir();
+    expect(resolveRawEvidencePath('https://example.com/x.json', tmp).safe).toBe(false);
+    expect(resolveRawEvidencePath('../../etc/passwd', tmp).safe).toBe(false);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('rejects NUL-byte paths', () => {
+    const tmp = makeTempDir();
+    try {
+      expect(resolveRawEvidencePath('bad\0path.json', tmp).safe).toBe(false);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('v1.10.4 roleConditionCoverage (v1.2.3 Batch 1)', () => {
+  const SATISFIED_CONDITION = {
+    conditionId: 'implementation.selected-owner',
+    role: 'implementation',
+    required: true,
+    retainedWitnessIds: ['owner-1'],
+    conditionSatisfied: true,
+    lostRequiredCondition: false,
+  };
+  const LOST_CONDITION = {
+    conditionId: 'implementation.required-contract',
+    role: 'implementation',
+    required: true,
+    retainedWitnessIds: [],
+    conditionSatisfied: false,
+    lostRequiredCondition: true,
+  };
+
+  it('accepts a v1.10.4 capsule declaring fully satisfied condition coverage', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.roleConditionCoverage).toEqual([SATISFIED_CONDITION]);
+        expect(result.projection.requiredConditionWitnessLost).toBe(false);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('derives requiredConditionWitnessLost when a required condition reports lostRequiredCondition', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION, LOST_CONDITION] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.requiredConditionWitnessLost).toBe(true);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('treats a schema-major-1 capsule that omits roleConditionCoverage entirely as legacy-compatible', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule(), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.projection.roleConditionCoverage).toEqual([]);
+        expect(result.projection.requiredConditionWitnessLost).toBe(false);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed when roleConditionCoverage is present but not an array', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: 'not-an-array' }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('reports malformed when a roleConditionCoverage entry is missing required fields', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ roleConditionCoverage: [{ conditionId: 'x' }] }), 'utf8');
+      const result = readRawContextCapsule(p, tmp);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.status).toBe('malformed');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('detects a roleConditionCoverage mismatch between capsule and audit', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION] }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ roleConditionCoverage: [SATISFIED_CONDITION, LOST_CONDITION] }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain('requiredConditionCoverage');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('findCapsuleAuditInconsistencies', () => {
+  it('reports no mismatches for identical projections', () => {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'c.json');
+      fs.writeFileSync(p, minimalCapsule(), 'utf8');
+      const a = readRawContextCapsule(p, tmp);
+      const b = readRawContextCapsule(p, tmp);
+      expect(a.ok && b.ok).toBe(true);
+      if (a.ok && b.ok) {
+        expect(findCapsuleAuditInconsistencies(a.projection, b.projection)).toEqual([]);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('detects a role mismatch', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule(), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ request: { role: 'test-implementation' }, roleContext: { role: 'test-implementation' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain('role');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('detects an index-identity mismatch', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule(), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: '/other', manifestPath: '/other/manifest.json' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain('indexIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  function expectMismatch(overrides: Record<string, unknown>, field: string) {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule(), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule(overrides), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).toContain(field);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  it('detects a freshness state mismatch', () => {
+    expectMismatch({ freshness: { role: 'implementation', state: 'stale', comparedIdentities: [] } }, 'freshness');
+  });
+
+  it('detects an after-index identity mismatch', () => {
+    expectMismatch(
+      { freshness: { role: 'implementation', state: 'fresh', comparedIdentities: [{ label: 'afterIndexPath', value: '/other-after' }] } },
+      'afterIndexIdentity',
+    );
+  });
+
+  it('detects a before-index identity mismatch', () => {
+    expectMismatch(
+      {
+        freshness: {
+          role: 'implementation',
+          state: 'fresh',
+          comparedIdentities: [
+            { label: 'afterIndexPath', value: '/idx' },
+            { label: 'beforeIndexPath', value: '/other-before' },
+          ],
+        },
+      },
+      'beforeIndexIdentity',
+    );
+  });
+
+  it('detects an overall (contextAdequacy) adequacy mismatch', () => {
+    expectMismatch({ contextAdequacy: { status: 'context insufficient and more retrieval required' } }, 'overallAdequacy');
+  });
+
+  it('detects a role-adequacy mismatch', () => {
+    expectMismatch({ roleAdequacy: { status: 'context insufficient and more retrieval required' } }, 'adequacy');
+  });
+
+  it('detects a required-truncation mismatch', () => {
+    expectMismatch({ truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } }, 'requiredTruncation');
+    expectMismatch({ truncation: { truncated: true, records: [{ requiredEvidenceLost: true }] } }, 'truncation');
+  });
+
+  it('detects a fallback-usage mismatch', () => {
+    expectMismatch({ fullFileFallback: { used: 1 } }, 'fallback');
+  });
+
+  it('detects a provenance-count mismatch', () => {
+    expectMismatch({ provenance: [{ id: 'p1' }, { id: 'p2' }] }, 'provenance');
+  });
+
+  it('detects a responsibility-mappings-truncated mismatch', () => {
+    expectMismatch({ responsibilityMappings: { mappings: [], truncated: true } }, 'responsibilityMappings');
+  });
+
+  it('detects a repository-identity (index.projectRoot) mismatch (v1.2.2 Batch 2 / F-006)', () => {
+    expectMismatch({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: '/repo/other' } }, 'repositoryIdentity');
+  });
+
+  it('does not flag a repository identity that only differs by cosmetic path form (separators/case/trailing slash)', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'C:\\Users\\dev\\repo\\' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: '/idx', manifestPath: '/idx/manifest.json', projectRoot: 'c:/Users/dev/repo' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('repositoryIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('does not flag an index-identity mismatch for cosmetically different but equivalent paths', () => {
+    const tmp = makeTempDir();
+    try {
+      const cPath = path.join(tmp, 'c.json');
+      const aPath = path.join(tmp, 'a.json');
+      fs.writeFileSync(cPath, minimalCapsule({ index: { indexPath: 'C:\\idx\\', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      fs.writeFileSync(aPath, minimalCapsule({ index: { indexPath: 'c:/idx', manifestPath: '/idx/manifest.json' } }), 'utf8');
+      const c = readRawContextCapsule(cPath, tmp);
+      const a = readRawContextCapsule(aPath, tmp);
+      expect(c.ok && a.ok).toBe(true);
+      if (c.ok && a.ok) {
+        expect(findCapsuleAuditInconsistencies(c.projection, a.projection)).not.toContain('indexIdentity');
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

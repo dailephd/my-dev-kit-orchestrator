@@ -1,0 +1,6 @@
+Artifact: FinalReport
+Workflow mode: feature
+Run ID: frozen-run-fixture
+Verdict: PASS
+Summary: All stages complete. Judge returned PASS.
+Status: complete

@@ -5,20 +5,48 @@ import { generateStagePrompt, writeStagePrompts } from '../promptGenerator';
 import { RunMetadata } from '../run';
 import { getWorkflow } from '../workflows';
 import { VALID_MODES } from '../types';
+import { makeReadyRunFolder } from '../../tests/readyContextTestHelpers';
 
+// Batch 5: the direct context-sensitive stages (implementation /
+// test-implementation) only render their normal packet-backed prompt when
+// repository context is ready (AGENTS.txt Batch 5 section 14.2). This
+// file's assertions are about normal-prompt content, so every mode gets a
+// real, ready-populated run folder rather than the old nonexistent
+// "/fake/project" path (which would now yield context-refresh-only prompts
+// for those stages). See tests/repositoryEvidencePromptIntegration.test.ts
+// for dedicated missing/ready-context prompt coverage.
 function makeFakeRun(mode: typeof VALID_MODES[number]): RunMetadata {
   const workflow = getWorkflow(mode);
-  return {
+  const runFolder = fs.mkdtempSync(path.join(os.tmpdir(), `mdko-prompt-gen-${mode}-`));
+  makeReadyRunFolder(runFolder, mode);
+  const meta: RunMetadata = {
     runId: `20240101T120000-test-run`,
     mode,
     request: 'test request',
-    projectRoot: '/fake/project',
-    runFolder: '/fake/project/.my-dev-kit-orchestrator/runs/20240101T120000-test-run',
+    projectRoot: path.dirname(runFolder),
+    runFolder,
     createdAt: '2024-01-01T12:00:00.000Z',
     currentStage: workflow.stages[0].name,
     stages: workflow.stages,
     status: 'created',
   };
+  // v1.2.3 Batch 3: final-report only renders its normal prompt once
+  // finalReportEligible is true, so every prior native artifact (including
+  // an accepted PASS judge-report.txt) is populated here -- this file's
+  // assertions are about normal-prompt content for every stage, matching
+  // the same "give every stage a legitimately ready precondition" approach
+  // makeReadyRunFolder already takes for repository context above.
+  const judgeIndex = workflow.stages.findIndex((s) => s.name === 'judge');
+  if (judgeIndex !== -1) {
+    for (const s of workflow.stages.slice(0, judgeIndex)) {
+      fs.writeFileSync(path.join(runFolder, s.artifactFile), 'done', 'utf8');
+      for (const additional of s.additionalArtifactFiles ?? []) {
+        fs.writeFileSync(path.join(runFolder, additional), 'done', 'utf8');
+      }
+    }
+    fs.writeFileSync(path.join(runFolder, 'artifacts', 'judge-report.txt'), 'Verdict: PASS', 'utf8');
+  }
+  return meta;
 }
 
 describe('generateStagePrompt - required sections', () => {
@@ -76,7 +104,8 @@ describe('generateStagePrompt - scope boundaries', () => {
   });
 
   it('test-implementation prompt requires test-strategy-packet as input', () => {
-    for (const mode of VALID_MODES) {
+    // greenfield (v1.1.0) has no test-implementation stage; every other mode does.
+    for (const mode of VALID_MODES.filter((m) => m !== 'greenfield')) {
       const meta = makeFakeRun(mode);
       const prompt = generateStagePrompt(meta, 'test-implementation');
       expect(prompt).toContain('test-strategy-packet.txt');
@@ -172,8 +201,10 @@ describe('generateStagePrompt - no unrelated workflow modes', () => {
   });
 });
 
-// extraction mode uses source-architecture-context, not architecture-context
-const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction');
+// extraction mode uses source-architecture-context, not architecture-context;
+// greenfield (v1.1.0) has its own stage vocabulary and has no
+// architecture-context stage at all
+const MODES_WITH_ARCH_CONTEXT = VALID_MODES.filter((m) => m !== 'extraction' && m !== 'greenfield');
 
 describe('generateStagePrompt - architecture-context my-dev-kit guidance', () => {
   it('architecture-context prompt mentions my-dev-kit as prompt-driven guidance', () => {
@@ -299,6 +330,7 @@ describe('writeStagePrompts', () => {
 
       fs.mkdirSync(path.join(runFolder, 'prompts'), { recursive: true });
       fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+      fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
 
       writeStagePrompts(patchedMeta);
 
@@ -324,6 +356,8 @@ describe('writeStagePrompts', () => {
         for (const stage of patchedMeta.stages) {
           fs.mkdirSync(path.join(runFolder, path.dirname(stage.promptFile)), { recursive: true });
         }
+        fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+        fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
 
         writeStagePrompts(patchedMeta);
 

@@ -1,0 +1,1025 @@
+{
+  "checkAndExportContract": {
+    "checkVariants": [
+      "default run check",
+      "single artifact",
+      "prompts",
+      "artifacts",
+      "all",
+      "trace",
+      "design-map"
+    ],
+    "contractsAndStageGates": "Artifact contracts and stage gates are validated against the selected run without changing workflow order.",
+    "export": "Exports bounded run metadata, workflow/status/correction information, and artifacts to stdout or a safe requested path.",
+    "pathSafety": "Export rejects paths outside its allowed destination boundary and does not overwrite repository inputs through traversal.",
+    "strictBehavior": "Warnings make the check fail in strict mode.",
+    "traceAndDesignMap": "Trace and DesignMap checks are explicit opt-in variants."
+  },
+  "cliContract": {
+    "commands": [
+      {
+        "name": "init",
+        "publicOptions": [
+          "--root <path>"
+        ],
+        "sideEffect": "writes the workspace skeleton"
+      },
+      {
+        "name": "start",
+        "publicOptions": [
+          "--mode <mode>",
+          "--request <text>",
+          "--profile <id>"
+        ],
+        "sideEffect": "creates a run and its prompt/artifact directories"
+      },
+      {
+        "name": "status",
+        "publicOptions": [
+          "--run <id>"
+        ],
+        "sideEffect": "read-only status inspection"
+      },
+      {
+        "name": "prompt",
+        "publicOptions": [
+          "--run <id>",
+          "--stage <name>"
+        ],
+        "sideEffect": "read-only prompt rendering"
+      },
+      {
+        "name": "list",
+        "publicOptions": [],
+        "sideEffect": "read-only run listing"
+      },
+      {
+        "name": "mark",
+        "publicOptions": [
+          "--run <id>",
+          "--stage <name>",
+          "--state <state>",
+          "--reason <text>"
+        ],
+        "sideEffect": "writes artifact-state.json"
+      },
+      {
+        "name": "check",
+        "publicOptions": [
+          "--run <id>",
+          "--artifact <path>",
+          "--prompts",
+          "--artifacts",
+          "--all",
+          "--trace",
+          "--design-map",
+          "--strict"
+        ],
+        "sideEffect": "reads run artifacts and may write check/trace results under the run"
+      },
+      {
+        "name": "export",
+        "publicOptions": [
+          "--run <id>",
+          "--out <path>"
+        ],
+        "sideEffect": "writes a bounded export only when a safe output path is supplied; otherwise prints it"
+      }
+    ],
+    "helpSummary": "Prompt-guided workflow orchestration with explicit run, artifact, check, correction, and export commands.",
+    "version": "1.2.0"
+  },
+  "correctionRoutingContract": {
+    "blockedVerdicts": [
+      "SCOPE_VIOLATION",
+      "BLOCKED"
+    ],
+    "correctableStages": [
+      "architecture-context",
+      "behavior-model",
+      "pseudocode-packet",
+      "test-strategy",
+      "test-implementation",
+      "implementation",
+      "verification"
+    ],
+    "defaultRoutes": {
+      "ARCHITECTURE_MISMATCH": "architecture-context",
+      "DESIGN_INCOMPLETE": "behavior-model",
+      "IMPLEMENTATION_MISMATCH": "implementation",
+      "NEED_CONTEXT": "architecture-context",
+      "NEED_VERIFICATION": "verification",
+      "PSEUDOCODE_INCOMPLETE": "pseudocode-packet",
+      "TEST_COVERAGE_INCOMPLETE": "test-strategy"
+    },
+    "recommendedStageOverride": "A valid recommended correctable stage wins; a conflict warns and strict mode fails. An invalid recommendation warns and falls back to the table default.",
+    "routeStatuses": [
+      "pass",
+      "correction_required",
+      "blocked",
+      "unknown_verdict",
+      "missing_verdict"
+    ],
+    "verdicts": [
+      "PASS",
+      "NEED_CONTEXT",
+      "DESIGN_INCOMPLETE",
+      "PSEUDOCODE_INCOMPLETE",
+      "IMPLEMENTATION_MISMATCH",
+      "TEST_COVERAGE_INCOMPLETE",
+      "ARCHITECTURE_MISMATCH",
+      "NEED_VERIFICATION",
+      "SCOPE_VIOLATION",
+      "BLOCKED"
+    ]
+  },
+  "documentationBaselineNote": {
+    "canonicalDocuments": [
+      "README.md",
+      "CHANGELOG.md",
+      "docs/ARCHITECTURE.md",
+      "docs/ARTIFACTS.md",
+      "docs/DEVELOPMENT.md",
+      "docs/ROADMAP.md",
+      "docs/USAGE.md",
+      "docs/WORKFLOWS.md"
+    ],
+    "committedState": "The selected commit identifies v1.2.0 as published and includes the committed documentation-preservation manifest.",
+    "currentLimitations": [
+      "prompt-guided rather than autonomous",
+      "does not automatically run my-dev-kit or coding agents",
+      "does not automatically run Gradle",
+      "generic mobile is intentionally unresolved"
+    ],
+    "externalUncommittedEditorialOverlayExists": true,
+    "overlayExcludedFromFixtureGeneration": true,
+    "releasePreparationRequirement": "Reconcile the preserved external editorial overlay intentionally before release preparation."
+  },
+  "fixtureSchemaVersion": "1.0.0",
+  "greenfieldContract": {
+    "androidComposeBoundary": "Android Compose is a supported prompt/scaffold profile. Commands are descriptive data; the orchestrator does not execute Gradle and requires no Android SDK.",
+    "commandsAreDescriptiveOnly": true,
+    "genericMobileAmbiguity": [
+      "mobile",
+      "mobile-app",
+      "phone-app"
+    ],
+    "profileIds": [
+      "typescript-cli",
+      "nextjs-app",
+      "android-compose"
+    ],
+    "profileResolutionBoundary": "Explicit aliases are resolved deterministically; unsupported requests are preserved rather than silently substituted.",
+    "stageOrder": [
+      "idea-brief",
+      "product-boundary",
+      "stack-decision",
+      "starter-profile",
+      "bootstrap-bundle",
+      "project-docs",
+      "scaffold-plan",
+      "scaffold-implementation",
+      "first-vertical-slice",
+      "verification",
+      "initial-index",
+      "judge",
+      "final-report"
+    ],
+    "unsupportedProfiles": [
+      "ios",
+      "react-native",
+      "flutter",
+      "kotlin-multiplatform"
+    ]
+  },
+  "lifecycleContract": {
+    "computedStates": [
+      "missing",
+      "incomplete",
+      "complete",
+      "blocked",
+      "stale"
+    ],
+    "legacyFallback": "When artifact-state.json is absent, existing artifact files are treated as complete and missing files as missing.",
+    "manualStates": [
+      "incomplete",
+      "complete",
+      "blocked"
+    ],
+    "staleDependencyModel": "A completed artifact is stale when any upstream dependency has a later completion time.",
+    "stateResolutionOrder": [
+      "explicit blocked record",
+      "missing artifact file",
+      "explicit incomplete record",
+      "stale because a dependency completed later",
+      "complete"
+    ]
+  },
+  "modeContract": [
+    {
+      "mode": "feature",
+      "stageCount": 10,
+      "stageOrder": [
+        "request-brief",
+        "architecture-context",
+        "behavior-model",
+        "pseudocode-packet",
+        "test-strategy",
+        "implementation",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "repair",
+      "stageCount": 11,
+      "stageOrder": [
+        "observed-behavior-report",
+        "architecture-context",
+        "behavior-trace",
+        "divergence-report",
+        "correction-design",
+        "regression-test-strategy",
+        "implementation",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "test",
+      "stageCount": 9,
+      "stageOrder": [
+        "test-target-brief",
+        "architecture-context",
+        "behavior-reconstruction",
+        "pseudocode-summary",
+        "test-strategy",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "refactor",
+      "stageCount": 11,
+      "stageOrder": [
+        "refactor-brief",
+        "architecture-context",
+        "existing-behavior-map",
+        "preserved-invariant-list",
+        "compatibility-test-strategy",
+        "refactor-pseudocode-packet",
+        "implementation",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "harden",
+      "stageCount": 11,
+      "stageOrder": [
+        "hardening-brief",
+        "architecture-context",
+        "assumption-report",
+        "failure-mode-matrix",
+        "guard-pseudocode-packet",
+        "resilience-test-strategy",
+        "implementation",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "extraction",
+      "stageCount": 14,
+      "stageOrder": [
+        "request-brief",
+        "source-architecture-context",
+        "source-workflow-map",
+        "porting-map",
+        "golden-behavior-contract",
+        "target-architecture",
+        "behavior-model",
+        "pseudocode-packet",
+        "test-strategy",
+        "implementation",
+        "test-implementation",
+        "verification",
+        "judge",
+        "final-report"
+      ]
+    },
+    {
+      "mode": "greenfield",
+      "stageCount": 13,
+      "stageOrder": [
+        "idea-brief",
+        "product-boundary",
+        "stack-decision",
+        "starter-profile",
+        "bootstrap-bundle",
+        "project-docs",
+        "scaffold-plan",
+        "scaffold-implementation",
+        "first-vertical-slice",
+        "verification",
+        "initial-index",
+        "judge",
+        "final-report"
+      ]
+    }
+  ],
+  "packageContract": {
+    "bin": {
+      "my-dev-kit-orchestrator": "dist/cli.js"
+    },
+    "engines": null,
+    "files": [
+      "dist"
+    ],
+    "name": "@dailephd/my-dev-kit-orchestrator",
+    "scripts": {
+      "build": "tsc",
+      "build:watch": "tsc --watch",
+      "clean": "rimraf dist",
+      "docs:check": "node scripts/check-docs-consistency.mjs",
+      "lint": "eslint src --ext .ts",
+      "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
+      "smoke:cli": "node scripts/cli-smoke.mjs",
+      "start": "node dist/cli.js",
+      "test": "jest",
+      "test:security": "node scripts/test-security.mjs",
+      "test:watch": "jest --watch",
+      "typecheck": "tsc --noEmit"
+    },
+    "version": "1.2.0"
+  },
+  "provenance": {
+    "generatedOn": "2026-07-20",
+    "generationMethod": "Loaded package.json and the compiled getAllWorkflows() export from the verified clean baseline; recorded lifecycle, routing, CLI, greenfield, check, and export contracts from their committed source owners and baseline validation output.",
+    "intentionallyExcludedNondeterministicFields": [
+      "absolute worktree paths",
+      "command timestamps",
+      "temporary output paths",
+      "installation timing"
+    ],
+    "packageVersion": "1.2.0",
+    "selectedCommit": "983a476da2d483f76f92fef73a0b324c9ed77ea7",
+    "selectedRef": "origin/fix/documentation-plan-restoration-v1.2.0",
+    "sourceOwners": [
+      "package.json",
+      "src/cli.ts",
+      "src/workflows.ts",
+      "src/artifactLifecycle.ts",
+      "src/correctionRouter.ts",
+      "src/commands/check.ts",
+      "src/commands/export.ts",
+      "src/greenfield/profiles/resolveGreenfieldProfile.ts"
+    ]
+  },
+  "stageContract": [
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/request-brief.txt",
+      "mode": "feature",
+      "position": 1,
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "stageName": "request-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "mode": "feature",
+      "position": 2,
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "stageName": "architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/behavior-model.txt",
+      "mode": "feature",
+      "position": 3,
+      "promptFile": "prompts/03-behavior-model.prompt.txt",
+      "stageName": "behavior-model"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/pseudocode-packet.txt",
+      "mode": "feature",
+      "position": 4,
+      "promptFile": "prompts/04-pseudocode-packet.prompt.txt",
+      "stageName": "pseudocode-packet"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "mode": "feature",
+      "position": 5,
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "stageName": "test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/implementation-report.txt",
+      "mode": "feature",
+      "position": 6,
+      "promptFile": "prompts/06-implementation.prompt.txt",
+      "stageName": "implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "feature",
+      "position": 7,
+      "promptFile": "prompts/07-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "feature",
+      "position": 8,
+      "promptFile": "prompts/08-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "feature",
+      "position": 9,
+      "promptFile": "prompts/09-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "feature",
+      "position": 10,
+      "promptFile": "prompts/10-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/observed-behavior-report.txt",
+      "mode": "repair",
+      "position": 1,
+      "promptFile": "prompts/01-observed-behavior-report.prompt.txt",
+      "stageName": "observed-behavior-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "mode": "repair",
+      "position": 2,
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "stageName": "architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/behavior-trace.txt",
+      "mode": "repair",
+      "position": 3,
+      "promptFile": "prompts/03-behavior-trace.prompt.txt",
+      "stageName": "behavior-trace"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/divergence-report.txt",
+      "mode": "repair",
+      "position": 4,
+      "promptFile": "prompts/04-divergence-report.prompt.txt",
+      "stageName": "divergence-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/correction-design.txt",
+      "mode": "repair",
+      "position": 5,
+      "promptFile": "prompts/05-correction-design.prompt.txt",
+      "stageName": "correction-design"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/regression-test-strategy.txt",
+      "mode": "repair",
+      "position": 6,
+      "promptFile": "prompts/06-regression-test-strategy.prompt.txt",
+      "stageName": "regression-test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/implementation-report.txt",
+      "mode": "repair",
+      "position": 7,
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "stageName": "implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "repair",
+      "position": 8,
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "repair",
+      "position": 9,
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "repair",
+      "position": 10,
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "repair",
+      "position": 11,
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-target-brief.txt",
+      "mode": "test",
+      "position": 1,
+      "promptFile": "prompts/01-test-target-brief.prompt.txt",
+      "stageName": "test-target-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "mode": "test",
+      "position": 2,
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "stageName": "architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/behavior-reconstruction.txt",
+      "mode": "test",
+      "position": 3,
+      "promptFile": "prompts/03-behavior-reconstruction.prompt.txt",
+      "stageName": "behavior-reconstruction"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/pseudocode-summary.txt",
+      "mode": "test",
+      "position": 4,
+      "promptFile": "prompts/04-pseudocode-summary.prompt.txt",
+      "stageName": "pseudocode-summary"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "mode": "test",
+      "position": 5,
+      "promptFile": "prompts/05-test-strategy.prompt.txt",
+      "stageName": "test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "test",
+      "position": 6,
+      "promptFile": "prompts/06-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "test",
+      "position": 7,
+      "promptFile": "prompts/07-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "test",
+      "position": 8,
+      "promptFile": "prompts/08-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "test",
+      "position": 9,
+      "promptFile": "prompts/09-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/refactor-brief.txt",
+      "mode": "refactor",
+      "position": 1,
+      "promptFile": "prompts/01-refactor-brief.prompt.txt",
+      "stageName": "refactor-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "mode": "refactor",
+      "position": 2,
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "stageName": "architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/existing-behavior-map.txt",
+      "mode": "refactor",
+      "position": 3,
+      "promptFile": "prompts/03-existing-behavior-map.prompt.txt",
+      "stageName": "existing-behavior-map"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/preserved-invariant-list.txt",
+      "mode": "refactor",
+      "position": 4,
+      "promptFile": "prompts/04-preserved-invariant-list.prompt.txt",
+      "stageName": "preserved-invariant-list"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/compatibility-test-strategy.txt",
+      "mode": "refactor",
+      "position": 5,
+      "promptFile": "prompts/05-compatibility-test-strategy.prompt.txt",
+      "stageName": "compatibility-test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/refactor-pseudocode-packet.txt",
+      "mode": "refactor",
+      "position": 6,
+      "promptFile": "prompts/06-refactor-pseudocode-packet.prompt.txt",
+      "stageName": "refactor-pseudocode-packet"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/implementation-report.txt",
+      "mode": "refactor",
+      "position": 7,
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "stageName": "implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "refactor",
+      "position": 8,
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "refactor",
+      "position": 9,
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "refactor",
+      "position": 10,
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "refactor",
+      "position": 11,
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/hardening-brief.txt",
+      "mode": "harden",
+      "position": 1,
+      "promptFile": "prompts/01-hardening-brief.prompt.txt",
+      "stageName": "hardening-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/architecture-context-packet.txt",
+      "mode": "harden",
+      "position": 2,
+      "promptFile": "prompts/02-architecture-context.prompt.txt",
+      "stageName": "architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/assumption-report.txt",
+      "mode": "harden",
+      "position": 3,
+      "promptFile": "prompts/03-assumption-report.prompt.txt",
+      "stageName": "assumption-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/failure-mode-matrix.txt",
+      "mode": "harden",
+      "position": 4,
+      "promptFile": "prompts/04-failure-mode-matrix.prompt.txt",
+      "stageName": "failure-mode-matrix"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/guard-pseudocode-packet.txt",
+      "mode": "harden",
+      "position": 5,
+      "promptFile": "prompts/05-guard-pseudocode-packet.prompt.txt",
+      "stageName": "guard-pseudocode-packet"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/resilience-test-strategy.txt",
+      "mode": "harden",
+      "position": 6,
+      "promptFile": "prompts/06-resilience-test-strategy.prompt.txt",
+      "stageName": "resilience-test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/implementation-report.txt",
+      "mode": "harden",
+      "position": 7,
+      "promptFile": "prompts/07-implementation.prompt.txt",
+      "stageName": "implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "harden",
+      "position": 8,
+      "promptFile": "prompts/08-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "harden",
+      "position": 9,
+      "promptFile": "prompts/09-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "harden",
+      "position": 10,
+      "promptFile": "prompts/10-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "harden",
+      "position": 11,
+      "promptFile": "prompts/11-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/request-brief.txt",
+      "mode": "extraction",
+      "position": 1,
+      "promptFile": "prompts/01-request-brief.prompt.txt",
+      "stageName": "request-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/source-architecture-context-packet.txt",
+      "mode": "extraction",
+      "position": 2,
+      "promptFile": "prompts/02-source-architecture-context.prompt.txt",
+      "stageName": "source-architecture-context"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/source-workflow-map.txt",
+      "mode": "extraction",
+      "position": 3,
+      "promptFile": "prompts/03-source-workflow-map.prompt.txt",
+      "stageName": "source-workflow-map"
+    },
+    {
+      "additionalArtifactFiles": [
+        "artifacts/do-not-port-list.txt"
+      ],
+      "artifactFile": "artifacts/source-to-target-porting-map.txt",
+      "mode": "extraction",
+      "position": 4,
+      "promptFile": "prompts/04-porting-map.prompt.txt",
+      "stageName": "porting-map"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/golden-behavior-contract.txt",
+      "mode": "extraction",
+      "position": 5,
+      "promptFile": "prompts/05-golden-behavior-contract.prompt.txt",
+      "stageName": "golden-behavior-contract"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/target-architecture-proposal.txt",
+      "mode": "extraction",
+      "position": 6,
+      "promptFile": "prompts/06-target-architecture.prompt.txt",
+      "stageName": "target-architecture"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/behavior-model.txt",
+      "mode": "extraction",
+      "position": 7,
+      "promptFile": "prompts/07-behavior-model.prompt.txt",
+      "stageName": "behavior-model"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/pseudocode-packet.txt",
+      "mode": "extraction",
+      "position": 8,
+      "promptFile": "prompts/08-pseudocode-packet.prompt.txt",
+      "stageName": "pseudocode-packet"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-strategy-packet.txt",
+      "mode": "extraction",
+      "position": 9,
+      "promptFile": "prompts/09-test-strategy.prompt.txt",
+      "stageName": "test-strategy"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/implementation-report.txt",
+      "mode": "extraction",
+      "position": 10,
+      "promptFile": "prompts/10-implementation.prompt.txt",
+      "stageName": "implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/test-implementation-report.txt",
+      "mode": "extraction",
+      "position": 11,
+      "promptFile": "prompts/11-test-implementation.prompt.txt",
+      "stageName": "test-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "extraction",
+      "position": 12,
+      "promptFile": "prompts/12-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "extraction",
+      "position": 13,
+      "promptFile": "prompts/13-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "extraction",
+      "position": 14,
+      "promptFile": "prompts/14-final-report.prompt.txt",
+      "stageName": "final-report"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/idea-brief.json",
+      "mode": "greenfield",
+      "position": 1,
+      "promptFile": "prompts/01-idea-brief.prompt.txt",
+      "stageName": "idea-brief"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/product-boundary.txt",
+      "mode": "greenfield",
+      "position": 2,
+      "promptFile": "prompts/02-product-boundary.prompt.txt",
+      "stageName": "product-boundary"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/stack-decision.txt",
+      "mode": "greenfield",
+      "position": 3,
+      "promptFile": "prompts/03-stack-decision.prompt.txt",
+      "stageName": "stack-decision"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/starter-profile.json",
+      "mode": "greenfield",
+      "position": 4,
+      "promptFile": "prompts/04-starter-profile.prompt.txt",
+      "stageName": "starter-profile"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/bootstrap-bundle.json",
+      "mode": "greenfield",
+      "position": 5,
+      "promptFile": "prompts/05-bootstrap-bundle.prompt.txt",
+      "stageName": "bootstrap-bundle"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/project-docs-report.txt",
+      "mode": "greenfield",
+      "position": 6,
+      "promptFile": "prompts/06-project-docs.prompt.txt",
+      "stageName": "project-docs"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/scaffold-plan.txt",
+      "mode": "greenfield",
+      "position": 7,
+      "promptFile": "prompts/07-scaffold-plan.prompt.txt",
+      "stageName": "scaffold-plan"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "reports/scaffold-implementation-report.txt",
+      "mode": "greenfield",
+      "position": 8,
+      "promptFile": "prompts/08-scaffold-implementation.prompt.txt",
+      "stageName": "scaffold-implementation"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/first-vertical-slice.txt",
+      "mode": "greenfield",
+      "position": 9,
+      "promptFile": "prompts/09-first-vertical-slice.prompt.txt",
+      "stageName": "first-vertical-slice"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/verification-report.txt",
+      "mode": "greenfield",
+      "position": 10,
+      "promptFile": "prompts/10-verification.prompt.txt",
+      "stageName": "verification"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "reports/initial-index-report.txt",
+      "mode": "greenfield",
+      "position": 11,
+      "promptFile": "prompts/11-initial-index.prompt.txt",
+      "stageName": "initial-index"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/judge-report.txt",
+      "mode": "greenfield",
+      "position": 12,
+      "promptFile": "prompts/12-judge.prompt.txt",
+      "stageName": "judge"
+    },
+    {
+      "additionalArtifactFiles": [],
+      "artifactFile": "artifacts/final-report.txt",
+      "mode": "greenfield",
+      "position": 13,
+      "promptFile": "prompts/13-final-report.prompt.txt",
+      "stageName": "final-report"
+    }
+  ]
+}

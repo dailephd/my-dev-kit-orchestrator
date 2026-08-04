@@ -18,7 +18,11 @@ import {
   ArtifactContractCheckResult,
   StageGateViolation,
 } from '../contractChecker';
-import { readCorrectionState } from '../correctionState';
+import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
+import { ContextReadinessResult } from '../instructions/contextReadiness';
+import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult, FinalReportEligibilityResult } from '../judgeIntegrity';
+import { RunMetadata } from '../run';
 
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
@@ -124,6 +128,117 @@ function formatGateViolation(v: StageGateViolation): string[] {
   ];
 }
 
+function formatContextReadinessResult(kind: string, result: ContextReadinessResult): string[] {
+  const lines = [`  [${result.decision === 'refresh-required' ? 'fail' : 'pass'}] ${kind} context: ${result.classification}`];
+  if (result.blockerSummary) {
+    const blocker = result.blockerSummary;
+    lines.push(`         Primary blocker: ${blocker.primaryCode}`);
+    lines.push(`         Reason: ${blocker.primaryReason}`);
+    lines.push(`         Blocking issues: ${blocker.blockingIssueCodes.join(', ')}`);
+    lines.push(`         Corrective action: ${blocker.correctiveAction}`);
+    lines.push(`         Evidence target: ${blocker.evidenceTarget}`);
+  }
+  return lines;
+}
+
+// Batch 5: evaluates repository-context readiness once per run (not once
+// per stage, so the same context-kind problem is reported a single time --
+// see AGENTS.txt Batch 5 section 20.3) and formats it deterministically for
+// both `check` and `check --all`. Read-only: never writes context files,
+// never marks a stage blocked, never executes my-dev-kit.
+function formatContextReadinessCheck(summary: RunContextReadinessSummary): { lines: string[]; hasFail: boolean } {
+  const lines: string[] = ['=== Repository context readiness ==='];
+  if (summary.overallDecision === 'not-required') {
+    lines.push('  not required for this mode');
+    lines.push('');
+    return { lines, hasFail: false };
+  }
+  let hasFail = false;
+  if (summary.implementationContext) {
+    if (summary.implementationContext.decision === 'refresh-required') hasFail = true;
+    lines.push(...formatContextReadinessResult('implementation', summary.implementationContext));
+  }
+  if (summary.testContext) {
+    if (summary.testContext.decision === 'refresh-required') hasFail = true;
+    lines.push(...formatContextReadinessResult('test', summary.testContext));
+  }
+  if (summary.overallDecision === 'refresh-required') {
+    lines.push(`  Recommended next stage: ${summary.recommendedNextStage ?? '(none)'}`);
+    lines.push(`  Affected stages: ${summary.affectedStages.join(', ')}`);
+  }
+  lines.push('');
+  return { lines, hasFail };
+}
+
+// v1.2.3 Batch 3: computes judge-integrity + final-report eligibility once
+// for a run (mirrors formatContextReadinessCheck's "evaluate once, format
+// deterministically for check and check --all" convention). Read-only.
+function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeIntegrityResult; eligibility: FinalReportEligibilityResult } {
+  const gate = evaluateRunIntegrityGate({
+    mode: meta.mode,
+    runFolder: meta.runFolder,
+    workflowStageNames: meta.stages.map((s) => s.name),
+    projectRoot: meta.projectRoot,
+  });
+  const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+  const stateFile = readArtifactStateFile(meta.runFolder);
+  const eligibility = evaluateFinalReportEligibility({
+    gate,
+    judgeIntegrity,
+    runFolder: meta.runFolder,
+    stages: meta.stages,
+    stateFile,
+  });
+  return { judgeIntegrity, eligibility };
+}
+
+// Formats the judge-integrity/final-report-eligibility state deterministically
+// for check/check --all/--artifacts (invariant 11.2). hasFail is true only
+// for a genuine integrity failure (rejected/malformed/missing-verdict/
+// unknown verdict) -- an ordinary accepted non-PASS correction verdict is a
+// normal in-progress state and does not fail check on its own, matching
+// existing pre-Batch-3 correction-routing display behavior.
+function formatJudgeIntegrityCheck(
+  judgeIntegrity: JudgeIntegrityResult,
+  eligibility: FinalReportEligibilityResult,
+): { lines: string[]; hasFail: boolean } {
+  const lines: string[] = ['=== Judge and final-report integrity ==='];
+  if (!judgeIntegrity.judgeArtifactPresent) {
+    lines.push('  no judge report found');
+    lines.push('');
+    return { lines, hasFail: false };
+  }
+
+  if (judgeIntegrity.judgeVerdictParseStatus === 'parsed') {
+    lines.push(`  Expected judge verdict: ${judgeIntegrity.expectedJudgeVerdict}`);
+    lines.push(
+      `  [${judgeIntegrity.judgeVerdictAccepted ? 'pass' : 'fail'}] Authored judge verdict: ${judgeIntegrity.authoredJudgeVerdict}`,
+    );
+    if (!judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.primaryReason) {
+      lines.push(`         Reason: ${judgeIntegrity.primaryReason}`);
+    }
+    if (judgeIntegrity.correctionBlocked) {
+      lines.push(`  Judge correction: ${judgeIntegrity.authoredJudgeVerdict} -- run is blocked`);
+    } else if (judgeIntegrity.correctionRequired) {
+      lines.push(`  Judge correction: ${judgeIntegrity.authoredJudgeVerdict} -> ${judgeIntegrity.acceptedCorrectionStage}`);
+    } else if (judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.authoredJudgeVerdict === 'PASS') {
+      lines.push('  Judge correction: PASS -- no correction required');
+    }
+  } else {
+    lines.push(`  Expected judge verdict: ${judgeIntegrity.expectedJudgeVerdict}`);
+    lines.push(`  [fail] Judge verdict parse status: ${judgeIntegrity.judgeVerdictParseStatus}`);
+    if (judgeIntegrity.primaryReason) lines.push(`         Reason: ${judgeIntegrity.primaryReason}`);
+  }
+  lines.push(`  Final-report eligible: ${eligibility.eligible}`);
+  if (!eligibility.eligible && eligibility.blockingCodes.length > 0) {
+    lines.push(`  Final-report blocking codes: ${eligibility.blockingCodes.join(', ')}`);
+  }
+  lines.push('');
+
+  const hasFail = !judgeIntegrity.judgeVerdictAccepted;
+  return { lines, hasFail };
+}
+
 function resolveArtifactTarget(
   meta: { stages: { name: string; artifactFile: string }[] },
   artifactArg: string,
@@ -223,12 +338,39 @@ export function makeCheckCommand(): Command {
             lines.push('Summary:');
             lines.push(...summarizeContracts(contractResult.results));
           }
+          lines.push('');
+
+          // Canonical run-integrity gate (v1.2.3 Batch 2 / invariant 6.7):
+          // structural artifact-contract validity and repository-context
+          // run eligibility are separate concerns. An artifact can pass
+          // every file/section check above while the run is still blocked
+          // from progression -- so --artifacts consults the same canonical
+          // gate every other command surface uses, rather than treating
+          // contract-pass as run-eligible.
+          const contractContextCheck = formatContextReadinessCheck(
+            evaluateRunContextReadiness({
+              mode: meta.mode,
+              runFolder: meta.runFolder,
+              workflowStageNames: meta.stages.map((s) => s.name),
+              projectRoot: meta.projectRoot,
+            }),
+          );
+          lines.push(...contractContextCheck.lines);
+
+          // Canonical judge/final-report integrity (v1.2.3 Batch 3):
+          // structural artifact validity never overrides an unaccepted
+          // judge verdict or an ineligible final report.
+          const contractJudgeState = evaluateJudgeCheckState(meta);
+          const contractJudgeCheck = formatJudgeIntegrityCheck(contractJudgeState.judgeIntegrity, contractJudgeState.eligibility);
+          lines.push(...contractJudgeCheck.lines);
 
           console.log(lines.join('\n'));
 
           const anyFail = !contractResult.modeValid ||
             contractResult.results.some((r) => !r.passed) ||
-            contractResult.modeIssues.some((i) => i.severity === 'fail');
+            contractResult.modeIssues.some((i) => i.severity === 'fail') ||
+            contractContextCheck.hasFail ||
+            contractJudgeCheck.hasFail;
           const anyWarn = contractResult.results.some((r) =>
             r.issues.some((i) => i.severity === 'warn'),
           );
@@ -250,8 +392,19 @@ export function makeCheckCommand(): Command {
           const hasDesignMap = fs.existsSync(designMapPath);
           const dmTraceResult = hasDesignMap ? checkDesignMapTrace(meta.runFolder) : null;
 
-          // Correction routing check
-          const correctionState = readCorrectionState(meta.runFolder);
+          // Canonical judge/final-report integrity (v1.2.3 Batch 3): replaces
+          // the raw readCorrectionState-based correction section below with
+          // the accepted (not authored-literal) judge state.
+          const allJudgeState = evaluateJudgeCheckState(meta);
+
+          // Repository context readiness check
+          const contextReadiness = evaluateRunContextReadiness({
+            mode: meta.mode,
+            runFolder: meta.runFolder,
+            workflowStageNames: meta.stages.map((s) => s.name),
+            projectRoot: meta.projectRoot,
+          });
+          const contextCheck = formatContextReadinessCheck(contextReadiness);
 
           const lines: string[] = [`Full check for run: ${meta.runId}`, ``];
 
@@ -310,20 +463,15 @@ export function makeCheckCommand(): Command {
           }
           lines.push('');
 
-          // Correction routing
-          lines.push('=== Correction routing ===');
-          if (!correctionState) {
-            lines.push('  no judge report found');
-          } else if (correctionState.routeStatus === 'pass') {
-            lines.push('  Judge correction: PASS -- no correction required');
-          } else if (correctionState.routeStatus === 'correction_required') {
-            lines.push(`  Judge correction: ${correctionState.verdict} -> ${correctionState.routedStage}`);
-          } else if (correctionState.routeStatus === 'blocked') {
-            lines.push(`  Judge correction: ${correctionState.verdict} -- run is blocked`);
-          } else {
-            lines.push(`  Judge correction: ${correctionState.routeStatus}`);
-          }
-          lines.push('');
+          // Judge and final-report integrity (replaces the old raw
+          // correction-routing-only section; see AGENTS.txt Batch 3
+          // invariant 11.2 -- one canonical judge-integrity summary, not a
+          // second correction-routing narrative that could disagree).
+          const allJudgeCheck = formatJudgeIntegrityCheck(allJudgeState.judgeIntegrity, allJudgeState.eligibility);
+          lines.push(...allJudgeCheck.lines);
+
+          // Repository context readiness
+          lines.push(...contextCheck.lines);
 
           // Persist trace results
           try {
@@ -354,6 +502,8 @@ export function makeCheckCommand(): Command {
             `  Stage gates: ${gateViolations.length} violation${gateViolations.length === 1 ? '' : 's'}`,
           );
           lines.push(...summarizeTrace(traceResults));
+          lines.push(`  Repository context: ${contextCheck.hasFail ? 'fail' : 'pass'}`);
+          lines.push(`  Judge and final-report integrity: ${allJudgeCheck.hasFail ? 'fail' : 'pass'}`);
 
           console.log(lines.join('\n'));
 
@@ -370,7 +520,7 @@ export function makeCheckCommand(): Command {
           );
           const hasGateViolations = gateViolations.length > 0;
 
-          const hasFail = anyContractFail || anyTraceFail || hasGateViolations;
+          const hasFail = anyContractFail || anyTraceFail || hasGateViolations || contextCheck.hasFail || allJudgeCheck.hasFail;
           const hasWarn = anyContractWarn || anyTraceWarn;
 
           if (hasFail || (options.strict && hasWarn)) {
@@ -500,6 +650,28 @@ export function makeCheckCommand(): Command {
           promptResults.push(...checkAllPrompts(meta));
         }
 
+        // Repository context readiness applies only to the full (no
+        // --artifact/--prompts filter) invocation of the default mode --
+        // matching the existing convention that --artifact/--prompts narrow
+        // to exactly what was requested.
+        const runContextCheck =
+          !options.artifact && !options.prompts
+            ? formatContextReadinessCheck(
+                evaluateRunContextReadiness({
+                  mode: meta.mode,
+                  runFolder: meta.runFolder,
+                  workflowStageNames: meta.stages.map((s) => s.name),
+                  projectRoot: meta.projectRoot,
+                }),
+              )
+            : null;
+        // Canonical judge/final-report integrity (v1.2.3 Batch 3), scoped
+        // identically to runContextCheck above.
+        const runJudgeState = !options.artifact && !options.prompts ? evaluateJudgeCheckState(meta) : null;
+        const runJudgeCheck = runJudgeState
+          ? formatJudgeIntegrityCheck(runJudgeState.judgeIntegrity, runJudgeState.eligibility)
+          : null;
+
         const lines: string[] = [`Check results for run: ${meta.runId}`, ``];
 
         if (artifactResults.length > 0) {
@@ -516,6 +688,14 @@ export function makeCheckCommand(): Command {
             lines.push(...formatPromptResult(result));
           }
           lines.push('');
+        }
+
+        if (runContextCheck) {
+          lines.push(...runContextCheck.lines);
+        }
+
+        if (runJudgeCheck) {
+          lines.push(...runJudgeCheck.lines);
         }
 
         lines.push(...summarize(artifactResults, promptResults));
@@ -546,7 +726,7 @@ export function makeCheckCommand(): Command {
           r.issues.some((i) => i.severity === 'warn'),
         );
 
-        const hasFail = anyArtifactFail || anyPromptFail;
+        const hasFail = anyArtifactFail || anyPromptFail || Boolean(runContextCheck?.hasFail) || Boolean(runJudgeCheck?.hasFail);
         const hasWarn = anyArtifactWarn || anyPromptWarn;
 
         if (hasFail || (options.strict && hasWarn)) {

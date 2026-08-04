@@ -1,0 +1,14 @@
+TestStrategyPacket fixture
+schemaVersion: 1.0.0
+owner: my-dev-kit-orchestrator
+purpose: controlled Batch 0 responsibility input; not runtime configuration
+
+TST-V121-001 | critical | catalog exact-ID resolution
+TST-V121-002 | critical | unrelated-instruction exclusion
+TST-V121-003 | critical | deterministic packet serialization
+TST-V121-004 | critical | old-run compatibility
+
+Criticality in this packet is owned by the orchestrator. The current my-dev-kit
+ContextRequest accepts testResponsibilityRefs as string IDs only, so the producing
+retrieval maps these controlled IDs as noncritical. Consumers must not infer that
+the my-dev-kit mapping criticality supersedes this orchestrator-owned packet.
