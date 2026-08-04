@@ -255,3 +255,166 @@ describe('checkGreenfieldRunReadiness - persisted scaffold-plan validation (Batc
     }
   });
 });
+
+// v1.3.0 Batch 5: the real disk-backed wrapper (this file) previously only
+// ever exercised typescript-cli end to end -- nextjs-app and android-compose
+// were only used for "wrong profile" string substitutions in the block
+// above, never for a full valid run through checkGreenfieldRunReadiness()
+// itself. This closes that fixture gap so every current profile has
+// equivalent disk-backed readiness coverage, including the scaffold-plan.txt
+// integration from the Batch 4 correction.
+describe('checkGreenfieldRunReadiness - cross-profile disk-backed readiness (Batch 5)', () => {
+  it('evaluates a complete, ready nextjs-app run from real on-disk artifacts', () => {
+    const runFolder = makeRunFolder();
+    try {
+      const bundle = JSON.stringify({
+        selectedProfile: { status: 'selected', profile: { id: 'nextjs-app' }, reason: 'x', stackDecisionNotes: [] },
+      });
+      const scaffoldReport = `Artifact: ScaffoldImplementationReport
+Workflow mode: greenfield
+Profile: nextjs-app
+Files changed:
+- package.json
+- app/layout.tsx
+- app/page.tsx
+- README.md
+Commands run:
+- npm install: passed
+Status: complete
+`;
+      const scaffoldPlan = `Artifact: ScaffoldPlan
+Workflow mode: greenfield
+Profile: nextjs-app
+Planned file groups: app-router pages.
+Target paths:
+- package.json
+- app/layout.tsx
+- app/page.tsx
+- README.md
+First runnable behavior: the root page renders a heading and a counter.
+Setup commands:
+- npm install: required
+Validation commands:
+- npm run typecheck: required
+- npm run build: required
+- npm test: required
+Test expectations:
+- component tests for the root page
+Documentation expectations:
+- page/route map
+Unresolved decisions:
+- none
+Non-goals:
+- no authentication
+Status: complete
+`;
+      const firstSlice = `Artifact: FirstVerticalSlice
+Workflow mode: greenfield
+Profile: nextjs-app
+Minimal behavior: The root page renders a heading and a counter button that increments and displays the current count in local component state on every click.
+Entry point: app/page.tsx
+Tied to product boundary: Demonstrates the core page-rendering workflow described in the product boundary document.
+Status: complete
+`;
+      const verificationReport = `Artifact: VerificationReport
+Workflow mode: greenfield
+Commands verified:
+- npm run typecheck: passed
+- npm run build: passed
+- npm test: passed
+Status: complete
+`;
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'bootstrap-bundle.json'), bundle);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'scaffold-plan.txt'), scaffoldPlan);
+      fs.writeFileSync(path.join(runFolder, 'reports', 'scaffold-implementation-report.txt'), scaffoldReport);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'first-vertical-slice.txt'), firstSlice);
+      fs.writeFileSync(path.join(runFolder, 'reports', 'verification-report.txt'), verificationReport);
+      const meta = makeMeta('greenfield', runFolder);
+      const result = checkGreenfieldRunReadiness(meta);
+      expect(result).toBeDefined();
+      expect(result!.ready).toBe(true);
+      expect(result!.issues).toEqual([]);
+    } finally {
+      fs.rmSync(runFolder, { recursive: true, force: true });
+    }
+  });
+
+  it('evaluates a complete, ready android-compose run from real on-disk artifacts, including an honestly skipped optional command', () => {
+    const runFolder = makeRunFolder();
+    try {
+      const bundle = JSON.stringify({
+        selectedProfile: { status: 'selected', profile: { id: 'android-compose' }, reason: 'x', stackDecisionNotes: [] },
+      });
+      const scaffoldReport = `Artifact: ScaffoldImplementationReport
+Workflow mode: greenfield
+Profile: android-compose
+Files changed:
+- settings.gradle.kts
+- build.gradle.kts
+- app/build.gradle.kts
+- app/src/main/AndroidManifest.xml
+- app/src/main/java/MainActivity.kt
+- app/src/test/java/ExampleUnitTest.kt
+- app/src/androidTest/java/ExampleInstrumentedTest.kt
+Commands run:
+Status: complete
+`;
+      const scaffoldPlan = `Artifact: ScaffoldPlan
+Workflow mode: greenfield
+Profile: android-compose
+Planned file groups: single Android app module.
+Target paths:
+- settings.gradle.kts
+- build.gradle.kts
+- app/build.gradle.kts
+- app/src/main/AndroidManifest.xml
+- app/src/main/java/MainActivity.kt
+- app/src/test/java/ExampleUnitTest.kt
+- app/src/androidTest/java/ExampleInstrumentedTest.kt
+First runnable behavior: MainActivity renders a Compose counter screen.
+Setup commands:
+Validation commands:
+- ./gradlew build: required
+- ./gradlew testDebugUnitTest: required
+- ./gradlew connectedAndroidTest: optional, requires a connected device or emulator
+Test expectations:
+- unit tests under app/src/test
+Documentation expectations:
+- Android project overview
+Unresolved decisions:
+- none
+Non-goals:
+- no Room database
+Status: complete
+`;
+      const firstSlice = `Artifact: FirstVerticalSlice
+Workflow mode: greenfield
+Profile: android-compose
+Minimal behavior: MainActivity renders a Compose screen with a single button that increments and displays a counter value on tap.
+Entry point: app/src/main/java/MainActivity.kt
+Tied to product boundary: Demonstrates the core Compose UI interaction described in the product boundary document.
+Status: complete
+`;
+      const verificationReport = `Artifact: VerificationReport
+Workflow mode: greenfield
+Commands verified:
+- ./gradlew build: passed
+- ./gradlew testDebugUnitTest: passed
+- ./gradlew connectedAndroidTest: skipped, no connected device or emulator available
+Status: complete
+`;
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'bootstrap-bundle.json'), bundle);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'scaffold-plan.txt'), scaffoldPlan);
+      fs.writeFileSync(path.join(runFolder, 'reports', 'scaffold-implementation-report.txt'), scaffoldReport);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'first-vertical-slice.txt'), firstSlice);
+      fs.writeFileSync(path.join(runFolder, 'reports', 'verification-report.txt'), verificationReport);
+      const meta = makeMeta('greenfield', runFolder);
+      const result = checkGreenfieldRunReadiness(meta);
+      expect(result).toBeDefined();
+      expect(result!.ready).toBe(true);
+      expect(result!.issues).toEqual([]);
+    } finally {
+      fs.rmSync(runFolder, { recursive: true, force: true });
+    }
+  });
+});

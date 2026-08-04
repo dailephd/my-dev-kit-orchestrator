@@ -1,6 +1,7 @@
 import { evaluateGreenfieldReadiness } from '../../src/greenfield/readiness/evaluateGreenfieldReadiness';
 import { GreenfieldReadinessInputs } from '../../src/greenfield/readiness/greenfieldReadinessTypes';
 import { TYPESCRIPT_CLI_PROFILE } from '../../src/greenfield/profiles/typescriptCliProfile';
+import { NEXTJS_APP_PROFILE } from '../../src/greenfield/profiles/nextjsAppProfile';
 import { ANDROID_COMPOSE_PROFILE } from '../../src/greenfield/profiles/androidComposeProfile';
 
 const VALID_SCAFFOLD_REPORT = `Artifact: ScaffoldImplementationReport
@@ -94,6 +95,52 @@ Status: complete
 `;
     const result = evaluateGreenfieldReadiness({
       profile: ANDROID_COMPOSE_PROFILE,
+      scaffoldImplementationReportContent: report,
+      firstVerticalSliceContent: slice,
+      verificationReportContent: verification,
+    });
+    expect(result.ready).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  // v1.3.0 Batch 5: nextjs-app had no TST-034 valid-readiness fixture of its
+  // own (only used as a "wrong profile" string substitution in mismatch
+  // tests elsewhere in this file) -- this closes that fixture gap so all
+  // three current profiles have equivalent full-contract readiness coverage.
+  it('nextjs-app: ready with zero issues', () => {
+    const report = `Artifact: ScaffoldImplementationReport
+Workflow mode: greenfield
+Profile: nextjs-app
+Files changed:
+- package.json
+- app/layout.tsx
+- app/page.tsx
+- README.md
+Commands run:
+- npm install: passed
+Deviations: none
+Blockers: none
+Risks: none
+Status: complete
+`;
+    const slice = `Artifact: FirstVerticalSlice
+Workflow mode: greenfield
+Profile: nextjs-app
+Minimal behavior: The root page renders a heading and a counter button that increments displayed state on click, exercising the full render and client-interaction pipeline end to end.
+Entry point: app/page.tsx
+Tied to product boundary: Demonstrates the core page-rendering workflow described in the product boundary document.
+Status: complete
+`;
+    const verification = `Artifact: VerificationReport
+Workflow mode: greenfield
+Commands verified:
+- npm run typecheck: passed
+- npm run build: passed
+- npm test: passed
+Status: complete
+`;
+    const result = evaluateGreenfieldReadiness({
+      profile: NEXTJS_APP_PROFILE,
       scaffoldImplementationReportContent: report,
       firstVerticalSliceContent: slice,
       verificationReportContent: verification,
