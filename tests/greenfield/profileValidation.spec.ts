@@ -313,6 +313,161 @@ describe('validateGreenfieldProfile - duplicate and overlapping target expectati
   });
 });
 
+// v1.3.0 Batch 3 correction: bounded-pattern versus bounded-pattern overlap.
+function twoPatternExpectations(
+  valueA: string,
+  valueB: string,
+  overridesA: Record<string, unknown> = {},
+  overridesB: Record<string, unknown> = {},
+) {
+  return [
+    {
+      id: 'pattern-a',
+      category: 'source',
+      matcher: { kind: 'bounded-pattern' as const, value: valueA },
+      required: true,
+      purpose: 'a',
+      evidenceKind: 'file' as const,
+      ...overridesA,
+    },
+    {
+      id: 'pattern-b',
+      category: 'source',
+      matcher: { kind: 'bounded-pattern' as const, value: valueB },
+      required: true,
+      purpose: 'b',
+      evidenceKind: 'file' as const,
+      ...overridesB,
+    },
+  ];
+}
+
+describe('validateGreenfieldProfile - bounded-pattern versus bounded-pattern overlap', () => {
+  it('flags two different "*" patterns that accept a common path', () => {
+    const malformed = validProfileFixture({ targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/app/*') });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+
+  it('flags "*" versus "**" with a common accepted path', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/**/Main.kt'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+
+  it('flags two different "**" patterns with a common accepted path', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/**/Main.kt', 'src/**/*'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+
+  it('does not flag two bounded patterns with no common accepted path', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/*/Main.kt', 'tests/*/Main.kt'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP')).toEqual([]);
+  });
+
+  it('classifies identical normalized patterns as duplicate, not an additional overlap issue', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/*/Main.kt'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_DUPLICATE' }));
+    expect(result.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP')).toEqual([]);
+  });
+
+  it('classifies patterns differing only by separator form but normalizing identically as duplicate', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src\\*\\Main.kt', 'src/*/Main.kt'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_DUPLICATE' }));
+    expect(result.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP')).toEqual([]);
+  });
+
+  it('detects overlap between a required and an optional pattern expectation', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/app/*', { required: true }, { required: false }),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+
+  it('produces the same overlap finding regardless of expectation pair order', () => {
+    const forward = validateGreenfieldProfile(
+      validProfileFixture({ targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/app/*') }),
+    );
+    const reversed = validateGreenfieldProfile(
+      validProfileFixture({ targetExpectations: twoPatternExpectations('src/app/*', 'src/*/Main.kt') }),
+    );
+    const forwardOverlap = forward.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP').map((i) => i.evidenceKey).sort();
+    const reversedOverlap = reversed.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP').map((i) => i.evidenceKey).sort();
+    expect(forwardOverlap).toEqual(reversedOverlap);
+  });
+
+  it('produces the same overlap finding (by code and normalized-value pair) regardless of the expectation array order', () => {
+    // affectedContract embeds each expectation's array index
+    // (targetExpectations[N]), so it legitimately differs when the array is
+    // reordered -- the same established convention as Batch 1's registry
+    // duplicate-id findings. What must stay stable is which codes fire and
+    // which normalized values are involved.
+    const expectationsForward = twoPatternExpectations('src/*/Main.kt', 'src/app/*');
+    const expectationsReversed = [...expectationsForward].reverse();
+    const forward = validateGreenfieldProfile(validProfileFixture({ targetExpectations: expectationsForward }));
+    const reversed = validateGreenfieldProfile(validProfileFixture({ targetExpectations: expectationsReversed }));
+    const project = (result: { issues: readonly { code: string; evidenceKey?: string }[] }) =>
+      result.issues.map((i) => `${i.code}:${(i.evidenceKey ?? '').split('~').sort().join('~')}`).sort();
+    expect(project(forward)).toEqual(project(reversed));
+  });
+
+  it('does not mutate the profile it validates', () => {
+    const profile = validProfileFixture({ targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/app/*') });
+    const before = JSON.parse(JSON.stringify(profile));
+    validateGreenfieldProfile(profile);
+    expect(profile).toEqual(before);
+  });
+
+  it('does not produce a misleading overlap finding when one pattern is invalid', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: twoPatternExpectations('src/*/Main.kt', 'src/**/foo/**/bar'),
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_PATH_INVALID_PATTERN' }));
+    expect(result.issues.filter((i) => i.code === 'GF_TARGET_OVERLAP')).toEqual([]);
+  });
+
+  it('preserves the existing exact-versus-pattern overlap behavior', () => {
+    const malformed = validProfileFixture({
+      targetExpectations: [
+        {
+          id: 'exact-one',
+          category: 'source',
+          matcher: { kind: 'exact', value: 'src/index.ts' },
+          required: true,
+          purpose: 'a',
+          evidenceKind: 'file',
+        },
+        {
+          id: 'pattern-one',
+          category: 'source',
+          matcher: { kind: 'bounded-pattern', value: 'src/*' },
+          required: false,
+          purpose: 'b',
+          evidenceKind: 'file',
+        },
+      ],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'GF_TARGET_OVERLAP' }));
+  });
+});
+
 // Batch 2 correction: allowedDocumentationTerminology closed-vocabulary
 // runtime validation. TypeScript's GreenfieldDocumentationTerminologyTag
 // union protects the three built-in profile literals at compile time; these

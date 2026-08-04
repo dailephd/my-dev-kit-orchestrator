@@ -16,7 +16,7 @@ import {
 import { ProfileValidationIssue, ProfileValidationResult } from './profileValidationTypes';
 import { finalizeProfileValidationResult } from './profileValidationOrdering';
 import { normalizeTargetPath, isAbsolutePathFailure } from './targetPathSafety';
-import { matchesBoundedPattern, validateBoundedPatternSyntax } from './targetPatternMatching';
+import { matchesBoundedPattern, patternsOverlap, validateBoundedPatternSyntax } from './targetPatternMatching';
 
 const UNKNOWN_PROFILE_ID_SENTINEL = 'unresolved-profile';
 
@@ -696,12 +696,14 @@ function validateDuplicateTargetExpectations(
   }
 }
 
-// PSE-008: overlap between an exact expectation and a bounded-pattern
-// expectation in the same profile, where the exact value would also match
-// the pattern -- the same evidence could satisfy both without explicit
-// shared accounting. General pattern-vs-pattern intersection detection is
-// not implemented: no current profile declares more than one bounded
-// pattern, and Batch 0 does not define an intersection algorithm.
+// PSE-008: overlap between two distinct target expectations in the same
+// profile whose accepted-evidence sets intersect, so the same evidence
+// could satisfy both without explicit shared accounting. Covers
+// exact-vs-pattern overlap and, per the v1.3.0 Batch 3 correction,
+// pattern-vs-pattern overlap via patternsOverlap() (targetPatternMatching.ts).
+// Identical normalized patterns are duplicate expectations
+// (GF_TARGET_DUPLICATE, handled by validateDuplicateTargetExpectations) and
+// are excluded here so a pair never produces both issues.
 function validateOverlappingTargetExpectations(
   locations: readonly TargetExpectationLocation[],
   profileId: string,
@@ -714,18 +716,39 @@ function validateOverlappingTargetExpectations(
   for (const exactLocation of exactLocations) {
     for (const patternLocation of patternLocations) {
       if (matchesBoundedPattern(exactLocation.normalizedValue!, patternLocation.normalizedValue!)) {
-        issues.push({
-          code: 'GF_TARGET_OVERLAP',
-          severity: 'error',
-          profileId,
-          affectedContract: exactLocation.contract,
-          reason: `Exact target expectation "${exactLocation.normalizedValue}" (${exactLocation.contract}) is also matched by bounded-pattern expectation "${patternLocation.normalizedValue}" (${patternLocation.contract}).`,
-          correctiveAction: 'Adjust the exact value or the pattern so at most one expectation can match a given evidence item.',
-          evidenceKey: `${exactLocation.normalizedValue}~${patternLocation.normalizedValue}`,
-        });
+        issues.push(targetOverlapIssue(profileId, exactLocation, patternLocation));
       }
     }
   }
+
+  for (let i = 0; i < patternLocations.length; i += 1) {
+    for (let j = i + 1; j < patternLocations.length; j += 1) {
+      const patternA = patternLocations[i];
+      const patternB = patternLocations[j];
+      if (patternA.normalizedValue === patternB.normalizedValue) {
+        continue; // identical normalized pattern -> GF_TARGET_DUPLICATE, not overlap.
+      }
+      if (patternsOverlap(patternA.normalizedValue!, patternB.normalizedValue!)) {
+        issues.push(targetOverlapIssue(profileId, patternA, patternB));
+      }
+    }
+  }
+}
+
+function targetOverlapIssue(
+  profileId: string,
+  locationA: TargetExpectationLocation,
+  locationB: TargetExpectationLocation,
+): ProfileValidationIssue {
+  return {
+    code: 'GF_TARGET_OVERLAP',
+    severity: 'error',
+    profileId,
+    affectedContract: locationA.contract,
+    reason: `Target expectation "${locationA.normalizedValue}" (${locationA.contract}, ${locationA.expectation.matcher?.kind}) accepts at least one evidence item also accepted by expectation "${locationB.normalizedValue}" (${locationB.contract}, ${locationB.expectation.matcher?.kind}).`,
+    correctiveAction: 'Adjust the values or patterns so at most one expectation can match a given evidence item.',
+    evidenceKey: [locationA.normalizedValue, locationB.normalizedValue].sort().join('~'),
+  };
 }
 
 function targetExpectationInvalidIssue(profileId: string, contract: string, reason: string): ProfileValidationIssue {

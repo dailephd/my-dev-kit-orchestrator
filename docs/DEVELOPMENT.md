@@ -402,6 +402,12 @@ profile:
     `category` is descriptive metadata only; it can never by itself satisfy
     an expectation. `validateGreenfieldScaffoldPlan()` uses this list to
     check the generated scaffold plan; it never reads the filesystem.
+    Two non-identical expectations must not both be able to match the same
+    evidence: `validateGreenfieldProfile()` rejects that as
+    `GF_TARGET_OVERLAP` (identical normalized values are `GF_TARGET_DUPLICATE`
+    instead), including bounded-pattern-versus-bounded-pattern overlap (e.g.
+    `src/*/Main.kt` and `src/app/*` both accept `src/app/Main.kt`); see
+    `patternsOverlap()` in `targetPatternMatching.ts`.
 - register the profile in `SUPPORTED_PROFILES`
   (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
 - add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the
