@@ -178,12 +178,15 @@ function section(text, heading, nextHeadingLevel = 2) {
   return next === -1 ? text.slice(start) : text.slice(start, next);
 }
 
-function containsUnnegatedClaim(text, claimRegex, window = 55) {
+function containsUnnegatedClaim(text, claimRegex) {
   const flags = claimRegex.flags.includes('g') ? claimRegex.flags : `${claimRegex.flags}g`;
   const regex = new RegExp(claimRegex.source, flags);
-  const negation = /\b(not|never|no|without|does not|doesn't|did not|didn't|has no|isn't|is not|remains manual)\b/i;
+  const attachedNegation = /\b(?:(?:do|does|did|is|are|was|were|has|have|had|can|could|will|would|should|must|may|might)\s+not|(?:doesn|didn|isn|aren|wasn|weren|hasn|haven|hadn|can|couldn|won|wouldn|shouldn|mustn|mightn)'t|(?:has|have|had)\s+no|not|never|no|without)(?:\s+(?:yet|[\w-]+ly|claims?|claimed|states?|stated|says?|said|describes?|described|presents?|presented)){0,3}\s*$/i;
+  const coordinatedNegation = /\b(?:(?:do|does|did|is|are|was|were|has|have|had|can|could|will|would|should|must|may|might)\s+not|(?:doesn|didn|isn|aren|wasn|weren|hasn|haven|hadn|can|couldn|won|wouldn|shouldn|mustn|mightn)'t|never)\b[^.!?;]*(?:,|\b(?:and|or))\s*$/i;
   for (const match of text.matchAll(regex)) {
-    if (!negation.test(text.slice(Math.max(0, match.index - window), match.index + match[0].length))) return true;
+    const prefix = text.slice(0, match.index);
+    const sentencePrefix = prefix.slice(Math.max(prefix.lastIndexOf('.'), prefix.lastIndexOf('!'), prefix.lastIndexOf('?'), prefix.lastIndexOf(';')) + 1);
+    if (!attachedNegation.test(sentencePrefix) && !coordinatedNegation.test(sentencePrefix)) return true;
   }
   return false;
 }
@@ -517,7 +520,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     ['STATUS_JSON_FALSE_CLAIM', /status\s+--json|status[^\n]{0,40}(?:supports|provides|outputs?)\s+JSON/i, 'status has no JSON option'],
     ['TASK_STATE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?TaskState`?/i, 'TaskState is in memory only'],
     ['STAGE_CONTEXT_BUNDLE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?StageContextBundle`?/i, 'StageContextBundle is in memory only'],
-    ['NATIVE_CONTEXT_STAGE_FALSE_CLAIM', /(?:adds?|has|uses|creates?)\s+(?:a\s+)?native\s+(?:implementation-|test-)?context\s+stage/i, 'no native context stage'],
+    ['NATIVE_CONTEXT_STAGE_FALSE_CLAIM', /(?:adds?|has|uses|creates?|provides?)\s+(?:a\s+)?native\s+(?:implementation-|test-)?context\s+stages?/i, 'no native context stage'],
   ];
   for (const [code, regex, expected] of contradictionChecks) {
     for (const { relPath, content } of docs) {
