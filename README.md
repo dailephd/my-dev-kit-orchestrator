@@ -210,6 +210,7 @@ or release workflows.
 
 ## Documentation
 
+- [Ecosystem development workflows](docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
 - [Usage and command reference](docs/USAGE.md)
 - [Workflow modes and stage procedures](docs/WORKFLOWS.md)
 - [Artifact contracts and lifecycle](docs/ARTIFACTS.md)

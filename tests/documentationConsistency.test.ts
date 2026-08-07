@@ -130,6 +130,29 @@ describe('documentation consistency gate', () => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);
   });
 
+  it.each([
+    ['a direct positive claim', 'my-dev-kit-orchestrator provides native implementation-context stages.'],
+    ['an unrelated negation in the previous paragraph', 'Do not duplicate the retrieval workflow.\n\nmy-dev-kit-orchestrator provides native implementation-context stages.'],
+    ['an unrelated negation in the same paragraph', 'Do not duplicate the retrieval workflow, and my-dev-kit-orchestrator provides native implementation-context stages.'],
+  ])('detects a native context-stage claim after %s', (_name, injected) => {
+    expectIssue(
+      'docs/WORKFLOWS.md',
+      (text) => `${text}\n${injected}\n`,
+      'NATIVE_CONTEXT_STAGE_FALSE_CLAIM',
+    );
+  });
+
+  it.each([
+    'my-dev-kit-orchestrator does not provide native implementation-context stages.',
+    'my-dev-kit-orchestrator does not currently provide native implementation-context stages.',
+  ])('allows an explicit local native context-stage negation: %s', (injected) => {
+    const root = createIsolatedRoot();
+    mutate(root, 'docs/WORKFLOWS.md', (text) => `${text}\n${injected}\n`);
+    const result = runCheck(root);
+    expect(result.status).toBe(0);
+    expect(result.output).not.toContain('[NATIVE_CONTEXT_STAGE_FALSE_CLAIM]');
+  });
+
   it('emits deterministic output ordering', () => {
     const root = createIsolatedRoot();
     mutate(root, 'README.md', (text) => `${text}\nThe orchestrator automatically runs my-dev-kit.\nThe status --json option emits JSON.\n`);

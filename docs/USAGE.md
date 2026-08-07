@@ -206,6 +206,14 @@ Example artifact path:
 
 The architecture-context stage can be handled as a task-specific prompt that uses both tools in one flow.
 
+This example is bounded task retrieval, not complete onboarding for an
+unfamiliar existing project. In that case, first follow the Architecture
+Assimilation workflow and obtain `ARCHITECTURE_ASSIMILATION_PASS` as defined in
+[ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md](ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#65-architecture-assimilation-gate).
+Do not choose an execution mode or start an implementation prompt from this
+single feature-oriented sequence alone. The assimilation result is manual; the
+current CLI neither creates nor validates it.
+
 Typical command sequence:
 
 ```bash

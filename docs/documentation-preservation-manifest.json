@@ -8,6 +8,7 @@
     "docs/WORKFLOWS.md",
     "docs/ARTIFACTS.md",
     "docs/ARCHITECTURE.md",
+    "docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md",
     "docs/DEVELOPMENT.md",
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md",
     "docs/RELEASE_CHECKLIST.md",
@@ -45,7 +46,8 @@
       "refresh-only",
       "primary blocker",
       "corrective action",
-      "evidence target"
+      "evidence target",
+      "ARCHITECTURE_ASSIMILATION_PASS"
     ],
     "docs/WORKFLOWS.md": [
       "feature",
@@ -61,7 +63,9 @@
       "Recommended next stage",
       "primary blocker",
       "corrective action",
-      "evidence target"
+      "evidence target",
+      "Architecture Assimilation",
+      "ARCHITECTURE_ASSIMILATION_PASS"
     ],
     "docs/ARTIFACTS.md": [
       "RequestBrief",
@@ -88,7 +92,18 @@
       "does not automatically retrieve",
       "primaryCode",
       "correctiveAction",
-      "evidenceTarget"
+      "evidenceTarget",
+      "ARCHITECTURE_ASSIMILATION_PASS"
+    ],
+    "docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md": [
+      "Existing-project onboarding workflow",
+      "Architecture Assimilation Report",
+      "ARCHITECTURE_ASSIMILATION_PASS",
+      "ARCHITECTURE_ASSIMILATION_INCOMPLETE",
+      "Existing owner:",
+      "Existing extension point:",
+      "Canonical contracts/state:",
+      "Architecture that must not be duplicated:"
     ],
     "docs/DEVELOPMENT.md": [
       "docs:check",
