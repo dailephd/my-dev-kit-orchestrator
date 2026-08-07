@@ -181,6 +181,22 @@ implementation or test work. Printing a prompt reevaluates readiness but does
 not create sidecars or templates and does not mutate `run.json` or
 `artifact-state.json`.
 
+For an unfamiliar existing project, prompt assembly also has a manual ecosystem
+precondition: the Architecture Assimilation Gate defined in
+[ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md](ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#65-architecture-assimilation-gate)
+must return `ARCHITECTURE_ASSIMILATION_PASS` before ChatGPT chooses direct or
+staged execution or supplies an implementation prompt. This is deliberately
+not a second native stage, persisted schema, or producer artifact. The current
+CLI does not validate the outcome and must not be described as enforcing it.
+
+The bounded implementation prompt references the passing result and carries
+only its relevant conclusions: existing owner and extension point, analogous
+implementation, canonical contracts/state, involved dependencies and flows,
+layers intentionally excluded, tests to extend, architecture that must not be
+duplicated, and accepted noncritical uncertainty. Task-specific repository
+evidence remains required and must be refreshed against the current candidate;
+the full assimilation report is not copied into every prompt.
+
 The two greenfield scaffold stages keep their specialized renderer without
 changing their stage names, prompt filenames, sidecars, or lifecycle behavior.
 

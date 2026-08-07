@@ -351,6 +351,13 @@ search
 -> bounded ranges
 ```
 
+For an unfamiliar existing project, this task-oriented phase is used within
+the broader Architecture Assimilation workflow in section 6. A single feature
+query or one adequate task capsule does not by itself prove project-wide
+understanding. Architecture Assimilation must cover the important project
+domains and pass before implementation-mode selection; later task-specific
+context then narrows that baseline for the authorized change.
+
 Use producer context role `architecture` to establish owners, extension
 points, contracts, related tests, architecture adequacy, required-witness
 coverage, provenance, freshness, conflicts, unresolved items, and capsule/audit
@@ -539,7 +546,30 @@ reorganize the agreed plan.
 
 ## 6. Existing-project onboarding workflow
 
-Use this sequence when source already exists:
+Use this workflow when source already exists and the project is unfamiliar.
+Onboarding has two separate goals:
+
+1. understand the project itself; and
+2. retrieve bounded context for a particular implementation task.
+
+The second goal must not substitute for the first. A feature-specific query
+such as "Where should feature X be implemented?" does not establish that the
+project's broader architecture is understood. Before implementation planning,
+ChatGPT and the coding agent must establish enough project-wide context to
+decide how new work fits the architecture that already exists.
+
+This Architecture Assimilation requirement is a manual workflow contract. It
+is not a new producer command, public artifact schema, or native orchestrator
+stage. The producer supplies deterministic repository evidence, the
+orchestrator controls a staged run when selected, ChatGPT makes architecture
+and workflow decisions, and the coding agent gathers evidence and executes only
+an authorized prompt. The lab remains a validation companion, not the normal
+codebase-understanding mechanism.
+
+### 6.1 Required onboarding sequence
+
+Follow this order; do not select an implementation mode or write an
+implementation prompt before step 9 passes:
 
 1. **Verify repository state.** Fetch without changing files; record path,
    branch, `HEAD`, upstream/default-branch commit, tags, package metadata, and
@@ -550,29 +580,387 @@ Use this sequence when source already exists:
    continuous-integration, compatibility, artifact/schema, roadmap, and
    preservation-policy documents. Do not treat ignored planning notes as
    canonical unless the user promotes them.
-3. **Create the first full producer index.** Select explicit source roots and a
-   stable output directory; enable call-graph generation when useful. Record
-   the manifest and candidate commit.
-4. **Inspect artifacts and graphs.** Confirm classifications, symbols, owners,
-   routes, tests, resources, data-model evidence, and relevant code/data views.
-   Static absence is an evidence limit, not proof of runtime absence.
-5. **Build architecture context.** Retrieve owner, extension, contract,
-   test/gap, provenance, and freshness witnesses. Record conflicts and unknowns.
+3. **Create the first full producer index.** Determine explicit source roots
+   from repository evidence rather than blindly indexing the repository root.
+   Use a stable output directory and enable call-graph generation when useful.
+   Record the manifest, producer version, and candidate commit.
+4. **Inspect artifacts and graphs.** Confirm available classifications,
+   symbols, owners, routes, tests, resources, data-model evidence, and relevant
+   code/data views. Static absence is an evidence limit, not proof of runtime
+   absence.
+5. **Retrieve architecture evidence across the project.** Investigate the
+   important architectural domains described in section 6.2, not only the
+   immediate feature query. Preserve provenance, freshness, conflicts,
+   truncation, lost evidence, and unresolved questions.
 6. **Reconstruct the current roadmap.** Prefer explicit current plans and
    published history. Separate completed scope, in-progress scope, future
-   scope, exclusions, and suggestions without rewriting the plan.
+   scope, exclusions, and suggestions without rewriting the plan. Do not infer
+   planned behavior from implementation alone.
 7. **Audit contradictions both ways.** Check undocumented implementation and
    unsupported documentation, including command help, versions, schemas, and
-   release claims.
-8. **Choose direct or staged work.** Use the Phase 2 policy. If staged, start
-   the appropriate orchestrator mode with a bounded request; the CLI does not
-   import the repository's roadmap automatically.
-9. **Create the first bounded implementation prompt.** Include exact candidate,
-   retrieved evidence, ownership, scope, exclusions, tests, documentation, and
-   report requirements.
-10. **Use the lab when risk warrants it.** Validate package, dependency,
+   release claims. Resolve or record material conflicts; do not silently choose
+   whichever claim makes implementation easier.
+8. **Produce the Architecture Assimilation Report.** Use the contract in
+   section 6.4 and evaluate it against section 6.5.
+9. **Pass the Architecture Assimilation Gate.** Only
+   `ARCHITECTURE_ASSIMILATION_PASS` permits workflow-mode selection.
+   `ARCHITECTURE_ASSIMILATION_INCOMPLETE` stops implementation planning and
+   prompt assembly.
+10. **Choose direct or staged work.** After a pass, apply the Phase 2 policy
+    without changing its activation criteria. If staged, start the appropriate
+    orchestrator mode with a bounded request; the CLI does not import the
+    repository's roadmap or assimilation report automatically.
+11. **Perform task-specific retrieval and create the first bounded
+    implementation prompt.** Consume the relevant assimilation conclusions,
+    refresh task evidence as required, and include the contract in section 6.6.
+12. **Use the lab when risk warrants it.** Validate package, dependency,
     security, subprocess, network, boundary, or external-target surfaces before
-    release and after material changes.
+    release and after material changes. Do not use lab work as a substitute for
+    Architecture Assimilation.
+
+The required relationship is:
+
+```text
+Existing-project onboarding
+-> Architecture Assimilation
+-> ARCHITECTURE_ASSIMILATION_PASS
+-> choose execution mode
+-> task-specific retrieval
+-> implementation
+```
+
+An assimilation result is not permanent authorization to reuse stale evidence.
+
+### 6.2 Architecture Assimilation dimensions
+
+Reconstruct each dimension that exists in the target project. Do not impose a
+generic layer model on a repository that does not use it.
+
+#### Project identity and behavior
+
+Establish project purpose, major current capabilities, explicit boundaries,
+implemented versus planned behavior, major user or system workflows, and
+intentionally unsupported behavior. Use the README, project overview,
+architecture documents, roadmap or milestones, changelog and release history,
+user-facing workflow documentation, and verified implementation evidence.
+Canonical documentation may require a complete read because intent, plans, and
+workflow meaning cannot always be reconstructed from snippets.
+
+#### Repository topology
+
+Establish repository type; monorepo or single-project structure; source roots;
+application, service, and library packages; executable and command entry
+points; configuration ownership; scripts; tests; fixtures; generated code and
+artifacts; public interfaces; and important non-source directories. Select the
+first index roots from this evidence and exclude dependencies, outputs, caches,
+and generated areas unless they are deliberately needed as evidence.
+
+#### Architectural layers and subsystem ownership
+
+Identify the layers and boundaries that actually exist. Examples can include
+user interface, routing, state management, domain logic, application or service
+logic, persistence, external-service access, schemas and types, validation,
+configuration, adapters, registries, analyzers, command handlers, and build or
+generation layers. For each important subsystem, identify its responsibility,
+primary owner, dependencies, contracts, extension point, and tests.
+
+#### Canonical and derived representations
+
+Distinguish, where applicable, canonical domain type or state; persisted or
+database representation; API or transport representation; artifact
+representation; projection; view model; user-interface-only state; test
+fixture; generated representation; and compatibility representation. Use
+producer classification evidence when available, but treat classification as
+evidence-backed guidance rather than unquestionable runtime truth. A later
+agent must not extend a projection, snapshot, generated file, fixture, or
+UI-only representation as though it were canonical state.
+
+#### Existing extension mechanisms
+
+Identify established mechanisms for adding behavior, such as registries,
+factories, adapters, analyzers, providers, handlers, plugins, strategies,
+serializers, validators, command or route registries, dependency-injection
+bindings, and framework conventions. For every important mechanism, identify:
+
+- its owner and extension point;
+- the contract an extension implements;
+- one or more analogous implementations;
+- its registration or wiring path; and
+- tests that prove the pattern.
+
+This map is a primary safeguard against creating a second registry, adapter
+family, analyzer, command path, or service abstraction beside the existing one.
+
+#### Control and data flow
+
+Establish important existing flows relevant to future modification: where
+input enters, validation occurs, state is transformed, canonical state lives,
+persistence occurs, external systems are called, and data reaches outputs or
+the UI. Record important call or dependency relationships, route-to-component
+or route-to-handler paths, storage or state gates, and cross-layer dependencies
+when applicable. Producer graphs and lineage are static evidence; never claim
+that a runtime path executes, a dependency is injected, a route is reachable,
+or a test passes unless separate runtime evidence proves it.
+
+#### Contracts and compatibility surfaces
+
+Identify public APIs, CLI contracts, schemas, artifact and serialization
+formats, database models, environment and configuration contracts,
+plugin/adapter interfaces, package boundaries, external-service boundaries,
+and other backward-compatibility surfaces. State which contracts future work
+must preserve unless the task explicitly authorizes changing them.
+
+#### Testing architecture
+
+Identify unit, integration, end-to-end or browser, contract/schema,
+platform-specific, and other test locations and conventions. Identify fixture,
+factory, mock, and test-double infrastructure; validation scripts; tests that
+establish ownership or extension patterns; and important architectural surfaces
+with no clear coverage. Onboarding need not run every test. It must establish
+how this project proves changes are correct.
+
+#### Operational architecture
+
+When relevant, establish development and build commands, packaging,
+continuous-integration boundaries, deployment and release boundaries,
+environment/configuration assumptions, security boundaries, generated
+artifacts, and supported platforms. This is architectural understanding, not
+release-readiness execution.
+
+#### Project conventions
+
+Capture recurring, evidence-supported conventions for naming, directory
+ownership, dependency direction, error handling, state management, validation,
+serialization, registries and adapters, extension patterns, forbidden
+dependency directions, and generated files. Do not promote one isolated
+example into a project convention.
+
+### 6.3 Producer evidence during assimilation
+
+Do not invent an onboarding command. Apply the current producer sequence to
+multiple architectural questions:
+
+```text
+index
+-> inspect manifest/artifacts
+-> search
+-> lookup
+-> slice when relationships matter
+-> source exact nodes/symbols/selectors
+-> source continuation
+-> local dependency expansion
+-> bounded ranges
+-> justified full-file fallback
+```
+
+Representative questions include, only when relevant:
+
+- What are the main application or command entry points?
+- What are the major subsystems and their owners?
+- Where are canonical domain state and persistence defined?
+- What owns external input and output?
+- Which registry, factory, adapter, analyzer, provider, or handler patterns
+  already exist?
+- Which schemas and contracts form compatibility surfaces?
+- What are the important route, UI, state, storage, and data relationships?
+- Which test infrastructure and tests protect each important subsystem?
+- Which files are generated, projected, or unsafe primary edit targets?
+- Which analogous implementation should new work follow?
+
+Use only applicable specialized evidence. Data-model and model/view lineage,
+React/TSX structure, route/storage/UI reachability, and Android/Kotlin/Java/
+Gradle/manifest/resource/navigation/Compose/test/architecture/data-flow
+evidence are valuable when the project and installed producer expose them.
+`graph-diff` is useful when comparing source states. Their absence from an
+inapplicable project is not a gate failure; missing evidence for a required
+ownership question is.
+
+For an unfamiliar project, one feature-specific `context` request with role
+`architecture` is not automatically sufficient. Use either one comprehensive
+request when its quality and bounds cover the important domains, or multiple
+bounded requests for distinct questions such as entry points and subsystem
+boundaries; canonical state and persistence; external input/output; extension
+mechanisms; UI/state/data relationships; and testing architecture. Do not
+duplicate adequate evidence ceremonially, and do not combine unrelated
+questions into an oversized request merely to avoid multiple requests.
+
+Judge architecture evidence by producer adequacy, freshness, provenance,
+conflicts, truncation, unresolved items, and capsule/audit parity. Preserve
+uncertainty when required evidence is lost or a critical ownership question is
+unresolved. Raw `search`, `lookup`, `slice`, or `source` output can refine the
+manual understanding, but it must not be relabeled as producer readiness when
+the producer contract reports architecture context as inadequate.
+
+Read source and tests through exact symbols, relevant graph slices, source
+continuation, local dependency expansion, and bounded line ranges. Do not dump
+the source tree. If a complete source or test file is still necessary, report:
+
+- repository and path;
+- line count;
+- targeted retrieval attempted first;
+- missing context;
+- producer limitation or structural reason;
+- what the complete read established; and
+- whether it materially changed the architecture conclusion.
+
+### 6.4 Architecture Assimilation Report
+
+Immediately before mode selection, produce a structured manual workflow report.
+Use the project's established workflow-report or run-report location when one
+exists. Otherwise retain it with the onboarding handoff under the project's
+chosen reporting convention. This requirement does not define a new tracked
+artifact family, public JSON schema, producer output, or orchestrator stage.
+
+The report contains:
+
+1. **Repository identity:** repository path, branch, candidate commit or
+   `HEAD`, package/application version when applicable, producer version, index
+   path, and manifest identity.
+2. **Documentation sources inspected:** canonical current-state, planning,
+   architecture, and workflow sources, with contradictions or gaps.
+3. **Repository topology:** source roots, packages/modules/services/apps,
+   entry points, tests, generated areas, and configuration areas.
+4. **Major subsystem map:** for each important subsystem, responsibility,
+   primary owner, important dependencies, public/internal contracts, relevant
+   extension point, and relevant tests.
+5. **Canonical-state map:** canonical and persisted representations,
+   projections, view models, artifacts, UI-only state, and generated
+   representations.
+6. **Extension-point map:** owner, contract, analogous implementation,
+   registration/wiring path, and tests for each important mechanism.
+7. **Important control/data flows:** entry, transformations, persistence or
+   external calls, output/UI, and the static evidence and limitations.
+8. **Compatibility surfaces:** schemas, API/CLI contracts, persistence
+   contracts, artifact formats, configuration, and public interfaces.
+9. **Testing architecture:** test layers, fixtures/mocks, relevant commands,
+   and major known gaps.
+10. **Safe edit guidance:** likely primary edit targets, layers requiring
+    inspection before editing, generated/read-only areas, and layers that must
+    not own the proposed behavior.
+11. **Existing architecture preservation rules:** the subsystem to extend,
+    authoritative representation, established extension mechanisms, dependency
+    directions, and architecture that must not be recreated in parallel.
+12. **Uncertainties and contradictions:** unresolved ownership, conflicting
+    documentation/implementation, producer inadequacy, static-analysis limits,
+    missing tests, and assumptions requiring confirmation.
+13. **Retrieval evidence summary:** index lifecycle, architecture-context
+    requests, searches, selected lookup nodes, slices, source blocks,
+    continuation/expansion, complete-file fallbacks, and material evidence used
+    in conclusions.
+
+### 6.5 Architecture Assimilation Gate
+
+The gate has exactly two primary outcomes:
+
+```text
+ARCHITECTURE_ASSIMILATION_PASS
+ARCHITECTURE_ASSIMILATION_INCOMPLETE
+```
+
+`ARCHITECTURE_ASSIMILATION_PASS` requires enough grounded evidence to identify
+the relevant existing architecture and safely decide where proposed work
+integrates. Perfect knowledge of every file is unnecessary, but critical
+architecture decisions cannot be guesses. At minimum, for the likely change
+area the report must answer:
+
+```text
+Existing owner:
+Existing extension point:
+Existing analogous implementation:
+Canonical contracts/state:
+Important dependencies:
+Layers that must not own this behavior:
+Existing tests to extend:
+Architecture that must not be duplicated:
+Remaining uncertainty:
+```
+
+A small, noncritical uncertainty may remain when it is explicit and does not
+affect ownership, contracts, extension choice, or safe placement.
+
+Return `ARCHITECTURE_ASSIMILATION_INCOMPLETE` when any material issue remains,
+including:
+
+- unresolved behavior ownership;
+- multiple plausible architectural layers with no grounded choice;
+- inability to distinguish canonical state from a projection or derived state;
+- an unknown extension mechanism or analogous pattern;
+- an unresolved critical contract;
+- a material documentation/implementation conflict;
+- inadequate producer architecture evidence for a required ownership question;
+- lost required evidence;
+- a meaningful risk of creating a parallel subsystem because the existing
+  mechanism is not understood; or
+- a product or architecture decision that requires the user.
+
+When incomplete, do not write an implementation prompt, choose
+`DIRECT_IMPLEMENTATION` or `FULL_STAGE_CONTEXT`, or let the coding agent choose
+a plausible architecture. Report the exact unresolved questions and perform
+additional bounded retrieval when repository evidence can resolve them.
+Request user or product clarification only when repository evidence cannot
+resolve a genuine decision.
+
+### 6.6 Mode selection and first implementation prompt
+
+Architecture Assimilation and `FULL_STAGE_CONTEXT` solve different problems.
+Assimilation establishes understanding of an unfamiliar existing project.
+`FULL_STAGE_CONTEXT` is an implementation execution mode chosen only when the
+existing Phase 2 activation rules justify staged orchestration. A bounded task
+with a now-known owner and extension point may still use
+`DIRECT_IMPLEMENTATION`; a pass does not force unnecessary orchestration.
+
+After `ARCHITECTURE_ASSIMILATION_PASS`, the first implementation prompt carries
+only the relevant conclusions rather than duplicating the full report:
+
+```text
+Existing owner:
+Existing extension point:
+Existing analogous implementation:
+Canonical contracts/state to preserve:
+Dependencies/flows involved:
+Layers intentionally not being modified:
+Existing tests to extend:
+Architecture that must not be duplicated:
+Known uncertainty accepted for this task:
+```
+
+It must also instruct the implementation agent:
+
+> Build on the established architecture identified during Architecture
+> Assimilation. Do not introduce a parallel owner, registry, state
+> representation, persistence path, analyzer, command path, service layer, or
+> other competing architecture unless the task explicitly requires an
+> architectural replacement and that replacement has been approved.
+
+Earlier established architecture must not be recreated merely because the
+current prompt starts a new coding-agent session. The prompt still includes the
+exact candidate, bounded task-specific evidence, scope, exclusions, acceptance
+criteria, tests, documentation impact, validation commands, stop conditions,
+authorization, and completion-report requirements from Phase 9.
+
+Architecture Assimilation does not replace task-specific retrieval. Refresh or
+rebuild indexes according to the Phase 6 lifecycle, use the assimilation model
+as the project-level baseline, and retrieve current evidence for the bounded
+task before implementation.
+
+### 6.7 Freshness and partial re-assimilation
+
+Do not repeat complete onboarding for every small continuation. Reuse a passing
+baseline when architecture is unchanged and perform current task-specific
+retrieval. Refresh or partially re-assimilate the affected domains when
+material architecture evidence may have changed, including:
+
+- a major subsystem replacement or architecture migration;
+- a new canonical data/state layer or persistence mechanism;
+- a new framework, application, service, or package;
+- a major route/state architecture change;
+- a new public contract family;
+- substantial repository restructuring or materially changed source roots;
+- stale or contradicted assimilation evidence; or
+- discovery that a recorded owner or extension point no longer exists.
+
+Record the refreshed candidate and evidence. Do not reuse stale assimilation
+conclusions blindly after material source changes.
 
 ## 7. Feature-version workflow
 
@@ -736,6 +1124,11 @@ restart unrelated completed work.
 - **Insufficient context or missing evidence:** issue a context-refresh or
   correction prompt naming exact witnesses; rerun `search`, `lookup`, `slice`,
   and bounded `source`, then update the packet and retrieval report.
+- **Incomplete Architecture Assimilation:** do not select direct or staged
+  implementation and do not assemble an implementation prompt. Record the
+  exact unresolved owner, extension, canonical-state, contract, or test
+  question; retrieve bounded evidence again or request a genuine product
+  decision when repository evidence cannot resolve it.
 - **Required evidence lost:** rebuild or broaden only the evidence needed for
   the lost condition. Optional truncation does not justify a full restart.
 - **Context conflict or ambiguity:** stop implementation, record both claims
@@ -809,6 +1202,7 @@ project-milestones.txt                          [manual source]
   -> search/lookup/slice/source evidence         [generated query output]
   -> context capsule and retrieval audit        [generated + recorded evidence]
   -> architecture decisions                     [manual decision record]
+  -> Architecture Assimilation Report and gate  [manual, existing projects]
   -> implementation prompts                     [orchestrator/manual]
   -> implementation reports and commits         [coding-agent evidence]
   -> documentation reconciliation report        [manual/agent evidence]
@@ -832,6 +1226,10 @@ replaces the raw evidence needed for a required witness.
 ## 15. Common mistakes
 
 - Asking the coding agent to choose direct versus staged workflow mode.
+- Selecting direct or staged work for an unfamiliar existing project before
+  `ARCHITECTURE_ASSIMILATION_PASS`.
+- Treating one feature-specific architecture query as proof that the existing
+  project architecture is understood.
 - Assuming the two planning files are automatically parsed.
 - Skipping producer retrieval during direct implementation.
 - Reading complete source trees before `search`, `lookup`, `slice`, and bounded

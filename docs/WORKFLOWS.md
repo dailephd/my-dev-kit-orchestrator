@@ -466,6 +466,13 @@ the user to refresh the required evidence. Printing a prompt reevaluates
 readiness but does not write sidecars, generate templates, or mutate run files.
 Normal work resumes after readiness passes.
 
+Producer readiness for a bounded implementation or test request is not the
+same as project-wide Architecture Assimilation. For an unfamiliar existing
+project, the planner must first complete the manual onboarding gate in
+[ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md](ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#65-architecture-assimilation-gate).
+The current CLI does not create or enforce that onboarding result; it continues
+to enforce only its implemented run and repository-evidence contracts.
+
 A refresh-required decision always carries an actionable issue. One
 deterministic primary blocker supplies the primary reason, corrective action,
 and evidence target; blocking and supporting issue codes retain canonical
@@ -582,3 +589,20 @@ For an architecture-context stage, a task-specific coding-agent prompt can combi
 4. continue the orchestrator workflow with the synthesized architecture context
 
 This is intentionally prompt-driven rather than rigid. ChatGPT can tailor the architecture-context prompt to the project, change request, and available retrieval evidence without changing the orchestrator command surface.
+
+For an unfamiliar existing project, do not start this implementation workflow
+or choose direct versus staged execution until the ecosystem Architecture
+Assimilation Report has produced `ARCHITECTURE_ASSIMILATION_PASS`. The report
+must establish the relevant owner, extension point, analogous implementation,
+canonical contracts/state, dependencies, excluded owning layers, tests to
+extend, and architecture that must not be duplicated. One feature-specific
+architecture-context request is insufficient unless its evidence genuinely
+covers all important onboarding domains.
+
+After the pass, prompt assembly carries only those conclusions relevant to the
+bounded task and still performs current task-specific retrieval. It must tell
+the agent to build on the established architecture and prohibit a parallel
+owner, registry, state representation, persistence path, analyzer, command
+path, service layer, or other competing architecture unless an approved
+replacement is explicitly in scope. Refresh or partially re-assimilate after a
+material architecture change; do not reuse a stale result indefinitely.
