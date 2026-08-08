@@ -1,5 +1,9 @@
 # Workflows
 
+Use this guide for ordered workflow decisions. Consult [Commands](COMMANDS.md)
+for exact CLI syntax and [Artifacts](ARTIFACTS.md) for detailed artifact
+contracts.
+
 `my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
 choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
 syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.

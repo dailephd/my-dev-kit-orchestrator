@@ -1,5 +1,8 @@
 # Development
 
+Continuous-integration coverage is documented in [CI/CD](CI_CD.md); the
+maintainer publication procedure is documented in [Release](RELEASE.md).
+
 ## Prerequisites
 
 Node.js 24 or later is required, and `package.json` declares `>=24`. The

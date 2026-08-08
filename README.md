@@ -138,7 +138,7 @@ node dist/cli.js start "Add audit logging"
 node dist/cli.js prompt
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for complete command syntax and
+See [docs/COMMANDS.md](docs/COMMANDS.md) for complete command syntax and
 [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for mode selection and stage procedures.
 
 ## Greenfield starter profiles
@@ -176,7 +176,7 @@ my-dev-kit-orchestrator check
 my-dev-kit-orchestrator export
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for flags, defaults, run selection, check
+See [docs/COMMANDS.md](docs/COMMANDS.md) for flags, defaults, run selection, check
 variants, export options, and troubleshooting.
 
 ## Tool boundaries
@@ -209,6 +209,25 @@ or release workflows.
   for a run that must be resumed through the CLI.
 
 ## Documentation
+
+Common canonical documents:
+
+- [Project overview](docs/PROJECT_OVERVIEW.md)
+- [Current state](docs/CURRENT_STATE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Contracts](docs/CONTRACTS.md)
+- [Commands](docs/COMMANDS.md)
+- [Workflows](docs/WORKFLOWS.md)
+- [Quickstart](docs/QUICKSTART.md)
+- [Development](docs/DEVELOPMENT.md)
+- [CI/CD](docs/CI_CD.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Release](docs/RELEASE.md)
+- [Security](docs/SECURITY.md)
+- [Documentation preservation policy](docs/DOCUMENTATION_PRESERVATION_POLICY.md)
+- [Changelog](CHANGELOG.md)
+
+Project-specific and compatibility references:
 
 - [Ecosystem development workflows](docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
 - [Usage and command reference](docs/USAGE.md)

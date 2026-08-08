@@ -1,5 +1,7 @@
 # Release Checklist
 
+> [RELEASE.md](RELEASE.md) is the canonical maintainer release procedure. This file remains the detailed smoke, compatibility, and historical checklist.
+
 Use this checklist for release-readiness work. This file is a checklist
 template, not evidence that the listed steps have already run. The current
 release is `v1.3.0`; older releases remain historical baselines.

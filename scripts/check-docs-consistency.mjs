@@ -195,6 +195,14 @@ function addIssue(issues, code, documentPath, expected, actual, action) {
   issues.push({ code, documentPath, expected, actual, action });
 }
 
+const commonCanonicalDocuments = [
+  'docs/PROJECT_OVERVIEW.md', 'docs/CURRENT_STATE.md', 'docs/ARCHITECTURE.md',
+  'docs/CONTRACTS.md', 'docs/COMMANDS.md', 'docs/WORKFLOWS.md',
+  'docs/QUICKSTART.md', 'docs/DEVELOPMENT.md', 'docs/CI_CD.md',
+  'docs/ROADMAP.md', 'docs/RELEASE.md', 'docs/SECURITY.md',
+  'docs/DOCUMENTATION_PRESERVATION_POLICY.md', 'CHANGELOG.md',
+];
+
 function topLevelHeadings(content) {
   return [...content.matchAll(/^## (.+)$/gm)].map((match) => match[1].trim());
 }
@@ -411,6 +419,14 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   }
 
   const readme = byPath['README.md'];
+  for (const relPath of commonCanonicalDocuments) {
+    if (!manifest.canonicalDocuments.includes(relPath)) {
+      addIssue(issues, 'COMMON_CANONICAL_DOCUMENT_UNPROTECTED', manifestPath, relPath, 'not protected', 'Add the common document to canonicalDocuments.');
+    }
+    if (!readme.includes(`](${relPath})`)) {
+      addIssue(issues, 'README_CANONICAL_LINK_MISSING', 'README.md', `link to ${relPath}`, 'missing', 'Add the common canonical link to the Documentation section.');
+    }
+  }
   const changelog = byPath['CHANGELOG.md'];
   const roadmap = byPath['docs/ROADMAP.md'];
   const architecture = byPath['docs/ARCHITECTURE.md'];

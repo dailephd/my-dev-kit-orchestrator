@@ -1,10 +1,11 @@
-# Usage compatibility guide
+# Commands
 
-> [COMMANDS.md](COMMANDS.md) is the canonical command reference. This detailed file is retained for existing links and compatibility; command changes must be reconciled into `COMMANDS.md` first.
+> Canonical command reference. `docs/USAGE.md` is retained as a compatibility mirror for existing links; new command-reference links and substantive command updates belong here.
 
 This guide is the complete user-facing command reference. For exact stage
 procedures, see [Workflows](WORKFLOWS.md). For artifact contracts and paths,
-see [Artifacts](ARTIFACTS.md).
+see [Artifacts](ARTIFACTS.md). The cross-cutting ownership and compatibility
+map is in [Contracts](CONTRACTS.md).
 
 ## Install or run the CLI
 
