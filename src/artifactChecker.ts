@@ -30,6 +30,21 @@ export interface ArtifactCheckResult {
 
 export interface SectionRequirements {
   required: string[];
+  format?: 'text' | 'json';
+  requiredFields?: string[];
+  validateJson?: (value: unknown) => StructuredArtifactIssue[];
+}
+
+export interface StructuredArtifactIssue {
+  code: 'MISSING_FIELD' | 'INVALID_FIELD';
+  message: string;
+  field: string;
+}
+
+export interface StructuredArtifactValidationResult {
+  value?: unknown;
+  issues: StructuredArtifactIssue[];
+  parseError?: string;
 }
 
 const SECTION_REGISTRY: Record<string, SectionRequirements> = {
@@ -244,6 +259,33 @@ export function parseArtifact(content: string): ParsedArtifact {
   return { sections, rawContent: content };
 }
 
+/** Validate a JSON artifact with the structured contract registered for its artifact kind. */
+export function validateStructuredArtifact(
+  content: string,
+  requirements: SectionRequirements,
+): StructuredArtifactValidationResult {
+  let value: unknown;
+  try {
+    value = JSON.parse(content) as unknown;
+  } catch (error) {
+    return {
+      issues: [],
+      parseError: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  return {
+    value,
+    issues: requirements.validateJson?.(value) ?? [],
+  };
+}
+
+function structuredStatus(value: unknown): string | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  const status = (value as Record<string, unknown>).status;
+  return typeof status === 'string' ? status : undefined;
+}
+
 // ─── Placeholder detection ────────────────────────────────────────────────────
 
 const PLACEHOLDER_MARKERS = ['TODO', 'PLACEHOLDER', '[TBD]', '[TODO]'];
@@ -304,51 +346,82 @@ export function checkArtifact(
   }
 
   const content = fs.readFileSync(fullPath, 'utf8');
-  const parsed = parseArtifact(content);
-
-  if (isPlaceholderContent(content)) {
-    issues.push({
-      code: 'PLACEHOLDER_CONTENT',
-      severity: 'warn',
-      message: 'Artifact appears to be a placeholder or is suspiciously short',
-    });
-  }
-
   const requirements = getArtifactSectionRequirements(artifactKind);
 
   if (requirements) {
-    for (const section of requirements.required) {
-      if (!parsed.sections.has(section)) {
+    if (requirements.format === 'json') {
+      const validation = validateStructuredArtifact(content, requirements);
+      if (validation.parseError) {
         issues.push({
-          code: 'MISSING_SECTION',
+          code: 'MALFORMED_JSON',
           severity: 'fail',
-          message: `Required section "${section}" is not present`,
-          section,
+          message: `Artifact is not valid JSON: ${validation.parseError}`,
         });
       } else {
-        const sectionContent = parsed.sections.get(section) ?? '';
-        if (!sectionContent.trim()) {
+        for (const issue of validation.issues) {
           issues.push({
-            code: 'EMPTY_SECTION',
+            code: issue.code === 'MISSING_FIELD' ? 'MISSING_FIELD' : 'INVALID_FIELD',
+            severity: 'fail',
+            message: issue.message,
+            section: issue.field,
+          });
+        }
+
+        const artifactStatus = structuredStatus(validation.value);
+        const lifecycleState = stateFile.artifacts[artifactFile]?.state;
+        if (hasStatusMismatch(artifactStatus, lifecycleState)) {
+          issues.push({
+            code: 'STATUS_MISMATCH',
             severity: 'warn',
-            message: `Required section "${section}" is present but empty`,
-            section,
+            message: `Artifact status field "${artifactStatus}" does not match lifecycle state "${lifecycleState}"`,
+            section: 'status',
           });
         }
       }
-    }
+    } else {
+      const parsed = parseArtifact(content);
 
-    const artifactStatus = parsed.sections.get('Status');
-    const stateRecord = stateFile.artifacts[artifactFile];
-    const lifecycleState = stateRecord?.state;
+      if (isPlaceholderContent(content)) {
+        issues.push({
+          code: 'PLACEHOLDER_CONTENT',
+          severity: 'warn',
+          message: 'Artifact appears to be a placeholder or is suspiciously short',
+        });
+      }
 
-    if (hasStatusMismatch(artifactStatus, lifecycleState)) {
-      issues.push({
-        code: 'STATUS_MISMATCH',
-        severity: 'warn',
-        message: `Artifact Status field "${artifactStatus}" does not match lifecycle state "${lifecycleState}"`,
-        section: 'Status',
-      });
+      for (const section of requirements.required) {
+        if (!parsed.sections.has(section)) {
+          issues.push({
+            code: 'MISSING_SECTION',
+            severity: 'fail',
+            message: `Required section "${section}" is not present`,
+            section,
+          });
+        } else {
+          const sectionContent = parsed.sections.get(section) ?? '';
+          if (!sectionContent.trim()) {
+            issues.push({
+              code: 'EMPTY_SECTION',
+              severity: 'warn',
+              message: `Required section "${section}" is present but empty`,
+              section,
+            });
+          }
+        }
+      }
+
+      const artifactStatus = parsed.sections.get('Status');
+      const stateRecord = stateFile.artifacts[artifactFile];
+      const lifecycleState = stateRecord?.state;
+
+      if (hasStatusMismatch(artifactStatus, lifecycleState)) {
+        issues.push({
+          code: 'STATUS_MISMATCH',
+          severity: 'warn',
+          message: `Artifact Status field "${artifactStatus}" does not match lifecycle state "${lifecycleState}"`,
+          section: 'Status',
+        });
+      }
     }
   }
 

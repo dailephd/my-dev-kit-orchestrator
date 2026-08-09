@@ -2,9 +2,9 @@
 
 Versions are listed in chronological order.
 
-`v1.3.1` is the current published release. `v1.3.0`, `v1.2.3`, `v1.2.2`,
+`v1.3.2` is the current published release. `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`,
 `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part
-of the published project history. Versions after `v1.3.1` are planned
+of the published project history. Versions after `v1.3.2` are planned
 milestones.
 
 ## Version summary
@@ -36,6 +36,10 @@ milestones.
   the generic baseline for newly bootstrapped projects and hardens the existing
   `nextjs-app` profile for the first explicit full-stack web environment
   contract: Next.js with PostgreSQL, Prisma, and Docker. Released on
+  2026-08-09.
+- `v1.3.2` corrects the shared artifact-validation contract so native
+  greenfield JSON artifacts retain strict JSON and structured-field validation
+  without receiving incompatible text-header requirements. Released on
   2026-08-09.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
@@ -954,6 +958,41 @@ Acceptance criteria:
   stated additive/legacy treatment
 - all explicit exclusions remain enforced, and the separate `v1.4.0` and
   `v1.5.0` plans remain unchanged and in order
+
+## Published v1.3.2
+
+### v1.3.2 - Greenfield JSON Artifact Contract Correction
+
+Status:
+Published as `1.3.2` on 2026-08-09.
+
+Goal:
+Restore a satisfiable shared artifact contract for greenfield runs containing
+both structured JSON and plain-text artifacts.
+
+Required behavior:
+
+- the artifact-kind registry selects text or structured JSON content validation
+- the three native greenfield JSON artifacts remain parseable JSON and must
+  satisfy their required structured fields
+- plain-text artifacts retain existing header, blank, and placeholder checks
+- shared existence, predecessor, lifecycle, stage-gate, judge-integrity, and
+  canonical readiness guarantees remain unchanged
+- existing valid greenfield runs remain readable without artifact rewrites
+
+Exclusions:
+
+- no new workflow mode, stage, profile, or CLI command
+- no relaxed parsing of malformed JSON
+- no second greenfield-only artifact engine
+- no release or publication behavior added to the CLI
+
+Acceptance expectations:
+
+- valid mixed-format greenfield runs pass format-appropriate content checks
+- malformed or structurally incomplete JSON fails deterministically
+- `check --artifacts` and `check --all` share the corrected behavior
+- legacy text behavior and run-integrity gates remain covered by regression tests
 
 ## Planned milestones
 

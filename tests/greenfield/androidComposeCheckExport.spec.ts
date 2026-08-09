@@ -109,15 +109,17 @@ describe('check - accepts legitimate Android Compose fixture content', () => {
       const meta = makeAndroidComposeRun(tmp);
       fs.writeFileSync(
         path.join(meta.runFolder, 'artifacts/idea-brief.json'),
-        [
-          'Artifact: IdeaBrief',
-          'Workflow mode: greenfield',
-          'Raw idea: An Android app built with Kotlin, Jetpack Compose, and Gradle for tracking habits.',
-          'Preferred profile: android-compose',
-          'Constraints: must work offline',
-          'Non-goals: no iOS or React Native support',
-          'Status: complete',
-        ].join('\n'),
+        JSON.stringify({
+          rawIdea: 'An Android app built with Kotlin, Jetpack Compose, and Gradle for tracking habits.',
+          constraints: ['must work offline'],
+          nonGoals: ['no iOS or React Native support'],
+          preferredStack: ['Kotlin', 'Jetpack Compose', 'Gradle'],
+          preferredProfile: 'android-compose',
+          documentationPreferences: [],
+          testingExpectations: [],
+          unresolved: [],
+          status: 'complete',
+        }),
         'utf8',
       );
       const { output } = runCliCaptured(['check', '--artifact', 'idea-brief', '--root', tmp]);

@@ -182,6 +182,7 @@
     "v1.2.3",
     "v1.3.0",
     "v1.3.1",
+    "v1.3.2",
     "v1.4.0",
     "v1.5.0"
   ],
@@ -224,8 +225,8 @@
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.3.1",
-    "latestPublishedVersion": "1.3.1",
+    "packageMetadataVersion": "1.3.2",
+    "latestPublishedVersion": "1.3.2",
     "implementedUnpublishedVersions": [],
     "cliCommands": [
       "init",
@@ -347,7 +348,7 @@
       "orderedHeadingGroups": [
         ["What it helps you do", "Current release", "Run-integrity enforcement (v1.2.3)", "Quick start", "Command overview", "Tool boundaries", "Documentation"]
       ],
-      "versionStatusPolicy": "v1.3.0 is current; older versions remain historically scoped.",
+      "versionStatusPolicy": "v1.3.2 is current; older versions remain historically scoped.",
       "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
       "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
@@ -362,7 +363,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
       "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
       "orderedHeadingGroups": [["v1.3.0 - Mobile Profile Expansion and Scaffold Verification", "v1.2.3 - Run-Integrity and Judge-Verdict Enforcement", "v1.2.2 - Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
-      "versionStatusPolicy": "v1.3.0 is the current release; older entries remain historical.",
+      "versionStatusPolicy": "v1.3.2 is the current release; older entries remain historical.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
@@ -466,12 +467,12 @@
       "purpose": "High-level released, current, and future version roadmap.",
       "temporalLens": "Historical releases, current published status, and high-level future direction.",
       "planningDetailAllowed": "high-level-only",
-      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
+      "requiredTopLevelHeadings": ["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Published v1.3.1", "Published v1.3.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"],
       "allowedTopLevelHeadingPatterns": ["^(Version summary|Published releases through v1.0.0|Published v[0-9]+\\.[0-9]+\\.[0-9]+|Planned milestones|Ecosystem responsibility boundaries|Non-goals|Conceptual workflow model)$"],
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
-      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.3.0 as the current published milestone; later versions remain high level.",
+      "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Published v1.3.1", "Published v1.3.2", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
+      "versionStatusPolicy": "Keep v1.3.2 as the current published milestone; later versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],

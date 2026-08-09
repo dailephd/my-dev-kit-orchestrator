@@ -20,7 +20,11 @@ lifecycle, context-readiness, judge-correction, and final-report rules below.
 
 ## Content check layer (v0.4.0)
 
-A separate content check layer is available via `my-dev-kit-orchestrator check`. Content checks are deterministic text-based checks that report whether artifact files contain the expected section headers. They run independently and do not block stage advancement.
+A separate content check layer is available via `my-dev-kit-orchestrator check`.
+Content checks are deterministic and artifact-format aware: text artifacts are
+checked for their expected section headers, while registered structured JSON
+artifacts are parsed and checked against their required structured fields. They
+run independently and do not block stage advancement.
 
 ```bash
 my-dev-kit-orchestrator check          # check all artifacts and prompts

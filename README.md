@@ -23,11 +23,12 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.3.1`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.3.2`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.3.1` makes the ecosystem's standardized 15-file canonical project-document
-baseline the generic documentation substrate for every newly bootstrapped
+`v1.3.2` corrects structured greenfield artifact checking while retaining the
+`v1.3.1` standardized 15-file canonical project-document
+baseline as the generic documentation substrate for every newly bootstrapped
 greenfield project, and adds the first explicit full-stack web environment
 contract: the existing `nextjs-app` starter profile combined with structured
 `fullstack-web`/`nextjs` intent, PostgreSQL, Prisma, and Docker, composed
@@ -43,7 +44,7 @@ context-readiness safeguards. It requires Node.js 24 or later. See
 [docs/ROADMAP.md](docs/ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening)
 for its scope.
 
-`v1.3.1` preserves the eight-command CLI surface, seven workflow modes, and
+`v1.3.2` preserves the eight-command CLI surface, seven workflow modes, and
 the three starter profiles (`typescript-cli`, `nextjs-app`,
 `android-compose`) -- there is no new `nextjs-fullstack` profile and no
 `--project-type`/`--framework`/`--profile` CLI flag. The orchestrator still

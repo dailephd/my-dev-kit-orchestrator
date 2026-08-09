@@ -138,6 +138,9 @@ For extraction mode, the `porting-map` stage has two artifacts - `source-to-targ
 | `EMPTY_SECTION` | `warn` | A required section is present but has no content |
 | `PLACEHOLDER_CONTENT` | `warn` | Artifact contains TODO/PLACEHOLDER/[TBD] or is shorter than 80 characters |
 | `STATUS_MISMATCH` | `warn` | Artifact `Status:` field conflicts with `artifact-state.json` lifecycle state |
+| `MALFORMED_JSON` | `fail` | A registered structured artifact is not valid JSON |
+| `MISSING_FIELD` | `fail` | A registered structured artifact lacks a required JSON field |
+| `INVALID_FIELD` | `fail` | A registered structured artifact has an invalid required JSON field |
 
 ### Prompt check codes (v0.4.0)
 
@@ -416,8 +419,11 @@ The 13 stage outputs are:
 `artifacts/*.txt` paths because `ARTIFACT_MAP` is keyed by stage name across
 all modes. They do not use greenfield-only `reports/*.txt` alternatives.
 
-The JSON-named brief, profile, and bundle files still participate in the
-shared existence, predecessor, and required-section checks. Bootstrap project
+The JSON brief, profile, and bundle files participate in the same shared
+existence, predecessor, lifecycle, and readiness checks as text artifacts.
+Their content checks parse JSON and apply their registered structured-field
+contracts; they are not required to contain bare text section headers.
+Bootstrap project
 documentation is structured in-memory runtime output; it does not imply that
 the orchestrator writes template documents. `validateBootstrapDocs` checks
 required content and is profile-aware: Android/Jetpack/Kotlin/Gradle content
@@ -727,7 +733,8 @@ external evidence files merely because a supplemental document names them.
 
 - Most native artifacts are plain text; the three greenfield JSON contracts
   named above are structured JSON.
-- The CLI does not apply full schema-heavy validation to every artifact.
+- The CLI applies the registered format-specific contract for each artifact;
+  valid JSON syntax alone is not sufficient for a structured artifact.
 - `reports/architecture-context-retrieval-report.txt` and `reports/source-architecture-context-retrieval-report.txt` are supporting evidence for context acquisition.
 - `artifacts/architecture-context-packet.txt` and `artifacts/source-architecture-context-packet.txt` are required downstream workflow artifacts.
 - later stages should consume the synthesized architecture packets rather than raw `my-dev-kit` output

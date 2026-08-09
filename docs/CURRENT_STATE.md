@@ -3,12 +3,13 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Source version: `1.3.1`
+- Source version: `1.3.2`
 - Required runtime: Node.js 24 or later
-- Latest verified npm version: `1.3.1`
-- Latest verified Git tag and GitHub Release: `v1.3.1`
+- Latest verified npm version: `1.3.2`
+- Latest verified Git tag and GitHub Release: `v1.3.2`
 
-Package metadata, npm, the `v1.3.1` tag, and the GitHub Release agree. Release history is in [CHANGELOG.md](../CHANGELOG.md).
+Package metadata, npm, the `v1.3.2` tag, and the GitHub Release agree. Release
+history is in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Implemented operational surface
 
@@ -49,6 +50,11 @@ remains eight commands, seven modes, and 79 native stages, with greenfield
 still 13 stages and three starter profiles (`typescript-cli`, `nextjs-app`,
 `android-compose`). See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
+
+The `v1.3.2` patch release corrects shared artifact validation so the three
+native greenfield JSON artifacts retain strict JSON and structured-field
+contracts without receiving incompatible text-header requirements. Text
+artifact behavior and run-integrity/readiness gates remain unchanged.
 
 `v1.4.0`, Greenfield-to-Feature Workflow Handoff Hardening, is the next
 planned milestone after `v1.3.1`. Its scope is not part of the `v1.3.1`
