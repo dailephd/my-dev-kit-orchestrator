@@ -225,3 +225,94 @@ describe('resolveGreenfieldProfile - unsupported platforms remain unsupported (v
     },
   );
 });
+
+describe('resolveGreenfieldProfile - projectType/webFramework compatibility (v1.3.1 Batch 1)', () => {
+  // TST-B1-001: legacy briefs (no projectType/webFramework) are unaffected.
+  it('TST-B1-001: legacy brief without projectType/webFramework resolves exactly as before', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'nextjs-app' }));
+    expect(selection.status).toBe('selected');
+    expect(selection.profile?.id).toBe('nextjs-app');
+  });
+
+  // TST-B1-004: the supported full-stack combination is accepted.
+  it('TST-B1-004: fullstack-web + nextjs + nextjs-app is accepted as compatible', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'nextjs-app',
+        projectType: 'fullstack-web',
+        webFramework: 'nextjs',
+      }),
+    );
+    expect(selection.status).toBe('selected');
+    expect(selection.profile?.id).toBe('nextjs-app');
+  });
+
+  // TST-B1-005: typescript-cli is not accepted for the explicit combination.
+  it('TST-B1-005: typescript-cli is not accepted for an explicit fullstack-web + nextjs request', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'typescript-cli',
+        projectType: 'fullstack-web',
+        webFramework: 'nextjs',
+      }),
+    );
+    expect(selection.status).toBe('unsupported');
+    expect(selection.profile).toBeUndefined();
+    expect(selection.reason).toMatch(/not compatible/i);
+  });
+
+  // TST-B1-006: android-compose is not accepted for the explicit combination.
+  it('TST-B1-006: android-compose is not accepted for an explicit fullstack-web + nextjs request', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'android-compose',
+        projectType: 'fullstack-web',
+        webFramework: 'nextjs',
+      }),
+    );
+    expect(selection.status).toBe('unsupported');
+    expect(selection.profile).toBeUndefined();
+    expect(selection.reason).toMatch(/not compatible/i);
+  });
+
+  // TST-B1-007: an unsupported dimension value is not silently accepted.
+  it('TST-B1-007: an unsupported projectType value is not accepted even with a compatible profile', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'nextjs-app',
+        projectType: 'embedded-firmware',
+      }),
+    );
+    expect(selection.status).toBe('unsupported');
+    expect(selection.profile).toBeUndefined();
+  });
+
+  it('TST-B1-007: an unsupported webFramework value is not accepted even with a compatible profile', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'nextjs-app',
+        webFramework: 'sveltekit',
+      }),
+    );
+    expect(selection.status).toBe('unsupported');
+    expect(selection.profile).toBeUndefined();
+  });
+
+  it('does not evaluate projectType/webFramework compatibility when neither dimension is requested', () => {
+    const selection = resolveGreenfieldProfile(baseNormalizedBrief({ preferredProfile: 'typescript-cli' }));
+    expect(selection.status).toBe('selected');
+    expect(selection.profile?.id).toBe('typescript-cli');
+  });
+
+  it('does not silently reinterpret an incompatible request as another supported profile', () => {
+    const selection = resolveGreenfieldProfile(
+      baseNormalizedBrief({
+        preferredProfile: 'typescript-cli',
+        projectType: 'fullstack-web',
+        webFramework: 'nextjs',
+      }),
+    );
+    expect(selection.profile).toBeUndefined();
+    expect(selection.requestedProfileId).toBe('typescript-cli');
+  });
+});

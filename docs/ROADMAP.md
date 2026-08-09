@@ -2,9 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.3.0` is the current published release. `v1.2.3`, `v1.2.2`, `v1.2.1`,
-`v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part of the
-published project history. Versions after `v1.3.0` are planned milestones.
+`v1.3.1` is the current published release. `v1.3.0`, `v1.2.3`, `v1.2.2`,
+`v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part
+of the published project history. Versions after `v1.3.1` are planned
+milestones.
 
 ## Version summary
 
@@ -31,6 +32,11 @@ published project history. Versions after `v1.3.0` are planned milestones.
   2026-08-04. It does not add a new starter
   profile; possible `android-xml` and `python-cli` evaluation remains a
   future candidate decision (see "Planned milestones").
+- `v1.3.1` makes the ecosystem's standardized project-document structure
+  the generic baseline for newly bootstrapped projects and hardens the existing
+  `nextjs-app` profile for the first explicit full-stack web environment
+  contract: Next.js with PostgreSQL, Prisma, and Docker. Released on
+  2026-08-09.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -651,6 +657,303 @@ Possible additional profiles (unchanged; still requires separate approval):
 - `android-xml`
 - `python-cli`
 - stronger `typescript-cli` and `nextjs-app` (delivered above)
+
+## Published v1.3.1
+
+### v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
+
+Status:
+Published as `1.3.1` on 2026-08-09.
+
+Goal:
+Extend the `v1.3.0` greenfield profile and scaffold foundation in two connected
+ways: make the standardized ecosystem project-document structure the generic
+documentation substrate for newly bootstrapped projects, and add the first
+explicit full-stack web environment contract by combining `fullstack-web`,
+Next.js, the existing `nextjs-app` starter profile, PostgreSQL, Prisma, and
+Docker.
+
+Rationale:
+The current greenfield project-doc bootstrap uses a smaller legacy taxonomy,
+while the ecosystem now has one canonical cross-project document structure.
+The current `nextjs-app` profile also establishes a minimal frontend scaffold
+but does not express an active database, environment, container, migration,
+test-database, or production-readiness contract. The Biolit and
+scientific-literature-explorer reference studies establish reusable pieces of
+that lifecycle and identify gaps that the first generic contract must harden
+explicitly rather than inherit as false-green behavior.
+
+Delivered capabilities:
+
+- use the common canonical document set as the generic baseline for new
+  greenfield projects, with content derived from the new project's actual
+  brief, stack, profile, type, framework, capabilities, and scaffold contract
+- represent project type, web framework, starter profile, and environment
+  capability as related but distinct decisions, without multiplying starter
+  profiles
+- resolve the first supported full-stack combination as Next.js, PostgreSQL,
+  Prisma, and Docker, while making no generic support claim for unvalidated
+  frameworks, databases, toolkits, or container runtimes
+- carry the resolved documentation and full-stack requirements through the
+  existing greenfield artifacts, scaffold guidance, evidence, readiness, and
+  judge flow
+- require real lifecycle evidence from the coding agent instead of accepting
+  generated-file existence or successful no-op commands as proof
+
+Standardized project-document contract:
+
+The generic baseline for a newly bootstrapped project is:
+
+- `README.md`
+- `CHANGELOG.md`
+- `docs/PROJECT_OVERVIEW.md`
+- `docs/CURRENT_STATE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRACTS.md`
+- `docs/COMMANDS.md`
+- `docs/WORKFLOWS.md`
+- `docs/QUICKSTART.md`
+- `docs/DEVELOPMENT.md`
+- `docs/CI_CD.md`
+- `docs/ROADMAP.md`
+- `docs/RELEASE.md`
+- `docs/SECURITY.md`
+- `docs/DOCUMENTATION_PRESERVATION_POLICY.md`
+
+These filenames establish common responsibilities, not shared boilerplate.
+Greenfield must generate project-specific content from the selected project's
+inputs and resolved contract; it must not blindly copy my-dev-kit ecosystem
+prose. Project-type-, framework-, database-, container-, and platform-specific
+requirements are layered into the appropriate common owners. Specialized
+documents remain allowed when they have a genuine independent responsibility,
+but project-specific content should normally enrich the common documents
+instead of creating a parallel taxonomy.
+
+For the initial full-stack contract, `PROJECT_OVERVIEW` owns product identity
+and technology shape; `ARCHITECTURE` owns application/database/container
+topology; `CONTRACTS` owns environment, database, migration, readiness, reset,
+and service invariants; `COMMANDS` owns the generated command surface;
+`WORKFLOWS` owns setup, daily development, migration, testing, and recovery;
+`QUICKSTART` owns the shortest successful startup; `DEVELOPMENT` owns
+contributor setup and validation; `CI_CD` owns CI test-database behavior plus
+production image and pre-traffic migration ordering when applicable;
+`SECURITY` owns secrets, destructive-operation boundaries, and runtime safety;
+and `CURRENT_STATE`, `ROADMAP`, and `RELEASE` retain their normal temporal and
+release responsibilities. The capability does not create `docs/DATABASE.md`,
+`docs/ENVIRONMENT.md`, `docs/TESTING.md`, or `docs/DEPLOYMENT.md` by default.
+
+The project-doc system must distinguish universal document requirements from
+conditional project-type, framework, database, container, and platform content
+requirements. Existing project-doc bootstrap behavior should remain compatible
+where practical. A legacy greenfield run must not become invalid solely because
+it predates the expanded documentation contract.
+
+Full-stack web selection model:
+
+The first explicit combination is:
+
+`projectType = fullstack-web`
+
+plus
+
+`webFramework = nextjs`
+
+plus
+
+`starterProfile = nextjs-app`
+
+plus
+
+the full-stack environment capability.
+
+`nextjs-app` remains the starter profile; no `nextjs-fullstack` profile or new
+workflow mode is introduced. Structured project-type and framework intent
+belongs to the greenfield brief, decision, and artifact flow. Existing stages
+remain responsible for resolution, so CLI `start` does not gain `--profile`,
+`--project-type`, or `--framework` options. Profile compatibility and capability
+information must be machine-readable enough for deterministic validation
+without creating a combinatorial profile catalog. Future combinations require
+their own explicit validated contracts before being advertised as supported.
+
+Initial Next.js/PostgreSQL/Prisma/Docker contract:
+
+- Development environment: support fast host-based Next.js development with
+  PostgreSQL in Docker, plus full-container application execution for smoke or
+  production-like validation. Handle Docker-engine readiness explicitly,
+  including Windows Docker Desktop readiness, and use bounded waits. Treat host
+  and container network addresses as different environments. Ordinary shutdown
+  preserves development database state unless reset is explicitly requested.
+- Environment variables: generate committed non-secret templates while keeping
+  real secrets untracked. Record each required variable's purpose, consumer,
+  scope, requiredness, and secret classification. Keep host-development,
+  Docker, test, and production database addresses distinct; fail clearly when
+  required configuration is absent; and never make production secrets depend
+  on insecure local defaults.
+- Database lifecycle: PostgreSQL is the first engine and Prisma the first
+  toolkit. One canonical application database client owns access. The Prisma
+  schema owns logical design and committed SQL migrations own database
+  evolution. Development migration creation and migration deployment/replay
+  remain separate. Client generation occurs at the required setup, build, and
+  test points. Fresh setup has one authoritative initialization path rather
+  than implicit migration application.
+- Data classes: default to no seed. Development sample data, required bootstrap
+  data, and test fixtures remain distinct; seed replay occurs only when the
+  selected project contract explicitly requires it.
+- Test database: isolate test data from development and production with a
+  dedicated environment and database identity. Apply committed migrations,
+  guard reset targets, and make repeated runs deterministic. Database-backed
+  tests must demonstrate that the application actually uses the database when
+  database capability is selected.
+- Docker: treat containerization as a lifecycle contract rather than a
+  Dockerfile-only deliverable. Require a production-oriented multi-stage Next.js
+  image, deterministic dependency installation from the selected lockfile and
+  package-manager contract, Prisma generation before the production build when
+  required, and standalone Next.js output when selected. Keep build context and
+  `.dockerignore` aligned. Compose responsibilities include PostgreSQL health,
+  bounded waiting, service dependency ordering, distinct development/test
+  database identities, persistent development storage, controlled test cleanup,
+  and application startup verification. Use a non-root production runtime where
+  practical.
+- Health and readiness: distinguish a running process/container, healthy
+  PostgreSQL, and an application ready to serve database-backed behavior. A
+  reusable application readiness contract must prove database reachability when
+  required; container state or database process health alone is insufficient.
+- Production migrations: expose a real production migration command and assign
+  an explicit pre-traffic migration responsibility. Ordinary application
+  replicas must not each run migrations during startup. Provider-specific
+  tooling may bind that responsibility later, but the generic contract does not
+  select a deployment provider.
+- Safe reset and recovery: allow destructive reset only for explicitly approved
+  non-production development/test environments. Parse and validate the actual
+  target environment and database rather than using a weak substring check;
+  refuse ambiguous or production-like targets; redact credentials from errors;
+  replay migrations after reset; and replay seed data only when required by the
+  selected contract. Production reset is outside this capability.
+- Evidence integrity: fake, message-only, or otherwise no-op commands cannot be
+  presented as successful setup, migration, test, Docker, or readiness evidence.
+
+Greenfield stage integration:
+
+The capability flows through the existing 13 stages; Docker and database work
+do not create another native stage:
+
+1. `idea-brief` captures enough structured intent to identify full-stack web.
+2. `product-boundary` decides whether persistence and backend behavior belong
+   inside the project boundary.
+3. `stack-decision` resolves the concrete framework, database, toolkit, and
+   container shape required by the project.
+4. `starter-profile` selects `nextjs-app` when appropriate and validates its
+   compatibility with the requested project type and framework.
+5. `bootstrap-bundle` carries normalized type/framework intent and the resolved
+   environment, database, container, and document requirements.
+6. `project-docs` prepares the common canonical set and layers resolved
+   full-stack content into the responsible documents.
+7. `scaffold-plan` plans project and infrastructure files, non-secret
+   environment templates, lifecycle commands, ownership, tests, and acceptance
+   criteria.
+8. `scaffold-implementation` guides the coding agent to create only the approved
+   scaffold.
+9. `first-vertical-slice` requires minimal useful behavior that genuinely
+   crosses the selected full-stack boundary when persistence is part of the
+   product.
+10. `verification` requires real evidence for the resolved development, test,
+    Docker, and database contract.
+11. `initial-index` remains the handoff to `my-dev-kit` after source exists.
+12. `judge` evaluates the generated result against the resolved full-stack and
+    standardized-document contracts.
+13. `final-report` records the result, evidence, remaining risks, and handoff
+    without changing release state.
+
+Verification expectations:
+
+When applicable to the selected contract, acceptance evidence must cover
+dependency installation; environment-template validation; Docker/Compose
+configuration validity; Docker engine and service readiness; PostgreSQL startup
+and health; Prisma/client generation; migration application; Next.js development
+startup or production build; application/database connectivity; isolated
+database-backed tests; production image build; production-style container
+startup and health smoke; clean shutdown; restart/recovery; and safe
+development/test reset when provided. The evidence must show meaningful command
+and runtime results, not only file presence or an exit-zero placeholder.
+
+The orchestrator continues to generate guidance and validate reported evidence;
+it does not execute Docker, database, application, build, test, or reset
+commands. The coding agent executes the resolved commands and reports bounded
+evidence through the existing greenfield artifacts.
+
+Compatibility expectations:
+
+- Published `v1.3.0` behavior, the 13-stage order, the three existing starter
+  profile identities, and stage-owned profile resolution remain intact.
+- Existing frontend-oriented `nextjs-app` requests remain usable; full-stack
+  behavior is selected through explicit structured intent and compatibility,
+  not inferred as mandatory for every Next.js project.
+- New contracts evolve additively where practical, with explicit legacy or
+  not-evaluated treatment when older runs lack new documentation or full-stack
+  evidence.
+- The standardized document baseline applies to newly bootstrapped projects;
+  it is not a retroactive declaration that historical generated projects are
+  defective.
+
+Explicit exclusions and boundaries:
+
+- no new workflow mode or native stage
+- no `nextjs-fullstack` starter profile
+- no CLI `--profile`, `--project-type`, or `--framework` flags
+- no autonomous Docker or database execution by the orchestrator
+- no deployment-provider-specific infrastructure or Kubernetes requirement
+- no authentication framework by default
+- no product-specific sidecars, including Biolit's Python NLP service
+- no seed data by default
+- no claim of generic support for every framework, database, toolkit, or
+  container runtime
+- no replacement of `my-dev-kit` indexing or retrieval
+- no `my-dev-kit-lab` integration into ordinary greenfield bootstrap
+- no release, publication, or provider deployment behavior
+- no `v1.4.0` greenfield-to-feature handoff work
+- no `v1.5.0` optional mobile-profile work
+
+Dependencies and evidence basis:
+
+- the completed ecosystem documentation-standardization report is authoritative
+  for the common canonical project-document set and responsibility model
+- the Biolit full-stack environment reference supplies the proven host-first
+  development, Docker readiness, host/container addressing, Compose health and
+  ordering, persistent development storage, separate test-service identity, and
+  standalone multi-stage Next.js image patterns
+- the scientific-literature-explorer database lifecycle reference supplies the
+  active PostgreSQL/Prisma client, schema, committed migration, generation,
+  database-backed test, and dedicated test-database patterns
+- gaps identified by those reports are deliberate hardening requirements here:
+  authoritative fresh initialization, safe reset, explicit no-seed default,
+  database-aware application readiness, and singleton pre-traffic production
+  migration responsibility
+- the reference projects provide evidence and counterexamples, not product
+  templates; their names, domain models, credentials, ports, routes, sidecars,
+  and prose are not copied
+
+Acceptance criteria:
+
+- newly bootstrapped projects use the common canonical document baseline, with
+  generated content grounded in the resolved project rather than ecosystem
+  boilerplate and with specialized documents added only for independent needs
+- a structured `fullstack-web` plus `nextjs` request can resolve compatibly to
+  `nextjs-app` plus the initial PostgreSQL/Prisma/Docker capability without a
+  new profile, mode, or CLI semantic flag
+- the resolved contract explicitly covers host and container development,
+  environment/secret scopes, database ownership and evolution, isolated tests,
+  Docker lifecycle, health/readiness, safe reset, and pre-traffic production
+  migrations
+- the existing 13 stages carry, guide, verify, and judge the resolved
+  documentation and full-stack responsibilities without the orchestrator
+  executing external commands
+- verification requires real database-backed and container/runtime evidence
+  where selected, rejects known no-op proof, and preserves honest skip/blocker
+  reporting for genuinely unavailable optional infrastructure
+- legacy runs and current non-full-stack profiles remain compatible under the
+  stated additive/legacy treatment
+- all explicit exclusions remain enforced, and the separate `v1.4.0` and
+  `v1.5.0` plans remain unchanged and in order
 
 ## Planned milestones
 

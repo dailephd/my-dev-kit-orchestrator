@@ -1,4 +1,10 @@
-import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldTargetExpectation } from './profileTypes';
+import {
+  GREENFIELD_DOCUMENTATION_TERMINOLOGY,
+  GREENFIELD_PROJECT_TYPE,
+  GREENFIELD_WEB_FRAMEWORK,
+  GreenfieldProfile,
+  GreenfieldTargetExpectation,
+} from './profileTypes';
 
 // v1.3.0 Batch 3 (PSE-010): adapts the existing templateTargets below into
 // required exact expectations. templateTargets itself is unchanged.
@@ -63,5 +69,7 @@ export const NEXTJS_APP_PROFILE: GreenfieldProfile = {
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
   allowedDocumentationTerminology: [GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT],
+  compatibleProjectTypes: [GREENFIELD_PROJECT_TYPE.FULLSTACK_WEB],
+  compatibleWebFrameworks: [GREENFIELD_WEB_FRAMEWORK.NEXTJS],
   targetExpectations: NEXTJS_APP_TARGET_EXPECTATIONS,
 };

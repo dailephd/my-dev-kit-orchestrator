@@ -5,6 +5,20 @@ deletion, compression, and status drift.
 
 ## Document classes and authority
 
+Every ecosystem repository maintains the common canonical set: `README.md`,
+`CHANGELOG.md`, and `docs/PROJECT_OVERVIEW.md`, `CURRENT_STATE.md`,
+`ARCHITECTURE.md`, `CONTRACTS.md`, `COMMANDS.md`, `WORKFLOWS.md`,
+`QUICKSTART.md`, `DEVELOPMENT.md`, `CI_CD.md`, `ROADMAP.md`, `RELEASE.md`,
+`SECURITY.md`, and `DOCUMENTATION_PRESERVATION_POLICY.md`. Specialized
+documents such as `ARTIFACTS.md` and `ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md`
+remain canonical for their independent detail. `USAGE.md` and
+`RELEASE_CHECKLIST.md` are retained compatibility/checklist paths;
+`COMMANDS.md` and `RELEASE.md` own those common responsibilities.
+
+Content may move only when its complete meaning is preserved, useful legacy
+paths retain a pointer, and the move does not create two canonical owners.
+Exact removals still require explicit authorization.
+
 - Planning documents preserve agreed version-by-version scope. Later explicit
   planning decisions override older conflicting assignments.
 - Current-state documents follow package metadata, implementation, CLI help,

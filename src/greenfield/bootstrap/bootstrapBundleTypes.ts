@@ -17,6 +17,7 @@ import {
   GreenfieldProfileResolutionStatus,
   GreenfieldProfileSelection,
 } from '../profiles/profileTypes';
+import { GreenfieldFullstackCapabilitySelection } from '../fullstack/resolveFullstackCapability';
 
 /** A field the bundle-building process left unresolved, preserved rather than guessed. */
 export interface GreenfieldUnresolvedDecision {
@@ -94,4 +95,12 @@ export interface GreenfieldBootstrapBundle {
   scaffoldPlanningInputs: GreenfieldScaffoldPlanningInputs;
   validationRules: GreenfieldBundleValidationRule[];
   unresolvedDecisions: GreenfieldUnresolvedDecision[];
+  /**
+   * v1.3.1 Batch 3: the resolved full-stack environment/database/Docker
+   * capability, when the requested projectType/webFramework/profile
+   * combination supports one (see resolveFullstackCapability.ts). Status is
+   * 'not-applicable' for ordinary non-full-stack bundles, so this field is
+   * always present and never requires a second bundle type.
+   */
+  fullstackCapability: GreenfieldFullstackCapabilitySelection;
 }

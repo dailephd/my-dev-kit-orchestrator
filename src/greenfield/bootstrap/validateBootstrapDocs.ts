@@ -41,7 +41,12 @@
 
 import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldProfileId } from '../profiles/profileTypes';
 import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
-import { GreenfieldDocSection, GreenfieldProjectDocBootstrapResult, GreenfieldProjectDocName } from './projectDocBootstrapTypes';
+import {
+  GREENFIELD_CANONICAL_DOCUMENT_PATHS,
+  GreenfieldDocSection,
+  GreenfieldProjectDocBootstrapResult,
+  GreenfieldProjectDocName,
+} from './projectDocBootstrapTypes';
 import { ProfileValidationIssue, ProfileValidationResult } from '../profiles/profileValidationTypes';
 import { finalizeProfileValidationResult } from '../profiles/profileValidationOrdering';
 
@@ -90,7 +95,10 @@ export type GreenfieldDocValidationIssueKind =
   | 'nextjs-web-claim'
   | 'release-security-publish-claim'
   | 'play-store-release-readiness-claim'
-  | 'autonomous-execution-claim';
+  | 'autonomous-execution-claim'
+  // v1.3.1 Batch 2: a common canonical document path was declared more than
+  // once in GreenfieldProjectDocBootstrapResult.canonicalDocuments.
+  | 'duplicate-canonical-path';
 
 export interface GreenfieldDocValidationIssue {
   docName: string;
@@ -142,58 +150,104 @@ export function validateBootstrapDocs(
   }
 
   for (const target of result.targets) {
-    const text = flattenSections(target.sections);
+    checkDocClaims(target.docName, target.sections, selectedProfileId, androidJetpackAllowed, nextjsReactAllowed, issues);
+  }
 
-    if (UNSUPPORTED_PLATFORM_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'unsupported-platform-claim',
-        message: `Doc "${target.docName}" contains an unsupported-platform claim (iOS/React Native/Flutter/multiplatform), which is out of scope.`,
-      });
+  // v1.3.1 Batch 2: the standardized common canonical document baseline.
+  // Optional on the result (see projectDocBootstrapTypes.ts), so only
+  // evaluated when present -- absence does not fail validation, preserving
+  // compatibility with callers/reconstructions that predate this contract.
+  if (result.canonicalDocuments) {
+    const presentPaths = new Set(result.canonicalDocuments.map((d) => d.path));
+
+    for (const requiredPath of GREENFIELD_CANONICAL_DOCUMENT_PATHS) {
+      if (!presentPaths.has(requiredPath)) {
+        issues.push({
+          docName: requiredPath,
+          kind: 'missing-required-section',
+          message: `Required common canonical document "${requiredPath}" was not generated.`,
+        });
+      }
     }
 
-    if (!androidJetpackAllowed && ANDROID_JETPACK_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'android-mobile-claim',
-        message: `Doc "${target.docName}" contains an Android/Jetpack claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
-      });
-    }
+    const seenPaths = new Set<string>();
+    for (const doc of result.canonicalDocuments) {
+      if (seenPaths.has(doc.path)) {
+        issues.push({
+          docName: doc.path,
+          kind: 'duplicate-canonical-path',
+          message: `Canonical document path "${doc.path}" is declared more than once.`,
+        });
+      }
+      seenPaths.add(doc.path);
 
-    if (!nextjsReactAllowed && NEXTJS_REACT_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'nextjs-web-claim',
-        message: `Doc "${target.docName}" contains a Next.js/React claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
-      });
-    }
-
-    if (RELEASE_SECURITY_PUBLISH_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'release-security-publish-claim',
-        message: `Doc "${target.docName}" makes a release/security/publish claim, which this runtime must not assert.`,
-      });
-    }
-
-    if (PLAY_STORE_RELEASE_READINESS_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'play-store-release-readiness-claim',
-        message: `Doc "${target.docName}" makes a Play Store/release-readiness claim, which this runtime must not assert for any profile.`,
-      });
-    }
-
-    if (AUTONOMOUS_EXECUTION_CLAIM_RE.test(text)) {
-      issues.push({
-        docName: target.docName,
-        kind: 'autonomous-execution-claim',
-        message: `Doc "${target.docName}" claims autonomous command/dependency/scaffold execution, which the orchestrator never performs.`,
-      });
+      checkDocClaims(doc.path, doc.sections, selectedProfileId, androidJetpackAllowed, nextjsReactAllowed, issues);
     }
   }
 
   return { valid: issues.length === 0, issues };
+}
+
+// Shared claim-detection rules, run identically against legacy doc-category
+// targets and standardized canonical-document targets (both are keyed by a
+// docName string and share the same GreenfieldDocSection[] shape).
+function checkDocClaims(
+  docName: string,
+  sections: GreenfieldDocSection[],
+  selectedProfileId: GreenfieldProfileId | undefined,
+  androidJetpackAllowed: boolean,
+  nextjsReactAllowed: boolean,
+  issues: GreenfieldDocValidationIssue[],
+): void {
+  const text = flattenSections(sections);
+
+  if (UNSUPPORTED_PLATFORM_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'unsupported-platform-claim',
+      message: `Doc "${docName}" contains an unsupported-platform claim (iOS/React Native/Flutter/multiplatform), which is out of scope.`,
+    });
+  }
+
+  if (!androidJetpackAllowed && ANDROID_JETPACK_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'android-mobile-claim',
+      message: `Doc "${docName}" contains an Android/Jetpack claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
+    });
+  }
+
+  if (!nextjsReactAllowed && NEXTJS_REACT_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'nextjs-web-claim',
+      message: `Doc "${docName}" contains a Next.js/React claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
+    });
+  }
+
+  if (RELEASE_SECURITY_PUBLISH_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'release-security-publish-claim',
+      message: `Doc "${docName}" makes a release/security/publish claim, which this runtime must not assert.`,
+    });
+  }
+
+  if (PLAY_STORE_RELEASE_READINESS_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'play-store-release-readiness-claim',
+      message: `Doc "${docName}" makes a Play Store/release-readiness claim, which this runtime must not assert for any profile.`,
+    });
+  }
+
+  if (AUTONOMOUS_EXECUTION_CLAIM_RE.test(text)) {
+    issues.push({
+      docName,
+      kind: 'autonomous-execution-claim',
+      message: `Doc "${docName}" claims autonomous command/dependency/scaffold execution, which the orchestrator never performs.`,
+    });
+  }
 }
 
 function flattenSections(sections: GreenfieldDocSection[]): string {
@@ -242,6 +296,8 @@ export function validateGreenfieldProfileDocumentation(
   for (const baseIssue of baseResult.issues) {
     if (baseIssue.kind === 'missing-required-section') {
       issues.push(docRequirementMissingIssue(profileId, baseIssue.docName, baseIssue.message));
+    } else if (baseIssue.kind === 'duplicate-canonical-path') {
+      issues.push(docDuplicatePathIssue(profileId, baseIssue.docName, baseIssue.message));
     } else if (CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM.has(baseIssue.kind)) {
       issues.push(docUnsupportedClaimIssue(profileId, baseIssue.docName, baseIssue.kind, baseIssue.message));
     }
@@ -259,6 +315,23 @@ function docRequirementMissingIssue(profileId: string, docName: string, reason: 
     reason,
     correctiveAction: `Generate required guidance content for the "${docName}" doc.`,
     evidenceKey: docName,
+  };
+}
+
+// v1.3.1 Batch 2: no existing GF_* code represents "duplicate declaration
+// within an array of path-keyed documents" (GF_PROFILE_UNSUPPORTED_FIELD
+// covers duplicate scalar enum values, a different shape; GF_TARGET_DUPLICATE
+// covers scaffold-target duplicates, a different contract). This mirrors that
+// existing one-code-per-duplicate-concept precedent.
+function docDuplicatePathIssue(profileId: string, docPath: string, reason: string): ProfileValidationIssue {
+  return {
+    code: 'GF_DOC_DUPLICATE_PATH',
+    severity: 'error',
+    profileId,
+    affectedContract: docPath,
+    reason,
+    correctiveAction: `Remove the duplicate declaration of "${docPath}" so each canonical document path appears exactly once.`,
+    evidenceKey: docPath,
   };
 }
 

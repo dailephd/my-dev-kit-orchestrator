@@ -3,6 +3,7 @@
 import { GreenfieldProfile } from '../profiles/profileTypes';
 import { GreenfieldScaffoldPlan } from '../scaffold/scaffoldPlanTypes';
 import { ProfileValidationResult } from '../profiles/profileValidationTypes';
+import { GreenfieldFullstackCapability } from '../fullstack/fullstackCapabilityTypes';
 
 export interface GreenfieldReadinessResult extends ProfileValidationResult {
   /** True only when `valid` and every required-evidence/first-slice/legacy condition is satisfied. */
@@ -30,7 +31,7 @@ export interface GreenfieldReadinessInputs {
   /** Raw text content of artifacts/first-vertical-slice.txt, or undefined when the file does not exist. */
   readonly firstVerticalSliceContent?: string;
   readonly firstVerticalSliceStale?: boolean;
-  /** Raw text content of reports/verification-report.txt, or undefined when the file does not exist. */
+  /** Raw text content of artifacts/verification-report.txt, or undefined when the file does not exist. */
   readonly verificationReportContent?: string;
   /** Raw text content of artifacts/project-docs-report.txt, or undefined when the file does not exist. */
   readonly projectDocsReportContent?: string;
@@ -42,4 +43,13 @@ export interface GreenfieldReadinessInputs {
    * unknown or inaccessible).
    */
   readonly projectRoot?: string;
+  /**
+   * v1.3.1 Batch 5: the resolved full-stack capability, when the run's
+   * bootstrap-bundle.json records `fullstackCapability.status === 'selected'`.
+   * Undefined for every ordinary non-full-stack run (typescript-cli,
+   * android-compose, or nextjs-app without the fullstack-web + nextjs
+   * dimensions), in which case readiness evaluation is byte-for-byte
+   * unchanged from pre-Batch-5 behavior.
+   */
+  readonly capability?: GreenfieldFullstackCapability;
 }

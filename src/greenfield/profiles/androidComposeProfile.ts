@@ -142,5 +142,7 @@ export const ANDROID_COMPOSE_PROFILE: GreenfieldProfile = {
     },
   ],
   allowedDocumentationTerminology: [GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK],
+  compatibleProjectTypes: [],
+  compatibleWebFrameworks: [],
   targetExpectations: ANDROID_COMPOSE_TARGET_EXPECTATIONS,
 };

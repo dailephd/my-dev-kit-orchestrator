@@ -26,6 +26,8 @@ import { RunIntegrityGateResult, resolveArtifactStateWithRunIntegrity } from './
 import { readCorrectionState } from './correctionState';
 import { CorrectionRouteResult, CorrectableStage, isCorrectableStage } from './correctionRouter';
 import { JudgeVerdict } from './judgeParser';
+import { checkGreenfieldRunReadinessForRun } from './greenfield/readiness/checkGreenfieldRunReadiness';
+import { GreenfieldReadinessResult } from './greenfield/readiness/greenfieldReadinessTypes';
 
 export const JUDGE_INTEGRITY_SCHEMA_VERSION = '1.0.0';
 
@@ -271,14 +273,39 @@ export interface FinalReportEligibilityResult {
   judgeIntegrity: JudgeIntegrityResult;
   blockingCodes: string[];
   primaryReason?: string;
+  /**
+   * v1.3.1 Batch 5 correction: the canonical greenfield readiness result
+   * consulted for this run, when `gate.mode === 'greenfield'` and a profile
+   * has been selected. `undefined` for every non-greenfield run, and for a
+   * greenfield run that has not yet selected a profile (an earlier-stage
+   * state already reported through `priorArtifactsValid`, not a readiness
+   * defect). Exposed so status/check can display the same decision this
+   * function already used, instead of recomputing it.
+   */
+  greenfieldReadiness?: GreenfieldReadinessResult;
 }
 
 export const FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE = 'FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE';
+export const FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE = 'FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE';
 
 // Composes judge integrity with the existing lifecycle rules for every
 // native stage before "final-report" (reusing
 // resolveArtifactStateWithRunIntegrity -- the same resolver Batch 2 already
 // established -- rather than a second completeness check).
+//
+// v1.3.1 Batch 5 correction: also consumes the canonical greenfield
+// readiness decision (checkGreenfieldRunReadinessForRun(), the same
+// evaluator status.ts/check.ts already call) when the run is greenfield.
+// This is the single integration point every existing caller of this
+// function (prompt.ts, mark.ts, status.ts, check.ts,
+// promptGenerator.ts's evaluateFinalReportEligibilityForRun()) already
+// funnels through, so a greenfield run cannot become final-report-eligible
+// off an authored judge PASS while canonical readiness remains
+// incomplete/blocked -- without any of those callers needing their own
+// readiness computation and without a separate full-stack-only gate. A
+// non-greenfield run's eligibility is completely unaffected: greenfieldReady
+// only ever evaluates to false for a greenfield run whose canonical
+// readiness explicitly says `ready: false`.
 export function evaluateFinalReportEligibility(input: {
   gate: RunIntegrityGateResult;
   judgeIntegrity: JudgeIntegrityResult;
@@ -296,12 +323,50 @@ export function evaluateFinalReportEligibility(input: {
     );
   });
 
-  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid;
+  const greenfieldReadiness =
+    gate.mode === 'greenfield'
+      ? checkGreenfieldRunReadinessForRun({ mode: gate.mode, runFolder, stages })
+      : undefined;
+  // undefined covers both "not greenfield" and "no profile selected yet" --
+  // neither is a readiness defect at this boundary, so it never blocks.
+  //
+  // A legacy run (predates the v1.3.0 structured evidence sections) is
+  // *never* `ready` by construction (greenfieldReadinessTypes.ts) -- that is
+  // not a defect, it is the documented, permanent state for evidence that
+  // could never have been written. status.ts already treats "legacy-
+  // compatible" (legacyRun && valid, i.e. no error-severity issues) as an
+  // acceptable terminal state distinct from "incomplete"/"invalid"; the gate
+  // here reuses that exact same distinction rather than inventing a
+  // second one, so a legacy run's final-report eligibility matches the
+  // state status/check already report for it, and legacy runs are not newly
+  // blocked from ever completing by this correction (AGENTS.txt Batch 5
+  // correction guardrail: preserve legacy-run compatibility).
+  const greenfieldReady =
+    greenfieldReadiness === undefined ||
+    greenfieldReadiness.ready ||
+    (greenfieldReadiness.legacyRun && greenfieldReadiness.valid);
+
+  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid && greenfieldReady;
 
   const blockingCodes = [...judgeIntegrity.blockingCodes];
   if (!priorArtifactsValid && blockingCodes.length === 0) {
     blockingCodes.push(FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE);
   }
+  if (!greenfieldReady) {
+    for (const issue of greenfieldReadiness!.issues) {
+      if (issue.severity === 'error' && !blockingCodes.includes(issue.code)) {
+        blockingCodes.push(issue.code);
+      }
+    }
+    if (!blockingCodes.includes(FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE)) {
+      blockingCodes.push(FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE);
+    }
+  }
+
+  const greenfieldPrimaryReason = !greenfieldReady
+    ? greenfieldReadiness!.issues.find((issue) => issue.severity === 'error')?.reason ??
+      'Canonical greenfield readiness is not satisfied for this run.'
+    : undefined;
 
   return {
     eligible,
@@ -310,6 +375,9 @@ export function evaluateFinalReportEligibility(input: {
     judgeIntegrity,
     blockingCodes,
     primaryReason:
-      judgeIntegrity.primaryReason ?? (!priorArtifactsValid ? 'A required prior native artifact is not yet complete.' : undefined),
+      judgeIntegrity.primaryReason ??
+      (!priorArtifactsValid ? 'A required prior native artifact is not yet complete.' : undefined) ??
+      greenfieldPrimaryReason,
+    greenfieldReadiness,
   };
 }

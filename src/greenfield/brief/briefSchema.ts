@@ -25,6 +25,8 @@ export function validateGreenfieldProjectBrief(
     preferredStack: validateOptionalStringArray(obj.preferredStack, 'brief.preferredStack'),
     preferredProfile: validateOptionalTrimmedString(obj.preferredProfile, 'brief.preferredProfile'),
     platformTarget: validateOptionalTrimmedString(obj.platformTarget, 'brief.platformTarget'),
+    projectType: validateOptionalTrimmedString(obj.projectType, 'brief.projectType'),
+    webFramework: validateOptionalTrimmedString(obj.webFramework, 'brief.webFramework'),
     documentationPreferences: validateOptionalStringArray(
       obj.documentationPreferences,
       'brief.documentationPreferences',

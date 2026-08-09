@@ -2,6 +2,45 @@
 
 ## Unreleased
 
+## v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
+
+Release date: 2026-08-09.
+
+### Added
+
+- standardized 15-file canonical greenfield document baseline (`README.md`,
+  `CHANGELOG.md`, and 13 `docs/*.md` files) applied to all three starter
+  profiles, with content derived from each project's actual brief, profile,
+  and capability instead of copied ecosystem prose; no default
+  `DATABASE.md`/`ENVIRONMENT.md`/`TESTING.md`/`DEPLOYMENT.md` taxonomy
+- orthogonal `projectType`/`webFramework` brief dimensions, additive to
+  starter-profile selection; legacy briefs without these fields remain valid
+- the first explicit full-stack web environment contract: the existing
+  `nextjs-app` starter profile combined with `fullstack-web`/`nextjs` intent,
+  PostgreSQL, Prisma, and Docker, composed additively into scaffold planning
+  (Dockerfile, Compose files, Prisma schema, environment templates, readiness
+  scripts, a database-backed first vertical slice) rather than a new profile
+  or a parallel scaffold format
+- canonical greenfield readiness extended with full-stack generated-file and
+  verification-command evidence, and a three-way distinct proof requirement
+  for PostgreSQL health, application liveness, and application/database
+  readiness
+- a judge/final-report lifecycle correction: final-report eligibility for
+  every greenfield run now also requires canonical greenfield readiness, so
+  an authored judge `PASS` can no longer override incomplete readiness; the
+  gate is generic to greenfield runs, not hard-coded to full-stack, with a
+  narrow legacy-run carve-out
+- a corrected verification-report artifact path so the generated
+  verification/judge/final-report prompts, canonical greenfield readiness,
+  and final-report artifact-lifecycle validation all read and write the same
+  file, making the lifecycle correction above reachable by a real generated
+  workflow run (a pre-existing, unrelated path inconsistency, found and
+  fixed during this work)
+- no new starter profile, CLI flag, workflow mode, or native stage; the CLI
+  remains eight commands, seven modes, 79 native stages, and greenfield
+  remains 13 stages and three starter profiles; the orchestrator still never
+  executes Docker, PostgreSQL, Prisma, or any other project command itself
+
 ## v1.3.0 - Mobile Profile Expansion and Scaffold Verification
 
 Release date: 2026-08-04.

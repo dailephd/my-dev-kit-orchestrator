@@ -27,9 +27,9 @@ describe('v1.2.1 package regression (npm pack --dry-run)', () => {
     };
   }, 60000);
 
-  it('package identity matches the v1.3.0 release', () => {
+  it('package identity matches the v1.3.1 release', () => {
     expect(packageInfo?.name).toBe('@dailephd/my-dev-kit-orchestrator');
-    expect(packageInfo?.version).toBe('1.3.0');
+    expect(packageInfo?.version).toBe('1.3.1');
   });
 
   it('every included file is under dist/ or is an explicitly allowed root package file', () => {

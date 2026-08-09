@@ -24,13 +24,24 @@ import {
 } from './parseGreenfieldEvidence';
 import { corroborateGeneratedTarget } from './corroborateGeneratedTarget';
 import { GreenfieldReadinessInputs, GreenfieldReadinessResult } from './greenfieldReadinessTypes';
+import { GreenfieldFullstackCapability } from '../fullstack/fullstackCapabilityTypes';
+import { validateFullstackCapability } from '../fullstack/validateFullstackCapability';
+import { GreenfieldTargetExpectation } from '../profiles/profileTypes';
 
 export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): GreenfieldReadinessResult {
-  const { profile } = inputs;
+  const { profile, capability } = inputs;
   const profileId = profile.id;
   const issues: ProfileValidationIssue[] = [];
 
   issues.push(...validateGreenfieldProfile(profile).issues);
+
+  // v1.3.1 Batch 5: structurally validate the resolved full-stack capability
+  // itself (reuses Batch 3's validator; also defends against a malformed/
+  // externally-edited bootstrap-bundle.json). No-op for every ordinary
+  // non-full-stack run.
+  if (capability) {
+    issues.push(...validateFullstackCapability(capability).issues);
+  }
 
   const reportContent = inputs.scaffoldImplementationReportContent;
   const reportMissing = !reportContent || isPlaceholderContent(reportContent);
@@ -56,9 +67,17 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
       const { normalizedPaths, pathIssues } = normalizeReportedPaths(profileId, rawFileLines);
       issues.push(...pathIssues);
 
+      // v1.3.1 Batch 5: composed additively with the resolved capability's
+      // own target expectations (Batch 4), mirroring buildScaffoldPlan.ts's
+      // and validateGreenfieldScaffoldPlan.ts's identical composition
+      // pattern. Undefined capability leaves this byte-for-byte unchanged.
+      const composedTargetExpectations: readonly GreenfieldTargetExpectation[] = capability
+        ? [...profile.targetExpectations, ...capability.targetExpectations]
+        : profile.targetExpectations;
+
       const corroboration = evaluateGeneratedTargetEvidence(
         profileId,
-        profile.targetExpectations,
+        composedTargetExpectations,
         normalizedPaths,
         inputs.projectRoot,
       );
@@ -78,7 +97,7 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
   // validateGreenfieldScaffoldPlan() naturally reports it via its existing
   // "plan does not declare a profile id" branch of GF_PLAN_PROFILE_MISMATCH.
   if (!legacyRun && inputs.scaffoldPlan) {
-    issues.push(...validateGreenfieldScaffoldPlan(profile, inputs.scaffoldPlan).issues);
+    issues.push(...validateGreenfieldScaffoldPlan(profile, inputs.scaffoldPlan, { capability }).issues);
   }
 
   const sliceContent = inputs.firstVerticalSliceContent;
@@ -86,15 +105,31 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
   if (sliceMissing) {
     issues.push(firstSliceMissingIssue(profileId));
   } else {
-    issues.push(...evaluateFirstVerticalSlice(profileId, profile.id, sliceContent, legacyRun));
+    issues.push(...evaluateFirstVerticalSlice(profileId, profile.id, sliceContent, legacyRun, capability));
     if (inputs.firstVerticalSliceStale) {
       issues.push(scaffoldReportStaleIssue(profileId)); // shared stale code; affectedContract distinguishes the artifact
     }
   }
 
-  issues.push(
-    ...evaluateCommandEvidence(profileId, profile.validationCommands, inputs.verificationReportContent),
-  );
+  // v1.3.1 Batch 5: capability validationCommands compose additively with
+  // the profile's own, reusing the exact existing evidence check.
+  const composedValidationCommands = capability
+    ? [...profile.validationCommands, ...capability.validationCommands]
+    : profile.validationCommands;
+  issues.push(...evaluateCommandEvidence(profileId, composedValidationCommands, inputs.verificationReportContent));
+
+  if (!legacyRun && capability) {
+    // Batch 4 placed most required development/test lifecycle operations
+    // (Docker readiness, database up/wait, Prisma generate, migrations,
+    // test DB lifecycle) in the capability's own setupCommands, distinct
+    // from validationCommands. Evidence is required for these the same way
+    // -- reusing evaluateCommandEvidence with a distinct contract prefix so
+    // issues are correctly labeled "setupCommands:<command>".
+    issues.push(
+      ...evaluateCommandEvidence(profileId, capability.setupCommands, inputs.verificationReportContent, 'setupCommands'),
+    );
+    issues.push(...evaluateProductionMigrationOrdering(profileId, capability, inputs.verificationReportContent));
+  }
 
   if (inputs.projectDocsReportContent) {
     const parsedDocs = parseArtifact(inputs.projectDocsReportContent);
@@ -220,11 +255,21 @@ function evaluateGeneratedTargetEvidence(
 
 const FIRST_SLICE_REQUIRED_SECTIONS = ['Minimal behavior', 'Entry point', 'Tied to product boundary'] as const;
 
+// v1.3.1 Batch 5: honest, bounded keyword check proving the described
+// behavior at least names the full-stack boundary it must cross (Next.js ->
+// canonical Prisma/database owner -> PostgreSQL -> observable result). This
+// cannot prove the code actually does this (that is Batch 4's scaffold-plan
+// contract plus generated-file/verification evidence, evaluated separately)
+// -- it only rejects a slice description that never mentions the database
+// boundary at all (e.g. "renders a static page").
+const DATABASE_BACKED_SLICE_RE = /\b(prisma|postgres(ql)?|database|db)\b/i;
+
 function evaluateFirstVerticalSlice(
   profileId: string,
   selectedProfileId: string,
   sliceContent: string,
   legacyRun: boolean,
+  capability: GreenfieldFullstackCapability | undefined,
 ): ProfileValidationIssue[] {
   const issues: ProfileValidationIssue[] = [];
   const parsed = parseArtifact(sliceContent);
@@ -284,6 +329,22 @@ function evaluateFirstVerticalSlice(
     }
   }
 
+  if (!legacyRun && capability && minimalBehavior.trim().length > 0 && !DATABASE_BACKED_SLICE_RE.test(minimalBehavior)) {
+    issues.push({
+      code: 'GF_FULLSTACK_FIRST_SLICE_NOT_DATABASE_BACKED',
+      severity: 'error',
+      profileId,
+      affectedContract: 'first-vertical-slice.txt:Minimal behavior',
+      reason:
+        'The resolved full-stack capability requires the first vertical slice to cross the application -> ' +
+        'Prisma/database owner -> PostgreSQL boundary, but "Minimal behavior" does not mention the database.',
+      correctiveAction:
+        'Describe how the minimal behavior reaches the canonical Prisma database client and PostgreSQL, not ' +
+        'only static page rendering.',
+      evidenceKey: 'first-vertical-slice.txt:Minimal behavior',
+    });
+  }
+
   return issues;
 }
 
@@ -293,13 +354,18 @@ function evaluateCommandEvidence(
   profileId: string,
   validationCommands: readonly GreenfieldProfileCommand[],
   verificationReportContent: string | undefined,
+  // v1.3.1 Batch 5: additive optional parameter, defaulting to the exact
+  // pre-Batch-5 label so every existing call site (profile.validationCommands)
+  // is unaffected. Passed as 'setupCommands' when this same function is
+  // reused for the resolved capability's setupCommands.
+  contractPrefix: string = 'validationCommands',
 ): ProfileValidationIssue[] {
   const issues: ProfileValidationIssue[] = [];
 
   if (!verificationReportContent) {
     for (const command of validationCommands) {
       if (command.required) {
-        issues.push(commandEvidenceMissingIssue(profileId, command, 'no VerificationReport was found'));
+        issues.push(commandEvidenceMissingIssue(profileId, command, 'no VerificationReport was found', contractPrefix));
       }
     }
     return issues;
@@ -315,9 +381,9 @@ function evaluateCommandEvidence(
     if (command.required) {
       if (!entry) {
         if (mentionsUnsupportedPassClaim(verificationReportContent, command.command)) {
-          issues.push(commandPassUnsupportedIssue(profileId, command));
+          issues.push(commandPassUnsupportedIssue(profileId, command, contractPrefix));
         } else {
-          issues.push(commandEvidenceMissingIssue(profileId, command, 'no recorded evidence for this command'));
+          issues.push(commandEvidenceMissingIssue(profileId, command, 'no recorded evidence for this command', contractPrefix));
         }
         continue;
       }
@@ -327,6 +393,7 @@ function evaluateCommandEvidence(
             profileId,
             command,
             entry.status === 'failed' ? 'recorded evidence shows it failed' : 'a required command cannot be skipped',
+            contractPrefix,
           ),
         );
       }
@@ -339,13 +406,13 @@ function evaluateCommandEvidence(
         code: 'GF_OPTIONAL_SKIP_REASON_MISSING',
         severity: 'error',
         profileId,
-        affectedContract: `validationCommands:${command.command}`,
+        affectedContract: `${contractPrefix}:${command.command}`,
         reason: `Optional command "${command.command}" was skipped without a nonblank reason.`,
         correctiveAction: `Record a reason for skipping "${command.command}" (e.g. matching its environmentNotes prerequisite).`,
         evidenceKey: command.command,
       });
     } else if (!entry && mentionsUnsupportedPassClaim(verificationReportContent, command.command)) {
-      issues.push(commandPassUnsupportedIssue(profileId, command));
+      issues.push(commandPassUnsupportedIssue(profileId, command, contractPrefix));
     }
   }
 
@@ -357,7 +424,16 @@ function escapeRegExp(value: string): string {
 }
 
 function mentionsUnsupportedPassClaim(content: string, command: string): boolean {
-  const re = new RegExp(`${escapeRegExp(command)}[^\\n]{0,40}(passed|success|succeeded)`, 'i');
+  // v1.3.1 Batch 5 correction: the negative lookahead `(?!:\S)` rejects a
+  // match where `command` is immediately followed by ":" plus a non-space
+  // character (e.g. "npm run dev" inside "npm run dev:db"), so one full-
+  // stack command that is a literal text prefix of another (npm run dev /
+  // npm run dev:db / npm run dev:db:wait / npm run dev:down) cannot produce
+  // a false "unsupported pass claim" for the shorter command merely because
+  // the longer, unrelated command's own passing evidence appears nearby. A
+  // genuine free-text claim like "npm run dev: passed" (colon then space)
+  // or "npm test passed" (no colon) is unaffected.
+  const re = new RegExp(`${escapeRegExp(command)}(?!:\\S)[^\\n]{0,40}(passed|success|succeeded)`, 'i');
   return re.test(content);
 }
 
@@ -365,28 +441,99 @@ function commandEvidenceMissingIssue(
   profileId: string,
   command: GreenfieldProfileCommand,
   reason: string,
+  contractPrefix: string = 'validationCommands',
 ): ProfileValidationIssue {
   return {
     code: 'GF_COMMAND_EVIDENCE_MISSING',
     severity: 'error',
     profileId,
-    affectedContract: `validationCommands:${command.command}`,
+    affectedContract: `${contractPrefix}:${command.command}`,
     reason: `Required command "${command.command}" has no recorded passing evidence (${reason}).`,
     correctiveAction: `Run "${command.command}" and record its outcome in the VerificationReport's "Commands verified" section.`,
     evidenceKey: command.command,
   };
 }
 
-function commandPassUnsupportedIssue(profileId: string, command: GreenfieldProfileCommand): ProfileValidationIssue {
+function commandPassUnsupportedIssue(
+  profileId: string,
+  command: GreenfieldProfileCommand,
+  contractPrefix: string = 'validationCommands',
+): ProfileValidationIssue {
   return {
     code: 'GF_COMMAND_PASS_UNSUPPORTED',
     severity: 'error',
     profileId,
-    affectedContract: `validationCommands:${command.command}`,
+    affectedContract: `${contractPrefix}:${command.command}`,
     reason: `The verification report claims command "${command.command}" passed without a recorded "Commands verified" entry.`,
     correctiveAction: `Add a "- ${command.command}: passed" entry to "Commands verified", or remove the unsupported claim.`,
     evidenceKey: command.command,
   };
+}
+
+// ─── v1.3.1 Batch 5: production migration ordering ─────────────────────────
+//
+// Preserves Batch 3's invariant (production migration deploy -> application
+// traffic/readiness) using the one ordering signal the existing verification
+// artifact format actually provides: the order "Commands verified" lines
+// were reported in. This does not invent timestamps or a new ordering
+// field -- it reads the same parsed array parseCommandEvidenceSection()
+// already returns (list order, not a Map), which the artifact's own
+// "one command per line, in the order reported" convention already
+// represents. If the migration-deploy command is missing entirely, the
+// existing evaluateCommandEvidence() check above already reports
+// GF_COMMAND_EVIDENCE_MISSING; this check only fires when both commands
+// have evidence, so it never duplicates that finding.
+
+const PRODUCTION_MIGRATION_COMMAND = 'npm run db:migrate:deploy';
+const PRODUCTION_READINESS_COMMANDS = ['npm run smoke:readiness', 'npm run smoke:liveness', 'docker compose -f compose.yaml up -d app'];
+
+function evaluateProductionMigrationOrdering(
+  profileId: string,
+  capability: GreenfieldFullstackCapability,
+  verificationReportContent: string | undefined,
+): ProfileValidationIssue[] {
+  if (!verificationReportContent) {
+    return [];
+  }
+  const allCommands = [...capability.setupCommands, ...capability.validationCommands];
+  if (!allCommands.some((c) => c.command === PRODUCTION_MIGRATION_COMMAND)) {
+    return []; // this capability instance does not declare the command; nothing to order.
+  }
+
+  const parsed = parseArtifact(verificationReportContent);
+  const evidence = parseCommandEvidenceSection(parsed.sections.get('Commands verified'));
+  const migrationIndex = evidence.findIndex((e) => e.command === PRODUCTION_MIGRATION_COMMAND && e.status === 'passed');
+  if (migrationIndex === -1) {
+    return []; // no successful migration evidence at all; already reported by evaluateCommandEvidence.
+  }
+
+  const readinessIndex = evidence.findIndex(
+    (e) => PRODUCTION_READINESS_COMMANDS.includes(e.command) && e.status === 'passed',
+  );
+  if (readinessIndex === -1) {
+    return []; // no successful readiness/startup evidence reported yet; nothing to order against.
+  }
+
+  if (readinessIndex < migrationIndex) {
+    return [
+      {
+        code: 'GF_FULLSTACK_MIGRATION_ORDER_VIOLATION',
+        severity: 'error',
+        profileId,
+        affectedContract: 'validationCommands,setupCommands',
+        reason:
+          `Verification evidence reports "${evidence[readinessIndex].command}" (application startup/readiness) ` +
+          `before "${PRODUCTION_MIGRATION_COMMAND}" (production migration), which violates the required ` +
+          'pre-traffic migration ordering.',
+        correctiveAction:
+          `Report "${PRODUCTION_MIGRATION_COMMAND}" as passed before any application startup/readiness ` +
+          'evidence in "Commands verified".',
+        evidenceKey: 'production-migration-order',
+      },
+    ];
+  }
+
+  return [];
 }
 
 // ─── Shared issue builders ─────────────────────────────────────────────────

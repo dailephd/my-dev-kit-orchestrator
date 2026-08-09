@@ -21,6 +21,8 @@ import {
   GreenfieldProfile,
   GreenfieldProfileId,
   GreenfieldProfileSelection,
+  GreenfieldProjectType,
+  GreenfieldWebFramework,
 } from './profileTypes';
 import { TYPESCRIPT_CLI_PROFILE } from './typescriptCliProfile';
 import { NEXTJS_APP_PROFILE } from './nextjsAppProfile';
@@ -130,6 +132,16 @@ function resolveExplicitProfile(
     };
   }
 
+  const incompatibility = findProjectDimensionIncompatibility(normalized, profile);
+  if (incompatibility) {
+    return {
+      status: 'unsupported',
+      requestedProfileId: requested,
+      reason: incompatibility,
+      stackDecisionNotes: [],
+    };
+  }
+
   const reason = aliasedId
     ? `Requested profile "${requested}" was resolved via a known alias to "${aliasedId}" and selected.`
     : `Explicit profile "${requested}" was found in the supported catalog and selected.`;
@@ -141,6 +153,42 @@ function resolveExplicitProfile(
     reason,
     stackDecisionNotes: buildStackDecisionNotes(normalized, profile),
   };
+}
+
+// v1.3.1 Batch 1: checks an explicitly requested projectType/webFramework
+// (orthogonal to preferredProfile) against the requested profile's declared
+// GreenfieldProfile.compatibleProjectTypes/compatibleWebFrameworks. Absence
+// of either dimension on the brief means that dimension is not evaluated, so
+// legacy briefs and non-web profile requests are unaffected. Returns a
+// human-readable incompatibility reason, or undefined when compatible (or
+// when the request supplies neither dimension).
+function findProjectDimensionIncompatibility(
+  normalized: NormalizedGreenfieldBrief,
+  profile: GreenfieldProfile,
+): string | undefined {
+  if (
+    normalized.projectType &&
+    !profile.compatibleProjectTypes.includes(normalized.projectType as GreenfieldProjectType)
+  ) {
+    return (
+      `Requested project type "${normalized.projectType}" is not compatible with profile "${profile.id}" ` +
+      `(profile declares compatibility with: ${profile.compatibleProjectTypes.join(', ') || 'none'}). ` +
+      'This request is preserved as unsupported rather than silently reinterpreted as another profile.'
+    );
+  }
+
+  if (
+    normalized.webFramework &&
+    !profile.compatibleWebFrameworks.includes(normalized.webFramework as GreenfieldWebFramework)
+  ) {
+    return (
+      `Requested web framework "${normalized.webFramework}" is not compatible with profile "${profile.id}" ` +
+      `(profile declares compatibility with: ${profile.compatibleWebFrameworks.join(', ') || 'none'}). ` +
+      'This request is preserved as unsupported rather than silently reinterpreted as another profile.'
+    );
+  }
+
+  return undefined;
 }
 
 function resolveFallbackProfile(normalized: NormalizedGreenfieldBrief): GreenfieldProfileSelection {

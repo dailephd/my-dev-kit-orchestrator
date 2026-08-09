@@ -47,6 +47,21 @@ describe('validateGreenfieldProjectBrief', () => {
   it('does not fail when optional planning fields are absent', () => {
     expect(() => validateGreenfieldProjectBrief({ rawIdea: 'A tool.' }, 'test')).not.toThrow();
   });
+
+  // TST-B1-002/TST-B1-003: schema accepts the new orthogonal dimensions as optional strings.
+  it('accepts optional projectType and webFramework fields', () => {
+    const brief = validateGreenfieldProjectBrief(
+      {
+        rawIdea: 'A full-stack web app for managing inventory.',
+        preferredProfile: 'nextjs-app',
+        projectType: 'fullstack-web',
+        webFramework: 'nextjs',
+      },
+      'test',
+    );
+    expect(brief.projectType).toBe('fullstack-web');
+    expect(brief.webFramework).toBe('nextjs');
+  });
 });
 
 // ─── loadProjectBrief ───────────────────────────────────────────────────────────
@@ -206,6 +221,42 @@ describe('normalizeProjectBrief', () => {
     const { normalized } = normalizeProjectBrief({ rawIdea: 'A tool for tracking tasks and habits.' });
     const serialized = JSON.stringify(normalized).toLowerCase();
     expect(serialized).not.toMatch(/android|mobile|ios\b|react-native|flutter/);
+  });
+
+  // TST-B1-001: legacy briefs with no projectType/webFramework remain valid and unchanged.
+  it('TST-B1-001: normalizes a legacy brief with no projectType/webFramework fields', () => {
+    const { normalized } = normalizeProjectBrief({ rawIdea: 'A tool for tracking tasks and habits.' });
+    expect(normalized.projectType).toBeUndefined();
+    expect(normalized.webFramework).toBeUndefined();
+  });
+
+  // TST-B1-002: the supported full-stack project type is accepted and normalized deterministically.
+  it('TST-B1-002: preserves a user-provided supported projectType', () => {
+    const { normalized } = normalizeProjectBrief({
+      rawIdea: 'A tool for tracking tasks and habits.',
+      projectType: 'fullstack-web',
+    });
+    expect(normalized.projectType).toBe('fullstack-web');
+  });
+
+  // TST-B1-003: the supported web framework is accepted and normalized deterministically.
+  it('TST-B1-003: preserves a user-provided supported webFramework', () => {
+    const { normalized } = normalizeProjectBrief({
+      rawIdea: 'A tool for tracking tasks and habits.',
+      webFramework: 'nextjs',
+    });
+    expect(normalized.webFramework).toBe('nextjs');
+  });
+
+  it('is deterministic for the same input including projectType/webFramework', () => {
+    const brief = {
+      rawIdea: 'A tool for tracking tasks and habits.',
+      projectType: 'fullstack-web',
+      webFramework: 'nextjs',
+    };
+    const first = normalizeProjectBrief(brief);
+    const second = normalizeProjectBrief(brief);
+    expect(first.normalized).toEqual(second.normalized);
   });
 
   it('infers a candidate project name from a quoted name in the idea text', () => {

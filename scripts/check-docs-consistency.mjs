@@ -195,6 +195,14 @@ function addIssue(issues, code, documentPath, expected, actual, action) {
   issues.push({ code, documentPath, expected, actual, action });
 }
 
+const commonCanonicalDocuments = [
+  'docs/PROJECT_OVERVIEW.md', 'docs/CURRENT_STATE.md', 'docs/ARCHITECTURE.md',
+  'docs/CONTRACTS.md', 'docs/COMMANDS.md', 'docs/WORKFLOWS.md',
+  'docs/QUICKSTART.md', 'docs/DEVELOPMENT.md', 'docs/CI_CD.md',
+  'docs/ROADMAP.md', 'docs/RELEASE.md', 'docs/SECURITY.md',
+  'docs/DOCUMENTATION_PRESERVATION_POLICY.md', 'CHANGELOG.md',
+];
+
 function topLevelHeadings(content) {
   return [...content.matchAll(/^## (.+)$/gm)].map((match) => match[1].trim());
 }
@@ -411,6 +419,14 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   }
 
   const readme = byPath['README.md'];
+  for (const relPath of commonCanonicalDocuments) {
+    if (!manifest.canonicalDocuments.includes(relPath)) {
+      addIssue(issues, 'COMMON_CANONICAL_DOCUMENT_UNPROTECTED', manifestPath, relPath, 'not protected', 'Add the common document to canonicalDocuments.');
+    }
+    if (!readme.includes(`](${relPath})`)) {
+      addIssue(issues, 'README_CANONICAL_LINK_MISSING', 'README.md', `link to ${relPath}`, 'missing', 'Add the common canonical link to the Documentation section.');
+    }
+  }
   const changelog = byPath['CHANGELOG.md'];
   const roadmap = byPath['docs/ROADMAP.md'];
   const architecture = byPath['docs/ARCHITECTURE.md'];
@@ -553,7 +569,18 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
       }
     }
     const implementedUnpublished = (manifest.protectedFacts.implementedUnpublishedVersions ?? []).includes(version);
-    const isCurrentlyPublishedVersion = version === `v${pkg.version}`;
+    // A version may legitimately say "published"/"released as"/"implemented"
+    // once it has actually shipped -- not only while it is the single
+    // current pkg.version, but permanently afterward (e.g. v1.3.0's history
+    // remains "Published as `1.3.0`" even after v1.3.1 becomes current).
+    // manifest.roadmapVersions is the authoritative chronological order
+    // (already validated elsewhere against ROADMAP.md's own headings), so a
+    // version is published-or-current when its position in that order is at
+    // or before the current package version's position.
+    const currentVersionIndex = manifest.roadmapVersions.indexOf(`v${pkg.version}`);
+    const versionIndex = manifest.roadmapVersions.indexOf(version);
+    const isCurrentlyPublishedVersion =
+      versionIndex !== -1 && currentVersionIndex !== -1 && versionIndex <= currentVersionIndex;
     if (!isCurrentlyPublishedVersion && containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i)) {
       addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} is not published`, 'published or released-as wording found', 'Restore not-yet-published wording; do not present unpublished work as shipped.');
     }

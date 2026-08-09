@@ -34,6 +34,20 @@ export interface GreenfieldProjectBrief {
   preferredProfile?: string;
   /** Optional: target platform (e.g. "web", "cli", "server"). */
   platformTarget?: string;
+  /**
+   * Optional (v1.3.1 Batch 1): requested project type, orthogonal to
+   * `preferredProfile` (e.g. "fullstack-web"). Not required for legacy or
+   * non-web projects; see src/greenfield/profiles/profileTypes.ts for the
+   * currently implemented values.
+   */
+  projectType?: string;
+  /**
+   * Optional (v1.3.1 Batch 1): requested web framework, orthogonal to
+   * `preferredProfile` (e.g. "nextjs"). Not required for legacy or non-web
+   * projects; see src/greenfield/profiles/profileTypes.ts for the currently
+   * implemented values.
+   */
+  webFramework?: string;
   /** Optional: documentation preferences. */
   documentationPreferences?: string[];
   /** Optional: testing expectations. */
@@ -88,6 +102,10 @@ export interface NormalizedGreenfieldBrief {
   preferredStack: string[];
   preferredProfile?: string;
   platformTarget?: string;
+  /** v1.3.1 Batch 1: orthogonal to preferredProfile; see GreenfieldProjectBrief.projectType. */
+  projectType?: string;
+  /** v1.3.1 Batch 1: orthogonal to preferredProfile; see GreenfieldProjectBrief.webFramework. */
+  webFramework?: string;
   documentationPreferences: string[];
   testingExpectations: string[];
   /** Fields the brief left ambiguous, preserved explicitly rather than guessed. */

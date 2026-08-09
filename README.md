@@ -23,13 +23,32 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.3.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.3.1`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.3.0` strengthens greenfield profile and scaffold verification on top of
-the `v1.2.3` run-integrity and judge-verdict enforcement, which itself built
-on the `v1.2.2` context-readiness safeguards. It requires Node.js 24 or
-later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for its scope.
+`v1.3.1` makes the ecosystem's standardized 15-file canonical project-document
+baseline the generic documentation substrate for every newly bootstrapped
+greenfield project, and adds the first explicit full-stack web environment
+contract: the existing `nextjs-app` starter profile combined with structured
+`fullstack-web`/`nextjs` intent, PostgreSQL, Prisma, and Docker, composed
+additively into scaffold planning, generated-file and verification-command
+evidence, and canonical greenfield readiness (with distinct proof for
+PostgreSQL health, application liveness, and application/database readiness).
+A database-backed first vertical slice is required when the full-stack
+capability is selected, and final-report eligibility for every greenfield run
+now also requires that canonical readiness, not only an authored judge
+`PASS`. It builds on `v1.3.0`'s greenfield profile and scaffold verification,
+the `v1.2.3` run-integrity and judge-verdict enforcement, and the `v1.2.2`
+context-readiness safeguards. It requires Node.js 24 or later. See
+[docs/ROADMAP.md](docs/ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening)
+for its scope.
+
+`v1.3.1` preserves the eight-command CLI surface, seven workflow modes, and
+the three starter profiles (`typescript-cli`, `nextjs-app`,
+`android-compose`) -- there is no new `nextjs-fullstack` profile and no
+`--project-type`/`--framework`/`--profile` CLI flag. The orchestrator still
+never executes Docker, PostgreSQL, Prisma, or any other project command
+itself.
 
 ## Greenfield profile and scaffold verification
 
@@ -138,7 +157,7 @@ node dist/cli.js start "Add audit logging"
 node dist/cli.js prompt
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for complete command syntax and
+See [docs/COMMANDS.md](docs/COMMANDS.md) for complete command syntax and
 [docs/WORKFLOWS.md](docs/WORKFLOWS.md) for mode selection and stage procedures.
 
 ## Greenfield starter profiles
@@ -176,7 +195,7 @@ my-dev-kit-orchestrator check
 my-dev-kit-orchestrator export
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for flags, defaults, run selection, check
+See [docs/COMMANDS.md](docs/COMMANDS.md) for flags, defaults, run selection, check
 variants, export options, and troubleshooting.
 
 ## Tool boundaries
@@ -209,6 +228,25 @@ or release workflows.
   for a run that must be resumed through the CLI.
 
 ## Documentation
+
+Common canonical documents:
+
+- [Project overview](docs/PROJECT_OVERVIEW.md)
+- [Current state](docs/CURRENT_STATE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Contracts](docs/CONTRACTS.md)
+- [Commands](docs/COMMANDS.md)
+- [Workflows](docs/WORKFLOWS.md)
+- [Quickstart](docs/QUICKSTART.md)
+- [Development](docs/DEVELOPMENT.md)
+- [CI/CD](docs/CI_CD.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Release](docs/RELEASE.md)
+- [Security](docs/SECURITY.md)
+- [Documentation preservation policy](docs/DOCUMENTATION_PRESERVATION_POLICY.md)
+- [Changelog](CHANGELOG.md)
+
+Project-specific and compatibility references:
 
 - [Ecosystem development workflows](docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
 - [Usage and command reference](docs/USAGE.md)

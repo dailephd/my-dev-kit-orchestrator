@@ -328,7 +328,7 @@ Status: complete
       fs.writeFileSync(path.join(runFolder, 'artifacts', 'scaffold-plan.txt'), scaffoldPlan);
       fs.writeFileSync(path.join(runFolder, 'reports', 'scaffold-implementation-report.txt'), scaffoldReport);
       fs.writeFileSync(path.join(runFolder, 'artifacts', 'first-vertical-slice.txt'), firstSlice);
-      fs.writeFileSync(path.join(runFolder, 'reports', 'verification-report.txt'), verificationReport);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'verification-report.txt'), verificationReport);
       const meta = makeMeta('greenfield', runFolder);
       const result = checkGreenfieldRunReadiness(meta);
       expect(result).toBeDefined();
@@ -407,7 +407,7 @@ Status: complete
       fs.writeFileSync(path.join(runFolder, 'artifacts', 'scaffold-plan.txt'), scaffoldPlan);
       fs.writeFileSync(path.join(runFolder, 'reports', 'scaffold-implementation-report.txt'), scaffoldReport);
       fs.writeFileSync(path.join(runFolder, 'artifacts', 'first-vertical-slice.txt'), firstSlice);
-      fs.writeFileSync(path.join(runFolder, 'reports', 'verification-report.txt'), verificationReport);
+      fs.writeFileSync(path.join(runFolder, 'artifacts', 'verification-report.txt'), verificationReport);
       const meta = makeMeta('greenfield', runFolder);
       const result = checkGreenfieldRunReadiness(meta);
       expect(result).toBeDefined();

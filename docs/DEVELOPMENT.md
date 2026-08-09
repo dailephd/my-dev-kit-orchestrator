@@ -1,5 +1,8 @@
 # Development
 
+Continuous-integration coverage is documented in [CI/CD](CI_CD.md); the
+maintainer publication procedure is documented in [Release](RELEASE.md).
+
 ## Prerequisites
 
 Node.js 24 or later is required, and `package.json` declares `>=24`. The
@@ -101,7 +104,12 @@ Important implementation files:
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
 - `src/greenfield/`: brief, profile, bootstrap, scaffold, and greenfield-mode
-  implementation
+  implementation, including `src/greenfield/fullstack/`: the single supported
+  full-stack capability (`fullstack-web` + `nextjs` + `nextjs-app` +
+  PostgreSQL + Prisma + Docker), resolved and validated separately from
+  starter-profile selection and composed additively into
+  `src/greenfield/scaffold/buildScaffoldPlan.ts` and
+  `src/greenfield/readiness/`
 - `src/__tests__/`: Jest coverage for shared CLI behavior and workflow logic
 - `tests/greenfield/`: greenfield and starter-profile regression suites
 - `docs/`: public documentation and release guidance
@@ -223,6 +231,40 @@ refresh-required) and its corrected counterpart. Tests copy their contents
 into a disposable directory before any mutation and assert the fixture files
 are unchanged afterward; never edit them except to correct an error in the
 distillation itself.
+
+Standardized-document, full-stack capability, and judge/final-report
+lifecycle changes (`v1.3.1`) additionally require:
+
+```bash
+npx jest tests/greenfield --runInBand
+```
+
+`tests/greenfield/fullstackCapability.spec.ts`,
+`fullstackReadiness.spec.ts`, and `fullstackScaffoldComposition.spec.ts`
+cover full-stack capability resolution/validation and its additive
+composition into scaffold planning and readiness.
+`tests/greenfield/readinessLifecycleCorrection.spec.ts` covers the
+judge/final-report readiness gate (`TST-B5C-001` through `TST-B5C-016`) and
+the verification-report artifact-path regression
+(`TST-VPATH-001` through `TST-VPATH-010`), which proves the generated
+verification/judge/final-report prompts, canonical greenfield readiness, and
+final-report artifact-lifecycle validation all agree on
+`artifacts/verification-report.txt`.
+
+To extend supported project types, web frameworks, or environment
+capabilities safely: represent a new dimension as its own field (like
+`projectType`/`webFramework`) rather than folding it into
+`GreenfieldProfileId`; resolve and validate a new capability under
+`src/greenfield/fullstack/` (or a sibling directory) the same way, with its
+own resolver and validator; and compose its targets/commands additively into
+`buildScaffoldPlan.ts` and the existing readiness evaluator rather than
+creating a second scaffold format, readiness engine, or artifact identity.
+The same no-parallel-registry rule that applies to profiles
+(`src/greenfield/profiles/`) applies to canonical documents
+(`src/greenfield/bootstrap/projectDocBootstrapTypes.ts`) and capabilities: one
+owner per concern, extracted dynamically by
+`scripts/check-docs-consistency.mjs` rather than hardcoded into
+documentation.
 
 ### Manual my-dev-kit integration caveat
 

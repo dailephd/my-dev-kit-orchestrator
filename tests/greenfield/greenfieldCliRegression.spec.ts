@@ -151,6 +151,28 @@ describe('greenfield CLI regression (full command surface)', () => {
   });
 });
 
+// TST-B1-012: the public `start` command exposes no new project-type/
+// framework/profile flags and does not become the profile-resolution owner.
+describe('start command surface regression - no profile/project-type/framework flags (v1.3.1 Batch 1, TST-B1-012)', () => {
+  it('start does not declare --profile, --project-type, --framework, or --web-framework options', () => {
+    const startCommand = createProgram().commands.find((c) => c.name() === 'start');
+    expect(startCommand).toBeDefined();
+    const flags = (startCommand?.options ?? []).map((o) => o.long);
+    expect(flags).not.toContain('--profile');
+    expect(flags).not.toContain('--project-type');
+    expect(flags).not.toContain('--framework');
+    expect(flags).not.toContain('--web-framework');
+  });
+
+  it('start --help output does not mention --profile, --project-type, or --framework flags', () => {
+    const { output } = runCliCaptured(['start', '--help']);
+    expect(output).not.toMatch(/--profile\b/);
+    expect(output).not.toMatch(/--project-type\b/);
+    expect(output).not.toMatch(/--framework\b/);
+    expect(output).not.toMatch(/--web-framework\b/);
+  });
+});
+
 describe('greenfield CLI regression does not break other modes', () => {
   let tmp: string;
 

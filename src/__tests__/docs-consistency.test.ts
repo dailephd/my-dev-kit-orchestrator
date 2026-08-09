@@ -118,4 +118,12 @@ describe('docs consistency check script', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('[PRESERVED_TERM_MISSING]');
   });
+
+  it('fails when README drops a common canonical document link', () => {
+    const root = makeFixture();
+    mutate(root, 'README.md', (content) => content.replace('](docs/CONTRACTS.md)', '](docs/ARCHITECTURE.md)'));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('[README_CANONICAL_LINK_MISSING]');
+  });
 });

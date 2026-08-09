@@ -1,5 +1,9 @@
 # Workflows
 
+Use this guide for ordered workflow decisions. Consult [Commands](COMMANDS.md)
+for exact CLI syntax and [Artifacts](ARTIFACTS.md) for detailed artifact
+contracts.
+
 `my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
 choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
 syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
@@ -413,17 +417,62 @@ Project-doc bootstrap returns structured in-memory content rather than writing
 template files. Component documentation remains empty until the brief schema
 has module or component hints.
 
-Implemented but unpublished work strengthens greenfield readiness checking
-for all three current profiles. The scaffold plan, scaffold implementation
-report, verification report, and first vertical slice are validated against
-the selected profile's exact contract: required targets, required and
-optional commands, generated-file evidence, and first-slice completeness.
-`status` and `check`/`check --all` surface the result. A run created before
-this validation existed (no `Profile:` section in its scaffold
-implementation report) is treated as legacy: it is not retroactively failed
-for evidence it could not have produced. See
-[docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts) for the exact
-structured sections each artifact carries.
+Greenfield readiness checking applies to all three current profiles. The
+scaffold plan, scaffold implementation report, verification report, and
+first vertical slice are validated against the selected profile's exact
+contract: required targets, required and optional commands, generated-file
+evidence, and first-slice completeness. `status` and `check`/`check --all`
+surface the result. A run created before this validation existed (no
+`Profile:` section in its scaffold implementation report) is treated as
+legacy: it is not retroactively failed for evidence it could not have
+produced. See [docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts)
+for the exact structured sections each artifact carries.
+
+### v1.3.1: standardized documents and full-stack composition
+
+`v1.3.1` (the current published release; see
+[CURRENT_STATE.md](CURRENT_STATE.md) and
+[ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability))
+does not add, remove, reorder, or rename any of the 13 stages above; it
+carries additional resolved information through the same stages:
+
+1. `idea-brief`/`stack-decision` may capture optional `projectType`
+   (`fullstack-web`) and `webFramework` (`nextjs`) intent, orthogonal to
+   starter-profile selection.
+2. `starter-profile` still resolves one of the three existing profiles
+   (`typescript-cli`, `nextjs-app`, `android-compose`); when the resolved
+   profile is `nextjs-app` with `fullstack-web`/`nextjs` intent, the single
+   supported full-stack capability (PostgreSQL, Prisma, Docker) also
+   resolves.
+3. `bootstrap-bundle` carries the resolved capability alongside the resolved
+   profile.
+4. `project-docs` populates the standardized 15-file canonical document
+   baseline (README.md, CHANGELOG.md, and 13 `docs/*.md` files) for every
+   profile, with full-stack-specific content layered additively into those
+   common documents only when the capability is selected; `typescript-cli`
+   and `android-compose` runs, and ordinary `nextjs-app` runs without the
+   capability, never receive full-stack content.
+5. `scaffold-plan` composes the base profile's targets/commands with the
+   capability's targets/commands (Dockerfile, Compose files, Prisma schema,
+   environment templates, readiness scripts, and the database-backed
+   `app/api/health/route.ts` first-slice entry point) into one plan.
+6. `scaffold-implementation`, `first-vertical-slice`, and `verification`
+   record the same evidence contract as before, extended with the
+   capability's required targets and commands where selected; a
+   full-stack first vertical slice must cross Next.js through the canonical
+   Prisma database client to PostgreSQL and observe a result -- a static
+   page or file's existence cannot satisfy it.
+7. `initial-index` and `judge` are unchanged in shape; `judge` still reviews
+   the same evidence, now inclusive of full-stack evidence when present.
+8. `final-report` eligibility for every greenfield run (not only full-stack
+   runs) now consults the same canonical greenfield readiness `status` and
+   `check` already surface; an authored judge `PASS` cannot make a run
+   eligible while that readiness is incomplete.
+
+No new CLI flag, workflow mode, or native stage was added. The orchestrator
+still never executes Docker, PostgreSQL, Prisma, or any other project
+command itself; it generates prompts and validates evidence a coding agent
+supplies.
 
 ## Instruction packets and context-sensitive behavior
 
