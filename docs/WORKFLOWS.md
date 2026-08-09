@@ -428,13 +428,12 @@ legacy: it is not retroactively failed for evidence it could not have
 produced. See [docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts)
 for the exact structured sections each artifact carries.
 
-### v1.3.1 (implemented candidate, unpublished): standardized documents and full-stack composition
+### v1.3.1: standardized documents and full-stack composition
 
-The working tree contains a complete, verified `v1.3.1` implementation, not
-yet published (`v1.3.0` remains current published; see
+`v1.3.1` (the current published release; see
 [CURRENT_STATE.md](CURRENT_STATE.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md#v131-implemented-candidate-unpublished-standardized-documents-and-full-stack-capability)).
-It does not add, remove, reorder, or rename any of the 13 stages above; it
+[ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability))
+does not add, remove, reorder, or rename any of the 13 stages above; it
 carries additional resolved information through the same stages:
 
 1. `idea-brief`/`stack-decision` may capture optional `projectType`

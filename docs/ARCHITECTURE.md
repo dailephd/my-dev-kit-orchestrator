@@ -6,11 +6,12 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.3.0` (mobile profile expansion and scaffold
-verification), which builds on the `v1.2.3` run-integrity and judge-verdict
-enforcement validated against the released `@dailephd/my-dev-kit@1.10.4`
-package. Architecture is organized by current responsibility rather than by
-release version.
+The current release is `v1.3.1` (standardized greenfield documentation and
+full-stack Next.js environment hardening), which builds on `v1.3.0`'s
+mobile profile expansion and scaffold verification and the `v1.2.3`
+run-integrity and judge-verdict enforcement validated against the released
+`@dailephd/my-dev-kit@1.10.4` package. Architecture is organized by current
+responsibility rather than by release version.
 
 ## System boundaries
 
@@ -90,12 +91,10 @@ All three current profiles share one validation architecture, owned by
   section in the scaffold implementation report as the sole discriminator --
   not a timestamp.
 
-### v1.3.1 (implemented candidate, unpublished): standardized documents and full-stack capability
+### v1.3.1: standardized documents and full-stack capability
 
-The working tree contains a complete, verified `v1.3.1` implementation that is
-not yet published (`v1.3.0` remains the current published release; see
-[CURRENT_STATE.md](CURRENT_STATE.md)). It is additive to the architecture
-above rather than a replacement:
+`v1.3.1` (the current published release; see [CURRENT_STATE.md](CURRENT_STATE.md))
+is additive to the architecture above rather than a replacement:
 
 - `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
   `webFramework` fields to the raw and normalized brief. They are orthogonal

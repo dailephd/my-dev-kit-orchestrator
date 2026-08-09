@@ -2,9 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.3.0` is the current published release. `v1.2.3`, `v1.2.2`, `v1.2.1`,
-`v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part of the
-published project history. Versions after `v1.3.0` are planned milestones.
+`v1.3.1` is the current published release. `v1.3.0`, `v1.2.3`, `v1.2.2`,
+`v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part
+of the published project history. Versions after `v1.3.1` are planned
+milestones.
 
 ## Version summary
 
@@ -34,9 +35,8 @@ published project history. Versions after `v1.3.0` are planned milestones.
 - `v1.3.1` makes the ecosystem's standardized project-document structure
   the generic baseline for newly bootstrapped projects and hardens the existing
   `nextjs-app` profile for the first explicit full-stack web environment
-  contract: Next.js with PostgreSQL, Prisma, and Docker. It is implemented and
-  verified in the working tree but not yet published; `v1.3.0` remains the
-  current published release (see "Planned milestones").
+  contract: Next.js with PostgreSQL, Prisma, and Docker. Released on
+  2026-08-09.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -658,14 +658,12 @@ Possible additional profiles (unchanged; still requires separate approval):
 - `python-cli`
 - stronger `typescript-cli` and `nextjs-app` (delivered above)
 
-## Planned milestones
+## Published v1.3.1
 
 ### v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
 
 Status:
-Implemented and verified in the working tree (patch after published
-`v1.3.0`); not yet published. `v1.3.0` remains the current published
-release. The next step is pre-release readiness, not publication.
+Published as `1.3.1` on 2026-08-09.
 
 Goal:
 Extend the `v1.3.0` greenfield profile and scaffold foundation in two connected
@@ -685,7 +683,7 @@ scientific-literature-explorer reference studies establish reusable pieces of
 that lifecycle and identify gaps that the first generic contract must harden
 explicitly rather than inherit as false-green behavior.
 
-Planned capabilities:
+Delivered capabilities:
 
 - use the common canonical document set as the generic baseline for new
   greenfield projects, with content derived from the new project's actual
@@ -956,6 +954,8 @@ Acceptance criteria:
   stated additive/legacy treatment
 - all explicit exclusions remain enforced, and the separate `v1.4.0` and
   `v1.5.0` plans remain unchanged and in order
+
+## Planned milestones
 
 ### v1.4.0 - Greenfield-to-Feature Workflow Handoff Hardening
 

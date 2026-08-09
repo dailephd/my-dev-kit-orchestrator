@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-### v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening (implemented candidate, not yet published)
+## v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
+
+Release date: 2026-08-09.
+
+### Added
 
 - standardized 15-file canonical greenfield document baseline (`README.md`,
   `CHANGELOG.md`, and 13 `docs/*.md` files) applied to all three starter
@@ -36,10 +40,6 @@
   remains eight commands, seven modes, 79 native stages, and greenfield
   remains 13 stages and three starter profiles; the orchestrator still never
   executes Docker, PostgreSQL, Prisma, or any other project command itself
-
-This work is implemented and verified in the working tree. `v1.3.0` remains
-the current published release; see
-[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) for status.
 
 ## v1.3.0 - Mobile Profile Expansion and Scaffold Verification
 

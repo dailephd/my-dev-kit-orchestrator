@@ -23,18 +23,32 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.3.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.3.1`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
 
-`v1.3.0` strengthens greenfield profile and scaffold verification on top of
-the `v1.2.3` run-integrity and judge-verdict enforcement, which itself built
-on the `v1.2.2` context-readiness safeguards. It requires Node.js 24 or
-later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for its scope.
+`v1.3.1` makes the ecosystem's standardized 15-file canonical project-document
+baseline the generic documentation substrate for every newly bootstrapped
+greenfield project, and adds the first explicit full-stack web environment
+contract: the existing `nextjs-app` starter profile combined with structured
+`fullstack-web`/`nextjs` intent, PostgreSQL, Prisma, and Docker, composed
+additively into scaffold planning, generated-file and verification-command
+evidence, and canonical greenfield readiness (with distinct proof for
+PostgreSQL health, application liveness, and application/database readiness).
+A database-backed first vertical slice is required when the full-stack
+capability is selected, and final-report eligibility for every greenfield run
+now also requires that canonical readiness, not only an authored judge
+`PASS`. It builds on `v1.3.0`'s greenfield profile and scaffold verification,
+the `v1.2.3` run-integrity and judge-verdict enforcement, and the `v1.2.2`
+context-readiness safeguards. It requires Node.js 24 or later. See
+[docs/ROADMAP.md](docs/ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening)
+for its scope.
 
-A standardized 15-file canonical project-document baseline and a full-stack
-Next.js/PostgreSQL/Prisma/Docker environment contract are implemented and
-verified for `v1.3.1` but not yet published; see
-[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) for current status.
+`v1.3.1` preserves the eight-command CLI surface, seven workflow modes, and
+the three starter profiles (`typescript-cli`, `nextjs-app`,
+`android-compose`) -- there is no new `nextjs-fullstack` profile and no
+`--project-type`/`--framework`/`--profile` CLI flag. The orchestrator still
+never executes Docker, PostgreSQL, Prisma, or any other project command
+itself.
 
 ## Greenfield profile and scaffold verification
 

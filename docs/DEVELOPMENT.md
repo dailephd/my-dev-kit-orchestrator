@@ -104,11 +104,11 @@ Important implementation files:
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
 - `src/greenfield/`: brief, profile, bootstrap, scaffold, and greenfield-mode
-  implementation, including `src/greenfield/fullstack/` (implemented
-  candidate, unpublished): the single supported full-stack capability
-  (`fullstack-web` + `nextjs` + `nextjs-app` + PostgreSQL + Prisma + Docker),
-  resolved and validated separately from starter-profile selection and
-  composed additively into `src/greenfield/scaffold/buildScaffoldPlan.ts` and
+  implementation, including `src/greenfield/fullstack/`: the single supported
+  full-stack capability (`fullstack-web` + `nextjs` + `nextjs-app` +
+  PostgreSQL + Prisma + Docker), resolved and validated separately from
+  starter-profile selection and composed additively into
+  `src/greenfield/scaffold/buildScaffoldPlan.ts` and
   `src/greenfield/readiness/`
 - `src/__tests__/`: Jest coverage for shared CLI behavior and workflow logic
 - `tests/greenfield/`: greenfield and starter-profile regression suites
@@ -233,8 +233,7 @@ are unchanged afterward; never edit them except to correct an error in the
 distillation itself.
 
 Standardized-document, full-stack capability, and judge/final-report
-lifecycle changes (`v1.3.1`, implemented candidate, unpublished)
-additionally require:
+lifecycle changes (`v1.3.1`) additionally require:
 
 ```bash
 npx jest tests/greenfield --runInBand

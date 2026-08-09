@@ -19,7 +19,7 @@ The package is `@dailephd/my-dev-kit-orchestrator`; the executable is `my-dev-ki
 
 The current implementation supports seven modes: `feature`, `repair`, `test`, `refactor`, `harden`, `extraction`, and `greenfield`. Across them it owns run creation and discovery, prompt rendering, artifact/lifecycle checks, context-readiness evaluation, run-integrity enforcement, judge verdict acceptance, correction routing, status, and export.
 
-Greenfield supports the `typescript-cli`, `nextjs-app`, and `android-compose` starter profiles. Profiles shape planning, scaffold targets, documentation, and verification expectations; the orchestrator itself does not generate or execute the project. A standardized canonical project-document baseline and one explicit full-stack web environment contract (`nextjs-app` with PostgreSQL, Prisma, and Docker) are implemented and verified as an unpublished candidate; see [CURRENT_STATE.md](CURRENT_STATE.md) for status.
+Greenfield supports the `typescript-cli`, `nextjs-app`, and `android-compose` starter profiles. Profiles shape planning, scaffold targets, documentation, and verification expectations; the orchestrator itself does not generate or execute the project. A standardized canonical project-document baseline and one explicit full-stack web environment contract (`nextjs-app` with PostgreSQL, Prisma, and Docker) are part of the current release; see [CURRENT_STATE.md](CURRENT_STATE.md) for status.
 
 ## Ecosystem relationship
 

@@ -476,10 +476,10 @@ generated-file, scaffold-plan, and first-slice-profile-identity evidence for
 that run, rather than retroactively failing it for fields it could not have
 written.
 
-### v1.3.1 additions (implemented candidate, unpublished)
+### v1.3.1 additions
 
 These extend the artifacts above; no artifact identity, filename, or path
-changes. See [ARCHITECTURE.md](ARCHITECTURE.md#v131-implemented-candidate-unpublished-standardized-documents-and-full-stack-capability)
+changes. See [ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability)
 for the owning modules.
 
 - `artifacts/bootstrap-bundle.json` additionally carries the normalized

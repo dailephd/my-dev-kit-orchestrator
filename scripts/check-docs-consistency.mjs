@@ -569,7 +569,18 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
       }
     }
     const implementedUnpublished = (manifest.protectedFacts.implementedUnpublishedVersions ?? []).includes(version);
-    const isCurrentlyPublishedVersion = version === `v${pkg.version}`;
+    // A version may legitimately say "published"/"released as"/"implemented"
+    // once it has actually shipped -- not only while it is the single
+    // current pkg.version, but permanently afterward (e.g. v1.3.0's history
+    // remains "Published as `1.3.0`" even after v1.3.1 becomes current).
+    // manifest.roadmapVersions is the authoritative chronological order
+    // (already validated elsewhere against ROADMAP.md's own headings), so a
+    // version is published-or-current when its position in that order is at
+    // or before the current package version's position.
+    const currentVersionIndex = manifest.roadmapVersions.indexOf(`v${pkg.version}`);
+    const versionIndex = manifest.roadmapVersions.indexOf(version);
+    const isCurrentlyPublishedVersion =
+      versionIndex !== -1 && currentVersionIndex !== -1 && versionIndex <= currentVersionIndex;
     if (!isCurrentlyPublishedVersion && containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i)) {
       addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} is not published`, 'published or released-as wording found', 'Restore not-yet-published wording; do not present unpublished work as shipped.');
     }
