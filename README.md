@@ -31,6 +31,11 @@ the `v1.2.3` run-integrity and judge-verdict enforcement, which itself built
 on the `v1.2.2` context-readiness safeguards. It requires Node.js 24 or
 later. See [docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for its scope.
 
+A standardized 15-file canonical project-document baseline and a full-stack
+Next.js/PostgreSQL/Prisma/Docker environment contract are implemented and
+verified for `v1.3.1` but not yet published; see
+[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) for current status.
+
 ## Greenfield profile and scaffold verification
 
 `v1.3.0` adds shared profile and registry validation, explicit command and

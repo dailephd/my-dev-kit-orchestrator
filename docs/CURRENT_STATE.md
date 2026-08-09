@@ -31,26 +31,42 @@ Current implementation includes exact workflow-instruction packets, supplemental
 The ecosystem documentation-standardization report records
 `ECOSYSTEM_DOCUMENTATION_STANDARDIZED`: the common canonical project-document
 structure and its responsibility model have been reconciled across
-`my-dev-kit`, `my-dev-kit-orchestrator`, and `my-dev-kit-lab`. That completed
-documentation work does not change the current greenfield bootstrap behavior.
+`my-dev-kit`, `my-dev-kit-orchestrator`, and `my-dev-kit-lab`.
 
-The next planned implementation task is `v1.3.1`, Standardized Greenfield
-Documentation and Full-Stack Next.js Environment Hardening. It is not
-implemented. The plan will extend the existing `nextjs-app` foundation with
-structured `fullstack-web` plus `nextjs` intent, the first explicit
-PostgreSQL/Prisma/Docker environment contract, and the standardized canonical
-project-document baseline for newly bootstrapped projects. Current source still
-has the three implemented starter profiles and the current project-doc and
-scaffold behavior described above; it must not be treated as already providing
-the planned contract. See the detailed [v1.3.1 roadmap
+`v1.3.1`, Standardized Greenfield Documentation and Full-Stack Next.js
+Environment Hardening, is an **implemented candidate: complete and verified in
+the working tree, but unpublished**. The current published version remains
+`v1.3.0`; package metadata, npm, and the `v1.3.0` tag are unchanged. The
+source branch contains the full `v1.3.1` implementation: the standardized
+15-file canonical project-document baseline applied to all three starter
+profiles, orthogonal `projectType`/`webFramework` brief dimensions, the single
+supported full-stack combination (`fullstack-web` + `nextjs` + `nextjs-app` +
+PostgreSQL + Prisma + Docker) composed additively into scaffold planning and
+canonical greenfield readiness, and a judge/final-report lifecycle correction
+that gates final-report eligibility on canonical greenfield readiness for
+every greenfield run. It does not add a fourth starter profile, a new CLI
+flag, a new workflow mode, or a new native stage; the CLI remains eight
+commands, seven modes, and 79 native stages, with greenfield still 13 stages
+and three starter profiles (`typescript-cli`, `nextjs-app`,
+`android-compose`). See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
 
-`v1.4.0`, Greenfield-to-Feature Workflow Handoff Hardening, remains the later
-milestone after `v1.3.1`. Its separate scope is not part of the patch plan.
+The implementation-completeness audit for `v1.3.1` has passed
+(`IMPLEMENTATION_COMPLETE`): every approved requirement is implemented,
+connected, and covered by tests, and the full repository suite and `npm run
+verify` pass. Implementation-facing documentation reconciliation for `v1.3.1`
+is in progress as this file is updated. The next step after documentation
+reconciliation is the separate pre-release readiness workflow (local
+release-candidate validation, exact-candidate cross-platform validation,
+`my-dev-kit-lab` security validation, and code-rot audit); publication does
+not begin until that workflow returns its own release-readiness verdict.
 
-Before implementation, the planner must inspect the current repository and
-ecosystem evidence rather than treating roadmap prose as a prewritten execution
-plan. Implementation-facing documents remain descriptions of `v1.3.0` behavior
-until corresponding `v1.3.1` behavior is implemented and verified.
+`v1.4.0`, Greenfield-to-Feature Workflow Handoff Hardening, remains the later
+milestone after `v1.3.1`. Its separate scope is not part of the `v1.3.1`
+implementation and is not started.
+
+Before further implementation, the planner must inspect the current
+repository and ecosystem evidence rather than treating roadmap prose as a
+prewritten execution plan.
 
 See [COMMANDS.md](COMMANDS.md) for syntax, [WORKFLOWS.md](WORKFLOWS.md) for operational sequences, and [CONTRACTS.md](CONTRACTS.md) for stable compatibility boundaries.

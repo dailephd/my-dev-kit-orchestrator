@@ -11,6 +11,7 @@
 
 import { NormalizedGreenfieldBrief } from '../brief/briefTypes';
 import { GreenfieldProfileSelection } from '../profiles/profileTypes';
+import { resolveFullstackCapability } from '../fullstack/resolveFullstackCapability';
 import {
   GreenfieldBootstrapBundle,
   GreenfieldBundleValidationRule,
@@ -37,6 +38,10 @@ export function buildGreenfieldBootstrapBundle(
   const scaffoldPlanningInputs = buildScaffoldPlanningInputs(normalizedBrief, selectedProfile);
   const validationRules = buildValidationRules(selectedProfile);
   const unresolvedDecisions = buildUnresolvedDecisions(normalizedBrief, selectedProfile);
+  // v1.3.1 Batch 3: resolved deterministically from the same normalized
+  // brief and profile selection already computed above; 'not-applicable'
+  // for every ordinary non-full-stack bundle.
+  const fullstackCapability = resolveFullstackCapability(normalizedBrief, selectedProfile);
 
   return {
     normalizedBrief,
@@ -48,6 +53,7 @@ export function buildGreenfieldBootstrapBundle(
     scaffoldPlanningInputs,
     validationRules,
     unresolvedDecisions,
+    fullstackCapability,
   };
 }
 

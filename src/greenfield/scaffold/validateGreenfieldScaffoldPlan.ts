@@ -8,7 +8,18 @@
 // Not wired into lifecycle/status/check/RunIntegrityGate; that integration
 // is Batch 4 scope. This function is a pure, self-contained boundary Batch 4
 // can call once that wiring is designed.
+//
+// v1.3.1 Batch 4: accepts an optional resolved GreenfieldFullstackCapability.
+// When present, its targetExpectations/setupCommands/validationCommands are
+// composed additively with the selected profile's own (never replacing
+// them), and the same target/command validation logic below runs over the
+// composed sets -- this is why GF_TARGET_REQUIRED_MISSING and
+// GF_PLAN_COMMAND_MISSING already cover "missing full-stack target/command"
+// without a second issue family. One new profile/capability-alignment check
+// and one destructive-command guard are added; both reuse the existing
+// GF_FULLSTACK_ prefix from Batch 3.
 import { GreenfieldProfile, GreenfieldProfileCommand, GreenfieldTargetExpectation } from '../profiles/profileTypes';
+import { GreenfieldFullstackCapability } from '../fullstack/fullstackCapabilityTypes';
 import { ProfileValidationIssue, ScaffoldPlanValidationResult } from '../profiles/profileValidationTypes';
 import { finalizeProfileValidationResult } from '../profiles/profileValidationOrdering';
 import { normalizeTargetPath, isAbsolutePathFailure } from '../profiles/targetPathSafety';
@@ -19,6 +30,13 @@ import { GreenfieldScaffoldPlan } from './scaffoldPlanTypes';
 export interface ValidateGreenfieldScaffoldPlanOptions {
   /** Other known profiles used for cross-profile target-ownership detection. Defaults to the built-in registry minus the selected profile. */
   readonly registryProfiles?: readonly GreenfieldProfile[];
+  /**
+   * v1.3.1 Batch 4: the resolved full-stack capability, when the bundle's
+   * `fullstackCapability.status === 'selected'`. Omitted (or undefined) for
+   * every ordinary non-full-stack plan, which then validates exactly as
+   * before Batch 4.
+   */
+  readonly capability?: GreenfieldFullstackCapability;
 }
 
 interface NormalizedPlanTarget {
@@ -34,20 +52,101 @@ export function validateGreenfieldScaffoldPlan(
 ): ScaffoldPlanValidationResult {
   const issues: ProfileValidationIssue[] = [];
   const profileId = profile.id;
+  const capability = options.capability;
 
   validatePlanProfileIdentity(profile, plan, profileId, issues);
+  validateCapabilityProfileAlignment(profile, capability, profileId, issues);
+  validateNoDestructiveProductionPlanCommands(capability, profileId, issues);
+
+  const ownTargetExpectations = composeTargetExpectations(profile, capability);
+  const ownSetupCommands = composeCommands(profile.setupCommands, capability?.setupCommands);
+  const ownValidationCommands = composeCommands(profile.validationCommands, capability?.validationCommands);
 
   const normalizedTargets = normalizePlanTargets(plan, profileId, issues);
-  validateRequiredAndAmbiguousTargets(profile, normalizedTargets, profileId, issues);
-  validateUnsupportedCrossProfileTargets(profile, normalizedTargets, profileId, options, issues);
+  validateRequiredAndAmbiguousTargets(ownTargetExpectations, normalizedTargets, profileId, issues);
+  validateUnsupportedCrossProfileTargets(profile, ownTargetExpectations, normalizedTargets, profileId, options, issues);
   validateDuplicatePlanTargets(normalizedTargets, profileId, issues);
 
-  validateRequiredCommands(profile.setupCommands, plan.setupCommands, 'setupCommands', profileId, issues);
-  validateRequiredCommands(profile.validationCommands, plan.validationCommands, 'validationCommands', profileId, issues);
-  validateCommandClassificationContradictions(profile, plan, profileId, issues);
+  validateRequiredCommands(ownSetupCommands, plan.setupCommands, 'setupCommands', profileId, issues);
+  validateRequiredCommands(ownValidationCommands, plan.validationCommands, 'validationCommands', profileId, issues);
+  validateCommandClassificationContradictions(ownSetupCommands, ownValidationCommands, plan, profileId, issues);
   validateContradictoryCompletionClaims(plan, profileId, issues);
 
   return finalizeProfileValidationResult(issues);
+}
+
+// ─── v1.3.1 Batch 4: profile + capability composition ────────────────────
+
+function composeTargetExpectations(
+  profile: GreenfieldProfile,
+  capability: GreenfieldFullstackCapability | undefined,
+): readonly GreenfieldTargetExpectation[] {
+  return capability ? [...profile.targetExpectations, ...capability.targetExpectations] : profile.targetExpectations;
+}
+
+function composeCommands(
+  profileCommands: readonly GreenfieldProfileCommand[],
+  capabilityCommands: readonly GreenfieldProfileCommand[] | undefined,
+): readonly GreenfieldProfileCommand[] {
+  return capabilityCommands && capabilityCommands.length > 0
+    ? [...profileCommands, ...capabilityCommands]
+    : profileCommands;
+}
+
+// v1.3.1 Batch 4: a resolved capability's `starterProfile` must match the
+// plan's selected profile -- defense-in-depth alongside
+// resolveFullstackCapability()'s own invariant (Batch 3), which already
+// guarantees this in the ordinary bundle-building flow.
+function validateCapabilityProfileAlignment(
+  profile: GreenfieldProfile,
+  capability: GreenfieldFullstackCapability | undefined,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  if (!capability || capability.starterProfile === profile.id) {
+    return;
+  }
+  issues.push({
+    code: 'GF_FULLSTACK_PROFILE_MISMATCH',
+    severity: 'error',
+    profileId,
+    affectedContract: 'capability.starterProfile',
+    reason: `Resolved full-stack capability declares starterProfile "${capability.starterProfile}", which does not match the selected profile "${profile.id}".`,
+    correctiveAction: 'Only compose the full-stack capability for the profile it was resolved for.',
+    evidenceKey: 'capability.starterProfile',
+    expected: profile.id,
+    actual: capability.starterProfile,
+  });
+}
+
+// v1.3.1 Batch 4: defense-in-depth mirror of
+// validateFullstackCapability()'s equivalent check, re-run here so a plan
+// composed with an externally-constructed/malformed capability cannot slip
+// a destructive production command past scaffold-plan validation even if
+// validateFullstackCapability() was skipped by the caller.
+function validateNoDestructiveProductionPlanCommands(
+  capability: GreenfieldFullstackCapability | undefined,
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  if (!capability) {
+    return;
+  }
+  const allCommands = [...capability.setupCommands, ...capability.validationCommands];
+  for (const command of allCommands) {
+    if (command.destructive === true && command.lifecyclePhase === 'production') {
+      issues.push({
+        code: 'GF_FULLSTACK_UNSAFE_RESET_POLICY',
+        severity: 'error',
+        profileId,
+        affectedContract: 'setupCommands,validationCommands',
+        reason: `Command "${command.command}" is destructive and scoped to the production lifecycle phase, which is never a valid target.`,
+        correctiveAction: 'Restrict destructive commands to development/test lifecycle phases only.',
+        evidenceKey: `command:destructive-production:${command.command}`,
+        actual: command.command,
+      });
+    }
+  }
 }
 
 // ─── Profile identity ────────────────────────────────────────────────────
@@ -172,12 +271,12 @@ function expectationMatches(expectation: GreenfieldTargetExpectation, normalized
 // ─── Required / ambiguous target matching (PSE-007) ──────────────────────
 
 function validateRequiredAndAmbiguousTargets(
-  profile: GreenfieldProfile,
+  targetExpectations: readonly GreenfieldTargetExpectation[],
   normalizedTargets: readonly NormalizedPlanTarget[],
   profileId: string,
   issues: ProfileValidationIssue[],
 ): void {
-  profile.targetExpectations.forEach((expectation, index) => {
+  targetExpectations.forEach((expectation, index) => {
     const matches = normalizedTargets.filter((target) => expectationMatches(expectation, target.normalized));
     const contract = `profile.targetExpectations[${index}]:${expectation.id ?? index}`;
 
@@ -213,6 +312,7 @@ function validateRequiredAndAmbiguousTargets(
 
 function validateUnsupportedCrossProfileTargets(
   profile: GreenfieldProfile,
+  ownTargetExpectations: readonly GreenfieldTargetExpectation[],
   normalizedTargets: readonly NormalizedPlanTarget[],
   profileId: string,
   options: ValidateGreenfieldScaffoldPlanOptions,
@@ -222,7 +322,7 @@ function validateUnsupportedCrossProfileTargets(
     options.registryProfiles ?? Object.values(SUPPORTED_PROFILES).filter((entry) => entry.id !== profile.id);
 
   for (const target of normalizedTargets) {
-    const ownMatch = profile.targetExpectations.some((expectation) => expectationMatches(expectation, target.normalized));
+    const ownMatch = ownTargetExpectations.some((expectation) => expectationMatches(expectation, target.normalized));
     if (ownMatch) {
       continue;
     }
@@ -313,13 +413,14 @@ function validateRequiredCommands(
 }
 
 function validateCommandClassificationContradictions(
-  profile: GreenfieldProfile,
+  ownSetupCommands: readonly GreenfieldProfileCommand[],
+  ownValidationCommands: readonly GreenfieldProfileCommand[],
   plan: GreenfieldScaffoldPlan,
   profileId: string,
   issues: ProfileValidationIssue[],
 ): void {
   const profileCommandsByText = new Map<string, GreenfieldProfileCommand>();
-  for (const command of [...profile.setupCommands, ...profile.validationCommands]) {
+  for (const command of [...ownSetupCommands, ...ownValidationCommands]) {
     profileCommandsByText.set(command.command, command);
   }
 

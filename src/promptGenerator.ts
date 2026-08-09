@@ -1730,7 +1730,7 @@ Inputs:
 ${ctx.stageInstructionText}
 
 Required output artifact: VerificationReport
-Output file: ${ctx.runFolder}/reports/verification-report.txt
+Output file: ${ctx.runFolder}/artifacts/verification-report.txt
 
 The VerificationReport must include a "Commands verified" section listing
 every selected-profile validation command that was actually run, one per
@@ -1760,7 +1760,7 @@ Inputs:
 - ${ctx.runFolder}/artifacts/scaffold-plan.txt
 - ${ctx.runFolder}/reports/scaffold-implementation-report.txt
 - ${ctx.runFolder}/artifacts/first-vertical-slice.txt
-- ${ctx.runFolder}/reports/verification-report.txt
+- ${ctx.runFolder}/artifacts/verification-report.txt
 
 ${ctx.stageInstructionText}
 
@@ -1792,7 +1792,7 @@ Inputs:
 - ${ctx.runFolder}/artifacts/scaffold-plan.txt
 - ${ctx.runFolder}/reports/scaffold-implementation-report.txt
 - ${ctx.runFolder}/artifacts/first-vertical-slice.txt
-- ${ctx.runFolder}/reports/verification-report.txt
+- ${ctx.runFolder}/artifacts/verification-report.txt
 - ${ctx.runFolder}/reports/initial-index-report.txt
 
 ${ctx.stageInstructionText}
@@ -1814,7 +1814,7 @@ function greenfieldFinalReportPrompt(ctx: PromptContext): string {
   return `${header(ctx)}
 Inputs:
 - ${ctx.runFolder}/reports/judge-report.txt
-- ${ctx.runFolder}/reports/verification-report.txt
+- ${ctx.runFolder}/artifacts/verification-report.txt
 - major greenfield artifacts and reports
 
 ${ctx.stageInstructionText}

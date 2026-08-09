@@ -36,6 +36,39 @@ export const GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS: readonly GreenfieldDocum
   Object.values(GREENFIELD_DOCUMENTATION_TERMINOLOGY);
 
 /**
+ * v1.3.1 Batch 1: the closed, centrally defined vocabulary of project types a
+ * greenfield brief may explicitly request via `projectType`, orthogonal to
+ * starter-profile identity. `fullstack-web` is the first and only implemented
+ * value; do not add further values without a separately approved contract
+ * (see docs/ROADMAP.md, v1.3.1).
+ */
+export const GREENFIELD_PROJECT_TYPE = {
+  FULLSTACK_WEB: 'fullstack-web',
+} as const;
+
+export type GreenfieldProjectType = (typeof GREENFIELD_PROJECT_TYPE)[keyof typeof GREENFIELD_PROJECT_TYPE];
+
+/** Derived membership list for runtime validation; do not declare independently. */
+export const GREENFIELD_PROJECT_TYPES: readonly GreenfieldProjectType[] =
+  Object.values(GREENFIELD_PROJECT_TYPE);
+
+/**
+ * v1.3.1 Batch 1: the closed, centrally defined vocabulary of web frameworks
+ * a greenfield brief may explicitly request via `webFramework`, orthogonal to
+ * starter-profile identity. `nextjs` is the first and only implemented value;
+ * do not add further values without a separately approved contract.
+ */
+export const GREENFIELD_WEB_FRAMEWORK = {
+  NEXTJS: 'nextjs',
+} as const;
+
+export type GreenfieldWebFramework = (typeof GREENFIELD_WEB_FRAMEWORK)[keyof typeof GREENFIELD_WEB_FRAMEWORK];
+
+/** Derived membership list for runtime validation; do not declare independently. */
+export const GREENFIELD_WEB_FRAMEWORKS: readonly GreenfieldWebFramework[] =
+  Object.values(GREENFIELD_WEB_FRAMEWORK);
+
+/**
  * A single setup or validation command a profile recommends, described but
  * never executed by the orchestrator itself (see buildScaffoldPlan.ts and
  * artifacts/v1.2.0-android-compose-profile-contract.txt). Kept intentionally
@@ -43,12 +76,35 @@ export const GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS: readonly GreenfieldDocum
  * optional environment caveat -- rather than a general command-execution
  * model, since the orchestrator never runs these commands.
  */
+/**
+ * v1.3.1 Batch 4: the lifecycle phase a command belongs to, when that
+ * distinction matters (currently only for full-stack capability commands --
+ * see src/greenfield/fullstack/fullstackCapabilityTypes.ts). Declared here,
+ * not in the fullstack module, so profileTypes.ts stays the single owner of
+ * GreenfieldProfileCommand and its extension fields, avoiding a circular
+ * import (fullstack already depends on profileTypes for this type).
+ */
+export type GreenfieldCommandLifecyclePhase = 'development' | 'test' | 'production';
+
 export interface GreenfieldProfileCommand {
   command: string;
   purpose: string;
   required: boolean;
   /** e.g. "requires a connected device or emulator"; omitted when not applicable. */
   environmentNotes?: string;
+  /**
+   * v1.3.1 Batch 4: optional; the lifecycle phase this command belongs to.
+   * Omitted for existing typescript-cli/nextjs-app/android-compose profile
+   * commands, which do not need this distinction and are unaffected.
+   */
+  lifecyclePhase?: GreenfieldCommandLifecyclePhase;
+  /**
+   * v1.3.1 Batch 4: optional; true when the command is destructive (e.g. a
+   * guarded database reset). Used by scaffold-plan validation to reject a
+   * destructive command scoped to `lifecyclePhase: 'production'`. Omitted
+   * for existing profile commands, none of which are destructive.
+   */
+  destructive?: boolean;
 }
 
 /**
@@ -96,6 +152,23 @@ export interface GreenfieldProfile {
    * externally constructed or malformed profile objects.
    */
   allowedDocumentationTerminology: readonly GreenfieldDocumentationTerminologyTag[];
+  /**
+   * v1.3.1 Batch 1: machine-readable declaration of which explicit
+   * `projectType` values (see `GREENFIELD_PROJECT_TYPES`) this profile can
+   * represent when a brief requests both a `projectType` and this profile
+   * together (see resolveGreenfieldProfile.ts). Most profiles declare none.
+   * Absence of `projectType` on the brief means this contract is not
+   * evaluated; it does not affect existing profile resolution behavior.
+   */
+  compatibleProjectTypes: readonly GreenfieldProjectType[];
+  /**
+   * v1.3.1 Batch 1: machine-readable declaration of which explicit
+   * `webFramework` values (see `GREENFIELD_WEB_FRAMEWORKS`) this profile can
+   * represent when a brief requests both a `webFramework` and this profile
+   * together. Most profiles declare none. Absence of `webFramework` on the
+   * brief means this contract is not evaluated.
+   */
+  compatibleWebFrameworks: readonly GreenfieldWebFramework[];
   /**
    * v1.3.0 Batch 3: profile-owned target expectations, validated by
    * validateGreenfieldProfile() (structural shape) and consumed by

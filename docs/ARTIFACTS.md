@@ -476,6 +476,41 @@ generated-file, scaffold-plan, and first-slice-profile-identity evidence for
 that run, rather than retroactively failing it for fields it could not have
 written.
 
+### v1.3.1 additions (implemented candidate, unpublished)
+
+These extend the artifacts above; no artifact identity, filename, or path
+changes. See [ARCHITECTURE.md](ARCHITECTURE.md#v131-implemented-candidate-unpublished-standardized-documents-and-full-stack-capability)
+for the owning modules.
+
+- `artifacts/bootstrap-bundle.json` additionally carries the normalized
+  `projectType`/`webFramework` brief dimensions and, when a full-stack
+  combination resolves, the selected capability
+  (`FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY`), following the same
+  `{ status: 'selected' | ..., reason, ... }` shape already used for profile
+  selection.
+- `artifacts/project-docs-report.txt` reflects the standardized 15-file
+  canonical document baseline for every profile, with full-stack-specific
+  content layered in only when the capability is selected.
+- `artifacts/scaffold-plan.txt`'s `Target paths:`, `Setup commands:`, and
+  `Validation commands:` sections carry the additive composition of the base
+  profile's targets/commands and the full-stack capability's targets/commands
+  (Dockerfile, Compose files, Prisma schema, environment templates, readiness
+  scripts) when selected, using the exact same parsed sections described
+  above -- there is no separate full-stack scaffold-plan format.
+- `checkGreenfieldRunReadiness()` extends its existing generated-file and
+  verification-command evidence matching to the capability's target/command
+  expectations when a full-stack run is detected, and additionally requires
+  distinct evidence for PostgreSQL health, application liveness, and
+  application/database readiness -- one cannot substitute for another. This
+  is the same readiness computation `status`, `check`/`check --all`, and
+  final-report eligibility all consume; there is no duplicate readiness
+  subsystem.
+- The orchestrator continues to prepare, contract, and validate artifacts and
+  prompts only. It does not build the generated project, run Docker, or
+  execute PostgreSQL/Prisma/database commands itself; every command in a
+  full-stack scaffold plan is descriptive guidance for the coding agent, as
+  with every other profile's commands.
+
 ## Extraction mode artifacts
 
 Extraction mode is implemented in `v0.2.1`.

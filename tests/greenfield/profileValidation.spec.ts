@@ -68,6 +68,8 @@ function validProfileFixture(overrides: Partial<GreenfieldProfile> = {}): Greenf
     setupCommands: [{ command: 'npm install', purpose: 'Install dependencies.', required: true }],
     validationCommands: [{ command: 'npm test', purpose: 'Run tests.', required: true }],
     allowedDocumentationTerminology: [],
+    compatibleProjectTypes: [],
+    compatibleWebFrameworks: [],
     targetExpectations: [
       {
         id: 'package-manifest',
@@ -566,6 +568,117 @@ describe('validateGreenfieldProfile - documentation terminology vocabulary', () 
     const first = validateGreenfieldProfile(malformed);
     const second = validateGreenfieldProfile(malformed);
     expect(first).toEqual(second);
+  });
+});
+
+// v1.3.1 Batch 1: compatibleProjectTypes/compatibleWebFrameworks structural
+// validation, mirroring the documentation terminology vocabulary above.
+describe('validateGreenfieldProfile - projectType/webFramework compatibility vocabulary (v1.3.1 Batch 1)', () => {
+  it('empty compatibility lists are valid (most profiles)', () => {
+    const result = validateGreenfieldProfile(
+      validProfileFixture({ compatibleProjectTypes: [], compatibleWebFrameworks: [] }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('["fullstack-web"] / ["nextjs"] are valid', () => {
+    const result = validateGreenfieldProfile(
+      validProfileFixture({ compatibleProjectTypes: ['fullstack-web'], compatibleWebFrameworks: ['nextjs'] }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('rejects an unsupported compatibleProjectTypes value', () => {
+    const malformed = validProfileFixture({
+      compatibleProjectTypes: ['mobile-app'] as unknown as GreenfieldProfile['compatibleProjectTypes'],
+    });
+    expect(() => validateGreenfieldProfile(malformed)).not.toThrow();
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+        affectedContract: 'compatibleProjectTypes',
+        actual: 'mobile-app',
+      }),
+    );
+  });
+
+  it('rejects an unsupported compatibleWebFrameworks value', () => {
+    const malformed = validProfileFixture({
+      compatibleWebFrameworks: ['sveltekit'] as unknown as GreenfieldProfile['compatibleWebFrameworks'],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+        affectedContract: 'compatibleWebFrameworks',
+        actual: 'sveltekit',
+      }),
+    );
+  });
+
+  it('rejects a duplicate compatibility value deterministically', () => {
+    const malformed = validProfileFixture({
+      compatibleProjectTypes: ['fullstack-web', 'fullstack-web'],
+    });
+    const result = validateGreenfieldProfile(malformed);
+    const duplicateIssues = result.issues.filter(
+      (i) => i.code === 'GF_PROFILE_UNSUPPORTED_FIELD' && i.reason.includes('more than once'),
+    );
+    expect(duplicateIssues).toHaveLength(1);
+  });
+
+  it('does not mutate the profile it validates', () => {
+    const malformed = validProfileFixture({
+      compatibleProjectTypes: ['bogus', 'bogus'] as unknown as GreenfieldProfile['compatibleProjectTypes'],
+    });
+    const before = JSON.parse(JSON.stringify(malformed));
+    validateGreenfieldProfile(malformed);
+    expect(malformed).toEqual(before);
+  });
+
+  it('never throws for expected invalid compatibility values', () => {
+    const malformed = validProfileFixture({
+      compatibleProjectTypes: ['', '  ', 'unknown'] as unknown as GreenfieldProfile['compatibleProjectTypes'],
+    });
+    expect(() => validateGreenfieldProfile(malformed)).not.toThrow();
+  });
+
+  // TST-B1-009: existing profile validation fixtures remain unaffected.
+  it('all three built-in profiles remain valid with their declared compatibility', () => {
+    expect(validateGreenfieldProfile(TYPESCRIPT_CLI_PROFILE).valid).toBe(true);
+    expect(validateGreenfieldProfile(NEXTJS_APP_PROFILE).valid).toBe(true);
+    expect(validateGreenfieldProfile(ANDROID_COMPOSE_PROFILE).valid).toBe(true);
+  });
+
+  it('only nextjs-app declares fullstack-web/nextjs compatibility', () => {
+    expect(TYPESCRIPT_CLI_PROFILE.compatibleProjectTypes).toEqual([]);
+    expect(TYPESCRIPT_CLI_PROFILE.compatibleWebFrameworks).toEqual([]);
+    expect(ANDROID_COMPOSE_PROFILE.compatibleProjectTypes).toEqual([]);
+    expect(ANDROID_COMPOSE_PROFILE.compatibleWebFrameworks).toEqual([]);
+    expect(NEXTJS_APP_PROFILE.compatibleProjectTypes).toEqual(['fullstack-web']);
+    expect(NEXTJS_APP_PROFILE.compatibleWebFrameworks).toEqual(['nextjs']);
+  });
+});
+
+// TST-B1-008: the built-in registry still contains exactly the established
+// three profile identities; no nextjs-fullstack or other combinatorial
+// profile was introduced.
+describe('greenfield profile registry - no combinatorial profile (v1.3.1 Batch 1, TST-B1-008)', () => {
+  it('SUPPORTED_PROFILES contains exactly typescript-cli, nextjs-app, and android-compose', () => {
+    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual(['android-compose', 'nextjs-app', 'typescript-cli']);
+  });
+
+  it('does not introduce a nextjs-fullstack profile', () => {
+    expect(SUPPORTED_PROFILES).not.toHaveProperty('nextjs-fullstack');
+  });
+
+  it('the registry remains valid with the new compatibility fields present', () => {
+    const result = validateSupportedGreenfieldProfileRegistry();
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
   });
 });
 

@@ -42,6 +42,54 @@ describe('buildGreenfieldBootstrapBundle', () => {
     expect(bundle.stackDecision.chosenStack).toEqual(expect.arrayContaining(['Next.js', 'React']));
   });
 
+  // TST-B1-011: when the supported dimensions are supplied, the bundle
+  // retains the requested/resolved dimension evidence (via normalizedBrief
+  // and selectedProfile) that later batches will consume.
+  it('TST-B1-011: retains requested projectType/webFramework and resolved profile compatibility in the bundle', () => {
+    const normalizedBrief = normalize('A full-stack web app for tracking inventory.', {
+      preferredProfile: 'nextjs-app',
+      projectType: 'fullstack-web',
+      webFramework: 'nextjs',
+    });
+    const selection = resolveGreenfieldProfile(normalizedBrief);
+    const bundle = buildGreenfieldBootstrapBundle(normalizedBrief, selection);
+
+    expect(bundle.normalizedBrief.projectType).toBe('fullstack-web');
+    expect(bundle.normalizedBrief.webFramework).toBe('nextjs');
+    expect(bundle.selectedProfile.status).toBe('selected');
+    expect(bundle.selectedProfile.profile?.id).toBe('nextjs-app');
+    expect(bundle.selectedProfile.profile?.compatibleProjectTypes).toEqual(['fullstack-web']);
+    expect(bundle.selectedProfile.profile?.compatibleWebFrameworks).toEqual(['nextjs']);
+  });
+
+  // TST-B1-011: absence of the dimensions leaves legacy bundle behavior valid.
+  it('TST-B1-011: legacy brief without projectType/webFramework still builds a valid bundle', () => {
+    const normalizedBrief = normalize('A tool for tracking tasks across a small team.', {
+      preferredProfile: 'nextjs-app',
+    });
+    const selection = resolveGreenfieldProfile(normalizedBrief);
+    const bundle = buildGreenfieldBootstrapBundle(normalizedBrief, selection);
+
+    expect(bundle.normalizedBrief.projectType).toBeUndefined();
+    expect(bundle.normalizedBrief.webFramework).toBeUndefined();
+    expect(bundle.starterProfile.status).toBe('selected');
+    expect(bundle.starterProfile.profileId).toBe('nextjs-app');
+  });
+
+  it('an incompatible explicit combination leaves the bundle unresolved rather than substituting a default', () => {
+    const normalizedBrief = normalize('A CLI tool that happens to be requested as full-stack web.', {
+      preferredProfile: 'typescript-cli',
+      projectType: 'fullstack-web',
+      webFramework: 'nextjs',
+    });
+    const selection = resolveGreenfieldProfile(normalizedBrief);
+    const bundle = buildGreenfieldBootstrapBundle(normalizedBrief, selection);
+
+    expect(bundle.selectedProfile.status).toBe('unsupported');
+    expect(bundle.starterProfile.profileId).toBeUndefined();
+    expect(bundle.stackDecision.status).toBe('unresolved');
+  });
+
   it('preserves constraints from the normalized brief in doc generation instructions and scaffold inputs', () => {
     const normalizedBrief = normalize('A tool that must remain offline-capable for field teams.', {
       constraints: ['must work offline', 'no third-party analytics'],

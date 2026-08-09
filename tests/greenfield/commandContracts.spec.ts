@@ -21,6 +21,8 @@ function validProfileFixture(overrides: Partial<GreenfieldProfile> = {}): Greenf
     setupCommands: [{ command: 'npm install', purpose: 'Install dependencies.', required: true }],
     validationCommands: [{ command: 'npm test', purpose: 'Run tests.', required: true }],
     allowedDocumentationTerminology: [],
+    compatibleProjectTypes: [],
+    compatibleWebFrameworks: [],
     targetExpectations: [
       {
         id: 'package-manifest',

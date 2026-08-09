@@ -86,6 +86,8 @@ export function normalizeProjectBrief(
     preferredStack,
     preferredProfile: brief.preferredProfile,
     platformTarget: brief.platformTarget,
+    projectType: brief.projectType,
+    webFramework: brief.webFramework,
     documentationPreferences: brief.documentationPreferences ?? [],
     testingExpectations: brief.testingExpectations ?? [],
     unresolved,

@@ -54,9 +54,8 @@ Android Compose support already shipped in `v1.2.0` as the explicit
 `nextjs-app`. It remains prompt and scaffold guidance only. The orchestrator
 does not run Gradle, require an Android SDK, or detect an emulator or device.
 
-Implemented but unpublished work strengthens all three current profiles with
-one shared validation architecture, owned by `src/greenfield/profiles/` and
-`src/greenfield/readiness/`:
+All three current profiles share one validation architecture, owned by
+`src/greenfield/profiles/` and `src/greenfield/readiness/`:
 
 - `validateGreenfieldProfile()` and `validateGreenfieldProfileRegistry()`
   validate a profile and the built-in registry (required fields, command
@@ -90,6 +89,73 @@ one shared validation architecture, owned by `src/greenfield/profiles/` and
   failed for missing v1.3.0-only fields) using the presence of a "Profile"
   section in the scaffold implementation report as the sole discriminator --
   not a timestamp.
+
+### v1.3.1 (implemented candidate, unpublished): standardized documents and full-stack capability
+
+The working tree contains a complete, verified `v1.3.1` implementation that is
+not yet published (`v1.3.0` remains the current published release; see
+[CURRENT_STATE.md](CURRENT_STATE.md)). It is additive to the architecture
+above rather than a replacement:
+
+- `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
+  `webFramework` fields to the raw and normalized brief. They are orthogonal
+  to starter-profile selection, not a new profile: `GreenfieldProfileId`
+  remains `'typescript-cli' | 'nextjs-app' | 'android-compose'`
+  (`src/greenfield/profiles/profileTypes.ts`); there is no `nextjs-fullstack`
+  profile. A brief without these fields normalizes exactly as before, so
+  legacy briefs remain valid.
+- `src/greenfield/bootstrap/projectDocBootstrapTypes.ts` owns the canonical
+  15-file greenfield document baseline (`GREENFIELD_CANONICAL_DOCUMENTS`):
+  `README.md`, `CHANGELOG.md`, and the 13 `docs/*.md` files through
+  `DOCUMENTATION_PRESERVATION_POLICY.md`, in one deterministic order, applied
+  to all three starter profiles. `src/greenfield/bootstrap/
+  populateCanonicalProjectDocumentsFromBrief.ts` derives per-document content
+  from the actual brief/profile/capability, not copied ecosystem prose.
+  Profile- and capability-specific requirements layer additively into these
+  common owners; there is no default `DATABASE.md`/`ENVIRONMENT.md`/
+  `TESTING.md`/`DEPLOYMENT.md` taxonomy.
+- `src/greenfield/fullstack/` owns the one supported full-stack combination:
+  `fullstackCapabilityTypes.ts` defines the single
+  `FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY` (fullstack-web +
+  nextjs + nextjs-app + PostgreSQL + Prisma + Docker), including environment
+  variable metadata with host/container address distinction, a default-none
+  seed policy, an explicit migration-create-vs-deploy distinction, isolated
+  test-database lifecycle, and a three-way distinction between PostgreSQL
+  health, application liveness, and application/database readiness.
+  `resolveFullstackCapability.ts` and `validateFullstackCapability.ts` resolve
+  and validate it deterministically. No other framework, database, or
+  container runtime is supported; there is no generic arbitrary-stack claim.
+- `src/greenfield/scaffold/buildScaffoldPlan.ts` composes the base `nextjs-app`
+  profile's targets and commands with the full-stack capability's targets and
+  commands additively into one scaffold plan (Dockerfile, scoped
+  `.dockerignore`, development and isolated-test Compose files, non-secret
+  environment templates, the Prisma schema and migration structure, the
+  canonical application database client, environment/Docker/database
+  readiness scripts, and the database-backed first vertical slice). An
+  ordinary `nextjs-app` run, `typescript-cli`, and `android-compose` never
+  receive full-stack targets: capability resolution only activates for
+  `fullstack-web` + `nextjs`.
+- `src/greenfield/readiness/checkGreenfieldRunReadiness.ts` and
+  `evaluateGreenfieldReadiness.ts` remain the sole greenfield readiness owner;
+  full-stack evidence (generated-file evidence, verification-command
+  evidence, and the three-way health/liveness/readiness proof) feeds into the
+  same aggregation as base readiness rather than a second lifecycle, gate, or
+  issue system.
+- `src/judgeIntegrity.ts`'s `evaluateFinalReportEligibility()` consults
+  canonical greenfield readiness for every greenfield run (generic to
+  `gate.mode === 'greenfield'`, not hard-coded to full-stack): an authored
+  judge `PASS` can no longer make a greenfield run final-report-eligible
+  while canonical readiness is incomplete. A legacy run (evidence predating
+  the structured-evidence sections) is exempted only through the existing
+  `legacyRun && valid` distinction `status`/`check` already used, not a
+  blanket bypass. `prompt`, `mark`, `status`, `check`, and `export` all
+  consume this same function; none recomputes readiness independently.
+- The generated verification/judge/final-report/initial-index prompts
+  (`src/promptGenerator.ts`) and canonical greenfield readiness both read and
+  write the verification-report artifact at the same canonical location the
+  shared workflow artifact map already declares for the "verification" stage
+  (`src/workflows.ts`), so a real run following the generated prompts
+  produces evidence at the same path every downstream consumer expects.
 
 ## Workflow definitions
 

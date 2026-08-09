@@ -46,6 +46,26 @@ const BATCH_4_RETURN_FORMAT_CHANGED_KEYS = new Set([
   'greenfield:scaffold-plan',
 ]);
 
+// v1.3.1 verification-report path correction: the greenfield verification/
+// judge/initial-index prompts previously told the coding agent to write/read
+// the verification artifact at "reports/verification-report.txt", which
+// disagreed with the canonical workflow ARTIFACT_MAP ("artifacts/
+// verification-report.txt") that greenfield's "verification" stage
+// deliberately reuses -- see reports/v1.3.1-verification-report-path-
+// correction.txt. The greenfield:verification prompt's "Output file:" line
+// and the greenfield:initial-index / greenfield:judge prompts' "Inputs:"
+// blocks (which each reference the verification-report path) now correctly
+// say "artifacts/...". This is an intentional, approved, single-field-per-
+// key path correction against the frozen prompt-structure.json baseline
+// (which predates it and is not regenerated -- see the file-level comment
+// above), not a regression; every other field for these three keys is
+// unaffected and still fully checked.
+const V1_3_1_VERIFICATION_PATH_CORRECTED_FIELDS: Record<string, Set<string>> = {
+  'greenfield:verification': new Set(['outputFileLine']),
+  'greenfield:initial-index': new Set(['inputs']),
+  'greenfield:judge': new Set(['inputs']),
+};
+
 interface PromptStructureEntry {
   mode: string;
   stage: string;
@@ -151,11 +171,24 @@ describe('v1.2.1 prompt structure compatibility (Batch 3)', () => {
       // See tests/correctedReadyReplay.test.ts for its normal rendering.
       if (entry.stage === 'final-report') continue;
       const current = currentStructure(entry.mode as typeof VALID_MODES[number], entry.stage);
-      if (current.normalizedHeaderHash !== entry.normalizedHeaderHash) mismatches.push({ key, field: 'header' });
-      if (current.inputsBlockHash !== entry.inputsBlockHash) mismatches.push({ key, field: 'inputs' });
+      const correctedFields = V1_3_1_VERIFICATION_PATH_CORRECTED_FIELDS[key];
+      if (
+        !correctedFields?.has('header') &&
+        current.normalizedHeaderHash !== entry.normalizedHeaderHash
+      )
+        mismatches.push({ key, field: 'header' });
+      if (
+        !correctedFields?.has('inputs') &&
+        current.inputsBlockHash !== entry.inputsBlockHash
+      )
+        mismatches.push({ key, field: 'inputs' });
       if (current.requiredOutputArtifactLine !== entry.requiredOutputArtifactLine)
         mismatches.push({ key, field: 'requiredOutputArtifactLine' });
-      if (current.outputFileLine !== entry.outputFileLine) mismatches.push({ key, field: 'outputFileLine' });
+      if (
+        !correctedFields?.has('outputFileLine') &&
+        current.outputFileLine !== entry.outputFileLine
+      )
+        mismatches.push({ key, field: 'outputFileLine' });
       if (!BATCH_4_RETURN_FORMAT_CHANGED_KEYS.has(key) && current.returnFormatHash !== entry.returnFormatHash)
         mismatches.push({ key, field: 'returnFormat' });
     }

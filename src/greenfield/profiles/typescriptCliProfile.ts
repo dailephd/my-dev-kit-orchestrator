@@ -66,5 +66,7 @@ export const TYPESCRIPT_CLI_PROFILE: GreenfieldProfile = {
     { command: 'npm test', purpose: 'Run the test suite.', required: true },
   ],
   allowedDocumentationTerminology: [],
+  compatibleProjectTypes: [],
+  compatibleWebFrameworks: [],
   targetExpectations: TYPESCRIPT_CLI_TARGET_EXPECTATIONS,
 };

@@ -9,6 +9,8 @@
 // profile it validates.
 import {
   GREENFIELD_DOCUMENTATION_TERMINOLOGY_TAGS,
+  GREENFIELD_PROJECT_TYPES,
+  GREENFIELD_WEB_FRAMEWORKS,
   GreenfieldProfile,
   GreenfieldProfileCommand,
   GreenfieldTargetExpectation,
@@ -40,8 +42,13 @@ const REQUIRED_NONEMPTY_STRING_ARRAY_CONTRACTS: readonly string[] = [
 ];
 
 // Required present as an array of strings; may be empty (most profiles use
-// no special documentation terminology).
-const OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS: readonly string[] = ['allowedDocumentationTerminology'];
+// no special documentation terminology, and most profiles declare no
+// project-type/web-framework compatibility -- v1.3.1 Batch 1).
+const OPTIONAL_EMPTY_STRING_ARRAY_CONTRACTS: readonly string[] = [
+  'allowedDocumentationTerminology',
+  'compatibleProjectTypes',
+  'compatibleWebFrameworks',
+];
 
 // Required present as an array (each entry is a GreenfieldProfileCommand
 // object, not a string); must be non-empty, per PseudocodePacket "required
@@ -57,7 +64,18 @@ const COMMAND_ARRAY_CONTRACTS: readonly string[] = [
   ...OPTIONAL_EMPTY_COMMAND_ARRAY_CONTRACTS,
 ];
 
-const KNOWN_COMMAND_FIELDS: ReadonlySet<string> = new Set(['command', 'purpose', 'required', 'environmentNotes']);
+// v1.3.1 Batch 4: lifecyclePhase/destructive are optional extension fields
+// (see profileTypes.ts) used only by full-stack capability commands; listing
+// them here keeps existing profiles (which omit both) unaffected while not
+// flagging them as unsupported when a command legitimately carries them.
+const KNOWN_COMMAND_FIELDS: ReadonlySet<string> = new Set([
+  'command',
+  'purpose',
+  'required',
+  'environmentNotes',
+  'lifecyclePhase',
+  'destructive',
+]);
 
 // v1.3.0 Batch 3: required present as an array (each entry is a
 // GreenfieldTargetExpectation object, not a string); must be non-empty --
@@ -110,6 +128,8 @@ export function validateGreenfieldProfile(profile: GreenfieldProfile): ProfileVa
   }
 
   validateDocumentationTerminology(record, profileId, issues);
+  validateCompatibilityDimension(record, 'compatibleProjectTypes', GREENFIELD_PROJECT_TYPES, profileId, issues);
+  validateCompatibilityDimension(record, 'compatibleWebFrameworks', GREENFIELD_WEB_FRAMEWORKS, profileId, issues);
 
   for (const contract of REQUIRED_NONEMPTY_COMMAND_ARRAY_CONTRACTS) {
     validateRequiredArrayPresence(record, contract, profileId, issues, { allowEmpty: false });
@@ -227,6 +247,78 @@ function validateDocumentationTerminology(
     }
     seen.add(entry);
   });
+}
+
+// v1.3.1 Batch 1: rejects unsupported and duplicate compatibleProjectTypes/
+// compatibleWebFrameworks entries, mirroring validateDocumentationTerminology
+// above. Blank/non-string entries are already reported by
+// validateOptionalStringArray and are skipped here to avoid a redundant issue
+// for the same malformed entry.
+function validateCompatibilityDimension(
+  record: Record<string, unknown>,
+  contract: string,
+  knownValues: readonly string[],
+  profileId: string,
+  issues: ProfileValidationIssue[],
+): void {
+  const value = record[contract];
+  if (!Array.isArray(value)) {
+    return; // already reported by validateOptionalStringArray
+  }
+
+  const known = new Set(knownValues);
+  const seen = new Set<string>();
+  value.forEach((entry, index) => {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      return; // already reported by validateOptionalStringArray
+    }
+    if (!known.has(entry)) {
+      issues.push(unsupportedCompatibilityValueIssue(profileId, contract, index, entry, knownValues));
+    }
+    if (seen.has(entry)) {
+      issues.push(duplicateCompatibilityValueIssue(profileId, contract, index, entry));
+    }
+    seen.add(entry);
+  });
+}
+
+function unsupportedCompatibilityValueIssue(
+  profileId: string,
+  contract: string,
+  index: number,
+  value: string,
+  knownValues: readonly string[],
+): ProfileValidationIssue {
+  const supported = knownValues.join(', ');
+  return {
+    code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+    severity: 'warning',
+    profileId,
+    affectedContract: contract,
+    reason: `${contract} value "${value}" is not part of the implemented v1.3.1 vocabulary.`,
+    correctiveAction: `Use one of the supported values (${supported}), or add a separately approved contract entry in profileTypes.ts for a genuinely new value.`,
+    evidenceKey: `${contract}[${index}]:unsupported:${value}`,
+    expected: supported,
+    actual: value,
+  };
+}
+
+function duplicateCompatibilityValueIssue(
+  profileId: string,
+  contract: string,
+  index: number,
+  value: string,
+): ProfileValidationIssue {
+  return {
+    code: 'GF_PROFILE_UNSUPPORTED_FIELD',
+    severity: 'warning',
+    profileId,
+    affectedContract: contract,
+    reason: `${contract} value "${value}" is declared more than once.`,
+    correctiveAction: `Remove the duplicate value so each ${contract} entry appears at most once.`,
+    evidenceKey: `${contract}[${index}]:duplicate:${value}`,
+    actual: value,
+  };
 }
 
 function validateRequiredArrayPresence(

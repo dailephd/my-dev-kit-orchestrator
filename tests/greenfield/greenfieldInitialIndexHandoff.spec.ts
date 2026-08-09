@@ -22,7 +22,7 @@ describe('initial-index handoff prompt', () => {
     expect(prompt).toContain('artifacts/scaffold-plan.txt');
     expect(prompt).toContain('reports/scaffold-implementation-report.txt');
     expect(prompt).toContain('artifacts/first-vertical-slice.txt');
-    expect(prompt).toContain('reports/verification-report.txt');
+    expect(prompt).toContain('artifacts/verification-report.txt');
   });
 
   it('outputs reports/initial-index-report.txt', () => {

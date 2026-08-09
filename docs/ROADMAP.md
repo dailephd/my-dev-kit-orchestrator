@@ -31,10 +31,12 @@ published project history. Versions after `v1.3.0` are planned milestones.
   2026-08-04. It does not add a new starter
   profile; possible `android-xml` and `python-cli` evaluation remains a
   future candidate decision (see "Planned milestones").
-- `v1.3.1` will make the ecosystem's standardized project-document structure
-  the generic baseline for newly bootstrapped projects and harden the existing
+- `v1.3.1` makes the ecosystem's standardized project-document structure
+  the generic baseline for newly bootstrapped projects and hardens the existing
   `nextjs-app` profile for the first explicit full-stack web environment
-  contract: Next.js with PostgreSQL, Prisma, and Docker.
+  contract: Next.js with PostgreSQL, Prisma, and Docker. It is implemented and
+  verified in the working tree but not yet published; `v1.3.0` remains the
+  current published release (see "Planned milestones").
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -661,7 +663,9 @@ Possible additional profiles (unchanged; still requires separate approval):
 ### v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
 
 Status:
-Planned patch after published `v1.3.0`; not implemented.
+Implemented and verified in the working tree (patch after published
+`v1.3.0`); not yet published. `v1.3.0` remains the current published
+release. The next step is pre-release readiness, not publication.
 
 Goal:
 Extend the `v1.3.0` greenfield profile and scaffold foundation in two connected
