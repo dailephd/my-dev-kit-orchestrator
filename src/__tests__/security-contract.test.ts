@@ -12,7 +12,7 @@ function makeFixture(packPaths: string[]): string {
     name: '@dailephd/my-dev-kit-orchestrator',
     version: '1.1.0',
     bin: { 'my-dev-kit-orchestrator': 'dist/cli.js' },
-    files: ['dist'],
+    files: ['dist', 'CHANGELOG.md'],
   }));
   fs.writeFileSync(path.join(root, 'pack.json'), JSON.stringify([{
     files: packPaths.map((filePath) => ({ path: filePath })),
@@ -36,7 +36,7 @@ describe('target security contract', () => {
   });
 
   it('passes safe package metadata and contents without modifying source files', () => {
-    const root = makeFixture(['README.md', 'package.json', 'dist/cli.js']);
+    const root = makeFixture(['README.md', 'package.json', 'CHANGELOG.md', 'dist/cli.js']);
     const sourceBefore = fs.readFileSync(scriptPath, 'utf8');
     try {
       const result = runFixture(root);
@@ -49,7 +49,7 @@ describe('target security contract', () => {
   });
 
   it('fails when package contents include a forbidden path', () => {
-    const root = makeFixture(['README.md', 'package.json', 'dist/cli.js', '.env.production']);
+    const root = makeFixture(['README.md', 'package.json', 'CHANGELOG.md', 'dist/cli.js', '.env.production']);
     try {
       const result = runFixture(root);
       expect(result.status).toBe(1);

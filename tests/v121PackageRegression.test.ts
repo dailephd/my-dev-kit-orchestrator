@@ -35,9 +35,13 @@ describe('v1.2.1 package regression (npm pack --dry-run)', () => {
   it('every included file is under dist/ or is an explicitly allowed root package file', () => {
     // npm always auto-includes README.md/LICENSE regardless of the "files"
     // field -- that is existing, unmodified package policy, not something
-    // this batch added.
+    // this batch added. CHANGELOG.md is explicitly listed in the "files"
+    // policy as of v1.3.1 (see package.json), so release notes ship with
+    // the installed package.
     for (const f of files) {
-      expect(f === 'package.json' || f === 'README.md' || f === 'LICENSE' || f.startsWith('dist/')).toBe(true);
+      expect(
+        f === 'package.json' || f === 'README.md' || f === 'LICENSE' || f === 'CHANGELOG.md' || f.startsWith('dist/'),
+      ).toBe(true);
     }
 
     expect(files.filter((f) => f === 'LICENSE')).toHaveLength(1);

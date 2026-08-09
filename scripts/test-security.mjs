@@ -69,8 +69,11 @@ function validateManifest(manifest) {
     errors.push(`Unsafe or unexpected CLI bin path: ${String(binPath)}`);
   }
 
-  if (!Array.isArray(manifest.files) || manifest.files.length !== 1 || manifest.files[0] !== 'dist') {
-    errors.push('package.json files policy must contain only "dist"');
+  const ALLOWED_FILES_POLICY_ENTRIES = new Set(['dist', 'CHANGELOG.md']);
+  const filesPolicy = Array.isArray(manifest.files) ? manifest.files : [];
+  const hasUnexpectedEntry = filesPolicy.some((entry) => !ALLOWED_FILES_POLICY_ENTRIES.has(entry));
+  if (!Array.isArray(manifest.files) || !filesPolicy.includes('dist') || hasUnexpectedEntry) {
+    errors.push('package.json files policy must contain only "dist" and "CHANGELOG.md"');
   }
   return errors;
 }
@@ -106,6 +109,7 @@ function validatePackResult(packResult) {
   }
   if (!paths.includes('package.json')) errors.push('Package output is missing package.json');
   if (!paths.includes('README.md')) errors.push('Package output is missing README.md');
+  if (!paths.includes('CHANGELOG.md')) errors.push('Package output is missing CHANGELOG.md');
   return errors;
 }
 

@@ -80,7 +80,15 @@ describe('v1.2.0 baseline compatibility (Batch 1)', () => {
 
   it('test fixtures are excluded from the packaged files list', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    expect(pkg.files).toEqual(inventory.packageContract.files);
+    // The v1.2.0 baseline's "dist"-only entry must remain present; v1.3.1
+    // additively allowlists "CHANGELOG.md" so release notes ship with the
+    // installed package (see package.json). Additive, safe growth of the
+    // files allowlist is expected here -- byte-identical equality to the
+    // frozen v1.2.0 baseline is not.
+    for (const entry of inventory.packageContract.files) {
+      expect(pkg.files).toContain(entry);
+    }
     expect(pkg.files).not.toEqual(expect.arrayContaining(['tests']));
+    expect(pkg.files).not.toEqual(expect.arrayContaining(['src']));
   });
 });
