@@ -829,8 +829,15 @@ Each stage is checked for:
 - missing required section (CONTRACT_MISSING_SECTION)
 - blank required section (CONTRACT_BLANK_SECTION; fail in strict mode)
 - placeholder-only section content (CONTRACT_PLACEHOLDER_SECTION; fail in strict mode)
+- malformed structured JSON (CONTRACT_MALFORMED_JSON)
+- missing required structured field (CONTRACT_MISSING_FIELD)
+- invalid required structured field (CONTRACT_INVALID_FIELD)
 - predecessor artifact missing (CONTRACT_PREDECESSOR_MISSING; fail in strict mode)
-- no section contract defined for this artifact kind (CONTRACT_STAGE_NO_CONTRACT; fail in strict mode)
+- no content contract defined for this artifact kind (CONTRACT_STAGE_NO_CONTRACT; fail in strict mode)
+
+Shared artifact checking does not impose one syntax on every file. Registered
+JSON artifacts must remain valid JSON and satisfy their structured contracts;
+plain-text artifacts continue to use required section headers.
 
 `check --artifacts` also reports repository-context readiness and (`v1.2.3`)
 judge and final-report integrity: structural

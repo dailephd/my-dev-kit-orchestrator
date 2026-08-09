@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## v1.3.2 - Greenfield JSON Artifact Contract Correction
+
+Release date: 2026-08-09.
+
+### Fixed
+
+- corrected the shared artifact checker so native structured greenfield JSON
+  artifacts are parsed and validated through their registered structured
+  contracts instead of incompatible plain-text section-header rules
+- preserved strict malformed-JSON and required structured-field failures for
+  `idea-brief.json`, `starter-profile.json`, and `bootstrap-bundle.json`
+- preserved existing plain-text section checks, predecessor checks, lifecycle
+  behavior, stage gates, judge integrity, and canonical greenfield readiness
+- added mixed-run, `check --artifacts`, `check --all`, malformed JSON,
+  incomplete structured content, text compatibility, and preserved-run
+  regression coverage
+
 ## v1.3.1 - Standardized Greenfield Documentation and Full-Stack Next.js Environment Hardening
 
 Release date: 2026-08-09.

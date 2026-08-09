@@ -59,6 +59,55 @@ function makeGreenfieldRun(tmp: string): RunMetadata {
   });
 }
 
+function validIdeaBrief(): Record<string, unknown> {
+  return {
+    rawIdea: 'Create a sample TypeScript CLI app',
+    constraints: ['local-first'],
+    nonGoals: ['no hosted service'],
+    preferredStack: ['TypeScript', 'Node.js'],
+    documentationPreferences: ['standard project documentation'],
+    testingExpectations: ['unit and CLI tests'],
+    unresolved: [],
+    status: 'complete',
+  };
+}
+
+function validStarterProfile(): Record<string, unknown> {
+  return {
+    status: 'complete',
+    profile: { id: 'typescript-cli' },
+    requestedProfileId: 'typescript-cli',
+    reason: 'The requested stack matches the supported TypeScript CLI profile.',
+    stackDecisionNotes: ['Use Node.js and TypeScript.'],
+  };
+}
+
+function validBootstrapBundle(): Record<string, unknown> {
+  return {
+    normalizedBrief: validIdeaBrief(),
+    selectedProfile: {
+      status: 'selected',
+      profile: { id: 'typescript-cli' },
+      requestedProfileId: 'typescript-cli',
+      reason: 'Supported profile selected.',
+      stackDecisionNotes: ['Use Node.js and TypeScript.'],
+    },
+    starterProfile: { id: 'typescript-cli' },
+    stackDecision: { status: 'resolved' },
+    templateTargets: [],
+    docGenerationInstructions: {},
+    scaffoldPlanningInputs: {},
+    validationRules: [],
+    unresolvedDecisions: [],
+    fullstackCapability: { status: 'not-applicable' },
+    status: 'complete',
+  };
+}
+
+function writeJsonArtifact(meta: RunMetadata, file: string, value: unknown): void {
+  fs.writeFileSync(path.join(meta.runFolder, file), JSON.stringify(value, null, 2), 'utf8');
+}
+
 // ─── check (default artifact/prompt mode) ──────────────────────────────────────
 
 describe('check command - greenfield artifact checking', () => {
@@ -81,14 +130,7 @@ describe('check command - greenfield artifact checking', () => {
       const meta = makeGreenfieldRun(tmp);
       fs.writeFileSync(
         path.join(meta.runFolder, 'artifacts/idea-brief.json'),
-        [
-          'Artifact: IdeaBrief',
-          'Workflow mode: greenfield',
-          'Raw idea: A CLI tool for tracking tasks across a small distributed team.',
-          'Constraints: must remain offline-capable',
-          'Non-goals: no mobile app in v1',
-          'Status: complete',
-        ].join('\n'),
+        JSON.stringify(validIdeaBrief()),
         'utf8',
       );
       const { output } = runCliCaptured(['check', '--artifact', 'idea-brief', '--root', tmp]);
@@ -114,6 +156,96 @@ describe('check command - greenfield artifact checking', () => {
 // ─── check --artifacts (contract check) ────────────────────────────────────────
 
 describe('check --artifacts - greenfield contract checking', () => {
+  it('accepts the preserved blocked-run shape with stages 1-7 and mixed artifact formats', () => {
+    const tmp = makeTempDir();
+    try {
+      const meta = makeGreenfieldRun(tmp);
+      writeJsonArtifact(meta, 'artifacts/idea-brief.json', validIdeaBrief());
+      writeJsonArtifact(meta, 'artifacts/starter-profile.json', validStarterProfile());
+      writeJsonArtifact(meta, 'artifacts/bootstrap-bundle.json', validBootstrapBundle());
+      fs.writeFileSync(
+        path.join(meta.runFolder, 'artifacts/product-boundary.txt'),
+        'Artifact: ProductBoundary\nWorkflow mode: greenfield\nStatus: complete\n' + 'A'.repeat(100),
+        'utf8',
+      );
+      fs.writeFileSync(
+        path.join(meta.runFolder, 'artifacts/stack-decision.txt'),
+        'Artifact: StackDecision\nWorkflow mode: greenfield\nStatus: complete\n' + 'B'.repeat(100),
+        'utf8',
+      );
+      fs.writeFileSync(
+        path.join(meta.runFolder, 'artifacts/project-docs-report.txt'),
+        'Artifact: ProjectDocsReport\nWorkflow mode: greenfield\nStatus: complete\n' + 'C'.repeat(100),
+        'utf8',
+      );
+      fs.writeFileSync(
+        path.join(meta.runFolder, 'artifacts/scaffold-plan.txt'),
+        'Artifact: ScaffoldPlan\nWorkflow mode: greenfield\nStatus: complete\n' + 'D'.repeat(100),
+        'utf8',
+      );
+
+      const result = checkRunArtifactContracts(meta, {});
+      for (const file of [
+        'artifacts/idea-brief.json',
+        'artifacts/starter-profile.json',
+        'artifacts/bootstrap-bundle.json',
+        'artifacts/product-boundary.txt',
+        'artifacts/stack-decision.txt',
+        'artifacts/project-docs-report.txt',
+        'artifacts/scaffold-plan.txt',
+      ]) {
+        expect(result.results.find((entry) => entry.artifactFile === file)?.passed).toBe(true);
+      }
+      const jsonIssues = result.results
+        .filter((entry) => entry.artifactFile.endsWith('.json'))
+        .flatMap((entry) => entry.issues);
+      expect(jsonIssues.some((issue) => issue.code === 'CONTRACT_MISSING_SECTION')).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('rejects malformed JSON and valid JSON missing required structured content', () => {
+    const tmp = makeTempDir();
+    try {
+      const meta = makeGreenfieldRun(tmp);
+      fs.writeFileSync(path.join(meta.runFolder, 'artifacts/idea-brief.json'), '{bad json', 'utf8');
+      writeJsonArtifact(meta, 'artifacts/starter-profile.json', { status: 'complete' });
+
+      const result = checkRunArtifactContracts(meta, {});
+      const idea = result.results.find((entry) => entry.artifactFile === 'artifacts/idea-brief.json');
+      const starter = result.results.find(
+        (entry) => entry.artifactFile === 'artifacts/starter-profile.json',
+      );
+      expect(idea?.issues.some((issue) => issue.code === 'CONTRACT_MALFORMED_JSON')).toBe(true);
+      expect(starter?.issues.some((issue) => issue.code === 'CONTRACT_MISSING_FIELD')).toBe(true);
+      expect(idea?.passed).toBe(false);
+      expect(starter?.passed).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('preserves plain-text required-header validation', () => {
+    const tmp = makeTempDir();
+    try {
+      const meta = makeGreenfieldRun(tmp);
+      fs.writeFileSync(
+        path.join(meta.runFolder, 'artifacts/product-boundary.txt'),
+        'This text deliberately has no artifact headers.',
+        'utf8',
+      );
+      const result = checkRunArtifactContracts(meta, {});
+      const boundary = result.results.find(
+        (entry) => entry.artifactFile === 'artifacts/product-boundary.txt',
+      );
+      expect(boundary?.issues.some((issue) => issue.code === 'CONTRACT_MISSING_SECTION')).toBe(true);
+      expect(boundary?.passed).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
   it('resolves a valid mode and 13 stage contracts for a greenfield run', () => {
     const tmp = makeTempDir();
     try {
@@ -171,6 +303,24 @@ describe('check --artifacts - greenfield contract checking', () => {
 // ─── check --all ────────────────────────────────────────────────────────────────
 
 describe('check --all - greenfield', () => {
+  it('does not reproduce JSON text-header failures through check --all', () => {
+    const tmp = makeTempDir();
+    try {
+      const meta = makeGreenfieldRun(tmp);
+      writeJsonArtifact(meta, 'artifacts/idea-brief.json', validIdeaBrief());
+      writeJsonArtifact(meta, 'artifacts/starter-profile.json', validStarterProfile());
+      writeJsonArtifact(meta, 'artifacts/bootstrap-bundle.json', validBootstrapBundle());
+      const { output } = runCliCaptured(['check', '--all', '--root', tmp]);
+      expect(output).not.toContain('Required section "Artifact" is missing from artifacts/idea-brief.json');
+      expect(output).not.toContain(
+        'Required section "Workflow mode" is missing from artifacts/starter-profile.json',
+      );
+      expect(output).not.toContain('Required section "Status" is missing from artifacts/bootstrap-bundle.json');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
   it('runs all v1 checks for a fresh greenfield run without throwing', () => {
     const tmp = makeTempDir();
     try {

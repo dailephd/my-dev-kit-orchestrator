@@ -5,6 +5,7 @@ import {
   resolveArtifactKind,
   getArtifactSectionRequirements,
   parseArtifact,
+  validateStructuredArtifact,
 } from './artifactChecker';
 import { getWorkflowOrThrow } from './workflows';
 import { isValidMode, VALID_MODES } from './types';
@@ -47,7 +48,9 @@ export interface ModeContractSummary {
     artifactFile: string;
     artifactKind: string;
     predecessors: string[];
+    format: 'text' | 'json';
     requiredSections: string[];
+    requiredFields: string[];
   }>;
 }
 
@@ -176,45 +179,69 @@ export function checkArtifactContract(
     return { artifactFile, artifactKind, stageName, mode, issues, passed, checkedAt };
   }
 
-  // Section requirement checks
+  // Format-specific content checks from the shared artifact-kind registry.
   const requirements = getArtifactSectionRequirements(artifactKind);
   if (!requirements) {
     // No section contract defined for this artifact kind
     issues.push({
       code: 'CONTRACT_STAGE_NO_CONTRACT',
       severity: strict ? 'fail' : 'warn',
-      message: `No section contract is defined for artifact kind "${artifactKind}" (stage: ${stageName})`,
-      suggestedFix: `Add section requirements to the SECTION_REGISTRY for ${artifactKind}.`,
+      message: `No content contract is defined for artifact kind "${artifactKind}" (stage: ${stageName})`,
+      suggestedFix: `Add content requirements to the SECTION_REGISTRY for ${artifactKind}.`,
     });
   } else {
-    const parsed = parseArtifact(content);
-    for (const section of requirements.required) {
-      if (!parsed.sections.has(section)) {
+    if (requirements.format === 'json') {
+      const validation = validateStructuredArtifact(content, requirements);
+      if (validation.parseError) {
         issues.push({
-          code: 'CONTRACT_MISSING_SECTION',
+          code: 'CONTRACT_MALFORMED_JSON',
           severity: 'fail',
-          message: `Required section "${section}" is missing from ${artifactFile}`,
-          suggestedFix: `Add a "${section}:" header with content to the artifact.`,
-          section,
+          message: `${artifactFile} is not valid JSON: ${validation.parseError}`,
+          suggestedFix: 'Write syntactically valid JSON that satisfies the artifact contract.',
         });
-      } else {
-        const sectionContent = parsed.sections.get(section) ?? '';
-        if (!sectionContent.trim()) {
+      }
+      for (const issue of validation.issues) {
+        issues.push({
+          code:
+            issue.code === 'MISSING_FIELD'
+              ? 'CONTRACT_MISSING_FIELD'
+              : 'CONTRACT_INVALID_FIELD',
+          severity: 'fail',
+          message: `${issue.message} in ${artifactFile}`,
+          suggestedFix: `Correct the structured JSON field "${issue.field}" according to the artifact contract.`,
+          section: issue.field,
+        });
+      }
+    } else {
+      const parsed = parseArtifact(content);
+      for (const section of requirements.required) {
+        if (!parsed.sections.has(section)) {
           issues.push({
-            code: 'CONTRACT_BLANK_SECTION',
-            severity: strict ? 'fail' : 'warn',
-            message: `Required section "${section}" is present but blank`,
-            suggestedFix: `Add content to the "${section}" section.`,
+            code: 'CONTRACT_MISSING_SECTION',
+            severity: 'fail',
+            message: `Required section "${section}" is missing from ${artifactFile}`,
+            suggestedFix: `Add a "${section}:" header with content to the artifact.`,
             section,
           });
-        } else if (isSectionPlaceholderContent(sectionContent)) {
-          issues.push({
-            code: 'CONTRACT_PLACEHOLDER_SECTION',
-            severity: strict ? 'fail' : 'warn',
-            message: `Required section "${section}" contains only placeholder content`,
-            suggestedFix: `Replace placeholder content in "${section}" with actual content.`,
-            section,
-          });
+        } else {
+          const sectionContent = parsed.sections.get(section) ?? '';
+          if (!sectionContent.trim()) {
+            issues.push({
+              code: 'CONTRACT_BLANK_SECTION',
+              severity: strict ? 'fail' : 'warn',
+              message: `Required section "${section}" is present but blank`,
+              suggestedFix: `Add content to the "${section}" section.`,
+              section,
+            });
+          } else if (isSectionPlaceholderContent(sectionContent)) {
+            issues.push({
+              code: 'CONTRACT_PLACEHOLDER_SECTION',
+              severity: strict ? 'fail' : 'warn',
+              message: `Required section "${section}" contains only placeholder content`,
+              suggestedFix: `Replace placeholder content in "${section}" with actual content.`,
+              section,
+            });
+          }
         }
       }
     }
@@ -379,7 +406,9 @@ export function resolveArtifactContractsForMode(mode: string): ModeContractSumma
         artifactFile: stage.artifactFile,
         artifactKind,
         predecessors: predecessorMap.get(stage.artifactFile) ?? [],
+        format: requirements?.format ?? 'text',
         requiredSections: requirements?.required ?? [],
+        requiredFields: requirements?.requiredFields ?? [],
       };
     });
     return { mode, stages };

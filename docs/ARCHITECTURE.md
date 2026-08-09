@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.3.1` (standardized greenfield documentation and
-full-stack Next.js environment hardening), which builds on `v1.3.0`'s
+The current release is `v1.3.2` (greenfield JSON artifact contract correction),
+which retains `v1.3.1`'s standardized greenfield documentation and full-stack
+Next.js environment hardening and builds on `v1.3.0`'s
 mobile profile expansion and scaffold verification and the `v1.2.3`
 run-integrity and judge-verdict enforcement validated against the released
 `@dailephd/my-dev-kit@1.10.4` package. Architecture is organized by current
@@ -33,6 +34,13 @@ The surrounding tools retain separate responsibilities:
 Repository retrieval is manual. The orchestrator does not execute `my-dev-kit`
 and does not automatically retrieve evidence, run a coding agent, edit
 source code, execute tests, or publish packages.
+
+Artifact content validation remains one shared system. Artifact-kind entries in
+the registry select their native format contract: text artifacts use the
+existing section parser, while structured greenfield JSON artifacts use strict
+JSON parsing and structured-field validators. Format-independent existence,
+predecessor, lifecycle, stage-gate, judge-integrity, and readiness checks remain
+shared and unchanged.
 
 ## Core components
 

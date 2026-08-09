@@ -96,7 +96,16 @@ describe('greenfield artifact contract', () => {
       const artifactPath = path.join(meta.runFolder, 'artifacts/idea-brief.json');
       fs.writeFileSync(
         artifactPath,
-        ['Artifact: IdeaBrief', 'Workflow mode: greenfield', 'Status: complete'].join('\n'),
+        JSON.stringify({
+          rawIdea: 'Create a local TypeScript command-line tool.',
+          constraints: ['local-first'],
+          nonGoals: ['no hosted service'],
+          preferredStack: ['TypeScript', 'Node.js'],
+          documentationPreferences: ['standard project documentation'],
+          testingExpectations: ['unit and CLI tests'],
+          unresolved: [],
+          status: 'complete',
+        }),
         'utf8',
       );
       const result = checkArtifactContract(meta.runFolder, 'artifacts/idea-brief.json', 'idea-brief', 'greenfield', []);
