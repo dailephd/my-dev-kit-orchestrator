@@ -143,12 +143,13 @@ describe('Android Compose CLI regression (v1.2.0)', () => {
     expect(output).toContain('Total: 1 run(s)');
   });
 
-  it('starter-profile stage prompt correctly names android-compose as a supported v1.2.0 profile', () => {
+  it('starter-profile stage prompt delegates supported-profile validity to the canonical registry', () => {
     runCliCaptured(['start', '--mode', 'greenfield', '--root', tmp, ANDROID_COMPOSE_REQUEST]);
     fillPriorArtifacts(tmp, 'starter-profile');
     const { output, exitCode } = runCliCaptured(['prompt', 'starter-profile', '--root', tmp]);
     expect(exitCode).toBeUndefined();
-    expect(output).toMatch(/Supported profiles in v1\.2\.0:.*android-compose/);
+    expect(output).toMatch(/canonical SUPPORTED_PROFILES registry/);
+    expect(output).not.toMatch(/typescript-cli, nextjs-app, android-compose/);
     // Must not blanket-forbid Android/mobile profiles now that one is supported.
     expect(output).not.toMatch(/do not use Android\/mobile profiles/);
   });

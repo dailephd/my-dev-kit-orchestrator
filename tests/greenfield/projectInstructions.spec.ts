@@ -290,7 +290,7 @@ describe('greenfield project-instruction bootstrap (v1.3.3 Batch 1)', () => {
   });
 
   it('TST-011: denies autonomous execution claims and validator rejects an affirmative assertion', () => {
-    for (const profile of ['typescript-cli', 'nextjs-app', 'android-compose'] as const) {
+    for (const profile of ['typescript-cli', 'nextjs-app', 'android-compose', 'python-cli'] as const) {
       const result = generatedFor(`A project using ${profile}.`, { preferredProfile: profile });
       const text = lowerCaseManuals(result);
       expect(text).toMatch(/does not execute setup or validation commands/i);
@@ -336,11 +336,12 @@ describe('greenfield project-instruction bootstrap (v1.3.3 Batch 1)', () => {
 
     expect(GREENFIELD_CANONICAL_DOCUMENTS).toHaveLength(15);
     expect(bootstrappedDocs).toHaveLength(15);
-    expect(Object.values(SUPPORTED_PROFILES)).toHaveLength(3);
+    expect(Object.values(SUPPORTED_PROFILES)).toHaveLength(4);
     expect(Object.values(SUPPORTED_PROFILES).map((profile) => profile.id)).toEqual([
       'typescript-cli',
       'nextjs-app',
       'android-compose',
+      'python-cli',
     ]);
     for (const path of GREENFIELD_PROJECT_INSTRUCTION_PATHS) {
       expect(canonicalPaths).not.toContain(path);

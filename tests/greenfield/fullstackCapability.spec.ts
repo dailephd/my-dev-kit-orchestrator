@@ -511,6 +511,11 @@ describe('v1.3.1 Batch 3 regression - Batch 1/Batch 2 unaffected', () => {
     expect(flags).not.toContain('--profile');
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { SUPPORTED_PROFILES } = require('../../src/greenfield/profiles/resolveGreenfieldProfile');
-    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual(['android-compose', 'nextjs-app', 'typescript-cli']);
+    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual([
+      'android-compose',
+      'nextjs-app',
+      'python-cli',
+      'typescript-cli',
+    ]);
   });
 });

@@ -9,7 +9,7 @@
 // artifacts/greenfield-starter-bridge-decision.txt in place of porting
 // my-dev-kit-alpha's StarterConfig.
 
-export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose';
+export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose' | 'python-cli';
 
 /**
  * v1.3.0 Batch 2 (corrected): the closed, centrally defined vocabulary of
@@ -26,6 +26,7 @@ export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-com
 export const GREENFIELD_DOCUMENTATION_TERMINOLOGY = {
   ANDROID_JETPACK: 'android-jetpack',
   NEXTJS_REACT: 'nextjs-react',
+  PYTHON: 'python',
 } as const;
 
 export type GreenfieldDocumentationTerminologyTag =

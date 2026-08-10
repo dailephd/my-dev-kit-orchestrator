@@ -6,6 +6,7 @@ import { NEXTJS_APP_PROFILE } from '../../src/greenfield/profiles/nextjsAppProfi
 import { SUPPORTED_PROFILES } from '../../src/greenfield/profiles/resolveGreenfieldProfile';
 import { normalizeTargetPath } from '../../src/greenfield/profiles/targetPathSafety';
 import { TYPESCRIPT_CLI_PROFILE } from '../../src/greenfield/profiles/typescriptCliProfile';
+import { PYTHON_CLI_PROFILE } from '../../src/greenfield/profiles/pythonCliProfile';
 import type { GreenfieldProfile, GreenfieldTargetExpectation } from '../../src/greenfield/profiles/profileTypes';
 import { normalizeProjectBrief } from '../../src/greenfield/brief/normalizeProjectBrief';
 import { resolveGreenfieldProfile } from '../../src/greenfield/profiles/resolveGreenfieldProfile';
@@ -18,7 +19,7 @@ import {
 } from '../../src/greenfield/scaffold/effectiveTargetExpectations';
 import { validateGreenfieldScaffoldPlan } from '../../src/greenfield/scaffold/validateGreenfieldScaffoldPlan';
 
-const CURRENT_PROFILES = [TYPESCRIPT_CLI_PROFILE, NEXTJS_APP_PROFILE, ANDROID_COMPOSE_PROFILE] as const;
+const CURRENT_PROFILES = [TYPESCRIPT_CLI_PROFILE, NEXTJS_APP_PROFILE, ANDROID_COMPOSE_PROFILE, PYTHON_CLI_PROFILE] as const;
 
 function exactPaths(expectations: readonly GreenfieldTargetExpectation[]): string[] {
   return expectations
@@ -53,6 +54,7 @@ describe('common greenfield target composition (v1.3.3 Batch 2)', () => {
     ['TST-002', TYPESCRIPT_CLI_PROFILE],
     ['TST-003', NEXTJS_APP_PROFILE],
     ['TST-004', ANDROID_COMPOSE_PROFILE],
+    ['TST-B3-011', PYTHON_CLI_PROFILE],
   ] as const)('%s: composes common plus only the selected profile targets', (_id, profile) => {
     const actual = exactGreenfieldTargetPaths(composeEffectiveGreenfieldTargetExpectations(profile));
     expect(actual).toEqual([...GREENFIELD_PROJECT_INSTRUCTION_PATHS, ...exactPaths(profile.targetExpectations)]);
@@ -100,9 +102,13 @@ describe('common greenfield target composition (v1.3.3 Batch 2)', () => {
     expect(result.issues.filter((issue) => issue.code === 'GF_TARGET_UNSUPPORTED')).toEqual([]);
   });
 
-  it('TST-012/TST-013: keeps public documents at 15 and starter profiles at exactly three', () => {
+  it('TST-012/TST-013: keeps public documents at 15 and registers exactly four starter profiles', () => {
     expect(GREENFIELD_CANONICAL_DOCUMENTS).toHaveLength(15);
-    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual(['android-compose', 'nextjs-app', 'typescript-cli']);
-    expect(SUPPORTED_PROFILES).not.toHaveProperty('python-cli');
+    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual([
+      'android-compose',
+      'nextjs-app',
+      'python-cli',
+      'typescript-cli',
+    ]);
   });
 });

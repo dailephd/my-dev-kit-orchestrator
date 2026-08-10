@@ -131,7 +131,12 @@ function buildFirstRunnableBehavior(
     };
   }
 
-  const entryPoint = profile.templateTargets.find((f) => /\.(ts|tsx|kt)$/.test(f) && f.includes('/'));
+  const entryPoint = profile.targetExpectations.find(
+    (expectation) =>
+      expectation.category === 'entry-point' &&
+      expectation.required &&
+      expectation.matcher.kind === 'exact',
+  )?.matcher.value;
   return {
     description: `${profile.notesForBootstrapBundle} Product boundary: ${bundle.docGenerationInstructions.productBoundary}`,
     entryPoint,
