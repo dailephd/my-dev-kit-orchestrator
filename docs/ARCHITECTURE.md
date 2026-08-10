@@ -63,7 +63,7 @@ Android Compose support already shipped in `v1.2.0` as the explicit
 `nextjs-app`. It remains prompt and scaffold guidance only. The orchestrator
 does not run Gradle, require an Android SDK, or detect an emulator or device.
 
-All three current profiles share one validation architecture, owned by
+All four current profiles share one validation architecture, owned by
 `src/greenfield/profiles/` and `src/greenfield/readiness/`:
 
 - `validateGreenfieldProfile()` and `validateGreenfieldProfileRegistry()`
@@ -101,13 +101,13 @@ All three current profiles share one validation architecture, owned by
 
 ### v1.3.1: standardized documents and full-stack capability
 
-`v1.3.1` (the current published release; see [CURRENT_STATE.md](CURRENT_STATE.md))
+`v1.3.1` (retained by the current `v1.3.2` release; see [CURRENT_STATE.md](CURRENT_STATE.md))
 is additive to the architecture above rather than a replacement:
 
 - `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
   `webFramework` fields to the raw and normalized brief. They are orthogonal
   to starter-profile selection, not a new profile: `GreenfieldProfileId`
-  remains `'typescript-cli' | 'nextjs-app' | 'android-compose'`
+  was `'typescript-cli' | 'nextjs-app' | 'android-compose'` in that release
   (`src/greenfield/profiles/profileTypes.ts`); there is no `nextjs-fullstack`
   profile. A brief without these fields normalizes exactly as before, so
   legacy briefs remain valid.
@@ -115,7 +115,8 @@ is additive to the architecture above rather than a replacement:
   15-file greenfield document baseline (`GREENFIELD_CANONICAL_DOCUMENTS`):
   `README.md`, `CHANGELOG.md`, and the 13 `docs/*.md` files through
   `DOCUMENTATION_PRESERVATION_POLICY.md`, in one deterministic order, applied
-  to all three starter profiles. `src/greenfield/bootstrap/
+  to the `typescript-cli`, `nextjs-app`, and `android-compose` profiles present
+  in that release. `src/greenfield/bootstrap/
   populateCanonicalProjectDocumentsFromBrief.ts` derives per-document content
   from the actual brief/profile/capability, not copied ecosystem prose.
   Profile- and capability-specific requirements layer additively into these
@@ -163,6 +164,42 @@ is additive to the architecture above rather than a replacement:
   shared workflow artifact map already declares for the "verification" stage
   (`src/workflows.ts`), so a real run following the generated prompts
   produces evidence at the same path every downstream consumer expects.
+
+### v1.3.3: common project instructions and Python CLI
+
+Current source extends the same architecture without adding a workflow mode,
+stage, native artifact, or readiness subsystem:
+
+- `src/greenfield/bootstrap/projectInstructions/projectInstructionTypes.ts`
+  owns one normalized in-memory project-instruction model and exactly four
+  generated-project paths. `buildProjectInstructionBundle.ts` deterministically
+  renders the detailed `agents.txt`, compact `claude.txt`, and small uppercase
+  adapters from that source; `validateProjectInstructionBundle.ts` validates
+  the bounded bundle. The pure path performs no I/O or command execution.
+- These four files are not members of the 15-file
+  `GREENFIELD_CANONICAL_DOCUMENTS` public-document registry and are not native
+  orchestrator artifacts.
+- `src/greenfield/scaffold/effectiveTargetExpectations.ts` owns the common
+  exact targets and `composeEffectiveGreenfieldTargetExpectations()`. Its
+  deterministic order is common, selected profile, then optional capability.
+  Scaffold planning, plan validation, generated-file evidence, filesystem
+  corroboration, and canonical readiness consume the same composition.
+- `src/greenfield/profiles/pythonCliProfile.ts` defines the fourth profile via
+  the existing `GreenfieldProfile` contract: `pyproject.toml`, `src/main.py`,
+  `tests/test_main.py`, and `README.md`, with Python setup/compile/pytest/help
+  guidance and no full-stack compatibility. Registry and resolution remain in
+  `resolveGreenfieldProfile.ts`; bare Python and Python web/API/server intent
+  remain unresolved/unsupported.
+- `buildScaffoldPlan.ts` derives the first runnable entry point from the
+  selected profile's required exact `entry-point` target metadata. It does not
+  maintain a TypeScript/Kotlin/Python extension list.
+- The closed terminology vocabulary in `profileTypes.ts` includes `PYTHON`;
+  `validateBootstrapDocs.ts` applies it through profile-owned declarations,
+  not Python profile-ID branches. Starter-profile guidance likewise derives
+  supported profile IDs from the canonical registry.
+- The existing generic `initial-index` stage is unchanged. Verified Python
+  source can be indexed by published `my-dev-kit` through ordinary extension
+  inference; the orchestrator neither invokes it nor owns a Python index path.
 
 ## Workflow definitions
 

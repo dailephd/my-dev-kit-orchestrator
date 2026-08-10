@@ -104,7 +104,11 @@ Important implementation files:
 - `src/correctionRouter.ts`: deterministic correction routing model, `routeJudgeVerdict`, `parseAndRoute` (v0.6.0)
 - `src/correctionState.ts`: reads judge-report.txt and computes correction state per run (v0.6.0)
 - `src/greenfield/`: brief, profile, bootstrap, scaffold, and greenfield-mode
-  implementation, including `src/greenfield/fullstack/`: the single supported
+  implementation, including `src/greenfield/bootstrap/projectInstructions/`
+  for the shared generated-project instruction bundle,
+  `src/greenfield/scaffold/effectiveTargetExpectations.ts` for common + profile
+  and optional-capability target composition, and `src/greenfield/fullstack/`:
+  the single supported
   full-stack capability (`fullstack-web` + `nextjs` + `nextjs-app` +
   PostgreSQL + Prisma + Docker), resolved and validated separately from
   starter-profile selection and composed additively into
@@ -402,9 +406,9 @@ move tests merely while adding a mode.
 
 ## Adding a greenfield profile
 
-Android Compose (`src/greenfield/profiles/androidComposeProfile.ts`)
-demonstrates the expected extension pattern for a new greenfield starter
-profile:
+The current Android Compose and Python CLI definitions under
+`src/greenfield/profiles/` demonstrate the expected extension pattern for a
+new greenfield starter profile:
 
 - register the new profile id in `GreenfieldProfileId`
   (`src/greenfield/profiles/profileTypes.ts`)
@@ -420,10 +424,11 @@ profile:
   - `allowedDocumentationTerminology: readonly GreenfieldDocumentationTerminologyTag[]`
     -- the closed set of documentation terminology tags
     (`GREENFIELD_DOCUMENTATION_TERMINOLOGY` in `profileTypes.ts`; currently
-    `ANDROID_JETPACK` and `NEXTJS_REACT`) this profile's generated docs may
-    use. Most profiles use `[]` (no special terminology). Use
+    `ANDROID_JETPACK`, `NEXTJS_REACT`, and `PYTHON`) this profile's generated
+    docs may use. Profiles without specialized stack wording may use `[]`. Use
     `ANDROID_JETPACK` only for an Android/Jetpack-based profile and
-    `NEXTJS_REACT` only for a Next.js/React-based profile.
+    `NEXTJS_REACT` only for a Next.js/React-based profile and `PYTHON` only for
+    a Python profile.
     `validateGreenfieldProfile()` rejects unsupported or duplicate tags at
     runtime (`GF_PROFILE_UNSUPPORTED_FIELD`); TypeScript rejects them at
     compile time for the built-in profile literals. Adding a genuinely new
@@ -434,9 +439,9 @@ profile:
   - `targetExpectations: readonly GreenfieldTargetExpectation[]` -- one
     entry per scaffold target this profile requires or permits, each
     `{ id, category, matcher: { kind: 'exact' | 'bounded-pattern', value }, required, purpose, evidenceKind }`.
-    Adapt the profile's existing `templateTargets` entries into required
-    `'exact'` expectations (`templateTargets` itself stays unchanged; it is
-    still what `buildScaffoldPlan.ts` and existing tests consume). Use
+    Keep the profile's `templateTargets` compatibility inventory aligned with
+    its expectations. `buildScaffoldPlan.ts`, plan validation, and readiness
+    consume the effective target expectation composition; use
     `'bounded-pattern'` only for a genuinely variable, language/package-
     dependent source root (see `targetPatternMatching.ts` for the grammar:
     literal segments, `*` for exactly one segment, at most one `**` for zero
@@ -450,6 +455,9 @@ profile:
     instead), including bounded-pattern-versus-bounded-pattern overlap (e.g.
     `src/*/Main.kt` and `src/app/*` both accept `src/app/Main.kt`); see
     `patternsOverlap()` in `targetPatternMatching.ts`.
+- do not duplicate the common instruction targets in a profile;
+  `composeEffectiveGreenfieldTargetExpectations()` adds them once before the
+  selected profile and optional capability expectations
 - register the profile in `SUPPORTED_PROFILES`
   (`src/greenfield/profiles/resolveGreenfieldProfile.ts`)
 - add a small, explicit, bounded set of aliases to `PROFILE_ALIASES` if the

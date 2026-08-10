@@ -426,10 +426,13 @@ contracts; they are not required to contain bare text section headers.
 Bootstrap project
 documentation is structured in-memory runtime output; it does not imply that
 the orchestrator writes template documents. `validateBootstrapDocs` checks
-required content and is profile-aware: Android/Jetpack/Kotlin/Gradle content
-is permitted only when the selected profile is `android-compose`; iOS/React
-Native/Flutter/multiplatform claims and release/security/publish/Play-Store
-claims are rejected regardless of the selected profile.
+required content and is profile-aware through the selected profile's declared
+terminology. Android/Jetpack content is permitted for `android-compose`,
+Next.js/React for `nextjs-app`, and Python/pytest/pyproject terminology for
+`python-cli`; equivalent stack claims are rejected for profiles that do not
+declare them. iOS/React Native/Flutter/multiplatform claims and
+release/security/publish/Play-Store claims are rejected regardless of the
+selected profile.
 
 `GreenfieldScaffoldPlan`'s `setupCommands` and `validationCommands` fields are
 `GreenfieldProfileCommand[]` (`{ command, purpose, required,
@@ -516,6 +519,23 @@ for the owning modules.
   execute PostgreSQL/Prisma/database commands itself; every command in a
   full-stack scaffold plan is descriptive guidance for the coding agent, as
   with every other profile's commands.
+
+### v1.3.3 generated-project instruction and Python additions
+
+The files `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` are required
+generated-project outputs for current-format greenfield runs. They are not
+native stage artifacts, do not add stages or lifecycle files, and are not part
+of the 15-file canonical public project-document registry. Their in-memory
+bundle is owned by `src/greenfield/bootstrap/projectInstructions/`.
+
+`src/greenfield/scaffold/effectiveTargetExpectations.ts` composes their common
+exact expectations with the selected profile and optional compatible
+capability. Consequently the existing `Target paths:` and `Files changed:`
+evidence and filesystem corroboration require them without a new artifact
+schema or readiness engine. `python-cli` adds only its four profile-owned
+targets (`pyproject.toml`, `src/main.py`, `tests/test_main.py`, `README.md`) and
+its profile-owned command guidance. Older evidence remains governed by the
+legacy rule above.
 
 ## Extraction mode artifacts
 

@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Added
+
+- one deterministic common generated-project instruction family for
+  `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`, derived from a
+  normalized project-instruction model and kept separate from the 15-file
+  canonical public project-document baseline
+- common + selected-profile + optional-capability target composition through
+  existing scaffold planning, scaffold validation, generated-file evidence,
+  filesystem corroboration, and canonical greenfield readiness
+- the bounded fourth starter profile `python-cli`, with `pyproject.toml`,
+  `src/main.py`, `tests/test_main.py`, and `README.md`, profile-owned Python
+  terminology, setup/compile/pytest/CLI guidance, and metadata-driven runnable
+  entry-point ownership
+- conservative Python resolution: explicit `python-cli`, exact `python`, and
+  clear Python-plus-CLI intent are supported; bare Python and Python
+  web/API/server intent remain unresolved/unsupported
+- verified generic `initial-index` compatibility for generated Python source;
+  no Python-specific workflow, native stage, readiness engine, artifact family,
+  full-stack capability, command execution, or indexing subsystem was added
+
 ## v1.3.2 - Greenfield JSON Artifact Contract Correction
 
 Release date: 2026-08-09.

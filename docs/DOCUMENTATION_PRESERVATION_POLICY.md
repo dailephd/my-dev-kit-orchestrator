@@ -15,6 +15,12 @@ remain canonical for their independent detail. `USAGE.md` and
 `RELEASE_CHECKLIST.md` are retained compatibility/checklist paths;
 `COMMANDS.md` and `RELEASE.md` own those common responsibilities.
 
+Generated-project coding-agent instructions (`agents.txt`, `claude.txt`,
+`AGENTS.md`, and `CLAUDE.md`) are a separate output class. They are not added
+to the canonical public project-document registry and are not native
+orchestrator run artifacts. Their content and target obligations follow the
+implemented greenfield instruction/scaffold contracts.
+
 Content may move only when its complete meaning is preserved, useful legacy
 paths retain a pointer, and the move does not create two canonical owners.
 Exact removals still require explicit authorization.

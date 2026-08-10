@@ -128,8 +128,14 @@ Android Compose example:
 my-dev-kit-orchestrator start --mode greenfield "Create an Android Compose habit tracker app"
 ```
 
-The greenfield foundation supports three starter profiles: `typescript-cli`,
-`nextjs-app`, and `android-compose`. Android Compose support is profile-guided
+Python CLI example:
+
+```bash
+my-dev-kit-orchestrator start --mode greenfield "Create a small Python CLI that prints a greeting"
+```
+
+The greenfield foundation supports four starter profiles: `typescript-cli`,
+`nextjs-app`, `android-compose`, and `python-cli`. Android Compose support is profile-guided
 planning and prompt support: the generated stack decision, docs, and scaffold
 plan describe a Kotlin/Jetpack Compose/Gradle project, and validation guidance
 lists Gradle commands (`./gradlew build`, `./gradlew testDebugUnitTest`, and an
@@ -140,6 +146,14 @@ the `starter-profile` stage prompt. Each generated prompt remains specific to
 the current stage regardless of profile. Paste that bounded prompt into the
 coding agent, save the required artifact in the run folder, and then request
 the next prompt.
+
+The bounded Python profile uses `pyproject.toml`, `src/main.py`,
+`tests/test_main.py`, and `README.md`, with setup, compile, pytest, and CLI-help
+commands recorded as guidance/evidence. Bare Python intent and Python
+web/API/server intent do not silently resolve to the CLI profile. Every current
+profile also receives `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`
+as common generated-project targets. The orchestrator validates the plan and
+evidence; it does not create those project files or execute Python commands.
 
 `check --artifacts` and `check --all` use the shared artifact and contract
 checkers for greenfield runs, for every profile. On a newly created run they

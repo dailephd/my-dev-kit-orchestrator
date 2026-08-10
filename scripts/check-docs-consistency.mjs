@@ -476,7 +476,12 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     }
   }
 
-  const currentFactDocs = docs.filter(({ relPath }) => !['CHANGELOG.md', 'docs/RELEASE_CHECKLIST.md'].includes(relPath));
+  // CHANGELOG and RELEASE_CHECKLIST contain historical counts, while ROADMAP
+  // is the canonical owner of planned future counts. Keep source-derived
+  // current-count enforcement on current/reference documents only.
+  const currentFactDocs = docs.filter(
+    ({ relPath }) => !['CHANGELOG.md', 'docs/RELEASE_CHECKLIST.md', 'docs/ROADMAP.md'].includes(relPath),
+  );
   checkWrongCountClaims(issues, currentFactDocs, 'workflow modes', modes.length, '(?:workflow\\s+)?modes', 'WORKFLOW_MODE_COUNT_MISMATCH');
   checkWrongCountClaims(issues, currentFactDocs, 'native stages', workflowFacts.nativeStageCount, 'native\\s+stages', 'NATIVE_STAGE_COUNT_MISMATCH');
   checkWrongCountClaims(issues, currentFactDocs, 'greenfield stages', workflowFacts.stageOrderByMode.greenfield.length, 'greenfield\\s+stages', 'GREENFIELD_STAGE_COUNT_MISMATCH');

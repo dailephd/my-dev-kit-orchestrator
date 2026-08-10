@@ -35,7 +35,7 @@ The inspected and published package versions are:
 | Tool | Current package | Ownership | Important boundary |
 | --- | --- | --- | --- |
 | Producer | `@dailephd/my-dev-kit@1.12.1` | Read-only indexing, structural and semantic artifacts, classification, code and data-model graphs, search, lookup, bounded source retrieval, slices, views, context evidence, and graph diff | It never edits source, executes the application, or makes security verdicts. |
-| Workflow controller | `@dailephd/my-dev-kit-orchestrator@1.3.0` | Stage order, profiles, prompts, run state, artifact lifecycle, integrity checks, correction routing, and portable handoffs | It does not run the producer, a coding agent, product tests, the lab, or a release. |
+| Workflow controller | `@dailephd/my-dev-kit-orchestrator@1.3.2` | Stage order, profiles, prompts, run state, artifact lifecycle, integrity checks, correction routing, and portable handoffs | It does not run the producer, a coding agent, product tests, the lab, or a release. |
 | Validation tool | `@dailephd/my-dev-kit-lab@0.4.5` | Self-validation, external-target and package validation, dependency and security checks, code-rot auditing, readiness evidence, and reports | It does not replace product tests or modify the target. |
 
 The orchestrator consumes producer evidence supplied through run artifacts. It
@@ -274,6 +274,15 @@ The profile resolver and bootstrap bundle are implemented. Application file
 generation, package installation, compilation, Gradle/Android execution,
 producer indexing, lab validation, and publishing are coding-agent or human
 actions. A planned greenfield-to-feature handoff is not a current command.
+
+Current source supports four starter profiles, including the bounded
+`python-cli` profile. Every profile's effective scaffold contract includes the
+common `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` generated-project
+instructions. For Python CLI, the profile additionally requires
+`pyproject.toml`, `src/main.py`, `tests/test_main.py`, and `README.md`. After the
+Python source and first slice exist, the same `initial-index` stage hands the
+project to the published producer; ordinary Python extension inference is used
+and no Python-specific orchestrator stage exists.
 
 ### Phase 5 — Initialize version control
 
@@ -1266,8 +1275,10 @@ all placeholders and consult current tool command references before execution.
 2. **Manual:** choose `FULL_STAGE_CONTEXT` because `<PROJECT_NAME>` is
    greenfield and architecture ownership is unresolved.
 3. **Manual:** map explicit platform/stack facts to a supported profile. If the
-   facts support `typescript-cli`, select it in the `starter-profile` stage. If
-   they do not support any current profile, record a custom manual scaffold
+   facts support a registered profile such as `typescript-cli` or the bounded
+   `python-cli`, select it in the `starter-profile` stage. Bare Python without
+   CLI intent does not select `python-cli`. If the facts do not support any
+   current profile, record a custom manual scaffold
    contract; do not invent a profile or CLI flag.
 
 ### 16.2 Run and bootstrap

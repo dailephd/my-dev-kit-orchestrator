@@ -10,7 +10,7 @@ Normal state is contained beneath the project-local `.my-dev-kit-orchestrator/` 
 
 ## Subprocess and network behavior
 
-The runtime does not execute coding agents, `my-dev-kit`, builds, tests, Gradle, Android tooling, publishing commands, or security scanners. It has no autonomous network workflow. `npm`/`npx`, Git, or companion-tool commands shown in prompts/docs are executed only by a user or coding agent outside the orchestrator process. This includes the full-stack environment contract: the orchestrator never executes Docker, PostgreSQL, Prisma, or any other project/database command itself; every setup and validation command in a full-stack scaffold plan is descriptive guidance for the coding agent, exactly like every other profile's commands.
+The runtime does not execute coding agents, `my-dev-kit`, builds, tests, Python, pytest, Gradle, Android tooling, publishing commands, or security scanners. It has no autonomous network workflow. `npm`/`npx`, Git, or companion-tool commands shown in prompts/docs are executed only by a user or coding agent outside the orchestrator process. This includes the full-stack environment contract: the orchestrator never executes Docker, PostgreSQL, Prisma, or any other project/database command itself; every setup and validation command in a scaffold plan is descriptive guidance for the coding agent.
 
 ## Full-stack environment contract
 
@@ -18,7 +18,7 @@ The full-stack scaffold and environment templates the orchestrator generates gui
 
 ## Evidence parsing and generated output
 
-Artifact and supplemental-evidence parsers use versioned contracts and deterministic issue results. Malformed, stale, mismatched, truncated, or legacy evidence is surfaced rather than silently normalized into success. Generated prompts, checks, and exports may contain repository/request text; review them before sharing and keep secrets out of requests and artifacts.
+Artifact and supplemental-evidence parsers use versioned contracts and deterministic issue results. Malformed, stale, mismatched, truncated, or legacy evidence is surfaced rather than silently normalized into success. The generated-project instruction bundle is deterministic and in-memory; its four files may contain normalized project facts and command guidance, so review them before sharing and keep secrets out of requests, artifacts, prompts, exports, and generated instructions.
 
 ## Readiness and proof boundary
 

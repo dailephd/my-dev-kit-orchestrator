@@ -161,7 +161,8 @@ function resolveAllowedDocumentationTerminology(selectedProfileId?: GreenfieldPr
  * @param result the generated docs to validate
  * @param selectedProfileId the profile the bundle was built from, if known.
  *   Terminology this profile's `allowedDocumentationTerminology` permits
- *   (e.g. Android/Jetpack for android-compose, Next.js/React for nextjs-app)
+ *   (e.g. Android/Jetpack for android-compose, Next.js/React for nextjs-app,
+ *   Python/pytest/pyproject terminology for python-cli)
  *   is not flagged; for any other profile id (or when omitted), it is
  *   flagged the same way it always was before v1.2.0.
  */
