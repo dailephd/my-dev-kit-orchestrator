@@ -30,6 +30,7 @@ import { checkGreenfieldRunReadiness } from '../../src/greenfield/readiness/chec
 import { generateStagePrompt } from '../../src/promptGenerator';
 import { FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY } from '../../src/greenfield/fullstack/fullstackCapabilityTypes';
 import { NEXTJS_APP_PROFILE } from '../../src/greenfield/profiles/nextjsAppProfile';
+import { GREENFIELD_PROJECT_INSTRUCTION_PATHS } from '../../src/greenfield/bootstrap/projectInstructions/projectInstructionTypes';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-b5-correction-'));
@@ -55,7 +56,7 @@ function writeArtifact(meta: RunMetadata, relPath: string, content: string): voi
   fs.writeFileSync(full, content, 'utf8');
 }
 
-const BASE_TARGETS = ['package.json', 'app/layout.tsx', 'app/page.tsx', 'README.md'];
+const BASE_TARGETS = [...GREENFIELD_PROJECT_INSTRUCTION_PATHS, 'package.json', 'app/layout.tsx', 'app/page.tsx', 'README.md'];
 const FULLSTACK_TARGETS = FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY.targetExpectations
   .filter((e) => e.matcher.kind === 'exact')
   .map((e) => e.matcher.value);
@@ -487,6 +488,10 @@ Workflow mode: greenfield
 Profile: typescript-cli
 Planned file groups: core CLI files.
 Target paths:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -512,7 +517,13 @@ Status: complete
     writeArtifact(
       meta,
       'reports/scaffold-implementation-report.txt',
-      scaffoldReportText('typescript-cli', ['package.json', 'src/cli.ts', 'src/index.ts', 'README.md']),
+      scaffoldReportText('typescript-cli', [
+        ...GREENFIELD_PROJECT_INSTRUCTION_PATHS,
+        'package.json',
+        'src/cli.ts',
+        'src/index.ts',
+        'README.md',
+      ]),
     );
     writeArtifact(
       meta,
@@ -546,6 +557,30 @@ describe('v1.3.1 Batch 5 correction - Case E: status/check/final-report consume 
     expect(eligibility.greenfieldReadiness).toEqual(standalone);
     expect(eligibility.eligible).toBe(false);
     expect(standalone?.ready).toBe(false);
+  });
+
+  it('TST-014/TST-015: one missing common target blocks canonical status/check readiness and final eligibility', () => {
+    tmp = makeTempDir();
+    const meta = buildReadyOrdinaryRun(tmp);
+    const reportPath = path.join(meta.runFolder, 'reports', 'scaffold-implementation-report.txt');
+    const withoutAgents = fs.readFileSync(reportPath, 'utf8').replace('- agents.txt\n', '');
+    writeArtifact(meta, 'reports/scaffold-implementation-report.txt', withoutAgents);
+    writeJudgeReport(meta, 'PASS');
+
+    const standalone = checkGreenfieldRunReadiness(meta);
+    const { eligibility } = evaluateFor(meta);
+    expect(standalone?.ready).toBe(false);
+    expect(standalone?.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_GENERATED_EVIDENCE_MISSING', evidenceKey: 'common-agents-instructions' }),
+    );
+    expect(eligibility.greenfieldReadiness).toEqual(standalone);
+    expect(eligibility.eligible).toBe(false);
+    expect(eligibility.blockingCodes).toContain(FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE);
+
+    const statusSource = fs.readFileSync(require.resolve('../../src/commands/status'), 'utf8');
+    const checkSource = fs.readFileSync(require.resolve('../../src/commands/check'), 'utf8');
+    expect(statusSource).toMatch(/checkGreenfieldRunReadiness/);
+    expect(checkSource).toMatch(/checkGreenfieldRunReadiness/);
   });
 
   // TST-B5C-012

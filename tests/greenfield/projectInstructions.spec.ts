@@ -328,7 +328,7 @@ describe('greenfield project-instruction bootstrap (v1.3.3 Batch 1)', () => {
     expectIssue(mutation, 'GF_AGENT_INSTRUCTIONS_PROFILE_STATE_MISMATCH');
   });
 
-  it('TST-012: leaves canonical documents, profile registration, and scaffold targets unchanged', () => {
+  it('TST-012: keeps canonical documents/profile registration separate while scaffold includes instruction targets', () => {
     const bundle = buildBundleFor('A CLI tool.', { preferredProfile: 'typescript-cli' });
     const canonicalPaths = GREENFIELD_CANONICAL_DOCUMENTS.map((document) => document.path);
     const bootstrappedDocs = bootstrapProjectDocs(bundle).canonicalDocuments!;
@@ -345,7 +345,7 @@ describe('greenfield project-instruction bootstrap (v1.3.3 Batch 1)', () => {
     for (const path of GREENFIELD_PROJECT_INSTRUCTION_PATHS) {
       expect(canonicalPaths).not.toContain(path);
       expect(bootstrappedDocs.map((document) => document.path)).not.toContain(path);
-      expect(scaffoldPaths).not.toContain(path);
+      expect(scaffoldPaths).toContain(path);
     }
   });
 });
