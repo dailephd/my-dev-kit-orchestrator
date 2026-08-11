@@ -882,9 +882,9 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     ],
   },
   "stage.greenfield.starter-profile": {
-    taskInstructions: "Supported profiles in v1.2.0: typescript-cli, nextjs-app, android-compose. If an unsupported profile is requested, report it clearly as unsupported; do not substitute a default silently.",
+    taskInstructions: "Select only from the canonical SUPPORTED_PROFILES registry in src/greenfield/profiles/resolveGreenfieldProfile.ts. If the request is ambiguous or unsupported, record that result clearly; do not substitute a default silently.",
     validationRequirements: [
-      "The StarterProfile artifact must record the resolved profile ID (typescript-cli, nextjs-app, or android-compose), or explicitly record an unsupported-profile result.",
+      "The StarterProfile artifact must record a profile ID from the canonical SUPPORTED_PROFILES registry, or explicitly record an unresolved/unsupported profile result.",
     ],
     stopConditions: [
       "do not silently substitute a mobile/Android profile for an ambiguous or unsupported request",

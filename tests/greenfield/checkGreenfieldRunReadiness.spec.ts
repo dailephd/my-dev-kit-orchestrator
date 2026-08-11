@@ -35,6 +35,10 @@ const VALID_SCAFFOLD_REPORT = `Artifact: ScaffoldImplementationReport
 Workflow mode: greenfield
 Profile: typescript-cli
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -49,6 +53,10 @@ Workflow mode: greenfield
 Profile: typescript-cli
 Planned file groups: core CLI files.
 Target paths:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -274,6 +282,10 @@ describe('checkGreenfieldRunReadiness - cross-profile disk-backed readiness (Bat
 Workflow mode: greenfield
 Profile: nextjs-app
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - app/layout.tsx
 - app/page.tsx
@@ -287,6 +299,10 @@ Workflow mode: greenfield
 Profile: nextjs-app
 Planned file groups: app-router pages.
 Target paths:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - app/layout.tsx
 - app/page.tsx
@@ -349,6 +365,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: android-compose
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - settings.gradle.kts
 - build.gradle.kts
 - app/build.gradle.kts
@@ -364,6 +384,10 @@ Workflow mode: greenfield
 Profile: android-compose
 Planned file groups: single Android app module.
 Target paths:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - settings.gradle.kts
 - build.gradle.kts
 - app/build.gradle.kts

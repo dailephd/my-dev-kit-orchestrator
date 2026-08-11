@@ -13,6 +13,11 @@ import {
   GreenfieldScaffoldFileGroup,
   GreenfieldScaffoldPlan,
 } from './scaffoldPlanTypes';
+import {
+  COMMON_GREENFIELD_TARGET_EXPECTATIONS,
+  composeEffectiveGreenfieldTargetExpectations,
+  exactGreenfieldTargetPaths,
+} from './effectiveTargetExpectations';
 
 export function buildScaffoldPlan(bundle: GreenfieldBootstrapBundle): GreenfieldScaffoldPlan {
   const profile = bundle.selectedProfile.profile;
@@ -49,10 +54,31 @@ function buildFileGroups(
   profile: GreenfieldProfile,
   capability: GreenfieldFullstackCapability | undefined,
 ): GreenfieldScaffoldFileGroup[] {
-  const configFiles = profile.templateTargets.filter((f) => !f.includes('/'));
-  const sourceFiles = profile.templateTargets.filter((f) => f.includes('/'));
+  const effectivePaths = exactGreenfieldTargetPaths(
+    composeEffectiveGreenfieldTargetExpectations(profile, capability),
+  );
+  const commonPathSet = new Set(exactGreenfieldTargetPaths(COMMON_GREENFIELD_TARGET_EXPECTATIONS));
+  const profilePathSet = new Set(exactGreenfieldTargetPaths(profile.targetExpectations));
+  const capabilityPathSet = new Set(exactGreenfieldTargetPaths(capability?.targetExpectations ?? []));
+
+  const commonFiles = effectivePaths.filter((path) => commonPathSet.has(path));
+  const profileFiles = effectivePaths.filter(
+    (path) => !commonPathSet.has(path) && profilePathSet.has(path),
+  );
+  const configFiles = profileFiles.filter((path) => !path.includes('/'));
+  const sourceFiles = profileFiles.filter((path) => path.includes('/'));
+  const capabilityFiles = effectivePaths.filter(
+    (path) => !commonPathSet.has(path) && !profilePathSet.has(path) && capabilityPathSet.has(path),
+  );
 
   const groups: GreenfieldScaffoldFileGroup[] = [];
+  if (commonFiles.length > 0) {
+    groups.push({
+      name: 'coding-agent-instructions',
+      description: 'Common generated-project operating instructions and deterministic coding-agent adapters.',
+      filePaths: commonFiles,
+    });
+  }
   if (configFiles.length > 0) {
     groups.push({
       name: 'configuration',
@@ -68,19 +94,14 @@ function buildFileGroups(
     });
   }
 
-  if (capability) {
-    const fullstackPaths = capability.targetExpectations
-      .filter((expectation) => expectation.matcher.kind === 'exact')
-      .map((expectation) => expectation.matcher.value);
-    if (fullstackPaths.length > 0) {
-      groups.push({
-        name: 'full-stack-infrastructure',
-        description:
-          'Full-stack environment/database/Docker infrastructure files required by the resolved ' +
-          'fullstack-web + nextjs + PostgreSQL + Prisma + Docker capability.',
-        filePaths: fullstackPaths,
-      });
-    }
+  if (capability && capabilityFiles.length > 0) {
+    groups.push({
+      name: 'full-stack-infrastructure',
+      description:
+        'Full-stack environment/database/Docker infrastructure files required by the resolved ' +
+        'fullstack-web + nextjs + PostgreSQL + Prisma + Docker capability.',
+      filePaths: capabilityFiles,
+    });
   }
 
   return groups;
@@ -110,7 +131,12 @@ function buildFirstRunnableBehavior(
     };
   }
 
-  const entryPoint = profile.templateTargets.find((f) => /\.(ts|tsx|kt)$/.test(f) && f.includes('/'));
+  const entryPoint = profile.targetExpectations.find(
+    (expectation) =>
+      expectation.category === 'entry-point' &&
+      expectation.required &&
+      expectation.matcher.kind === 'exact',
+  )?.matcher.value;
   return {
     description: `${profile.notesForBootstrapBundle} Product boundary: ${bundle.docGenerationInstructions.productBoundary}`,
     entryPoint,

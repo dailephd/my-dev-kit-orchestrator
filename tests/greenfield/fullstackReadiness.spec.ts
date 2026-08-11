@@ -16,8 +16,9 @@ import { ANDROID_COMPOSE_PROFILE } from '../../src/greenfield/profiles/androidCo
 import { FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY } from '../../src/greenfield/fullstack/fullstackCapabilityTypes';
 import { RunMetadata } from '../../src/run';
 import { getWorkflow } from '../../src/workflows';
+import { GREENFIELD_PROJECT_INSTRUCTION_PATHS } from '../../src/greenfield/bootstrap/projectInstructions/projectInstructionTypes';
 
-const BASE_TARGETS = ['package.json', 'app/layout.tsx', 'app/page.tsx', 'README.md'];
+const BASE_TARGETS = [...GREENFIELD_PROJECT_INSTRUCTION_PATHS, 'package.json', 'app/layout.tsx', 'app/page.tsx', 'README.md'];
 const FULLSTACK_TARGETS = FULLSTACK_NEXTJS_POSTGRESQL_PRISMA_DOCKER_CAPABILITY.targetExpectations
   .filter((e) => e.matcher.kind === 'exact')
   .map((e) => e.matcher.value);
@@ -485,6 +486,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: typescript-cli
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -528,6 +533,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: android-compose
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - settings.gradle.kts
 - build.gradle.kts
 - app/build.gradle.kts
@@ -740,6 +749,10 @@ Workflow mode: greenfield
 Profile: typescript-cli
 Planned file groups: core CLI files.
 Target paths:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -768,6 +781,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: typescript-cli
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts

@@ -2,6 +2,7 @@ import { GreenfieldProfile } from '../../src/greenfield/profiles/profileTypes';
 import { TYPESCRIPT_CLI_PROFILE } from '../../src/greenfield/profiles/typescriptCliProfile';
 import { NEXTJS_APP_PROFILE } from '../../src/greenfield/profiles/nextjsAppProfile';
 import { ANDROID_COMPOSE_PROFILE } from '../../src/greenfield/profiles/androidComposeProfile';
+import { PYTHON_CLI_PROFILE } from '../../src/greenfield/profiles/pythonCliProfile';
 import { validateGreenfieldProfile } from '../../src/greenfield/profiles/validateGreenfieldProfile';
 import { validateGreenfieldProfileRegistry } from '../../src/greenfield/profiles/validateGreenfieldProfileRegistry';
 import {
@@ -48,6 +49,14 @@ describe('validateGreenfieldProfile - current profiles (TST-001..003)', () => {
     const result = validateSupportedGreenfieldProfileRegistry();
     expect(result.valid).toBe(true);
     expect(result.issues).toEqual([]);
+  });
+
+  it('TST-001: python-cli is valid with no issues', () => {
+    const before = JSON.parse(JSON.stringify(PYTHON_CLI_PROFILE));
+    const result = validateGreenfieldProfile(PYTHON_CLI_PROFILE);
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual([]);
+    expect(PYTHON_CLI_PROFILE).toEqual(before);
   });
 });
 
@@ -647,10 +656,11 @@ describe('validateGreenfieldProfile - projectType/webFramework compatibility voc
   });
 
   // TST-B1-009: existing profile validation fixtures remain unaffected.
-  it('all three built-in profiles remain valid with their declared compatibility', () => {
+  it('all four built-in profiles remain valid with their declared compatibility', () => {
     expect(validateGreenfieldProfile(TYPESCRIPT_CLI_PROFILE).valid).toBe(true);
     expect(validateGreenfieldProfile(NEXTJS_APP_PROFILE).valid).toBe(true);
     expect(validateGreenfieldProfile(ANDROID_COMPOSE_PROFILE).valid).toBe(true);
+    expect(validateGreenfieldProfile(PYTHON_CLI_PROFILE).valid).toBe(true);
   });
 
   it('only nextjs-app declares fullstack-web/nextjs compatibility', () => {
@@ -658,17 +668,23 @@ describe('validateGreenfieldProfile - projectType/webFramework compatibility voc
     expect(TYPESCRIPT_CLI_PROFILE.compatibleWebFrameworks).toEqual([]);
     expect(ANDROID_COMPOSE_PROFILE.compatibleProjectTypes).toEqual([]);
     expect(ANDROID_COMPOSE_PROFILE.compatibleWebFrameworks).toEqual([]);
+    expect(PYTHON_CLI_PROFILE.compatibleProjectTypes).toEqual([]);
+    expect(PYTHON_CLI_PROFILE.compatibleWebFrameworks).toEqual([]);
     expect(NEXTJS_APP_PROFILE.compatibleProjectTypes).toEqual(['fullstack-web']);
     expect(NEXTJS_APP_PROFILE.compatibleWebFrameworks).toEqual(['nextjs']);
   });
 });
 
-// TST-B1-008: the built-in registry still contains exactly the established
-// three profile identities; no nextjs-fullstack or other combinatorial
-// profile was introduced.
+// TST-B1-008 plus v1.3.3 Batch 3: the built-in registry contains the four
+// starter profiles; no nextjs-fullstack or other combinatorial profile exists.
 describe('greenfield profile registry - no combinatorial profile (v1.3.1 Batch 1, TST-B1-008)', () => {
-  it('SUPPORTED_PROFILES contains exactly typescript-cli, nextjs-app, and android-compose', () => {
-    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual(['android-compose', 'nextjs-app', 'typescript-cli']);
+  it('SUPPORTED_PROFILES contains exactly the four registered starter profiles', () => {
+    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual([
+      'android-compose',
+      'nextjs-app',
+      'python-cli',
+      'typescript-cli',
+    ]);
   });
 
   it('does not introduce a nextjs-fullstack profile', () => {
@@ -865,8 +881,14 @@ describe('validateGreenfieldProfileRegistry - non-mutation and determinism', () 
 
 describe('validateSupportedGreenfieldProfileRegistry - built-in registry boundary', () => {
   it('reflects the current SUPPORTED_PROFILES/PROFILE_ALIASES exports without duplication', () => {
-    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual(['android-compose', 'nextjs-app', 'typescript-cli']);
+    expect(Object.keys(SUPPORTED_PROFILES).sort()).toEqual([
+      'android-compose',
+      'nextjs-app',
+      'python-cli',
+      'typescript-cli',
+    ]);
     expect(PROFILE_ALIASES.android).toBe('android-compose');
+    expect(PROFILE_ALIASES.python).toBe('python-cli');
     const result = validateSupportedGreenfieldProfileRegistry();
     expect(result.valid).toBe(true);
     expect(result.issues).toEqual([]);

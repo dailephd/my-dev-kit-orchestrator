@@ -8,6 +8,10 @@ const VALID_SCAFFOLD_REPORT = `Artifact: ScaffoldImplementationReport
 Workflow mode: greenfield
 Profile: typescript-cli
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -64,6 +68,10 @@ describe('evaluateGreenfieldReadiness - valid readiness (TST-034)', () => {
 Workflow mode: greenfield
 Profile: android-compose
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - settings.gradle.kts
 - build.gradle.kts
 - app/build.gradle.kts
@@ -112,6 +120,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: nextjs-app
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - app/layout.tsx
 - app/page.tsx
@@ -179,6 +191,18 @@ describe('evaluateGreenfieldReadiness - missing scaffold report (TST-035)', () =
 
 // TST-036: report lacks required target evidence -> GF_GENERATED_EVIDENCE_MISSING.
 describe('evaluateGreenfieldReadiness - missing generated-target evidence (TST-036)', () => {
+  it('TST-009: blocks readiness when one required common instruction target is omitted', () => {
+    const report = VALID_SCAFFOLD_REPORT.replace('- agents.txt\n', '');
+    const result = evaluateGreenfieldReadiness(validInputs({ scaffoldImplementationReportContent: report }));
+    expect(result.ready).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'GF_GENERATED_EVIDENCE_MISSING',
+        affectedContract: 'targetExpectations:common-agents-instructions',
+      }),
+    );
+  });
+
   it('flags a required target missing from "Files changed"', () => {
     const report = VALID_SCAFFOLD_REPORT.replace('- README.md\n', '');
     const result = evaluateGreenfieldReadiness(validInputs({ scaffoldImplementationReportContent: report }));
@@ -270,6 +294,10 @@ Status: complete
 Workflow mode: greenfield
 Profile: android-compose
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - settings.gradle.kts
 - build.gradle.kts
 - app/build.gradle.kts

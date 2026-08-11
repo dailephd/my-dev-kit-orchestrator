@@ -98,6 +98,10 @@ describe('evaluateGreenfieldReadiness - filesystem corroboration integration', (
 Workflow mode: greenfield
 Profile: typescript-cli
 Files changed:
+- agents.txt
+- claude.txt
+- AGENTS.md
+- CLAUDE.md
 - package.json
 - src/cli.ts
 - src/index.ts
@@ -108,6 +112,10 @@ Status: complete
 `;
 
   function writeAllReportedFiles(): void {
+    fs.writeFileSync(path.join(projectRoot, 'agents.txt'), 'instructions');
+    fs.writeFileSync(path.join(projectRoot, 'claude.txt'), 'instructions');
+    fs.writeFileSync(path.join(projectRoot, 'AGENTS.md'), '# adapter');
+    fs.writeFileSync(path.join(projectRoot, 'CLAUDE.md'), '# adapter');
     fs.writeFileSync(path.join(projectRoot, 'package.json'), '{}');
     fs.mkdirSync(path.join(projectRoot, 'src'));
     fs.writeFileSync(path.join(projectRoot, 'src', 'cli.ts'), 'export {};');
@@ -124,6 +132,23 @@ Status: complete
     });
     expect(result.filesystemCorroborationPerformed).toBe(true);
     expect(result.issues.filter((i) => i.code === 'GF_GENERATED_EVIDENCE_CONFLICT')).toEqual([]);
+  });
+
+  it('TST-009: reports a conflict when a reported common instruction file is absent on disk', () => {
+    writeAllReportedFiles();
+    fs.rmSync(path.join(projectRoot, 'agents.txt'));
+    const result = evaluateGreenfieldReadiness({
+      profile: TYPESCRIPT_CLI_PROFILE,
+      scaffoldImplementationReportContent: VALID_SCAFFOLD_REPORT,
+      projectRoot,
+    });
+    expect(result.ready).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'GF_GENERATED_EVIDENCE_CONFLICT',
+        evidenceKey: 'common-agents-instructions',
+      }),
+    );
   });
 
   it('flags a report/filesystem conflict when a reported file does not actually exist on disk', () => {

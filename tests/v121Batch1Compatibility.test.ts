@@ -26,11 +26,11 @@ function loadInventory(): ContractInventory {
 describe('v1.2.0 baseline compatibility (Batch 1)', () => {
   const inventory = loadInventory();
 
-  it('preserves the package name while reporting the v1.3.2 release version', () => {
+  it('preserves the package name while reporting the v1.3.3 release version', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     expect(pkg.name).toBe(inventory.packageContract.name);
     expect(inventory.packageContract.version).toBe('1.2.0');
-    expect(pkg.version).toBe('1.3.2');
+    expect(pkg.version).toBe('1.3.3');
   });
 
   it('exactly seven modes exist, matching the baseline', () => {

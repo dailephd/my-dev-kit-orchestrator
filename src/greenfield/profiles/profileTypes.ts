@@ -9,7 +9,7 @@
 // artifacts/greenfield-starter-bridge-decision.txt in place of porting
 // my-dev-kit-alpha's StarterConfig.
 
-export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose';
+export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-compose' | 'python-cli';
 
 /**
  * v1.3.0 Batch 2 (corrected): the closed, centrally defined vocabulary of
@@ -26,6 +26,7 @@ export type GreenfieldProfileId = 'typescript-cli' | 'nextjs-app' | 'android-com
 export const GREENFIELD_DOCUMENTATION_TERMINOLOGY = {
   ANDROID_JETPACK: 'android-jetpack',
   NEXTJS_REACT: 'nextjs-react',
+  PYTHON: 'python',
 } as const;
 
 export type GreenfieldDocumentationTerminologyTag =
@@ -173,11 +174,11 @@ export interface GreenfieldProfile {
    * v1.3.0 Batch 3: profile-owned target expectations, validated by
    * validateGreenfieldProfile() (structural shape) and consumed by
    * validateGreenfieldScaffoldPlan() (plan conformance). Per PSE-010,
-   * `templateTargets` above is preserved unchanged as the existing public
-   * contract that buildScaffoldPlan.ts and existing tests already consume;
-   * `targetExpectations` adapts those same current values into required
-   * exact expectations during this compatibility migration rather than
-   * replacing or duplicating `templateTargets`'s meaning.
+   * `templateTargets` above is preserved as a compatibility inventory;
+   * `targetExpectations` is the machine-readable owner consumed through the
+   * effective common + profile + optional-capability composition by scaffold
+   * planning, validation, and readiness. The two inventories must remain
+   * semantically aligned for built-in profiles.
    */
   targetExpectations: readonly GreenfieldTargetExpectation[];
 }

@@ -23,30 +23,29 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.3.2`. See [CHANGELOG.md](CHANGELOG.md) for
-release history and [docs/ROADMAP.md](docs/ROADMAP.md) for planned work.
+`@dailephd/my-dev-kit-orchestrator@1.3.3`. See [CHANGELOG.md](CHANGELOG.md) for
+release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
+planned-work status.
 
-`v1.3.2` corrects structured greenfield artifact checking while retaining the
-`v1.3.1` standardized 15-file canonical project-document
-baseline as the generic documentation substrate for every newly bootstrapped
-greenfield project, and adds the first explicit full-stack web environment
-contract: the existing `nextjs-app` starter profile combined with structured
-`fullstack-web`/`nextjs` intent, PostgreSQL, Prisma, and Docker, composed
-additively into scaffold planning, generated-file and verification-command
-evidence, and canonical greenfield readiness (with distinct proof for
-PostgreSQL health, application liveness, and application/database readiness).
-A database-backed first vertical slice is required when the full-stack
-capability is selected, and final-report eligibility for every greenfield run
-now also requires that canonical readiness, not only an authored judge
-`PASS`. It builds on `v1.3.0`'s greenfield profile and scaffold verification,
-the `v1.2.3` run-integrity and judge-verdict enforcement, and the `v1.2.2`
-context-readiness safeguards. It requires Node.js 24 or later. See
-[docs/ROADMAP.md](docs/ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening)
-for its scope.
+`v1.3.3` ships one common coding-agent instruction bootstrap for every
+greenfield profile and the bounded fourth starter profile, `python-cli`. The
+common outputs are `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`;
+they remain generated-project instructions rather than native run artifacts or
+members of the standardized 15-file public project-document baseline. Python
+support is limited to CLI projects and reuses the existing profile, scaffold,
+evidence, readiness, and generic `initial-index` architecture. The orchestrator
+does not execute Python, project commands, coding agents, or `my-dev-kit`.
 
-`v1.3.2` preserves the eight-command CLI surface, seven workflow modes, and
-the three starter profiles (`typescript-cli`, `nextjs-app`,
-`android-compose`) -- there is no new `nextjs-fullstack` profile and no
+The release retains `v1.3.2`'s structured greenfield artifact correction,
+`v1.3.1`'s standardized documentation and full-stack Next.js environment,
+`v1.3.0`'s profile/scaffold verification, `v1.2.3`'s run-integrity enforcement,
+and `v1.2.2`'s context-readiness safeguards. It requires Node.js 24 or later. See
+[docs/ROADMAP.md](docs/ROADMAP.md#v133---python-cli-greenfield-profile-and-coding-agent-instruction-bootstrap)
+for the delivered scope.
+
+`v1.3.3` preserves the eight-command CLI surface and seven workflow modes, and
+supports four starter profiles (`typescript-cli`, `nextjs-app`,
+`android-compose`, and `python-cli`) -- there is no `nextjs-fullstack` profile and no
 `--project-type`/`--framework`/`--profile` CLI flag. The orchestrator still
 never executes Docker, PostgreSQL, Prisma, or any other project command
 itself.
@@ -168,11 +167,25 @@ The `greenfield` mode supports these starter profiles:
 - `typescript-cli`
 - `nextjs-app`
 - `android-compose`
+- `python-cli`
 
 Greenfield remains prompt-guided. The CLI records the selected profile and
 generates planning guidance; it does not generate and build an application on
 its own. After code exists, the `initial-index` stage guides the first
 `my-dev-kit` index.
+
+Every current profile's effective scaffold contract includes four common
+coding-agent instruction outputs: `agents.txt`, `claude.txt`, `AGENTS.md`, and
+`CLAUDE.md`. They are generated-project instructions, distinct from the
+standardized 15-file public project-document baseline. The lower-case manuals
+derive from one normalized project-instruction model; the upper-case files are
+small deterministic adapters.
+
+The bounded `python-cli` profile targets `pyproject.toml`, `src/main.py`,
+`tests/test_main.py`, and `README.md`, with Python compile, pytest, and CLI help
+guidance. Explicit Python CLI intent is supported; bare Python or Python
+web/API/server intent remains unresolved rather than being guessed. The
+orchestrator does not install dependencies or execute Python commands.
 
 The Android Compose profile describes Kotlin, Jetpack Compose, Gradle project
 structure, scaffold targets, and validation commands. The orchestrator does

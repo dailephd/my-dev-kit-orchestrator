@@ -368,18 +368,22 @@ it to add behavior to an established codebase; use `feature` for that work.
 my-dev-kit-orchestrator start --mode greenfield "<project idea>"
 ```
 
-The greenfield foundation is platform-neutral. It supports three starter
-profiles: `typescript-cli`, `nextjs-app`, and `android-compose`. It also
+The greenfield foundation is platform-neutral. It supports four starter
+profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`. It also
 excludes security validation, release, and publishing workflows.
 
 `start` stores the request but does not resolve a profile at the CLI layer.
 Profile resolution
 (`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
-agent executes the `starter-profile` stage prompt, using the
-`preferredProfile`/`platformTarget` fields from the normalized brief. `prompt`
+agent executes the `starter-profile` stage prompt, using the normalized
+brief's profile, platform, stack, project-type, and framework signals.
+Explicit `python-cli`, the exact `python` alias, and clear Python-plus-CLI
+intent resolve to the Python profile. Bare Python and Python web/API/server
+intent remain unresolved/unsupported rather than falling through to
+TypeScript CLI or Next.js. `prompt`
 itself renders static, mode-and-stage-keyed template text; profile-specific
 correctness is carried through that static wording and the artifacts a coding
-agent produces, not through a separate CLI Android/mobile mode.
+agent produces, not through a separate CLI Android/mobile/Python mode.
 
 Android Compose is profile-guided planning support, not an Android build
 runner: the orchestrator does not run Gradle, does not require the Android
@@ -421,7 +425,7 @@ Project-doc bootstrap returns structured in-memory content rather than writing
 template files. Component documentation remains empty until the brief schema
 has module or component hints.
 
-Greenfield readiness checking applies to all three current profiles. The
+Greenfield readiness checking applies to all four current profiles. The
 scaffold plan, scaffold implementation report, verification report, and
 first vertical slice are validated against the selected profile's exact
 contract: required targets, required and optional commands, generated-file
@@ -432,9 +436,27 @@ legacy: it is not retroactively failed for evidence it could not have
 produced. See [docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts)
 for the exact structured sections each artifact carries.
 
+### v1.3.3: common project instructions and Python CLI
+
+Every selected profile receives the common exact generated-project targets
+`agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`. The lower-case manuals
+derive from one normalized instruction model; the upper-case files are small
+adapters. These files are separate from the 15 canonical public project
+documents and are not native run artifacts.
+
+The effective target set is composed once as common targets plus the selected
+profile's targets plus an optional compatible capability's targets. The same
+set drives scaffold planning, persisted plan validation, generated-file
+evidence, optional filesystem corroboration, and canonical readiness. For
+`python-cli`, it yields the four common targets plus `pyproject.toml`,
+`src/main.py`, `tests/test_main.py`, and `README.md`. Runnable behavior uses the
+profile's required exact `entry-point` target metadata, not a language-extension
+list. The existing `initial-index` stage remains the generic handoff after code
+exists; no Python-specific stage or execution path was added.
+
 ### v1.3.1: standardized documents and full-stack composition
 
-`v1.3.1` (the current published release; see
+`v1.3.1` (retained by the current `v1.3.3` release; see
 [CURRENT_STATE.md](CURRENT_STATE.md) and
 [ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability))
 does not add, remove, reorder, or rename any of the 13 stages above; it

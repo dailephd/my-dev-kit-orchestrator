@@ -39,7 +39,12 @@
 // insufficient requires real artifact/readiness semantics and is Batch 4
 // scope, not Batch 2's static per-profile contract validation.
 
-import { GREENFIELD_DOCUMENTATION_TERMINOLOGY, GreenfieldProfile, GreenfieldProfileId } from '../profiles/profileTypes';
+import {
+  GREENFIELD_DOCUMENTATION_TERMINOLOGY,
+  GreenfieldDocumentationTerminologyTag,
+  GreenfieldProfile,
+  GreenfieldProfileId,
+} from '../profiles/profileTypes';
 import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
 import {
   GREENFIELD_CANONICAL_DOCUMENT_PATHS,
@@ -77,6 +82,8 @@ const ANDROID_JETPACK_RE = /\b(android|jetpack)\b/i;
 // check above (TST-029).
 const NEXTJS_REACT_RE = /\b(next\.?js|react)\b/i;
 
+const PYTHON_RE = /\b(python|pytest|pyproject\.toml)\b/i;
+
 const RELEASE_SECURITY_PUBLISH_RE =
   /\b(released?|publish(ed|ing)?|security[- ]validated|statically analyzed|static analysis (passed|complete)|passed all tests|production[- ]ready|shipped)\b/i;
 
@@ -93,6 +100,7 @@ export type GreenfieldDocValidationIssueKind =
   | 'unsupported-platform-claim'
   | 'android-mobile-claim'
   | 'nextjs-web-claim'
+  | 'python-stack-claim'
   | 'release-security-publish-claim'
   | 'play-store-release-readiness-claim'
   | 'autonomous-execution-claim'
@@ -111,6 +119,34 @@ export interface GreenfieldDocValidationResult {
   issues: GreenfieldDocValidationIssue[];
 }
 
+interface GreenfieldDocumentationTerminologyClaimRule {
+  readonly terminology: GreenfieldDocumentationTerminologyTag;
+  readonly pattern: RegExp;
+  readonly kind: GreenfieldDocValidationIssueKind;
+  readonly claimLabel: string;
+}
+
+const PROFILE_TERMINOLOGY_CLAIM_RULES: readonly GreenfieldDocumentationTerminologyClaimRule[] = [
+  {
+    terminology: GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK,
+    pattern: ANDROID_JETPACK_RE,
+    kind: 'android-mobile-claim',
+    claimLabel: 'Android/Jetpack claim',
+  },
+  {
+    terminology: GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT,
+    pattern: NEXTJS_REACT_RE,
+    kind: 'nextjs-web-claim',
+    claimLabel: 'Next.js/React claim',
+  },
+  {
+    terminology: GREENFIELD_DOCUMENTATION_TERMINOLOGY.PYTHON,
+    pattern: PYTHON_RE,
+    kind: 'python-stack-claim',
+    claimLabel: 'Python stack claim',
+  },
+];
+
 function resolveAllowedDocumentationTerminology(selectedProfileId?: GreenfieldProfileId): readonly string[] {
   if (!selectedProfileId) {
     return [];
@@ -125,7 +161,8 @@ function resolveAllowedDocumentationTerminology(selectedProfileId?: GreenfieldPr
  * @param result the generated docs to validate
  * @param selectedProfileId the profile the bundle was built from, if known.
  *   Terminology this profile's `allowedDocumentationTerminology` permits
- *   (e.g. Android/Jetpack for android-compose, Next.js/React for nextjs-app)
+ *   (e.g. Android/Jetpack for android-compose, Next.js/React for nextjs-app,
+ *   Python/pytest/pyproject terminology for python-cli)
  *   is not flagged; for any other profile id (or when omitted), it is
  *   flagged the same way it always was before v1.2.0.
  */
@@ -135,9 +172,7 @@ export function validateBootstrapDocs(
 ): GreenfieldDocValidationResult {
   const issues: GreenfieldDocValidationIssue[] = [];
   const presentNames = new Set(result.targets.map((t) => t.docName));
-  const allowedTerminology = resolveAllowedDocumentationTerminology(selectedProfileId);
-  const androidJetpackAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.ANDROID_JETPACK);
-  const nextjsReactAllowed = allowedTerminology.includes(GREENFIELD_DOCUMENTATION_TERMINOLOGY.NEXTJS_REACT);
+  const allowedTerminology = new Set(resolveAllowedDocumentationTerminology(selectedProfileId));
 
   for (const required of REQUIRED_DOC_NAMES) {
     if (!presentNames.has(required)) {
@@ -150,7 +185,7 @@ export function validateBootstrapDocs(
   }
 
   for (const target of result.targets) {
-    checkDocClaims(target.docName, target.sections, selectedProfileId, androidJetpackAllowed, nextjsReactAllowed, issues);
+    checkDocClaims(target.docName, target.sections, selectedProfileId, allowedTerminology, issues);
   }
 
   // v1.3.1 Batch 2: the standardized common canonical document baseline.
@@ -181,7 +216,7 @@ export function validateBootstrapDocs(
       }
       seenPaths.add(doc.path);
 
-      checkDocClaims(doc.path, doc.sections, selectedProfileId, androidJetpackAllowed, nextjsReactAllowed, issues);
+      checkDocClaims(doc.path, doc.sections, selectedProfileId, allowedTerminology, issues);
     }
   }
 
@@ -195,8 +230,7 @@ function checkDocClaims(
   docName: string,
   sections: GreenfieldDocSection[],
   selectedProfileId: GreenfieldProfileId | undefined,
-  androidJetpackAllowed: boolean,
-  nextjsReactAllowed: boolean,
+  allowedTerminology: ReadonlySet<string>,
   issues: GreenfieldDocValidationIssue[],
 ): void {
   const text = flattenSections(sections);
@@ -209,20 +243,14 @@ function checkDocClaims(
     });
   }
 
-  if (!androidJetpackAllowed && ANDROID_JETPACK_RE.test(text)) {
-    issues.push({
-      docName,
-      kind: 'android-mobile-claim',
-      message: `Doc "${docName}" contains an Android/Jetpack claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
-    });
-  }
-
-  if (!nextjsReactAllowed && NEXTJS_REACT_RE.test(text)) {
-    issues.push({
-      docName,
-      kind: 'nextjs-web-claim',
-      message: `Doc "${docName}" contains a Next.js/React claim, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
-    });
+  for (const rule of PROFILE_TERMINOLOGY_CLAIM_RULES) {
+    if (!allowedTerminology.has(rule.terminology) && rule.pattern.test(text)) {
+      issues.push({
+        docName,
+        kind: rule.kind,
+        message: `Doc "${docName}" contains a ${rule.claimLabel}, which is not valid for the selected profile (${selectedProfileId ?? 'none'}).`,
+      });
+    }
   }
 
   if (RELEASE_SECURITY_PUBLISH_RE.test(text)) {
@@ -261,6 +289,7 @@ const CLAIM_KIND_TO_DOC_UNSUPPORTED_CLAIM: ReadonlySet<GreenfieldDocValidationIs
   'unsupported-platform-claim',
   'android-mobile-claim',
   'nextjs-web-claim',
+  'python-stack-claim',
   'release-security-publish-claim',
   'play-store-release-readiness-claim',
   'autonomous-execution-claim',

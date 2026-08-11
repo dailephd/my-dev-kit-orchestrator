@@ -13,6 +13,7 @@ import { parseGreenfieldScaffoldPlanArtifact } from '../../src/greenfield/readin
 import { NEXTJS_APP_PROFILE } from '../../src/greenfield/profiles/nextjsAppProfile';
 import { TYPESCRIPT_CLI_PROFILE } from '../../src/greenfield/profiles/typescriptCliProfile';
 import { ANDROID_COMPOSE_PROFILE } from '../../src/greenfield/profiles/androidComposeProfile';
+import { GREENFIELD_PROJECT_INSTRUCTION_PATHS } from '../../src/greenfield/bootstrap/projectInstructions/projectInstructionTypes';
 
 function buildBundleFor(rawIdea: string, overrides: Record<string, unknown> = {}) {
   const normalizedBrief = normalizeProjectBrief({ rawIdea, ...overrides } as any).normalized;
@@ -50,7 +51,7 @@ describe('buildScaffoldPlan - full-stack composition (v1.3.1 Batch 4)', () => {
   it('TST-B4-012: normal nextjs-app, typescript-cli, and android-compose plans are unchanged by Batch 4', () => {
     const nextjsPlan = buildScaffoldPlan(buildBundleFor('A web app.', { preferredProfile: 'nextjs-app' }));
     expect(nextjsPlan.plannedFileGroups.flatMap((g) => g.filePaths).sort()).toEqual(
-      [...NEXTJS_APP_PROFILE.templateTargets].sort(),
+      [...GREENFIELD_PROJECT_INSTRUCTION_PATHS, ...NEXTJS_APP_PROFILE.templateTargets].sort(),
     );
     expect(nextjsPlan.setupCommands).toEqual(NEXTJS_APP_PROFILE.setupCommands);
     expect(nextjsPlan.validationCommands).toEqual(NEXTJS_APP_PROFILE.validationCommands);
@@ -398,9 +399,14 @@ Non-goals:
 Status: complete
 `;
     const legacyPlan = parseGreenfieldScaffoldPlanArtifact(parseArtifact(legacyText));
-    // no `capability` option passed -- exactly the pre-Batch-4 call shape
+    // No capability option is passed, but current direct validation still
+    // applies the additive Batch 2 common-target contract. Run-level legacy
+    // evidence remains protected by evaluateGreenfieldReadiness's no-Profile gate.
     const result = validateGreenfieldScaffoldPlan(TYPESCRIPT_CLI_PROFILE, legacyPlan);
-    expect(result.valid).toBe(true);
+    expect(result.valid).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'GF_TARGET_REQUIRED_MISSING', evidenceKey: 'common-agents-instructions' }),
+    );
   });
 });
 

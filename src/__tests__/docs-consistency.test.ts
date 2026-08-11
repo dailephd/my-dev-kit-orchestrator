@@ -62,7 +62,7 @@ describe('docs consistency check script', () => {
     const result = run(makeFixture());
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('DOCS_CHECK_PASS');
-    expect(result.stdout).toContain('3 greenfield profiles');
+    expect(result.stdout).toContain('4 greenfield profiles');
   });
 
   it('fails when README contains a stale current-published version claim', () => {
@@ -85,7 +85,7 @@ describe('docs consistency check script', () => {
 
   it('fails when docs state the old two-profile count', () => {
     const root = makeFixture();
-    mutate(root, 'docs/WORKFLOWS.md', (content) => content.replace(/supports three starter\s+profiles:/, 'supports two starter profiles:'));
+    mutate(root, 'docs/WORKFLOWS.md', (content) => content.replace(/supports four starter\s+profiles:/, 'supports two starter profiles:'));
     const result = run(root);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('[GREENFIELD_PROFILE_COUNT_MISMATCH]');

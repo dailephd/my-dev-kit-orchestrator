@@ -26,7 +26,7 @@ import { corroborateGeneratedTarget } from './corroborateGeneratedTarget';
 import { GreenfieldReadinessInputs, GreenfieldReadinessResult } from './greenfieldReadinessTypes';
 import { GreenfieldFullstackCapability } from '../fullstack/fullstackCapabilityTypes';
 import { validateFullstackCapability } from '../fullstack/validateFullstackCapability';
-import { GreenfieldTargetExpectation } from '../profiles/profileTypes';
+import { composeEffectiveGreenfieldTargetExpectations } from '../scaffold/effectiveTargetExpectations';
 
 export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): GreenfieldReadinessResult {
   const { profile, capability } = inputs;
@@ -67,13 +67,7 @@ export function evaluateGreenfieldReadiness(inputs: GreenfieldReadinessInputs): 
       const { normalizedPaths, pathIssues } = normalizeReportedPaths(profileId, rawFileLines);
       issues.push(...pathIssues);
 
-      // v1.3.1 Batch 5: composed additively with the resolved capability's
-      // own target expectations (Batch 4), mirroring buildScaffoldPlan.ts's
-      // and validateGreenfieldScaffoldPlan.ts's identical composition
-      // pattern. Undefined capability leaves this byte-for-byte unchanged.
-      const composedTargetExpectations: readonly GreenfieldTargetExpectation[] = capability
-        ? [...profile.targetExpectations, ...capability.targetExpectations]
-        : profile.targetExpectations;
+      const composedTargetExpectations = composeEffectiveGreenfieldTargetExpectations(profile, capability);
 
       const corroboration = evaluateGeneratedTargetEvidence(
         profileId,

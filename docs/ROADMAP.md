@@ -2,10 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.3.2` is the current published release. `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`,
-`v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part
-of the published project history. Versions after `v1.3.2` are planned
-milestones.
+`v1.3.3` is the current published release. `v1.3.2`, `v1.3.1`, `v1.3.0`,
+`v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
+releases remain part of the published project history. `v1.4.0` and later
+versions remain planned.
 
 ## Version summary
 
@@ -29,9 +29,10 @@ milestones.
   path safety, scaffold-plan and persisted-scaffold-plan validation, layered
   generated-file and verification-command evidence, first-vertical-slice
   readiness, and `status`/`check` readiness integration. Released on
-  2026-08-04. It does not add a new starter
-  profile; possible `android-xml` and `python-cli` evaluation remains a
-  future candidate decision (see "Planned milestones").
+  2026-08-04. It did not add a new starter profile; `android-xml` and
+  `python-cli` were future candidate decisions at that time. The later
+  `v1.3.3` milestone promotes `python-cli`; the historical candidate record is
+  retained here.
 - `v1.3.1` makes the ecosystem's standardized project-document structure
   the generic baseline for newly bootstrapped projects and hardens the existing
   `nextjs-app` profile for the first explicit full-stack web environment
@@ -41,6 +42,11 @@ milestones.
   greenfield JSON artifacts retain strict JSON and structured-field validation
   without receiving incompatible text-header requirements. Released on
   2026-08-09.
+- `v1.3.3` adds
+  common coding-agent instruction bootstrap to every supported greenfield
+  profile and promotes `python-cli` from its earlier candidate status into the
+  fourth starter profile, reusing the existing greenfield architecture. The
+  release shipped on 2026-08-11.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -993,6 +999,187 @@ Acceptance expectations:
 - malformed or structurally incomplete JSON fails deterministically
 - `check --artifacts` and `check --all` share the corrected behavior
 - legacy text behavior and run-integrity gates remain covered by regression tests
+
+## Published v1.3.3
+
+### v1.3.3 - Python CLI Greenfield Profile and Coding-Agent Instruction Bootstrap
+
+Status:
+Published as `1.3.3` on 2026-08-11. The earlier `v1.3.0` discussion of
+`python-cli` remains an accurate historical candidate record; this release
+promotes that candidate into shipped scope.
+
+Goal:
+Extend the existing greenfield architecture in two related ways: give every
+supported greenfield project one common coding-agent instruction set, and add
+`python-cli` as the fourth greenfield starter profile. Both additions must use
+the existing profile, scaffold, documentation, verification, readiness, and
+initial-index architecture rather than parallel Python-specific or
+coding-agent-specific workflows.
+
+Release scope:
+
+- The preceding `v1.3.2` release had exactly three starter profiles: `typescript-cli`,
+  `nextjs-app`, and `android-compose`.
+- `v1.3.2` provided the standardized 15-file canonical public
+  project-document baseline, shared profile and registry validation, shared
+  scaffold-plan validation, shared generated-file and verification-command
+  evidence, shared first-vertical-slice and greenfield readiness, and the
+  existing initial `my-dev-kit` indexing handoff.
+- Released `v1.3.3` has four starter profiles by adding `python-cli` and gives
+  every supported profile `agents.txt`, `claude.txt`, `AGENTS.md`, and
+  `CLAUDE.md` as common greenfield outputs.
+
+Coding-agent instruction bootstrap:
+
+- `agents.txt` is the detailed shared operating manual for the generated
+  project. It covers project identity and purpose, current scope, core
+  workflow, non-goals, architecture boundaries, tool usage, repository
+  retrieval discipline, implementation rules, testing and failure handling,
+  validation, Git safety, documentation, final reporting, and uncertainty or
+  stop rules.
+- `claude.txt` is a compact Claude Code guide derived from the same project
+  facts and instruction model. It directs Claude to read `agents.txt` and
+  retains the highest-value project constraints, first steps, tool usage,
+  testing, validation, and reporting rules without becoming a separately
+  maintained source of truth.
+- `AGENTS.md` is a small deterministic adapter directing compatible coding
+  agents to the lower-case instruction files.
+- `CLAUDE.md` is a small deterministic adapter directing Claude Code to the
+  lower-case instruction files.
+- One normalized project-instruction source/model renders both the detailed
+  and compact instruction files. The implementation does not maintain independent,
+  manually duplicated `agents.txt` and `claude.txt` content.
+
+Public-document boundary:
+
+The four coding-agent instruction files are distinct from the standardized
+15-file public canonical project-document baseline. The public baseline remains
+README, CHANGELOG, and `docs/*`; the agent files are coding-agent project
+instructions. `v1.3.3` defines and validates their participation in
+greenfield scaffold output without redefining the public-document registry or
+treating them as ordinary public project documentation.
+
+Common scaffold integration:
+
+The four agent files are common greenfield outputs represented once, not copied
+into `typescript-cli`, `nextjs-app`, `android-compose`, or `python-cli` profile
+definitions. Effective target expectations compose conceptually as common
+greenfield targets plus selected starter-profile targets plus optional
+capability targets. Those expectations flow through the existing scaffold
+plan, scaffold-plan validation, scaffold implementation evidence,
+generated-file readiness, and optional filesystem corroboration path. No
+second readiness engine or agent-file-specific lifecycle is introduced.
+
+Python CLI profile:
+
+- `python-cli` is the fourth starter profile beside `typescript-cli`,
+  `nextjs-app`, and `android-compose`, within the existing `greenfield`
+  workflow.
+- Its deliberately small CLI baseline is `pyproject.toml`, `src/main.py`,
+  `tests/test_main.py`, and `README.md`. The common coding-agent instruction
+  files are additive common targets, not Python-owned targets.
+- The initial stack is Python with `pyproject.toml`, standard-library
+  command-line entry behavior where practical, and pytest.
+- Profile-owned command contracts carry dependency/environment setup, Python
+  syntax or compile validation, pytest, and CLI smoke guidance and evidence.
+  The orchestrator continues not to execute Python, setup, validation, npm,
+  Gradle, Docker, or other project commands.
+- The profile is CLI-specific, not a generic Python project profile. FastAPI,
+  Django, Flask, Jupyter, scientific computing, machine learning, databases,
+  and web services require separate future design.
+
+Profile resolution and generic ownership:
+
+- Explicit `python-cli` selects the profile, and the bounded alias
+  `python` resolves to it. Clearly Python-plus-CLI intent may resolve to
+  `python-cli`; fuzzy profile matching remains prohibited.
+- A generic request such as "create a Python project" remains unresolved and
+  must not silently assume CLI. Python web, API, or server intent must not be
+  silently mapped to `python-cli` or `nextjs-app` when no compatible profile
+  exists. Existing Android ambiguity behavior remains unchanged.
+- First-runnable entry-point selection is profile-owned target metadata:
+  the selected profile identifies its entry point through the existing target
+  contract. The design must not grow a hard-coded `.ts | .tsx | .kt | .py`
+  extension list.
+- Supported-profile guidance in the generic `starter-profile` instruction
+  derives from the actual profile registry as its single canonical source,
+  replacing the former hard-coded three-profile inventory so a future fifth
+  profile does not require another generic-prose update.
+- Python-specific documentation claims use the existing profile-owned
+  terminology contract. Shared validators must not accumulate Python
+  profile-ID branches, and other profiles must not claim Python as their
+  selected stack.
+
+Existing integrations and capability boundaries:
+
+No new `my-dev-kit` Python subsystem is required because current `my-dev-kit`
+already supports Python source indexing. Generated Python source joins the
+existing `greenfield -> scaffold -> verification -> initial-index -> normal
+graph-guided development` flow; there is no Python-specific initial-index
+stage.
+
+The existing Next.js full-stack capability remains separate and unchanged.
+`python-cli` does not acquire `fullstack-web`, PostgreSQL, Prisma, Docker,
+Next.js compatibility, or a Python web-framework capability.
+
+Compatibility invariants:
+
+- exactly eight CLI commands, seven workflow modes, 79 native stages, and 13
+  greenfield stages
+- existing workflow stage orders, lifecycle, artifact paths except for the
+  approved non-native generated project files, `RunIntegrityGate`, judge
+  integrity, final-report eligibility, and extraction behavior
+- current three-profile behavior for old runs and explicit legacy
+  compatibility where current greenfield readiness requires it
+- existing shared profile validation, scaffold validation, generated-file
+  evidence, verification-command evidence, status/check readiness, first-slice
+  readiness, and canonical greenfield readiness
+- existing Next.js full-stack capability behavior and orchestrator
+  non-execution boundaries
+
+Verified acceptance criteria:
+
+- `python-cli` is the fourth registered greenfield starter profile, while the
+  existing three profiles remain compatible and no workflow mode or native
+  stage is added.
+- All four supported profiles receive the four coding-agent instruction files.
+- `agents.txt` and `claude.txt` derive from one project-instruction source;
+  `AGENTS.md` and `CLAUDE.md` remain small deterministic adapters.
+- Agent instruction files remain distinct from the standardized public
+  canonical-document registry and are represented once as common greenfield
+  outputs rather than copied into each profile definition.
+- Common, profile, and optional capability target expectations compose through
+  the existing scaffold/readiness path.
+- Python uses the shared profile, scaffold, generated-file, command-evidence,
+  status/check, first-slice, and greenfield-readiness architecture.
+- Python entry-point determination is profile-driven; explicit Python CLI
+  requests resolve correctly; ambiguous Python requests remain unresolved;
+  and unsupported Python web/server intent is not silently mapped elsewhere.
+- Generated Python source can enter the existing initial `my-dev-kit` indexing
+  handoff, while existing Next.js full-stack behavior remains unchanged.
+- Documentation consistency and preservation checks understand the released
+  `v1.3.3` milestone and the four-profile release truth.
+
+Explicit exclusions:
+
+- Python web profiles, FastAPI, Django, Flask, Jupyter/notebook, scientific
+  computing, machine learning, Python databases, and generic Python project
+  inference
+- a new workflow mode, a new native greenfield stage, Python-specific native
+  stages, readiness, artifact lifecycle, scaffold engine, or initial-index
+  stage
+- automatic agent execution, project-command execution, or `my-dev-kit`
+  execution
+- release or publication automation
+- `v1.4.0` greenfield-to-feature handoff hardening
+- `v1.5.0` optional mobile-profile evaluation
+
+Roadmap sequence:
+
+`v1.3.3` is the current published release. `v1.4.0` remains the next
+implementation milestone and retains Greenfield-to-Feature Workflow Handoff Hardening.
+`v1.5.0` retains its optional mobile-profile evaluation scope.
 
 ## Planned milestones
 

@@ -26,6 +26,7 @@ import { normalizeTargetPath, isAbsolutePathFailure } from '../profiles/targetPa
 import { matchesBoundedPattern, matchesExact, validateBoundedPatternSyntax } from '../profiles/targetPatternMatching';
 import { SUPPORTED_PROFILES } from '../profiles/resolveGreenfieldProfile';
 import { GreenfieldScaffoldPlan } from './scaffoldPlanTypes';
+import { composeEffectiveGreenfieldTargetExpectations } from './effectiveTargetExpectations';
 
 export interface ValidateGreenfieldScaffoldPlanOptions {
   /** Other known profiles used for cross-profile target-ownership detection. Defaults to the built-in registry minus the selected profile. */
@@ -58,7 +59,7 @@ export function validateGreenfieldScaffoldPlan(
   validateCapabilityProfileAlignment(profile, capability, profileId, issues);
   validateNoDestructiveProductionPlanCommands(capability, profileId, issues);
 
-  const ownTargetExpectations = composeTargetExpectations(profile, capability);
+  const ownTargetExpectations = composeEffectiveGreenfieldTargetExpectations(profile, capability);
   const ownSetupCommands = composeCommands(profile.setupCommands, capability?.setupCommands);
   const ownValidationCommands = composeCommands(profile.validationCommands, capability?.validationCommands);
 
@@ -76,13 +77,6 @@ export function validateGreenfieldScaffoldPlan(
 }
 
 // ─── v1.3.1 Batch 4: profile + capability composition ────────────────────
-
-function composeTargetExpectations(
-  profile: GreenfieldProfile,
-  capability: GreenfieldFullstackCapability | undefined,
-): readonly GreenfieldTargetExpectation[] {
-  return capability ? [...profile.targetExpectations, ...capability.targetExpectations] : profile.targetExpectations;
-}
 
 function composeCommands(
   profileCommands: readonly GreenfieldProfileCommand[],

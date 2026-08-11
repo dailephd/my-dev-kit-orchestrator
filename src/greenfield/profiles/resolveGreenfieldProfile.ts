@@ -27,6 +27,7 @@ import {
 import { TYPESCRIPT_CLI_PROFILE } from './typescriptCliProfile';
 import { NEXTJS_APP_PROFILE } from './nextjsAppProfile';
 import { ANDROID_COMPOSE_PROFILE } from './androidComposeProfile';
+import { PYTHON_CLI_PROFILE } from './pythonCliProfile';
 import { normalizeGreenfieldProfileIdentifier } from './profileIdentifierNormalization';
 import { ProfileRegistryValidationResult } from './profileValidationTypes';
 import { validateGreenfieldProfileRegistry } from './validateGreenfieldProfileRegistry';
@@ -40,6 +41,7 @@ export const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> 
   'typescript-cli': TYPESCRIPT_CLI_PROFILE,
   'nextjs-app': NEXTJS_APP_PROFILE,
   'android-compose': ANDROID_COMPOSE_PROFILE,
+  'python-cli': PYTHON_CLI_PROFILE,
 };
 
 // Small, explicit, bounded alias table -- never fuzzy matching. Each key is
@@ -51,6 +53,7 @@ export const SUPPORTED_PROFILES: Record<GreenfieldProfileId, GreenfieldProfile> 
 //
 // Exported (v1.3.0) for the same reason as SUPPORTED_PROFILES above.
 export const PROFILE_ALIASES: Record<string, GreenfieldProfileId> = {
+  python: 'python-cli',
   android: 'android-compose',
   'kotlin-compose': 'android-compose',
   'jetpack-compose': 'android-compose',
@@ -73,6 +76,9 @@ const AMBIGUOUS_MOBILE_PROFILE_IDS = new Set(['mobile', 'mobile-app', 'phone-app
 const MOBILE_HINT_RE = /\b(mobile|phone app|phone-app)\b/i;
 
 const WEB_HINT_RE = /\b(web|browser|next\.?js|react|frontend|dashboard)\b/i;
+const PYTHON_HINT_RE = /\bpython\b/i;
+const CLI_HINT_RE = /\b(cli|command[- ]line(?: tool| application)?)\b/i;
+const SERVER_HINT_RE = /\b(api|server|backend|full[- ]stack|fastapi|django|flask)\b/i;
 
 export function resolveGreenfieldProfile(
   normalized: NormalizedGreenfieldBrief,
@@ -210,6 +216,46 @@ function resolveFallbackProfile(normalized: NormalizedGreenfieldBrief): Greenfie
   }
 
   const looksWebFacing = signals.some((signal) => WEB_HINT_RE.test(signal));
+  const looksPython = signals.some((signal) => PYTHON_HINT_RE.test(signal));
+
+  if (looksPython) {
+    const hasIncompatiblePythonIntent =
+      looksWebFacing ||
+      signals.some((signal) => SERVER_HINT_RE.test(signal)) ||
+      Boolean(normalized.projectType || normalized.webFramework);
+
+    if (hasIncompatiblePythonIntent) {
+      return {
+        status: 'unsupported',
+        reason:
+          'The brief requests Python together with web, API, server, or full-stack intent, but the only ' +
+          'supported Python profile is python-cli. This request is preserved as unsupported rather than ' +
+          'silently mapped to python-cli or nextjs-app.',
+        stackDecisionNotes: [],
+      };
+    }
+
+    const looksCommandLine = signals.some((signal) => CLI_HINT_RE.test(signal));
+    if (looksCommandLine) {
+      return {
+        status: 'selected',
+        profile: PYTHON_CLI_PROFILE,
+        reason:
+          'No explicit profile preference provided; Python and command-line intent were both explicit, ' +
+          'so the deterministic fallback selected python-cli.',
+        stackDecisionNotes: buildStackDecisionNotes(normalized, PYTHON_CLI_PROFILE),
+      };
+    }
+
+    return {
+      status: 'unresolved',
+      reason:
+        'The brief requests Python but does not establish command-line intent. Python may describe several ' +
+        'unsupported project kinds, so this request is preserved as unresolved rather than defaulted to ' +
+        'python-cli or typescript-cli.',
+      stackDecisionNotes: [],
+    };
+  }
 
   const profile = looksWebFacing ? NEXTJS_APP_PROFILE : TYPESCRIPT_CLI_PROFILE;
   const reason = looksWebFacing
