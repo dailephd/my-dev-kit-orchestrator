@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.3.3 - Python CLI Greenfield Profile and Coding-Agent Instruction Bootstrap
+
+Release date: 2026-08-11.
 
 ### Added
 

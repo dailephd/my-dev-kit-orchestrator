@@ -3,16 +3,14 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.3.2`
-- Current source implementation: `v1.3.3` implementation complete, release pending
+- Package metadata version: `1.3.3`
+- Current release: `v1.3.3`
 - Required runtime: Node.js 24 or later
-- Latest verified npm version: `1.3.2`
-- Latest verified Git tag and GitHub Release: `v1.3.2`
+- Latest npm version: `1.3.3`
+- Latest Git tag and GitHub Release: `v1.3.3`
 
-Package metadata, npm, the `v1.3.2` tag, and the GitHub Release agree. The
-completed `v1.3.3` source implementation has not been version-bumped, tagged,
-released, or published. Release history and the current unreleased delta are
-in [CHANGELOG.md](../CHANGELOG.md).
+Package metadata, npm, the `v1.3.3` tag, and the GitHub Release agree. Release
+history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Implemented operational surface
 
@@ -55,13 +53,11 @@ still 13 stages and the same `typescript-cli`, `nextjs-app`, and
 `android-compose` profile set. See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
 
-The current published release, `v1.3.2`, corrects shared artifact validation so the three
-native greenfield JSON artifacts retain strict JSON and structured-field
-contracts without receiving incompatible text-header requirements. Text
-artifact behavior and run-integrity/readiness gates remain unchanged.
-
-`v1.3.3`, Python CLI Greenfield Profile and Coding-Agent Instruction
-Bootstrap, is implementation-complete in source and release-pending. It adds
+The current release, `v1.3.3`, retains `v1.3.2`'s shared artifact-validation
+correction so the three native greenfield JSON artifacts retain strict JSON and
+structured-field contracts without receiving incompatible text-header
+requirements. Python CLI Greenfield Profile and Coding-Agent Instruction
+Bootstrap adds
 the four common instruction outputs, common + profile + optional-capability
 target composition, and the bounded fourth `python-cli` profile. Explicit
 `python-cli`, the exact `python` alias, and clear Python-plus-CLI intent resolve
@@ -71,8 +67,7 @@ readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
 `v1.4.0`, Greenfield-to-Feature Workflow Handoff Hardening, is the next planned
-implementation direction after separate `v1.3.3` release work. Its scope
-remains separate and has not started.
+implementation milestone. Its scope remains separate and has not started.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a

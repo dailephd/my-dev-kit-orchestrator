@@ -2,10 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.3.2` is the current published release. `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`,
-`v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0` releases remain part
-of the published project history. `v1.3.3` is implementation-complete in
-source and release-pending; `v1.4.0` and later versions remain planned.
+`v1.3.3` is the current published release. `v1.3.2`, `v1.3.1`, `v1.3.0`,
+`v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
+releases remain part of the published project history. `v1.4.0` and later
+versions remain planned.
 
 ## Version summary
 
@@ -42,11 +42,11 @@ source and release-pending; `v1.4.0` and later versions remain planned.
   greenfield JSON artifacts retain strict JSON and structured-field validation
   without receiving incompatible text-header requirements. Released on
   2026-08-09.
-- `v1.3.3` is implementation-complete in source and release-pending. It adds
+- `v1.3.3` adds
   common coding-agent instruction bootstrap to every supported greenfield
   profile and promotes `python-cli` from its earlier candidate status into the
   fourth starter profile, reusing the existing greenfield architecture. The
-  current published release remains `v1.3.2` until separate release work.
+  release shipped on 2026-08-11.
 - `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
 - `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
   `react-native` profiles only if the greenfield profile architecture proves
@@ -1000,16 +1000,14 @@ Acceptance expectations:
 - `check --artifacts` and `check --all` share the corrected behavior
 - legacy text behavior and run-integrity gates remain covered by regression tests
 
-## Planned milestones
+## Published v1.3.3
 
 ### v1.3.3 - Python CLI Greenfield Profile and Coding-Agent Instruction Bootstrap
 
 Status:
-Implementation complete in source; release pending. The package metadata,
-latest npm package, tag, and GitHub Release remain `v1.3.2`, so `v1.3.3` is not
-yet released or published. The earlier `v1.3.0` discussion of `python-cli`
-remains an accurate historical candidate record; this version promotes that
-candidate into implemented source scope.
+Published as `1.3.3` on 2026-08-11. The earlier `v1.3.0` discussion of
+`python-cli` remains an accurate historical candidate record; this release
+promotes that candidate into shipped scope.
 
 Goal:
 Extend the existing greenfield architecture in two related ways: give every
@@ -1019,16 +1017,16 @@ the existing profile, scaffold, documentation, verification, readiness, and
 initial-index architecture rather than parallel Python-specific or
 coding-agent-specific workflows.
 
-Published-to-source transition:
+Release scope:
 
-- Current `v1.3.2` has exactly three starter profiles: `typescript-cli`,
+- The preceding `v1.3.2` release had exactly three starter profiles: `typescript-cli`,
   `nextjs-app`, and `android-compose`.
-- Current `v1.3.2` provides the standardized 15-file canonical public
+- `v1.3.2` provided the standardized 15-file canonical public
   project-document baseline, shared profile and registry validation, shared
   scaffold-plan validation, shared generated-file and verification-command
   evidence, shared first-vertical-slice and greenfield readiness, and the
   existing initial `my-dev-kit` indexing handoff.
-- Implemented `v1.3.3` source has four starter profiles by adding `python-cli` and gives
+- Released `v1.3.3` has four starter profiles by adding `python-cli` and gives
   every supported profile `agents.txt`, `claude.txt`, `AGENTS.md`, and
   `CLAUDE.md` as common greenfield outputs.
 
@@ -1160,8 +1158,8 @@ Verified acceptance criteria:
   and unsupported Python web/server intent is not silently mapped elsewhere.
 - Generated Python source can enter the existing initial `my-dev-kit` indexing
   handoff, while existing Next.js full-stack behavior remains unchanged.
-- Documentation consistency and preservation checks understand the inserted
-  implementation-complete `v1.3.3` milestone and the four-profile source truth.
+- Documentation consistency and preservation checks understand the released
+  `v1.3.3` milestone and the four-profile release truth.
 
 Explicit exclusions:
 
@@ -1179,10 +1177,11 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.3.2` remains the current published release. Implementation-complete,
-release-pending `v1.3.3` follows it. `v1.4.0` remains the next implementation
-milestone and retains Greenfield-to-Feature Workflow Handoff Hardening.
+`v1.3.3` is the current published release. `v1.4.0` remains the next
+implementation milestone and retains Greenfield-to-Feature Workflow Handoff Hardening.
 `v1.5.0` retains its optional mobile-profile evaluation scope.
+
+## Planned milestones
 
 ### v1.4.0 - Greenfield-to-Feature Workflow Handoff Hardening
 

@@ -456,7 +456,7 @@ exists; no Python-specific stage or execution path was added.
 
 ### v1.3.1: standardized documents and full-stack composition
 
-`v1.3.1` (retained by the current `v1.3.2` release; see
+`v1.3.1` (retained by the current `v1.3.3` release; see
 [CURRENT_STATE.md](CURRENT_STATE.md) and
 [ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability))
 does not add, remove, reorder, or rename any of the 13 stages above; it

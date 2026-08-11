@@ -34,7 +34,7 @@ Profile types/registry/resolution live under `src/greenfield/profiles`. Bootstra
 
 The canonical 15-file greenfield document baseline is owned by `src/greenfield/bootstrap/projectDocBootstrapTypes.ts` and applied to the then-current `typescript-cli`, `nextjs-app`, and `android-compose` profile set; it is not a fourth taxonomy alongside them. The single supported full-stack combination -- `fullstack-web` + `nextjs` + the existing `nextjs-app` starter profile + PostgreSQL + Prisma + Docker -- is owned by `src/greenfield/fullstack/` and composes additively into the existing scaffold-plan (`buildScaffoldPlan.ts`) and canonical greenfield readiness (`src/greenfield/readiness/`) contracts rather than introducing a second one. Its environment scope, migration create-vs-deploy distinction, isolated test-database lifecycle, default-none seed policy, and non-production-only reset are part of the capability contract, not ad hoc. Final-report eligibility for every greenfield run now additionally requires canonical greenfield readiness (see "RunIntegrityGate, judge integrity, and final-report eligibility" above); this is not a separate gate. See [ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability) for owners and [ROADMAP.md](ROADMAP.md) for status.
 
-## Common project instructions and Python CLI profile (v1.3.3 source candidate)
+## Common project instructions and Python CLI profile (v1.3.3)
 
 `src/greenfield/bootstrap/projectInstructions/` owns one normalized project-instruction model and deterministic render/validation contract for exactly `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`. These are generated-project instructions, not native run artifacts and not members of `GREENFIELD_CANONICAL_DOCUMENTS`.
 

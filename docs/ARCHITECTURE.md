@@ -6,9 +6,10 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.3.2` (greenfield JSON artifact contract correction),
-which retains `v1.3.1`'s standardized greenfield documentation and full-stack
-Next.js environment hardening and builds on `v1.3.0`'s
+The current release is `v1.3.3` (Python CLI greenfield profile and common
+coding-agent instruction bootstrap), which retains `v1.3.2`'s greenfield JSON
+artifact contract correction, `v1.3.1`'s standardized greenfield documentation
+and full-stack Next.js environment hardening, and `v1.3.0`'s
 mobile profile expansion and scaffold verification and the `v1.2.3`
 run-integrity and judge-verdict enforcement validated against the released
 `@dailephd/my-dev-kit@1.10.4` package. Architecture is organized by current
@@ -101,7 +102,7 @@ All four current profiles share one validation architecture, owned by
 
 ### v1.3.1: standardized documents and full-stack capability
 
-`v1.3.1` (retained by the current `v1.3.2` release; see [CURRENT_STATE.md](CURRENT_STATE.md))
+`v1.3.1` (retained by the current `v1.3.3` release; see [CURRENT_STATE.md](CURRENT_STATE.md))
 is additive to the architecture above rather than a replacement:
 
 - `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
@@ -167,7 +168,7 @@ is additive to the architecture above rather than a replacement:
 
 ### v1.3.3: common project instructions and Python CLI
 
-Current source extends the same architecture without adding a workflow mode,
+The `v1.3.3` release extends the same architecture without adding a workflow mode,
 stage, native artifact, or readiness subsystem:
 
 - `src/greenfield/bootstrap/projectInstructions/projectInstructionTypes.ts`
