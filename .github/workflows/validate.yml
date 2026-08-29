@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15]
-        node-version: ['24']
+        node-version: ['24', 'latest']
 
     steps:
       - name: Checkout
