@@ -115,6 +115,8 @@ export function makePromptCommand(): Command {
         runFolder: meta.runFolder,
         stages: meta.stages,
         stateFile,
+        proofOnly: meta.proofOnly === true,
+        verificationResponsibility: meta.verificationResponsibility,
       });
 
       if (stage) {

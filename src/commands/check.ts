@@ -191,6 +191,8 @@ function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeInte
     runFolder: meta.runFolder,
     stages: meta.stages,
     stateFile,
+    proofOnly: meta.proofOnly === true,
+    verificationResponsibility: meta.verificationResponsibility,
   });
   return { judgeIntegrity, eligibility };
 }

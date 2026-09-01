@@ -36,7 +36,7 @@ describe('runtime compatibility (Batch 3)', () => {
       const runJsonText = fs.readFileSync(path.join(meta.runFolder, 'run.json'), 'utf8');
       const runJson = JSON.parse(runJsonText);
       expect(Object.keys(runJson).sort()).toEqual(
-        ['artifactFile', 'currentStage', 'mode', 'projectRoot', 'request', 'runFolder', 'runId', 'stages', 'status', 'createdAt']
+        ['artifactFile', 'currentStage', 'mode', 'projectRoot', 'proofOnly', 'request', 'runFolder', 'runId', 'stages', 'status', 'createdAt']
           .filter((k) => k !== 'artifactFile')
           .sort(),
       );
@@ -44,6 +44,7 @@ describe('runtime compatibility (Batch 3)', () => {
       expect(runJson).not.toHaveProperty('taskState');
       expect(runJson).not.toHaveProperty('workflowInstructionPacket');
       expect(runJson).not.toHaveProperty('sidecars');
+      expect(runJson.proofOnly).toBe(false);
     } finally {
       cleanup(tmp);
     }

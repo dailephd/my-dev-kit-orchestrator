@@ -81,6 +81,8 @@ export function makeStatusCommand(): Command {
         runFolder: meta.runFolder,
         stages: meta.stages,
         stateFile,
+        proofOnly: meta.proofOnly === true,
+        verificationResponsibility: meta.verificationResponsibility,
       });
       const lifecycleStatuses = getArtifactLifecycleStatusesWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
       const legacyStatuses = getArtifactStatuses(meta);
@@ -99,6 +101,7 @@ export function makeStatusCommand(): Command {
         `Request:`,
         `  ${meta.request}`,
         ``,
+        ...(meta.proofOnly ? [`Proof-only:`, `  active`, `Verification responsibility:`, `  ${meta.verificationResponsibility}`, ``] : []),
         `Run folder:`,
         `  ${meta.runFolder}`,
         ``,

@@ -144,6 +144,8 @@ export function makeMarkCommand(): Command {
             runFolder: meta.runFolder,
             stages: meta.stages,
             stateFile: preMarkStateFile,
+            proofOnly: meta.proofOnly === true,
+            verificationResponsibility: meta.verificationResponsibility,
           });
           if (isRunIntegrityBlockedArtifactFile(gate, meta.stages, artifactKey, finalReportEligibility.eligible)) {
             const isFinalReport = path.basename(artifactKey) === 'final-report.txt';

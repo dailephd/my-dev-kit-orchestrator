@@ -316,7 +316,10 @@ function evaluateFinalReportEligibilityForRun(meta: RunMetadata, currentStage = 
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const stateFile = readArtifactStateFile(meta.runFolder);
-  return evaluateFinalReportEligibility({ gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages, stateFile });
+  return evaluateFinalReportEligibility({
+    gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages, stateFile,
+    proofOnly: meta.proofOnly === true, verificationResponsibility: meta.verificationResponsibility,
+  });
 }
 
 function header(ctx: PromptContext): string {
@@ -331,6 +334,10 @@ function header(ctx: PromptContext): string {
   if (ctx.targetRepoRoot) lines.push(`Target repository: ${ctx.targetRepoRoot}`);
   lines.push('');
   return lines.join('\n');
+}
+
+function proofOnlyPreamble(meta: RunMetadata): string {
+  return `=== PROOF-ONLY RUN ===\nThis run was explicitly declared proof-only. Do not fabricate an implementation changed surface.\nDeclared verification responsibility: ${meta.verificationResponsibility}\nProof evidence must contain the exact line: Proof result: PASS.\nRunIntegrityGate, judge integrity, and final-report eligibility remain mandatory.`;
 }
 
 // ─── Core shared stages ───────────────────────────────────────────────────────
@@ -1885,8 +1892,10 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
   switch (stageName) {
     // shared - non-extraction
     case 'architecture-context': return architectureContextPrompt(ctx);
-    case 'verification':
-      return isExtraction ? extractionVerificationPrompt(ctx) : isGreenfield ? greenfieldVerificationPrompt(ctx) : verificationPrompt(ctx);
+    case 'verification': {
+      const prompt = isExtraction ? extractionVerificationPrompt(ctx) : isGreenfield ? greenfieldVerificationPrompt(ctx) : verificationPrompt(ctx);
+      return meta.proofOnly ? `${proofOnlyPreamble(meta)}\n\n${prompt}` : prompt;
+    }
     case 'judge':
       return isExtraction ? extractionJudgePrompt(ctx) : isGreenfield ? greenfieldJudgePrompt(ctx) : judgePrompt(ctx);
     case 'final-report':
@@ -1895,7 +1904,10 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     case 'behavior-model': return isExtraction ? extractionBehaviorModelPrompt(ctx) : behaviorModelPrompt(ctx);
     case 'pseudocode-packet': return isExtraction ? extractionPseudocodePacketPrompt(ctx) : pseudocodePacketPrompt(ctx);
     case 'test-strategy': return isExtraction ? extractionTestStrategyPrompt(ctx) : testStrategyPrompt(ctx);
-    case 'implementation': return isExtraction ? extractionImplementationPrompt(ctx) : implementationPrompt(ctx);
+    case 'implementation': {
+      const prompt = isExtraction ? extractionImplementationPrompt(ctx) : implementationPrompt(ctx);
+      return meta.proofOnly ? `${proofOnlyPreamble(meta)}\n\n${prompt}` : prompt;
+    }
     case 'test-implementation': return isExtraction ? extractionTestImplementationPrompt(ctx) : testImplementationPrompt(ctx);
     // feature
     case 'request-brief': return isExtraction ? extractionRequestBriefPrompt(ctx) : requestBriefPrompt(ctx);

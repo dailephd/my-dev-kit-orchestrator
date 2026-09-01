@@ -18,6 +18,8 @@ export interface RunMetadata {
   status: 'created' | 'in_progress' | 'completed';
   sourceRepoRoot?: string;
   targetRepoRoot?: string;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }
 
 function sanitizeSlug(input: string): string {
@@ -59,6 +61,8 @@ export function createRun(options: {
   outputDir?: string;
   sourceRepoRoot?: string;
   targetRepoRoot?: string;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }): RunMetadata {
   const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
   const runId = makeRunId(request, name);
@@ -92,6 +96,8 @@ export function createRun(options: {
     status: 'created',
     ...(sourceRepoRoot !== undefined ? { sourceRepoRoot } : {}),
     ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
+    proofOnly: options.proofOnly === true,
+    ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
   };
 
   fs.writeFileSync(

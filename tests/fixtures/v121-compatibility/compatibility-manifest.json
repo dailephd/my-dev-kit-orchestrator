@@ -99,7 +99,9 @@
         "--name",
         "--output-dir",
         "--source",
-        "--target"
+        "--target",
+        "--proof-only",
+        "--verification-responsibility"
       ]
     },
     {

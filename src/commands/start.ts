@@ -3,6 +3,7 @@ import * as path from 'path';
 import { VALID_MODES, isValidMode } from '../types';
 import { createRun } from '../run';
 import { initWorkspace } from '../workspace';
+import { validateVerificationResponsibility } from '../proofOnly';
 
 export function makeStartCommand(): Command {
   const cmd = new Command('start');
@@ -15,7 +16,9 @@ export function makeStartCommand(): Command {
     .option('--output-dir <path>', 'custom run output directory')
     .option('--source <path>', 'source repository root (required for extraction mode)')
     .option('--target <path>', 'target repository root (required for extraction mode)')
-    .action((request: string, options: { mode: string; root?: string; name?: string; outputDir?: string; source?: string; target?: string }) => {
+    .option('--proof-only', 'declare this run as verification-only with no implementation changed surface')
+    .option('--verification-responsibility <path>', 'run-relative proof evidence file (required with --proof-only)')
+    .action((request: string, options: { mode: string; root?: string; name?: string; outputDir?: string; source?: string; target?: string; proofOnly?: boolean; verificationResponsibility?: string }) => {
       if (!isValidMode(options.mode)) {
         console.error(`Error: invalid mode "${options.mode}". Allowed values: ${VALID_MODES.join(', ')}`);
         process.exit(1);
@@ -30,6 +33,21 @@ export function makeStartCommand(): Command {
           console.error('Error: --target <path> is required for extraction mode');
           process.exit(1);
         }
+      }
+      if (options.proofOnly && !options.verificationResponsibility) {
+        console.error('Error: --proof-only requires --verification-responsibility <path>');
+        process.exit(1);
+      }
+      if (!options.proofOnly && options.verificationResponsibility !== undefined) {
+        console.error('Error: --verification-responsibility <path> requires --proof-only');
+        process.exit(1);
+      }
+      const responsibilityError = options.proofOnly
+        ? validateVerificationResponsibility(options.verificationResponsibility)
+        : undefined;
+      if (responsibilityError) {
+        console.error(`Error: ${responsibilityError}`);
+        process.exit(1);
       }
 
       const sourceRepoRoot = options.source ? path.resolve(options.source) : undefined;
@@ -48,6 +66,8 @@ export function makeStartCommand(): Command {
           outputDir: options.outputDir ? path.resolve(options.outputDir) : undefined,
           sourceRepoRoot,
           targetRepoRoot,
+          proofOnly: options.proofOnly,
+          verificationResponsibility: options.verificationResponsibility,
         });
 
         const lines = [`Created workflow run:\n${meta.runFolder}\n\nMode:\n${meta.mode}`];
@@ -57,6 +77,7 @@ export function makeStartCommand(): Command {
         if (meta.targetRepoRoot) {
           lines.push(`\nTarget repository:\n${meta.targetRepoRoot}`);
         }
+        if (meta.proofOnly) lines.push(`\nProof-only: active\nVerification responsibility:\n${meta.verificationResponsibility}`);
         lines.push(`\nNext:\n  my-dev-kit-orchestrator prompt`);
         console.log(lines.join(''));
       } catch (err) {

@@ -31,6 +31,8 @@ export function reconcileRunLifecycle(meta: RunMetadata): RunMetadata {
     runFolder: meta.runFolder,
     stages: meta.stages,
     stateFile,
+    proofOnly: meta.proofOnly === true,
+    verificationResponsibility: meta.verificationResponsibility,
   });
   const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
   const correctionStage = judgeIntegrity.correctionRequired ? judgeIntegrity.acceptedCorrectionStage : null;
