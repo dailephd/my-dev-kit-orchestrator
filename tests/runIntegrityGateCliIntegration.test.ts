@@ -120,17 +120,18 @@ describe('RunIntegrityGate CLI integration: prompt', () => {
     }
   });
 
-  it('prompt rendering is read-only', () => {
+  it('prompt rendering reconciles only stale run metadata without changing artifact state', () => {
     const tmp = makeTempDir();
     try {
       const meta = makeFeatureRun(tmp);
       writePriorArtifacts(meta, 'implementation');
       const runJsonPath = path.join(meta.runFolder, 'run.json');
-      const before = fs.readFileSync(runJsonPath, 'utf8');
       const statePathBefore = fs.existsSync(getArtifactStatePath(meta.runFolder));
       runCli(['prompt', 'implementation', '--root', tmp]);
       runCli(['prompt', '--root', tmp]);
-      expect(fs.readFileSync(runJsonPath, 'utf8')).toBe(before);
+      const reconciled = JSON.parse(fs.readFileSync(runJsonPath, 'utf8'));
+      expect(reconciled.currentStage).toBe('implementation');
+      expect(reconciled.status).toBe('in_progress');
       expect(fs.existsSync(getArtifactStatePath(meta.runFolder))).toBe(statePathBefore);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });

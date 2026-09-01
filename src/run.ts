@@ -4,6 +4,7 @@ import { WorkflowMode } from './types';
 import { getWorkflow, StageDefinition } from './workflows';
 import { getRunsDir } from './workspace';
 import { writeStagePrompts } from './promptGenerator';
+import { reconcileRunLifecycle } from './runLifecycle';
 
 export interface RunMetadata {
   runId: string;
@@ -110,7 +111,7 @@ export function loadRun(runFolder: string): RunMetadata {
     throw new Error(`run.json not found in: ${runFolder}`);
   }
   const raw = fs.readFileSync(metaPath, 'utf8');
-  return JSON.parse(raw) as RunMetadata;
+  return reconcileRunLifecycle(JSON.parse(raw) as RunMetadata);
 }
 
 export function getRunFolder(projectRoot: string, runId: string, outputDir?: string): string {
