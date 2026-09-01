@@ -10,24 +10,24 @@ function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-export-ctx-'));
 }
 
+function advanceToImplementation(meta: ReturnType<typeof createRun>): void {
+  for (const stage of meta.stages) {
+    if (stage.name === 'implementation') break;
+    fs.writeFileSync(path.join(meta.runFolder, stage.artifactFile), 'complete', 'utf8');
+  }
+}
+
 describe('export command: repository context readiness summary', () => {
-  it('includes a structured, honest summary when context is missing', () => {
+  it('reports future context as not required at a pre-owner stage', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
       createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
       const { output } = runCli(['export', '--root', tmp]);
       expect(output).toContain('=== Repository context readiness ===');
-      expect(output).toContain('overallDecision: refresh-required');
-      expect(output).toContain('recommendedNextStage: implementation');
-      expect(output).toContain('implementationContext:');
-      expect(output).toContain('testContext:');
-      expect(output).toContain('primaryContextKind: implementation');
-      expect(output).toContain('primaryCode: CONTEXT_PACKET_TEMPLATE');
-      expect(output).toContain('primaryReason:');
-      expect(output).toContain('correctiveAction:');
-      expect(output).toContain('evidenceTarget:');
-      expect(output).toContain('blockingIssueCodes: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
+      expect(output).toContain('Current stage: request-brief');
+      expect(output).toContain('overallDecision: not-required');
+      expect(output).not.toContain('implementationContext:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -38,6 +38,7 @@ describe('export command: repository context readiness summary', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      advanceToImplementation(meta);
       makeReadyRunFolder(meta.runFolder, 'feature');
       const { output } = runCli(['export', '--root', tmp]);
       expect(output).toContain('overallDecision: ready');

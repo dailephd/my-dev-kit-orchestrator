@@ -10,22 +10,23 @@ function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-status-ctx-'));
 }
 
+function advanceToImplementation(meta: ReturnType<typeof createRun>): void {
+  for (const stage of meta.stages) {
+    if (stage.name === 'implementation') break;
+    fs.writeFileSync(path.join(meta.runFolder, stage.artifactFile), 'complete', 'utf8');
+  }
+}
+
 describe('status command: repository context readiness', () => {
-  it('reports missing context for a fresh feature run', () => {
+  it('reports future context as not required for a fresh feature run', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
       createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
       const { output } = runCli(['status', '--root', tmp]);
-      expect(output).toContain('Repository context readiness: refresh-required');
-      expect(output).toContain('Implementation context: refresh-required');
-      expect(output).toContain('Test context: refresh-required');
-      expect(output).toContain('Primary blocker: CONTEXT_PACKET_TEMPLATE');
-      expect(output).toContain('Reason:');
-      expect(output).toContain('Blocking: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
-      expect(output).toContain('Corrective action:');
-      expect(output).toContain('Evidence target:');
-      expect(output).toContain('Recommended next stage: implementation');
+      expect(output).toContain('Current / next stage:\n  request-brief');
+      expect(output).toContain('Repository context: not required');
+      expect(output).not.toContain('Repository context readiness: refresh-required');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -36,6 +37,7 @@ describe('status command: repository context readiness', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      advanceToImplementation(meta);
       makeReadyRunFolder(meta.runFolder, 'feature');
       const { output } = runCli(['status', '--root', tmp]);
       expect(output).toContain('Repository context readiness: ready');

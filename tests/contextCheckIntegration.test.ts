@@ -10,21 +10,23 @@ function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-check-ctx-'));
 }
 
+function advanceToImplementation(meta: ReturnType<typeof createRun>): void {
+  for (const stage of meta.stages) {
+    if (stage.name === 'implementation') break;
+    fs.writeFileSync(path.join(meta.runFolder, stage.artifactFile), 'complete', 'utf8');
+  }
+}
+
 describe('check command: repository context readiness', () => {
-  it('fails (nonzero exit) when required context is missing', () => {
+  it('does not block a fresh pre-owner run on future context', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
       createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
       const { output, exitCode } = runCli(['check', '--root', tmp]);
       expect(output).toContain('=== Repository context readiness ===');
-      expect(output).toContain('[fail] implementation context: template');
-      expect(output).toContain('[fail] test context: template');
-      expect(output).toContain('Primary blocker: CONTEXT_PACKET_TEMPLATE');
-      expect(output).toContain('Reason:');
-      expect(output).toContain('Blocking issues: CONTEXT_PACKET_TEMPLATE, CONTEXT_REPORT_TEMPLATE');
-      expect(output).toContain('Corrective action:');
-      expect(output).toContain('Evidence target:');
+      expect(output).toContain('not required for this mode');
+      expect(output).not.toContain('implementation context: template');
       expect(exitCode).toBe(1);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -36,6 +38,7 @@ describe('check command: repository context readiness', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      advanceToImplementation(meta);
       fs.rmSync(path.join(meta.runFolder, 'artifacts', 'implementation-context-packet.txt'));
       fs.rmSync(path.join(meta.runFolder, 'reports', 'implementation-context-retrieval-report.txt'));
       const { output, exitCode } = runCli(['check', '--root', tmp]);
@@ -51,25 +54,25 @@ describe('check command: repository context readiness', () => {
     try {
       initWorkspace(tmp);
       const meta = createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
+      advanceToImplementation(meta);
       makeReadyRunFolder(meta.runFolder, 'feature');
       const { output } = runCli(['check', '--root', tmp]);
       expect(output).toContain('[pass] implementation context: ready');
-      expect(output).toContain('[pass] test context: ready');
+      expect(output).not.toContain('[fail] implementation context:');
       expect(output).not.toContain('Primary blocker:');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
 
-  it('check --all does not duplicate the same context-kind issue per stage', () => {
+  it('check --all does not invent a future context issue at a pre-owner stage', () => {
     const tmp = makeTempDir();
     try {
       initWorkspace(tmp);
       createRun({ request: 'test', mode: 'feature', projectRoot: tmp });
       const { output } = runCli(['check', '--all', '--root', tmp]);
-      const occurrences = output.split('implementation context: template').length - 1;
-      expect(occurrences).toBe(1);
-      expect(output.split('Primary blocker: CONTEXT_PACKET_TEMPLATE').length - 1).toBe(2);
+      expect(output).toContain('not required for this mode');
+      expect(output).not.toContain('implementation context: template');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

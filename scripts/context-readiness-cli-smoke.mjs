@@ -216,7 +216,8 @@ function partialMappingScenario(parentRoot) {
   // Refresh the strategy artifact after its generated predecessors so the
   // lifecycle cursor reaches test-implementation rather than treating the
   // strategy as stale.
-  fs.utimesSync(path.join(meta.runFolder, 'artifacts', 'test-strategy-packet.txt'), new Date(), new Date());
+  const afterPredecessors = new Date(Date.now() + 2_000);
+  fs.utimesSync(path.join(meta.runFolder, 'artifacts', 'test-strategy-packet.txt'), afterPredecessors, afterPredecessors);
 
   const status = runCli(root, meta.runId, ['status']);
   assertContains(status, 'Test context: refresh-required', name);
