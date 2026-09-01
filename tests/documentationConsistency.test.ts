@@ -114,17 +114,10 @@ describe('documentation consistency gate', () => {
     ['resolved producer mismatch as current', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '## Non-goals', '- The my-dev-kit 1.10.2 mismatch remains a current limitation.\n\n## Non-goals'), 'RESOLVED_PRODUCER_LIMITATION_STILL_CURRENT'],
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, /`prompt` without a stage selects[\s\S]*?remain current/, '`prompt` without a stage prints the first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'They cannot rediscover or select a custom-output', 'They cannot select a custom-output'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
-    ['android xml moved into v1.5.0', 'docs/ROADMAP.md', (text: string) => replace(text, /- `react-native`(\r?\n)(\r?\n)Decision criteria:/, '- `react-native`$1- `android-xml`$1$2Decision criteria:'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.3.0 became a legitimately implemented-but-unpublished version in
-    // Batch 6 (see manifest.protectedFacts.implementedUnpublishedVersions),
-    // so this drift case now targets v1.5.0, which remains genuinely
-    // planned -- "implemented" wording there is still a real drift.
-    ['planned v1.5.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Optional Mobile Profile Candidates', '### v1.5.0 - Optional Mobile Profile Candidates\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    // v1.3.0 became the genuinely published current release at release time
-    // (see manifest.protectedFacts.packageMetadataVersion / latestPublishedVersion),
-    // so this drift case now targets v1.5.0, which remains genuinely planned
-    // and unpublished -- "Published." wording there is still a real drift.
-    ['v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Optional Mobile Profile Candidates', '### v1.5.0 - Optional Mobile Profile Candidates\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
+    // v1.4.0 is implemented but unpublished; v1.5.0 remains planned.
+    ['planned v1.5.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
   ])('detects %s', (_name, relativePath, mutation, issueCode) => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);

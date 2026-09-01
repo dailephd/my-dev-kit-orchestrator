@@ -185,7 +185,8 @@
     "v1.3.2",
     "v1.3.3",
     "v1.4.0",
-    "v1.5.0"
+    "v1.5.0",
+    "v1.6.0"
   ],
   "greenfieldStageOrder": [
     "idea-brief",
@@ -222,14 +223,14 @@
     "artifacts/bootstrap-bundle.json"
   ],
   "roadmapCandidateAssignments": {
-    "v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"],
-    "v1.5.0": ["ios-swiftui", "flutter", "react-native"]
+    "v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"]
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
     "packageMetadataVersion": "1.3.3",
     "latestPublishedVersion": "1.3.3",
-    "implementedUnpublishedVersions": [],
+    "implementedUnpublishedVersions": ["v1.4.0"],
+    "plannedUnpublishedVersions": ["v1.5.0", "v1.6.0"],
     "cliCommands": [
       "init",
       "start",

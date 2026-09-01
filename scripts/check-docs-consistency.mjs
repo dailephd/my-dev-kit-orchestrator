@@ -594,6 +594,13 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     }
   }
 
+  for (const version of manifest.protectedFacts.plannedUnpublishedVersions ?? []) {
+    const detail = section(roadmap, `### ${version}`, 3);
+    if (containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i) || /\bimplemented\b/i.test(detail)) {
+      addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'published, released-as, or implemented wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
+    }
+  }
+
   for (const [documentPath, content] of [
     ['docs/USAGE.md', usage],
     ['docs/WORKFLOWS.md', workflowsText],

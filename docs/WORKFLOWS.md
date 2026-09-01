@@ -18,6 +18,13 @@ behavior while changing structure; `harden` strengthens failure handling;
 plans a new project before useful code exists. Every mode uses the shared
 lifecycle, context-readiness, judge-correction, and final-report rules below.
 
+Proof-only is not an eighth mode. It is an explicit run capability for a
+verification task with a declared proof responsibility: ordinary runs retain
+changed-surface expectations, while proof-only runs require exact proof
+evidence and remain subject to lifecycle, readiness, integrity, judge, and
+final-report gates. Repository evidence becomes blocking only at its owning
+stage; future-stage evidence does not block an earlier phase.
+
 ## Content check layer (v0.4.0)
 
 A separate content check layer is available via `my-dev-kit-orchestrator check`.

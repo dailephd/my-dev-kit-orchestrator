@@ -4,8 +4,9 @@ Versions are listed in chronological order.
 
 `v1.3.3` is the current published release. `v1.3.2`, `v1.3.1`, `v1.3.0`,
 `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
-releases remain part of the published project history. `v1.4.0` and later
-versions remain planned.
+releases remain part of the published project history. `v1.4.0` is implemented
+on the development branch with release preparation pending; later versions
+remain planned.
 
 ## Version summary
 
@@ -47,10 +48,13 @@ versions remain planned.
   profile and promotes `python-cli` from its earlier candidate status into the
   fourth starter profile, reusing the existing greenfield architecture. The
   release shipped on 2026-08-11.
-- `v1.4.0` will harden the greenfield-to-feature workflow handoff so completed scaffolds transition cleanly into normal graph-guided feature, repair, refactor, test, and harden workflows.
-- `v1.5.0` will evaluate the optional `ios-swiftui`, `flutter`, and
-  `react-native` profiles only if the greenfield profile architecture proves
-  reusable.
+- `v1.4.0` reconciles maintained-line trace/lifecycle behavior, adds
+  phase-aware readiness and explicit proof-only verification, and adds a
+  bounded Observer v0.6 evidence consumer validated against fresh pushed
+  Observer source.
+- `v1.5.0` will provide the Semantic Continuity and Evidence-to-Implementation
+  Bridge; richer semantic chains remain opt-in for FULL_STAGE_CONTEXT.
+- `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
 
 ## Published releases through v1.0.0
 
@@ -1177,44 +1181,42 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.3.3` is the current published release. `v1.4.0` remains the next
-implementation milestone and retains Greenfield-to-Feature Workflow Handoff Hardening.
-`v1.5.0` retains its optional mobile-profile evaluation scope.
+`v1.3.3` is the current published release. `v1.4.0` is implemented on the
+development branch and awaits release preparation. Greenfield-to-Feature
+Workflow Handoff Hardening and optional mobile-profile candidates remain
+deferred scopes.
 
 ## Planned milestones
 
-### v1.4.0 - Greenfield-to-Feature Workflow Handoff Hardening
+### v1.4.0 - Maintained-Line Reconciliation and Proof-Only Workflow Support
 
-Goal:
-Make the transition from a completed greenfield scaffold into normal graph-guided feature workflow explicit, testable, and reusable.
+Status: Implemented on the development branch; release preparation pending.
 
-Planned features:
+Implemented scope:
 
-- `next-feature-workflow-handoff.txt`
-- initial my-dev-kit index report integration
-- generated guidance for next normal feature workflow
-- handoff checks that confirm the scaffold exists before indexing
-- handoff checks that confirm docs match scaffold shape
-- handoff checks that confirm the first vertical slice was verified
-- status output for greenfield handoff readiness
-- prompt guidance for continuing from greenfield to feature mode
+- formal trace and lifecycle reconciliation corrections
+- stage-aware repository evidence readiness
+- explicit proof-only verification with declared proof responsibility
+- bounded Observer v0.6 evidence consumption and public-contract hardening
+- reproducible Observer-to-Orchestrator compatibility using fresh pushed
+  source; no current claim of a reproducible Lab leg
 
-Expected handoff flow:
+### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
-1. greenfield mode creates the initial scaffold
-2. verification confirms the scaffold and first vertical slice
-3. initial-index instructs a user or coding agent to run my-dev-kit indexing
-4. handoff artifact explains how to continue with normal graph-guided feature workflow
-5. future changes use feature, repair, test, refactor, or harden workflows
+Preserve lightweight DIRECT_IMPLEMENTATION while richer semantic continuity,
+including deterministic WF-002 metadata direction, remains FULL_STAGE_CONTEXT
+work.
 
-Boundary:
+### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
-- the handoff should not run autonomous agents
-- the handoff should not perform pre-release checks
-- the handoff should not run security validation
-- the handoff should not publish anything
+Planned deterministic workflow economics and run telemetry.
 
-### v1.5.0 - Optional Mobile Profile Candidates
+### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
+
+The completed greenfield scaffold-to-feature transition remains a separate
+future scope.
+
+### Deferred: Optional Mobile Profile Candidates
 
 Goal:
 Evaluate whether the greenfield profile architecture should support additional mobile frameworks beyond Android Compose.

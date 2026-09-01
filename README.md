@@ -27,6 +27,13 @@ The current release is
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
 
+The maintained development branch also contains the unreleased `v1.4.0`
+candidate: phase-aware readiness, explicit proof-only verification, lifecycle
+and trace corrections, and a dependency-free bounded Observer v0.6 evidence
+consumer. `v1.3.3` remains the published release. Fresh pushed Observer v0.6
+artifacts have been validated against the maintained consumer; no current
+three-repository Lab replay is claimed.
+
 `v1.3.3` ships one common coding-agent instruction bootstrap for every
 greenfield profile and the bounded fourth starter profile, `python-cli`. The
 common outputs are `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`;

@@ -25,6 +25,11 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
   reports/
 ```
 
+New ordinary runs persist `proofOnly: false`. Explicit proof-only runs also
+persist their `verificationResponsibility`; the declared file is evidence owned
+by that responsibility, not a new Orchestrator artifact family. Observer
+evidence consumption adds no run persistence.
+
 For extraction mode, the run layout lives under the target repository:
 
 ```text

@@ -66,6 +66,17 @@ my-dev-kit-orchestrator start --mode refactor "split prompt generation helpers b
 my-dev-kit-orchestrator start --mode harden "guard invalid run IDs in prompt command"
 ```
 
+For an explicit proof-only verification run, declare the run-relative proof
+responsibility at creation time:
+
+```bash
+my-dev-kit-orchestrator start --proof-only --verification-responsibility artifacts/proof.txt "verify the existing migration behavior"
+```
+
+Proof-only is never inferred from an empty diff. The declared proof file must
+contain the exact line `Proof result: PASS`; normal integrity, judge, and
+final-report gates still apply.
+
 Use a readable run suffix:
 
 ```bash

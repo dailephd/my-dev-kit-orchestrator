@@ -12,6 +12,14 @@
 Package metadata, npm, the `v1.3.3` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
+The maintained development branch has implemented the unreleased `v1.4.0`
+candidate: formal-trace and lifecycle reconciliation corrections, phase-aware
+repository readiness, explicit proof-only runs, and a bounded Observer v0.6
+evidence consumer. `v1.4.0` is not published; `v1.3.3` remains the current
+release. Fresh pushed `my-frontend-observer@0.6.0` artifacts validate against
+the maintained consumer. The historical Lab compatibility leg is not
+reproducible from surviving pushed Lab source.
+
 ## Implemented operational surface
 
 The CLI has eight commands: `init`, `start`, `prompt`, `status`, `list`, `mark`, `check`, and `export`. It supports seven workflow modes and 79 native stages. Greenfield has 13 stages and four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
@@ -66,8 +74,8 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-`v1.4.0`, Greenfield-to-Feature Workflow Handoff Hardening, is the next planned
-implementation milestone. Its scope remains separate and has not started.
+The next implementation direction after the unreleased `v1.4.0` candidate is
+the separately deferred Greenfield-to-Feature Workflow Handoff Hardening.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a
