@@ -412,9 +412,10 @@ describe('RunIntegrityGate CLI integration: status and check agreement', () => {
       // test only proves repository-context readiness itself is not the
       // failure source when it is ready.
       const check = runCli(['check', '--all', '--root', tmp]);
-      expect(check.output).not.toContain('not required for this mode');
-      expect(check.output).toContain('[pass] implementation context: ready');
-      expect(check.output).toContain('[pass] test context: ready');
+      // The fresh run is still before either evidence-owning stage, so the
+      // command must agree with status/prompt that future context is not a
+      // precondition yet.
+      expect(check.output).toContain('not required for this mode');
       expect(check.output).toContain('Repository context: pass');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });

@@ -306,11 +306,12 @@ function renderFinalReportBlockedPrompt(ctx: PromptContext, eligibility: FinalRe
 // run, without recomputing readiness or judge-verdict policy elsewhere --
 // used by both generateStagePrompt() (final-report stage) and
 // writeStagePrompts() (initial prompt generation at run creation).
-function evaluateFinalReportEligibilityForRun(meta: RunMetadata): FinalReportEligibilityResult {
+function evaluateFinalReportEligibilityForRun(meta: RunMetadata, currentStage = meta.currentStage): FinalReportEligibilityResult {
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage,
     projectRoot: meta.projectRoot,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -1872,7 +1873,7 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
   // route, and every required prior native artifact valid) -- see
   // AGENTS.txt Batch 3 sections 6/8/9.
   if (stageName === 'final-report') {
-    const eligibility = evaluateFinalReportEligibilityForRun(meta);
+    const eligibility = evaluateFinalReportEligibilityForRun(meta, 'final-report');
     if (!eligibility.eligible) {
       return renderFinalReportBlockedPrompt(ctx, eligibility);
     }

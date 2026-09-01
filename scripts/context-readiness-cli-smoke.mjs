@@ -212,6 +212,11 @@ function partialMappingScenario(parentRoot) {
       fs.writeFileSync(target, `Artifact: ${stage.artifactKind}\nWorkflow mode: test\nStatus: complete\n`, 'utf8');
     }
   }
+  // The phase-aware assertion belongs at the first evidence-owning stage.
+  // Refresh the strategy artifact after its generated predecessors so the
+  // lifecycle cursor reaches test-implementation rather than treating the
+  // strategy as stale.
+  fs.utimesSync(path.join(meta.runFolder, 'artifacts', 'test-strategy-packet.txt'), new Date(), new Date());
 
   const status = runCli(root, meta.runId, ['status']);
   assertContains(status, 'Test context: refresh-required', name);
@@ -235,8 +240,8 @@ function legacyRunScenario(parentRoot) {
     fs.rmSync(path.join(meta.runFolder, relativePath), { force: true });
   }
   const status = runCli(root, meta.runId, ['status']);
-  assertContains(status, 'Implementation context: refresh-required', name);
-  console.log('CONTEXT_CLI_SMOKE legacy-run: loadable and actionably refresh-required');
+  assertContains(status, 'Repository context: not required', name);
+  console.log('CONTEXT_CLI_SMOKE legacy-run: loadable before evidence-owning phase');
 }
 
 const sourceHashBefore = hashTree(fixtureRoot);

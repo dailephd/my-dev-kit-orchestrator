@@ -16,7 +16,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { createRun, RunMetadata } from '../src/run';
+import { createRun, loadRun, RunMetadata } from '../src/run';
 import { initWorkspace } from '../src/workspace';
 import { makeReadyRunFolder } from './readyContextTestHelpers';
 import { evaluateRunIntegrityGate } from '../src/runIntegrityGate';
@@ -225,7 +225,7 @@ describe('v1.2.3 Batch 4 cross-surface check: export must not disagree with stat
       writeAllPriorArtifacts(meta, 'final-report');
       writeJudgeReport(meta, 'Verdict: PASS');
 
-      const exportText: string = buildExportText(meta);
+      const exportText: string = buildExportText(loadRun(meta.runFolder));
 
       expect(exportText).not.toContain('PASS -- no correction required');
       expect(exportText).toContain('PASS (accepted: false)');

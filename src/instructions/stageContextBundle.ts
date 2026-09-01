@@ -193,6 +193,7 @@ export function assembleStageContextBundle(
       mode: runMetadata.mode,
       runFolder: runMetadata.runFolder,
       workflowStageNames: runMetadata.stages.map((s) => s.name),
+      currentStage: selectedStage,
       projectRoot: runMetadata.projectRoot,
     });
     relatedRepositoryEvidenceReferences = ['implementation', 'test-implementation']

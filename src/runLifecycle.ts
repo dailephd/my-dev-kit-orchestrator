@@ -3,7 +3,7 @@ import * as path from 'path';
 import { readArtifactStateFile } from './artifactLifecycle';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from './judgeIntegrity';
 import { evaluateRunIntegrityGate } from './runIntegrityGate';
-import { getNextStageWithRunIntegrity } from './stageDetector';
+import { getNextStageWithLifecycle, getNextStageWithRunIntegrity } from './stageDetector';
 import type { RunMetadata } from './run';
 
 /**
@@ -13,10 +13,15 @@ import type { RunMetadata } from './run';
  */
 export function reconcileRunLifecycle(meta: RunMetadata): RunMetadata {
   const stateFile = readArtifactStateFile(meta.runFolder);
+  // Establish lifecycle truth before asking readiness which requirements are
+  // applicable.  This intentionally uses the non-gate lifecycle resolver:
+  // the gate below then applies readiness to that reconciled phase.
+  const lifecycleNextStage = getNextStageWithLifecycle(meta, stateFile);
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((stage) => stage.name),
+    currentStage: lifecycleNextStage?.name ?? '(complete)',
     projectRoot: meta.projectRoot,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });

@@ -145,11 +145,13 @@ function formatContextReadinessSummary(meta: {
   runFolder: string;
   projectRoot?: string;
   stages: Array<{ name: string }>;
+  currentStage?: string;
 }): string {
   const summary = evaluateRunContextReadiness({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage: meta.currentStage,
     projectRoot: meta.projectRoot,
   });
 
@@ -236,6 +238,7 @@ export function buildExportText(meta: {
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage: meta.currentStage,
     projectRoot: meta.projectRoot,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });

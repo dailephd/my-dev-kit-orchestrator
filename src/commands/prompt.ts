@@ -100,6 +100,7 @@ export function makePromptCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
+        currentStage: meta.currentStage,
         projectRoot: meta.projectRoot,
       });
       // Canonical judge-integrity / final-report eligibility (v1.2.3

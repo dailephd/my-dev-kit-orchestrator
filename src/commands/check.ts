@@ -180,6 +180,7 @@ function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeInte
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage: meta.currentStage,
     projectRoot: meta.projectRoot,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -395,6 +396,7 @@ export function makeCheckCommand(): Command {
               mode: meta.mode,
               runFolder: meta.runFolder,
               workflowStageNames: meta.stages.map((s) => s.name),
+              currentStage: meta.currentStage,
               projectRoot: meta.projectRoot,
             }),
           );
@@ -445,6 +447,7 @@ export function makeCheckCommand(): Command {
             mode: meta.mode,
             runFolder: meta.runFolder,
             workflowStageNames: meta.stages.map((s) => s.name),
+            currentStage: meta.currentStage,
             projectRoot: meta.projectRoot,
           });
           const contextCheck = formatContextReadinessCheck(contextReadiness);
@@ -721,6 +724,7 @@ export function makeCheckCommand(): Command {
                   mode: meta.mode,
                   runFolder: meta.runFolder,
                   workflowStageNames: meta.stages.map((s) => s.name),
+                  currentStage: meta.currentStage,
                   projectRoot: meta.projectRoot,
                 }),
               )

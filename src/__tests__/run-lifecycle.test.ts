@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { createRun, loadRun } from '../run';
+import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-run-lifecycle-'));
@@ -39,6 +40,28 @@ describe('durable run lifecycle reconciliation', () => {
       const persisted = JSON.parse(fs.readFileSync(path.join(created.runFolder, 'run.json'), 'utf8'));
       expect(persisted.currentStage).toBe(created.stages[1].name);
       expect(persisted.status).toBe('in_progress');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('uses the reconciled lifecycle stage for readiness after reload', () => {
+    const root = makeTempDir();
+    try {
+      const created = createRun({ request: 'Reconcile readiness phase', mode: 'feature', projectRoot: root });
+      const implementationIndex = created.stages.findIndex((stage) => stage.name === 'implementation');
+      completeArtifacts(created.runFolder, created.stages.slice(0, implementationIndex).map((stage) => stage.artifactFile));
+      const loaded = loadRun(created.runFolder);
+      expect(loaded.currentStage).toBe('implementation');
+      const readiness = evaluateRunContextReadiness({
+        mode: loaded.mode,
+        runFolder: loaded.runFolder,
+        workflowStageNames: loaded.stages.map((stage) => stage.name),
+        currentStage: loaded.currentStage,
+        projectRoot: loaded.projectRoot,
+      });
+      expect(readiness.implementationContext?.decision).toBe('refresh-required');
+      expect(readiness.testContext).toBeUndefined();
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

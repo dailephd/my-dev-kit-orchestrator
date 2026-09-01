@@ -65,6 +65,7 @@ export function makeStatusCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
+        currentStage: meta.currentStage,
         projectRoot: meta.projectRoot,
       });
       const gate = deriveRunIntegrityGateResult(meta.mode, readiness);

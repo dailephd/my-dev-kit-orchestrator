@@ -122,10 +122,18 @@ export function makeMarkCommand(): Command {
         // artifact-state.json is not touched, matching the "rejected mark
         // does not mutate lifecycle state" acceptance criterion.
         if (state === 'complete') {
+          // Completion is an attempt to advance the artifact's own stage,
+          // even when earlier missing artifacts keep the reconciled run
+          // cursor behind it.  Evaluate that target phase so manual marking
+          // cannot bypass its stage-owned evidence requirement.
+          const targetStage = meta.stages.find(
+            (stage) => stage.artifactFile === artifactKey || (stage.additionalArtifactFiles ?? []).includes(artifactKey),
+          );
           const gate = evaluateRunIntegrityGate({
             mode: meta.mode,
             runFolder: meta.runFolder,
             workflowStageNames: meta.stages.map((s) => s.name),
+            currentStage: targetStage?.name ?? meta.currentStage,
             projectRoot: meta.projectRoot,
           });
           const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
