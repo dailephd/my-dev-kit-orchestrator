@@ -79,9 +79,9 @@ describe('runtime compatibility (Batch 3)', () => {
   const describeIfBuilt = fs.existsSync(CLI) ? describe : describe.skip;
 
   describeIfBuilt('CLI compatibility', () => {
-    it('--version reports the v1.3.3 release', () => {
+    it('--version reports the current release', () => {
       const out = execFileSync(process.execPath, [CLI, '--version'], { encoding: 'utf8' }).trim();
-      expect(out).toBe('1.3.3');
+      expect(out).toBe('1.4.0');
     });
 
     it('--help output is unchanged', () => {

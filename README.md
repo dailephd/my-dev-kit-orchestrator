@@ -23,16 +23,15 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.3.3`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.4.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
 
-The maintained development branch also contains the unreleased `v1.4.0`
-candidate: phase-aware readiness, explicit proof-only verification, lifecycle
-and trace corrections, and a dependency-free bounded Observer v0.6 evidence
-consumer. `v1.3.3` remains the published release. Fresh pushed Observer v0.6
-artifacts have been validated against the maintained consumer; no current
-three-repository Lab replay is claimed.
+`v1.4.0` ships phase-aware readiness, explicit proof-only verification,
+lifecycle and trace corrections, and a dependency-free bounded Observer v0.6
+evidence consumer. Fresh pushed Observer v0.6 artifacts have been validated
+against the maintained consumer; no current three-repository Lab replay is
+claimed.
 
 `v1.3.3` ships one common coding-agent instruction bootstrap for every
 greenfield profile and the bounded fourth starter profile, `python-cli`. The

@@ -95,7 +95,7 @@ describe('documentation consistency gate', () => {
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
     ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
     ['contradictory v1.2.3 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.3 is unreleased.\n`, 'V123_RELEASE_STATUS_CONTRADICTION'],
-    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.3.3', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
+    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.4.0', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
     ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
@@ -115,7 +115,7 @@ describe('documentation consistency gate', () => {
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, /`prompt` without a stage selects[\s\S]*?remain current/, '`prompt` without a stage prints the first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'They cannot rediscover or select a custom-output', 'They cannot select a custom-output'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
     ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.4.0 is implemented but unpublished; v1.5.0 remains planned.
+    // v1.4.0 is published; v1.5.0 remains planned.
     ['planned v1.5.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
     ['v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],

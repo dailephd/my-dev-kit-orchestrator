@@ -2,7 +2,7 @@
 
 ## v1.4.0 - Maintained-Line Reconciliation and Proof-Only Workflow Support
 
-**Unreleased candidate.**
+Release date: 2026-09-01.
 
 ### Added
 

@@ -3,22 +3,20 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.3.3`
-- Current release: `v1.3.3`
+- Package metadata version: `1.4.0`
+- Current release: `v1.4.0`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.3.3`
-- Latest Git tag and GitHub Release: `v1.3.3`
+- Latest npm version: `1.4.0`
+- Latest Git tag and GitHub Release: `v1.4.0`
 
-Package metadata, npm, the `v1.3.3` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.4.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
-The maintained development branch has implemented the unreleased `v1.4.0`
-candidate: formal-trace and lifecycle reconciliation corrections, phase-aware
-repository readiness, explicit proof-only runs, and a bounded Observer v0.6
-evidence consumer. `v1.4.0` is not published; `v1.3.3` remains the current
-release. Fresh pushed `my-frontend-observer@0.6.0` artifacts validate against
-the maintained consumer. The historical Lab compatibility leg is not
-reproducible from surviving pushed Lab source.
+`v1.4.0` ships formal-trace and lifecycle reconciliation corrections,
+phase-aware repository readiness, explicit proof-only runs, and a bounded
+Observer v0.6 evidence consumer. Fresh pushed `my-frontend-observer@0.6.0`
+artifacts validate against the maintained consumer. The historical Lab
+compatibility leg is not reproducible from surviving pushed Lab source.
 
 ## Implemented operational surface
 
@@ -61,7 +59,7 @@ still 13 stages and the same `typescript-cli`, `nextjs-app`, and
 `android-compose` profile set. See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
 
-The current release, `v1.3.3`, retains `v1.3.2`'s shared artifact-validation
+The current release, `v1.4.0`, retains `v1.3.2`'s shared artifact-validation
 correction so the three native greenfield JSON artifacts retain strict JSON and
 structured-field contracts without receiving incompatible text-header
 requirements. Python CLI Greenfield Profile and Coding-Agent Instruction

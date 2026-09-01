@@ -1,6 +1,6 @@
 {
   "name": "@dailephd/my-dev-kit-orchestrator",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "CLI-first workflow tool for design-first software development with coding agents",
   "main": "dist/index.js",
   "repository": {
