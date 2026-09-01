@@ -56,10 +56,27 @@ describe('parseDeclaredTraceIds', () => {
     expect(result.map((r) => r.id)).not.toContain('BEH-999');
   });
 
-  it('finds IDs embedded in prose on non-link lines', () => {
+  it('does not treat IDs embedded in ordinary prose as declarations', () => {
     const content = 'This implements BEH-042 as specified by REQ-001.';
     const result = parseDeclaredTraceIds(content);
-    expect(result).toHaveLength(2);
+    expect(result).toEqual([]);
+  });
+
+  it('does not create duplicate or orphan issues from several prose references', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'REQ-001: requirement',
+        'BEH-001: behavior',
+        'The implementation discusses REQ-001 and BEH-001 several times: REQ-001, BEH-001.',
+        'REQ-001 -> BEH-001',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.some((issue) => issue.code === 'TRACE_DUPLICATE_ID')).toBe(false);
+      expect(result.issues.some((issue) => issue.code === 'TRACE_ORPHAN_ID')).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('records correct line numbers', () => {

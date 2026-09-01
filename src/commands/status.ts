@@ -65,6 +65,7 @@ export function makeStatusCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
+        currentStage: meta.currentStage,
         projectRoot: meta.projectRoot,
       });
       const gate = deriveRunIntegrityGateResult(meta.mode, readiness);
@@ -80,6 +81,8 @@ export function makeStatusCommand(): Command {
         runFolder: meta.runFolder,
         stages: meta.stages,
         stateFile,
+        proofOnly: meta.proofOnly === true,
+        verificationResponsibility: meta.verificationResponsibility,
       });
       const lifecycleStatuses = getArtifactLifecycleStatusesWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
       const legacyStatuses = getArtifactStatuses(meta);
@@ -98,6 +101,7 @@ export function makeStatusCommand(): Command {
         `Request:`,
         `  ${meta.request}`,
         ``,
+        ...(meta.proofOnly ? [`Proof-only:`, `  active`, `Verification responsibility:`, `  ${meta.verificationResponsibility}`, ``] : []),
         `Run folder:`,
         `  ${meta.runFolder}`,
         ``,

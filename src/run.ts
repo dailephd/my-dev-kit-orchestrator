@@ -4,6 +4,7 @@ import { WorkflowMode } from './types';
 import { getWorkflow, StageDefinition } from './workflows';
 import { getRunsDir } from './workspace';
 import { writeStagePrompts } from './promptGenerator';
+import { reconcileRunLifecycle } from './runLifecycle';
 
 export interface RunMetadata {
   runId: string;
@@ -17,6 +18,8 @@ export interface RunMetadata {
   status: 'created' | 'in_progress' | 'completed';
   sourceRepoRoot?: string;
   targetRepoRoot?: string;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }
 
 function sanitizeSlug(input: string): string {
@@ -58,6 +61,8 @@ export function createRun(options: {
   outputDir?: string;
   sourceRepoRoot?: string;
   targetRepoRoot?: string;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }): RunMetadata {
   const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
   const runId = makeRunId(request, name);
@@ -91,6 +96,8 @@ export function createRun(options: {
     status: 'created',
     ...(sourceRepoRoot !== undefined ? { sourceRepoRoot } : {}),
     ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
+    proofOnly: options.proofOnly === true,
+    ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
   };
 
   fs.writeFileSync(
@@ -110,7 +117,7 @@ export function loadRun(runFolder: string): RunMetadata {
     throw new Error(`run.json not found in: ${runFolder}`);
   }
   const raw = fs.readFileSync(metaPath, 'utf8');
-  return JSON.parse(raw) as RunMetadata;
+  return reconcileRunLifecycle(JSON.parse(raw) as RunMetadata);
 }
 
 export function getRunFolder(projectRoot: string, runId: string, outputDir?: string): string {

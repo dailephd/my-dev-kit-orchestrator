@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.4.0 - Maintained-Line Reconciliation and Proof-Only Workflow Support
+
+Release date: 2026-09-01.
+
+### Added
+
+- explicit `start --proof-only --verification-responsibility <path>` support
+  for verification-only runs with declared, run-relative proof evidence
+- dependency-free `consumeBoundedObserverEvidence` public API for bounded
+  `my-frontend-observer/bounded-agent-context` schema `1.0.0` artifacts
+
+### Fixed
+
+- formal trace declarations no longer confuse ordinary prose identifiers with
+  trace syntax, while malformed, duplicate, orphaned, and missing targets
+  remain fail-closed
+- reload reconciles durable lifecycle state with artifacts, integrity, and
+  judge/correction eligibility; readiness applies repository evidence only
+  once its owning stage is reached
+
+### Compatibility
+
+- validated against fresh pushed `my-frontend-observer@0.6.0`; the historical
+  Lab leg is not reproducible from surviving pushed Lab source
+
 ## v1.3.3 - Python CLI Greenfield Profile and Coding-Agent Instruction Bootstrap
 
 Release date: 2026-08-11.

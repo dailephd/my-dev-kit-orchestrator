@@ -62,6 +62,7 @@ export interface EvaluateRunIntegrityGateInput {
   mode: string;
   runFolder: string;
   workflowStageNames: readonly string[];
+  currentStage?: string;
   projectRoot?: string;
 }
 

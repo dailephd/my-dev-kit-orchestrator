@@ -42,10 +42,24 @@ export function evaluateRunContextReadiness(input: {
   mode: string;
   runFolder: string;
   workflowStageNames: readonly string[];
+  // The reconciled lifecycle stage.  Requirements become applicable when
+  // their owning stage is reached, and remain applicable for later stages.
+  // Omission preserves the legacy whole-run evaluation for external callers
+  // that do not yet carry lifecycle metadata.
+  currentStage?: string;
   projectRoot?: string;
 }): RunContextReadinessSummary {
-  const { mode, runFolder, workflowStageNames, projectRoot } = input;
-  const requiredKinds = requiredSupplementalContextKindsForMode(mode);
+  const { mode, runFolder, workflowStageNames, currentStage, projectRoot } = input;
+  const requiredKinds = requiredSupplementalContextKindsForMode(mode).filter((kind) => {
+    if (currentStage === undefined || currentStage === '(complete)') return true;
+    const currentIndex = workflowStageNames.indexOf(currentStage);
+    const requirementStage = kind === 'implementation' ? 'implementation' : 'test-implementation';
+    const requirementIndex = workflowStageNames.indexOf(requirementStage);
+    // An unknown lifecycle stage must never turn a required check into an
+    // exemption.  Preserve the former fail-closed whole-run behavior.
+    if (currentIndex < 0 || requirementIndex < 0) return true;
+    return requirementIndex <= currentIndex;
+  });
 
   if (requiredKinds.length === 0) {
     return {

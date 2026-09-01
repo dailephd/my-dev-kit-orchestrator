@@ -28,6 +28,7 @@ import { CorrectionRouteResult, CorrectableStage, isCorrectableStage } from './c
 import { JudgeVerdict } from './judgeParser';
 import { checkGreenfieldRunReadinessForRun } from './greenfield/readiness/checkGreenfieldRunReadiness';
 import { GreenfieldReadinessResult } from './greenfield/readiness/greenfieldReadinessTypes';
+import { evaluateProofEvidence, ProofEvidenceResult } from './proofOnly';
 
 export const JUDGE_INTEGRITY_SCHEMA_VERSION = '1.0.0';
 
@@ -283,6 +284,7 @@ export interface FinalReportEligibilityResult {
    * function already used, instead of recomputing it.
    */
   greenfieldReadiness?: GreenfieldReadinessResult;
+  proofEvidence?: ProofEvidenceResult;
 }
 
 export const FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE = 'FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE';
@@ -312,8 +314,10 @@ export function evaluateFinalReportEligibility(input: {
   runFolder: string;
   stages: readonly StageDefinition[];
   stateFile: ArtifactStateFile;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }): FinalReportEligibilityResult {
-  const { gate, judgeIntegrity, runFolder, stages, stateFile } = input;
+  const { gate, judgeIntegrity, runFolder, stages, stateFile, proofOnly = false, verificationResponsibility } = input;
   const finalReportIndex = stages.findIndex((s) => s.name === 'final-report');
   const priorStages = finalReportIndex === -1 ? stages : stages.slice(0, finalReportIndex);
   const priorArtifactsValid = priorStages.every((stage) => {
@@ -346,7 +350,9 @@ export function evaluateFinalReportEligibility(input: {
     greenfieldReadiness.ready ||
     (greenfieldReadiness.legacyRun && greenfieldReadiness.valid);
 
-  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid && greenfieldReady;
+  const proofEvidence = proofOnly ? evaluateProofEvidence(runFolder, verificationResponsibility) : undefined;
+  const proofReady = !proofOnly || proofEvidence?.state === 'pass';
+  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid && greenfieldReady && proofReady;
 
   const blockingCodes = [...judgeIntegrity.blockingCodes];
   if (!priorArtifactsValid && blockingCodes.length === 0) {
@@ -362,6 +368,7 @@ export function evaluateFinalReportEligibility(input: {
       blockingCodes.push(FINAL_REPORT_GREENFIELD_READINESS_INCOMPLETE);
     }
   }
+  if (!proofReady && proofEvidence?.code && !blockingCodes.includes(proofEvidence.code)) blockingCodes.push(proofEvidence.code);
 
   const greenfieldPrimaryReason = !greenfieldReady
     ? greenfieldReadiness!.issues.find((issue) => issue.severity === 'error')?.reason ??
@@ -377,7 +384,8 @@ export function evaluateFinalReportEligibility(input: {
     primaryReason:
       judgeIntegrity.primaryReason ??
       (!priorArtifactsValid ? 'A required prior native artifact is not yet complete.' : undefined) ??
-      greenfieldPrimaryReason,
+      greenfieldPrimaryReason ?? proofEvidence?.reason,
     greenfieldReadiness,
+    proofEvidence,
   };
 }

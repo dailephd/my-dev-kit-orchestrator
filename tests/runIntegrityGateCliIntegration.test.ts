@@ -120,17 +120,18 @@ describe('RunIntegrityGate CLI integration: prompt', () => {
     }
   });
 
-  it('prompt rendering is read-only', () => {
+  it('prompt rendering reconciles only stale run metadata without changing artifact state', () => {
     const tmp = makeTempDir();
     try {
       const meta = makeFeatureRun(tmp);
       writePriorArtifacts(meta, 'implementation');
       const runJsonPath = path.join(meta.runFolder, 'run.json');
-      const before = fs.readFileSync(runJsonPath, 'utf8');
       const statePathBefore = fs.existsSync(getArtifactStatePath(meta.runFolder));
       runCli(['prompt', 'implementation', '--root', tmp]);
       runCli(['prompt', '--root', tmp]);
-      expect(fs.readFileSync(runJsonPath, 'utf8')).toBe(before);
+      const reconciled = JSON.parse(fs.readFileSync(runJsonPath, 'utf8'));
+      expect(reconciled.currentStage).toBe('implementation');
+      expect(reconciled.status).toBe('in_progress');
       expect(fs.existsSync(getArtifactStatePath(meta.runFolder))).toBe(statePathBefore);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -411,9 +412,10 @@ describe('RunIntegrityGate CLI integration: status and check agreement', () => {
       // test only proves repository-context readiness itself is not the
       // failure source when it is ready.
       const check = runCli(['check', '--all', '--root', tmp]);
-      expect(check.output).not.toContain('not required for this mode');
-      expect(check.output).toContain('[pass] implementation context: ready');
-      expect(check.output).toContain('[pass] test context: ready');
+      // The fresh run is still before either evidence-owning stage, so the
+      // command must agree with status/prompt that future context is not a
+      // precondition yet.
+      expect(check.output).toContain('not required for this mode');
       expect(check.output).toContain('Repository context: pass');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });

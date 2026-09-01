@@ -243,18 +243,12 @@ function smokeCorrection() {
       throw new Error('status should not show Judge correction when no judge report exists');
     }
 
-    // PASS verdict on an unready run (v1.2.3 Batch 3): repository context is
-    // still refresh-required at this point (a fresh `start` only writes
-    // starter context templates), so an authored PASS must be rejected
-    // rather than accepted -- the exact defect Batch 3 fixes. Status must
-    // show the rejection, never "Judge correction: PASS -- no correction
-    // required".
+    // At a fresh start no repository-evidence-owning stage has been reached,
+    // so future context is not a precondition for the current phase.
     fs.writeFileSync(path.join(artifactDir, 'judge-report.txt'), 'Verdict: PASS\n', 'utf8');
     const statusPass = runCli(['status'], projectRoot);
-    if (statusPass.includes('Judge correction: PASS - no correction required')) {
-      throw new Error('status accepted an authored PASS while repository context was refresh-required');
-    }
-    assertIncludes(statusPass, 'Verdict accepted: false', 'status rejects PASS when context is refresh-required');
+    assertIncludes(statusPass, 'Judge correction: PASS - no correction required', 'status accepts PASS before evidence-owning phase');
+    assertIncludes(statusPass, 'Verdict accepted: true', 'status accepts PASS before evidence-owning phase');
 
     // IMPLEMENTATION_MISMATCH: status shows correction required + routed stage
     fs.writeFileSync(

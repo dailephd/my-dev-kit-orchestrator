@@ -41,7 +41,7 @@
       "export"
     ],
     "docs/PROJECT_OVERVIEW.md": ["workflow coordinator", "my-dev-kit", "my-dev-kit-lab", "Non-goals"],
-    "docs/CURRENT_STATE.md": ["1.3.3", "eight commands", "four starter profiles", "Current release", "v1.4.0", "Current limitations"],
+    "docs/CURRENT_STATE.md": ["1.4.0", "eight commands", "four starter profiles", "Current release", "v1.4.0", "Current limitations"],
     "docs/CONTRACTS.md": ["RunIntegrityGate", "judge integrity", "final-report eligibility", "ARTIFACTS.md"],
     "docs/COMMANDS.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export"],
     "docs/USAGE.md": [
@@ -185,7 +185,8 @@
     "v1.3.2",
     "v1.3.3",
     "v1.4.0",
-    "v1.5.0"
+    "v1.5.0",
+    "v1.6.0"
   ],
   "greenfieldStageOrder": [
     "idea-brief",
@@ -222,14 +223,14 @@
     "artifacts/bootstrap-bundle.json"
   ],
   "roadmapCandidateAssignments": {
-    "v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"],
-    "v1.5.0": ["ios-swiftui", "flutter", "react-native"]
+    "v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"]
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.3.3",
-    "latestPublishedVersion": "1.3.3",
+    "packageMetadataVersion": "1.4.0",
+    "latestPublishedVersion": "1.4.0",
     "implementedUnpublishedVersions": [],
+    "plannedUnpublishedVersions": ["v1.5.0", "v1.6.0"],
     "cliCommands": [
       "init",
       "start",

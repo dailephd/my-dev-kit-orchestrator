@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { evaluateRunContextReadiness } from '../src/instructions/runContextReadiness';
 import { getWorkflow } from '../src/workflows';
+import { makeReadyRunFolder } from './readyContextTestHelpers';
 
 function makeRunFolder(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-run-readiness-'));
@@ -16,6 +17,41 @@ function stageNames(mode: string): string[] {
 }
 
 describe('evaluateRunContextReadiness', () => {
+  it('does not apply future repository evidence before its owning stage', () => {
+    const runFolder = makeRunFolder();
+    const summary = evaluateRunContextReadiness({
+      mode: 'feature',
+      runFolder,
+      workflowStageNames: stageNames('feature'),
+      currentStage: 'architecture-context',
+    });
+    expect(summary.overallDecision).toBe('not-required');
+    expect(summary.implementationContext).toBeUndefined();
+    expect(summary.testContext).toBeUndefined();
+  });
+
+  it('begins fail-closed enforcement at each requirement owning stage and keeps it for later stages', () => {
+    const runFolder = makeRunFolder();
+    const implementation = evaluateRunContextReadiness({
+      mode: 'feature', runFolder, workflowStageNames: stageNames('feature'), currentStage: 'implementation',
+    });
+    expect(implementation.implementationContext?.decision).toBe('refresh-required');
+    expect(implementation.testContext).toBeUndefined();
+
+    makeReadyRunFolder(runFolder, 'feature');
+    const ready = evaluateRunContextReadiness({
+      mode: 'feature', runFolder, workflowStageNames: stageNames('feature'), currentStage: 'implementation',
+    });
+    expect(ready.overallDecision).toBe('ready');
+
+    fs.rmSync(path.join(runFolder, 'artifacts', 'test-context-packet.txt'));
+    const later = evaluateRunContextReadiness({
+      mode: 'feature', runFolder, workflowStageNames: stageNames('feature'), currentStage: 'verification',
+    });
+    expect(later.implementationContext?.decision).toBe('ready');
+    expect(later.testContext?.decision).toBe('refresh-required');
+  });
+
   it('greenfield is not-required with no recommendation', () => {
     const runFolder = makeRunFolder();
     const summary = evaluateRunContextReadiness({ mode: 'greenfield', runFolder, workflowStageNames: stageNames('greenfield') });

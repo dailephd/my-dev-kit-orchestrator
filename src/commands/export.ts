@@ -6,7 +6,9 @@ import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
-import { evaluateJudgeIntegrity, JudgeIntegrityResult } from '../judgeIntegrity';
+import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult } from '../judgeIntegrity';
+import { readArtifactStateFile } from '../artifactLifecycle';
+import { StageDefinition } from '../workflows';
 import type { WorkflowMode } from '../types';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
@@ -145,11 +147,13 @@ function formatContextReadinessSummary(meta: {
   runFolder: string;
   projectRoot?: string;
   stages: Array<{ name: string }>;
+  currentStage?: string;
 }): string {
   const summary = evaluateRunContextReadiness({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage: meta.currentStage,
     projectRoot: meta.projectRoot,
   });
 
@@ -226,6 +230,8 @@ export function buildExportText(meta: {
   runFolder: string;
   projectRoot?: string;
   stages: Array<{ name: string; artifactFile: string }>;
+  proofOnly?: boolean;
+  verificationResponsibility?: string;
 }): string {
   const parts: string[] = [];
 
@@ -236,9 +242,15 @@ export function buildExportText(meta: {
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
+    currentStage: meta.currentStage,
     projectRoot: meta.projectRoot,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
+  const finalEligibility = evaluateFinalReportEligibility({
+    gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages as StageDefinition[],
+    stateFile: readArtifactStateFile(meta.runFolder),
+    proofOnly: meta.proofOnly === true, verificationResponsibility: meta.verificationResponsibility,
+  });
 
   parts.push('my-dev-kit-orchestrator run handoff export');
   parts.push(`Generated: ${new Date().toISOString()}`);
@@ -250,6 +262,11 @@ export function buildExportText(meta: {
   parts.push(`  Created:      ${meta.createdAt}`);
   parts.push(`  Current stage: ${meta.currentStage}`);
   parts.push(`  Run folder:   ${meta.runFolder}`);
+  if (meta.proofOnly) {
+    parts.push(`  Proof-only:  active`);
+    parts.push(`  Verification responsibility: ${meta.verificationResponsibility}`);
+    parts.push(`  Proof evidence: ${finalEligibility.proofEvidence?.state ?? 'invalid'}`);
+  }
 
   parts.push(sectionHeader('Request'));
   parts.push(`  ${meta.request}`);

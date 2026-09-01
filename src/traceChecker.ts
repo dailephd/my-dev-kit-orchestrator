@@ -29,9 +29,11 @@ export interface TraceCheckResultsFile {
 
 // ─── Declared ID parser ───────────────────────────────────────────────────────
 
-// Inline regex for valid trace IDs
-const TRACE_ID_INLINE_RE_SRC =
-  '(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\\d{3,})';
+// A declaration is the documented label form at the start of a line, e.g.
+// "BEH-001: externally visible behavior". A valid ID mentioned in ordinary
+// prose is a reference, not a declaration.
+const TRACE_DECLARATION_RE =
+  /^\s*(?:[-*+]\s+)?(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})\s*:/;
 
 // Malformed token pattern
 const MALFORMED_TOKEN_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
@@ -49,11 +51,8 @@ export function parseDeclaredTraceIds(content: string): TraceId[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.includes('->')) continue; // skip link lines
-    let match: RegExpExecArray | null;
-    const lineRe = new RegExp(TRACE_ID_INLINE_RE_SRC, 'g');
-    while ((match = lineRe.exec(line)) !== null) {
-      results.push({ id: match[0], prefix: match[1], num: match[2], line: i + 1 });
-    }
+    const match = TRACE_DECLARATION_RE.exec(line);
+    if (match) results.push({ id: `${match[1]}-${match[2]}`, prefix: match[1], num: match[2], line: i + 1 });
   }
   return results;
 }

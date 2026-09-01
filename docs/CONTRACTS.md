@@ -26,6 +26,12 @@ Readiness owners under `src/instructions/` select one deterministic primary bloc
 
 `src/runIntegrityGate.ts` is the canonical readiness-sensitive decision. `src/judgeIntegrity.ts` prevents an authored `PASS` from overriding a required `NEED_CONTEXT` state and evaluates final-report eligibility. A normal final report requires an accepted `PASS`, no active correction, and no remaining readiness blocker. Artifact presence or a manual lifecycle mark cannot substitute.
 
+## Proof-only and bounded Observer-evidence contracts
+
+`start --proof-only --verification-responsibility <path>` is an explicit, durable run capability rather than a workflow mode or stage. A proof-only run requires a non-empty safe relative responsibility path; the responsibility option without `--proof-only`, or an unsafe path, fails closed. Legacy runs without `proofOnly` remain ordinary. Final proof evidence must include a trimmed line exactly equal to `Proof result: PASS`; this does not bypass `RunIntegrityGate`, judge/correction state, or applicable context readiness.
+
+`consumeBoundedObserverEvidence` is a pure public library boundary for already-loaded `my-frontend-observer/bounded-agent-context` schema `1.0.0` artifacts. It validates bounded producer, provenance, adequacy, loss, identity, and runtime/static-correlation truth without browser execution, persistence, static retrieval, or source/edit-authority inference. Structurally valid inadequate evidence remains distinct from malformed or unsupported evidence.
+
 ## Greenfield profile and scaffold contract
 
 Profile types/registry/resolution live under `src/greenfield/profiles`. Bootstrap bundles, project-document content, scaffold targets, setup/validation commands, generated-file reports, and readiness are structured evidence. A profile is guidance and validation policy, not an executor. Detailed greenfield artifacts are in [ARTIFACTS.md](ARTIFACTS.md); command behavior is in [COMMANDS.md](COMMANDS.md).

@@ -36,7 +36,7 @@ describe('runtime compatibility (Batch 3)', () => {
       const runJsonText = fs.readFileSync(path.join(meta.runFolder, 'run.json'), 'utf8');
       const runJson = JSON.parse(runJsonText);
       expect(Object.keys(runJson).sort()).toEqual(
-        ['artifactFile', 'currentStage', 'mode', 'projectRoot', 'request', 'runFolder', 'runId', 'stages', 'status', 'createdAt']
+        ['artifactFile', 'currentStage', 'mode', 'projectRoot', 'proofOnly', 'request', 'runFolder', 'runId', 'stages', 'status', 'createdAt']
           .filter((k) => k !== 'artifactFile')
           .sort(),
       );
@@ -44,6 +44,7 @@ describe('runtime compatibility (Batch 3)', () => {
       expect(runJson).not.toHaveProperty('taskState');
       expect(runJson).not.toHaveProperty('workflowInstructionPacket');
       expect(runJson).not.toHaveProperty('sidecars');
+      expect(runJson.proofOnly).toBe(false);
     } finally {
       cleanup(tmp);
     }
@@ -78,9 +79,9 @@ describe('runtime compatibility (Batch 3)', () => {
   const describeIfBuilt = fs.existsSync(CLI) ? describe : describe.skip;
 
   describeIfBuilt('CLI compatibility', () => {
-    it('--version reports the v1.3.3 release', () => {
+    it('--version reports the current release', () => {
       const out = execFileSync(process.execPath, [CLI, '--version'], { encoding: 'utf8' }).trim();
-      expect(out).toBe('1.3.3');
+      expect(out).toBe('1.4.0');
     });
 
     it('--help output is unchanged', () => {

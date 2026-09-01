@@ -156,18 +156,21 @@ describe('Judge/final-report integrity CLI integration: prompt', () => {
     }
   });
 
-  it('prompt display remains read-only', () => {
+  it('prompt display reconciles stale run metadata without changing judge artifacts', () => {
     const tmp = makeTempDir();
     try {
       const meta = makeFeatureRun(tmp);
       writeAllPriorArtifacts(meta, 'final-report');
       writeJudgeReport(meta, 'Verdict: PASS');
       const runJsonPath = path.join(meta.runFolder, 'run.json');
-      const before = fs.readFileSync(runJsonPath, 'utf8');
       const judgeBefore = fs.readFileSync(path.join(meta.runFolder, 'artifacts', 'judge-report.txt'), 'utf8');
       runCli(['prompt', 'final-report', '--root', tmp]);
       runCli(['prompt', '--root', tmp]);
-      expect(fs.readFileSync(runJsonPath, 'utf8')).toBe(before);
+      const reconciled = JSON.parse(fs.readFileSync(runJsonPath, 'utf8'));
+      // Canonical repository-context integrity remains the first unresolved
+      // lifecycle condition, even when authored artifacts reach final report.
+      expect(reconciled.currentStage).toBe('implementation');
+      expect(reconciled.status).toBe('in_progress');
       expect(fs.readFileSync(path.join(meta.runFolder, 'artifacts', 'judge-report.txt'), 'utf8')).toBe(judgeBefore);
       expect(fs.existsSync(path.join(meta.runFolder, 'artifacts', 'final-report.txt'))).toBe(false);
     } finally {

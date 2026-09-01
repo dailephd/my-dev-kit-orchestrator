@@ -6,14 +6,11 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.3.3` (Python CLI greenfield profile and common
-coding-agent instruction bootstrap), which retains `v1.3.2`'s greenfield JSON
-artifact contract correction, `v1.3.1`'s standardized greenfield documentation
-and full-stack Next.js environment hardening, and `v1.3.0`'s
-mobile profile expansion and scaffold verification and the `v1.2.3`
-run-integrity and judge-verdict enforcement validated against the released
-`@dailephd/my-dev-kit@1.10.4` package. Architecture is organized by current
-responsibility rather than by release version.
+The current release is `v1.4.0`, adding maintained-line trace/lifecycle
+reconciliation, phase-aware readiness, explicit proof-only verification, and
+the bounded Observer v0.6 consumer while retaining the prior greenfield,
+integrity, and instruction-bootstrap contracts. Architecture is organized by
+current responsibility rather than by release version.
 
 ## System boundaries
 
