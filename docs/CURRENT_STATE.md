@@ -72,7 +72,7 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-The next implementation direction after the unreleased `v1.4.0` candidate is
+The next implementation direction after the released `v1.4.0` is
 the separately deferred Greenfield-to-Feature Workflow Handoff Hardening.
 
 Before further implementation or release work, the planner must inspect the current

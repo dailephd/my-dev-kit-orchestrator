@@ -2,7 +2,7 @@
 
 Versions are listed in chronological order.
 
-`v1.3.3` is the current published release. `v1.3.2`, `v1.3.1`, `v1.3.0`,
+`v1.4.0` is the current published release. `v1.3.3`, `v1.3.2`, `v1.3.1`, `v1.3.0`,
 `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
 releases remain part of the published project history. `v1.4.0` is released;
 later versions remain planned.
