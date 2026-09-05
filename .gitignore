@@ -20,6 +20,6 @@ CLAUDE.md
 agents.txt
 claude.txt
 docs/*.txt
-reports/
+/reports/
 docs/RELEASE_CHECKLIST.md
 .claude/
