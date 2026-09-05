@@ -6,11 +6,12 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.4.0`, adding maintained-line trace/lifecycle
+The current release is `v1.4.1`, correcting the installed greenfield
+instruction surface while retaining the prior greenfield, integrity, and
+instruction-bootstrap contracts, `v1.4.0`'s maintained-line trace/lifecycle
 reconciliation, phase-aware readiness, explicit proof-only verification, and
-the bounded Observer v0.6 consumer while retaining the prior greenfield,
-integrity, and instruction-bootstrap contracts. Architecture is organized by
-current responsibility rather than by release version.
+the bounded Observer v0.6 consumer. Architecture is organized by current
+responsibility rather than by release version.
 
 ## System boundaries
 

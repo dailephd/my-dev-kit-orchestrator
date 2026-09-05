@@ -30,7 +30,7 @@ describe('v1.2.0 baseline compatibility (Batch 1)', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     expect(pkg.name).toBe(inventory.packageContract.name);
     expect(inventory.packageContract.version).toBe('1.2.0');
-    expect(pkg.version).toBe('1.4.0');
+    expect(pkg.version).toBe('1.4.1');
   });
 
   it('exactly seven modes exist, matching the baseline', () => {

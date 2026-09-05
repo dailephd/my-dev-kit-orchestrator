@@ -143,13 +143,16 @@ describe('Android Compose CLI regression (v1.2.0)', () => {
     expect(output).toContain('Total: 1 run(s)');
   });
 
-  it('starter-profile stage prompt delegates supported-profile validity to the canonical registry', () => {
+  it('starter-profile stage prompt delegates supported-profile validity to the canonical registry and exposes android-compose as a listed profile ID', () => {
     runCliCaptured(['start', '--mode', 'greenfield', '--root', tmp, ANDROID_COMPOSE_REQUEST]);
     fillPriorArtifacts(tmp, 'starter-profile');
     const { output, exitCode } = runCliCaptured(['prompt', 'starter-profile', '--root', tmp]);
     expect(exitCode).toBeUndefined();
     expect(output).toMatch(/canonical SUPPORTED_PROFILES registry/);
-    expect(output).not.toMatch(/typescript-cli, nextjs-app, android-compose/);
+    // v1.4.1: the starter-profile prompt now directly lists the supported
+    // profile IDs (superseding the prior no-enumeration requirement), so
+    // android-compose must appear among them.
+    expect(output).toMatch(/Supported starter profile IDs:.*android-compose/);
     // Must not blanket-forbid Android/mobile profiles now that one is supported.
     expect(output).not.toMatch(/do not use Android\/mobile profiles/);
   });
@@ -181,7 +184,9 @@ describe('Android Compose CLI regression (v1.2.0)', () => {
     fillPriorArtifacts(tmp, 'project-docs');
     const { output, exitCode } = runCliCaptured(['prompt', 'project-docs', '--root', tmp]);
     expect(exitCode).toBeUndefined();
-    expect(output).toMatch(/do not claim Android\/mobile support unless the selected profile is android-compose/);
+    expect(output).toContain(
+      'do not claim Android/mobile support in generated documentation unless the selected starter profile ID is android-compose',
+    );
   });
 
   it('no prompt output claims Gradle was run or that the Android SDK is available', () => {

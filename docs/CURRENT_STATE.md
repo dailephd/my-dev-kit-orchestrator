@@ -3,20 +3,25 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.4.0`
-- Current release: `v1.4.0`
+- Package metadata version: `1.4.1`
+- Current release: `v1.4.1`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.4.0`
-- Latest Git tag and GitHub Release: `v1.4.0`
+- Latest npm version: `1.4.1`
+- Latest Git tag and GitHub Release: `v1.4.1`
 
-Package metadata, npm, the `v1.4.0` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.4.1` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
-`v1.4.0` ships formal-trace and lifecycle reconciliation corrections,
-phase-aware repository readiness, explicit proof-only runs, and a bounded
-Observer v0.6 evidence consumer. Fresh pushed `my-frontend-observer@0.6.0`
-artifacts validate against the maintained consumer. The historical Lab
-compatibility leg is not reproducible from surviving pushed Lab source.
+`v1.4.1` corrects the installed greenfield instruction surface: five stage
+prompts (`idea-brief`, `starter-profile`, `bootstrap-bundle`, `project-docs`,
+and `scaffold-plan`) no longer depend on Orchestrator-maintainer source paths.
+Public prompts now state their artifact, behavior, validation, and
+stop-condition requirements directly. Isolated packed-install acceptance
+validated that the corrected source-build and installed-package prompts are
+equivalent for all five affected stages. All eight commands, seven workflow
+modes, 79 native stages, 13 greenfield stages, and four starter profiles
+remain unchanged; no package, dependency, export, or core retrieval-engine
+change was required.
 
 ## Implemented operational surface
 
@@ -33,12 +38,6 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
-- Installed-package parity is otherwise clean, but four confirmed greenfield
-  stage instructions (`idea-brief`, `starter-profile`, `scaffold-plan`, and
-  `bootstrap-bundle`) still expose Orchestrator-maintainer source-path guidance
-  to coding agents working on generated user projects. This is a shipped
-  prompt-content defect, not a missing package asset; `v1.4.1` is planned as a
-  bounded correction.
 
 ## Active next direction
 
@@ -78,16 +77,16 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-The immediate next planned work is `v1.4.1`, Installed Greenfield Instruction
-Surface Correction. It will replace inappropriate Orchestrator-maintainer
+`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the current
+released version. It replaces inappropriate Orchestrator-maintainer
 source-path guidance in shipped greenfield prompts with direct artifact,
 behavior, validation, and completion requirements while preserving the
-underlying instruction intent and installed package surface.
-
-After `v1.4.1`, `v1.5.0` remains the planned Semantic Continuity and
-Evidence-to-Implementation Bridge, followed by `v1.6.0` Workflow Economics and
-Deterministic Run Telemetry. Greenfield-to-Feature Workflow Handoff Hardening
-and optional mobile-profile candidates remain separately deferred.
+underlying instruction intent and installed package surface. The active next
+direction is: (1) `v1.5.0`, Semantic Continuity and Evidence-to-Implementation
+Bridge, is the next planned feature version; (2) `v1.6.0` Workflow Economics
+and Deterministic Run Telemetry follows; (3) Greenfield-to-Feature Workflow
+Handoff Hardening remains deferred; (4) optional mobile-profile candidates
+remain deferred.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a

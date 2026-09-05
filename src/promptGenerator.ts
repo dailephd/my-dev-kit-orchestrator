@@ -7,6 +7,7 @@ import {
   renderScaffoldPlanPrompt,
   renderScaffoldImplementationPrompt,
 } from './greenfield/scaffold/renderScaffoldPrompt';
+import { SUPPORTED_PROFILES, PROFILE_ALIASES } from './greenfield/profiles/resolveGreenfieldProfile';
 import { buildInstructionCatalog } from './instructions/catalog';
 import { renderWorkflowInstructionPacket } from './instructions/workflowInstructionPacketRenderer';
 import { serializeWorkflowInstructionPacket } from './instructions/workflowInstructionPacketSerialization';
@@ -1588,7 +1589,7 @@ Required output artifact: IdeaBrief
 Output file: ${ctx.runFolder}/artifacts/idea-brief.json
 
 Return format:
-Produce the artifact as a JSON file matching NormalizedGreenfieldBrief (src/greenfield/brief/briefTypes.ts), plus:
+Produce the artifact as a JSON file with these fields: "rawIdea" (string, required), "candidateProjectName" (optional), "productGoal" (optional), "usersOrAudience" (optional), "coreWorkflow" (optional), "constraints" (string array), "nonGoals" (string array), "preferredStack" (string array), "preferredProfile" (optional), "platformTarget" (optional), "projectType" (optional), "webFramework" (optional), "documentationPreferences" (string array), "testingExpectations" (string array), and "unresolved" (array of { "field": string, "reason": string }), plus:
   "status": "complete" | "incomplete" | "blocked"
 `;
 }
@@ -1639,6 +1640,10 @@ Produce the artifact as a plain-text file using the template:
 }
 
 function greenfieldStarterProfilePrompt(ctx: PromptContext): string {
+  const supportedProfileIds = Object.keys(SUPPORTED_PROFILES).join(', ');
+  const recognizedAliases = Object.entries(PROFILE_ALIASES)
+    .map(([alias, profileId]) => `${alias} -> ${profileId}`)
+    .join(', ');
   return `${header(ctx)}
 Inputs:
 - ${ctx.runFolder}/artifacts/idea-brief.json
@@ -1647,11 +1652,14 @@ Inputs:
 
 ${ctx.stageInstructionText}
 
+Supported starter profile IDs: ${supportedProfileIds}
+Recognized aliases: ${recognizedAliases}
+
 Required output artifact: StarterProfile
 Output file: ${ctx.runFolder}/artifacts/starter-profile.json
 
 Return format:
-Produce the artifact as a JSON file matching GreenfieldProfileSelection (src/greenfield/profiles/profileTypes.ts), plus:
+Produce the artifact as a JSON file with these fields: "status" ("selected", "unresolved", or "unsupported"), "profile" (the resolved profile object, present only when status is "selected"), "requestedProfileId" (optional), "reason" (string), and "stackDecisionNotes" (string array), plus:
   "status": "complete" | "incomplete" | "blocked"
 `;
 }
@@ -1670,7 +1678,7 @@ Required output artifact: GreenfieldBootstrapBundleArtifact
 Output file: ${ctx.runFolder}/artifacts/bootstrap-bundle.json
 
 Return format:
-Produce the artifact as a JSON file matching GreenfieldBootstrapBundle (src/greenfield/bootstrap/bootstrapBundleTypes.ts), plus:
+Produce the artifact as a JSON file with these top-level fields: "normalizedBrief", "selectedProfile", "starterProfile", "stackDecision", "templateTargets", "docGenerationInstructions", "scaffoldPlanningInputs", "validationRules", "unresolvedDecisions", and "fullstackCapability", plus:
   "status": "complete" | "incomplete" | "blocked"
 `;
 }

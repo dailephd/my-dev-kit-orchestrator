@@ -2,10 +2,11 @@
 
 Versions are listed in chronological order.
 
-`v1.4.0` is the current published release. `v1.3.3`, `v1.3.2`, `v1.3.1`, `v1.3.0`,
-`v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
-releases remain part of the published project history. `v1.4.1`, `v1.5.0`, and
-`v1.6.0` are planned; deferred scopes remain separate.
+`v1.4.1` is the current published release. `v1.4.0`, `v1.3.3`, `v1.3.2`,
+`v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
+and the `v0.x.0` releases remain part of the published project history.
+`v1.5.0` and `v1.6.0` remain planned after `v1.4.1`; deferred scopes remain
+separate.
 
 ## Version summary
 
@@ -51,11 +52,12 @@ releases remain part of the published project history. `v1.4.1`, `v1.5.0`, and
   phase-aware readiness and explicit proof-only verification, and adds a
   bounded Observer v0.6 evidence consumer validated against fresh pushed
   Observer source.
-- `v1.4.1` will correct the installed greenfield instruction surface by
+- `v1.4.1` corrects the installed greenfield instruction surface by
   replacing inappropriate Orchestrator-maintainer source-path guidance in
-  public generated prompts with direct artifact, behavior, validation, and
-  completion requirements, with isolated packed-install regression coverage
-  and no packaging or workflow redesign.
+  public generated prompts (five affected stages: `idea-brief`,
+  `starter-profile`, `bootstrap-bundle`, `project-docs`, and `scaffold-plan`)
+  with direct artifact, behavior, validation, and completion requirements.
+  Released on 2026-09-05.
 - `v1.5.0` will provide the Semantic Continuity and Evidence-to-Implementation
   Bridge; richer semantic chains remain opt-in for FULL_STAGE_CONTEXT.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
@@ -1185,10 +1187,9 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.4.0` is the current published release. `v1.4.1` is the next planned patch;
-`v1.5.0` remains the next planned feature version after that, followed by
-`v1.6.0`. Greenfield-to-Feature Workflow Handoff Hardening and optional
-mobile-profile candidates remain deferred scopes.
+`v1.4.1` is the current published release. `v1.5.0` remains the next planned
+feature version, followed by `v1.6.0`. Greenfield-to-Feature Workflow Handoff
+Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
 
@@ -1207,7 +1208,7 @@ Implemented scope:
 
 ### v1.4.1 - Installed Greenfield Instruction Surface Correction
 
-Status: Planned patch before `v1.5.0`.
+Status: Released as `1.4.1` on 2026-09-05.
 
 Audit basis:
 
@@ -1215,12 +1216,30 @@ Audit basis:
   seven workflow modes with behavior matching the source build
 - package contents, runtime assets, dependencies, exports, and repository-root
   independence were otherwise clean
-- four confirmed greenfield stage instructions (`idea-brief`,
-  `starter-profile`, `scaffold-plan`, and `bootstrap-bundle`) expose
-  Orchestrator-maintainer source paths such as `src/greenfield/**/*.ts` to
-  coding agents working on generated user projects
+- a complete audit of all 13 native greenfield stages found five affected
+  stage instructions (`idea-brief`, `starter-profile`, `bootstrap-bundle`,
+  `project-docs`, and `scaffold-plan`) exposing Orchestrator-maintainer source
+  paths such as `src/greenfield/**/*.ts` to coding agents working on generated
+  user projects; the original four-stage planning assumption undercounted
+  `project-docs`
 - the defect is shipped instruction content, not a missing package asset or a
   package-files problem
+
+Implementation and validation summary:
+
+- nine internal Orchestrator source-path/symbol references were removed from
+  the five affected stages' emitted public prompts and replaced with direct
+  artifact, behavior, validation, and completion requirements
+- the correction spans the existing generic instruction path, the
+  `promptGenerator` return-format path, and the specialized scaffold-plan
+  renderer; no new workflow, mode, stage, CLI command, package asset family,
+  dependency, or retrieval-engine change was required
+- independent packed-install acceptance installed the actual candidate npm
+  tarball outside the repository and confirmed: zero forbidden references
+  remain in any of the five corrected prompts; all required guidance is
+  preserved; legitimate target-project `src/...` references are unaffected;
+  and the installed tarball's rendered prompts match the source build's
+  rendered prompts for all five corrected stages
 
 Goal:
 
@@ -1233,8 +1252,9 @@ Planned scope:
 
 - audit the complete rendered public greenfield instruction surface for
   equivalent Orchestrator-internal source-path leakage
-- correct the confirmed `idea-brief`, `starter-profile`, `scaffold-plan`, and
-  `bootstrap-bundle` instruction content in the existing instruction owner
+- correct the confirmed `idea-brief`, `starter-profile`, `bootstrap-bundle`,
+  `project-docs`, and `scaffold-plan` instruction content in the existing
+  instruction owner
 - for every removed internal reference, identify the requirement it was meant
   to communicate and state that requirement directly rather than deleting the
   guidance without replacement
@@ -1252,7 +1272,7 @@ Acceptance criteria:
 - every meaningful requirement represented by a removed internal path remains
   present as direct artifact, behavior, validation, or completion guidance
 - the complete rendered greenfield prompt surface is checked for equivalent
-  leakage, not only the four known examples
+  leakage, not only the confirmed examples
 - affected source-build prompt tests and isolated packed-install acceptance pass
 - all eight public CLI commands and all seven workflow modes remain available
 - package contents, runtime dependencies, exports, workflow modes, native stage

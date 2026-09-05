@@ -81,7 +81,7 @@ describe('runtime compatibility (Batch 3)', () => {
   describeIfBuilt('CLI compatibility', () => {
     it('--version reports the current release', () => {
       const out = execFileSync(process.execPath, [CLI, '--version'], { encoding: 'utf8' }).trim();
-      expect(out).toBe('1.4.0');
+      expect(out).toBe('1.4.1');
     });
 
     it('--help output is unchanged', () => {

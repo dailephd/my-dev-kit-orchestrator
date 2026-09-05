@@ -120,6 +120,26 @@ describe('renderScaffoldPlanPrompt', () => {
     expect(prompt.toLowerCase()).not.toMatch(/react-native|flutter|jetpack|ios app/);
   });
 
+  // v1.4.1: renderScaffoldPlanPrompt must not name Orchestrator-internal
+  // source files/symbols; the actual required-target/path-safety and
+  // scaffoldPlanningInputs-source-of-truth guidance must be stated directly.
+  it('does not reference bootstrapBundleTypes.ts or validateGreenfieldScaffoldPlan( and preserves the required guidance', () => {
+    const prompt = renderScaffoldPlanPrompt(makeCtx());
+    expect(prompt).not.toContain('bootstrapBundleTypes.ts');
+    expect(prompt).not.toContain('validateGreenfieldScaffoldPlan(');
+    expect(prompt).toContain("Use the bootstrap bundle's scaffoldPlanningInputs as the source of truth");
+    expect(prompt).toContain('Do not invent structure beyond those inputs');
+    expect(prompt).toMatch(/must exactly\s+match the selected profile's declared target-path expectations/);
+    expect(prompt).toMatch(/required-target and path-safety requirements/);
+    expect(prompt).toMatch(/do not invent additional target paths/);
+  });
+
+  it('preserves the ScaffoldPlan output artifact and scaffold-plan.txt output file', () => {
+    const prompt = renderScaffoldPlanPrompt(makeCtx());
+    expect(prompt).toContain('Required output artifact: ScaffoldPlan');
+    expect(prompt).toContain('artifacts/scaffold-plan.txt');
+  });
+
   it('does not mutate any files at prompt-generation time', () => {
     // Use a dedicated, exclusively-owned temp directory rather than counting
     // entries in the shared os.tmpdir() root, which other concurrently
@@ -180,5 +200,24 @@ describe('scaffold stage prompts wired through the greenfield stage router', () 
   it('generateStagePrompt("scaffold-implementation") delegates to renderScaffoldImplementationPrompt', () => {
     const prompt = generateStagePrompt(fakeMeta(), 'scaffold-implementation');
     expect(prompt).toContain('reports/scaffold-implementation-report.txt');
+  });
+
+  // v1.4.1: renderScaffoldImplementationPrompt is not authorized for
+  // semantic change; its legitimate generated-project example path
+  // ("src/cli.ts") must remain, and the specialized scaffold-plan /
+  // scaffold-implementation renderer split must remain intact (neither
+  // collapsed into the generic packet renderer, nor into each other).
+  it('renderScaffoldImplementationPrompt still allows the legitimate generated-project src/cli.ts example', () => {
+    const prompt = renderScaffoldImplementationPrompt({ ...makeCtx(), stage: 'scaffold-implementation' });
+    expect(prompt).toContain('src/cli.ts');
+  });
+
+  it('scaffold-plan and scaffold-implementation remain on the specialized renderer (no bootstrapBundleTypes.ts / validateGreenfieldScaffoldPlan( leakage through the router either)', () => {
+    const planPrompt = generateStagePrompt(fakeMeta(), 'scaffold-plan');
+    const implPrompt = generateStagePrompt(fakeMeta(), 'scaffold-implementation');
+    for (const forbidden of ['bootstrapBundleTypes.ts', 'validateGreenfieldScaffoldPlan(']) {
+      expect(planPrompt).not.toContain(forbidden);
+      expect(implPrompt).not.toContain(forbidden);
+    }
   });
 });

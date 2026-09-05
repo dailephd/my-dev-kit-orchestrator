@@ -713,9 +713,9 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     ],
   },
   "stage.greenfield.bootstrap-bundle": {
-    taskInstructions: "Build the GreenfieldBootstrapBundle using src/greenfield/bootstrap/buildBootstrapBundle.ts for the resolved starter profile.",
+    taskInstructions: "Build the GreenfieldBootstrapBundle for the resolved starter profile. The bundle must record: the normalized brief, the selected starter profile, the starter profile summary, the stack decision, the template target categories, the documentation-generation instructions, the scaffold-planning inputs, the validation rules, the unresolved decisions, and the full-stack capability selection.",
     validationRequirements: [
-      "The GreenfieldBootstrapBundleArtifact must record the bundle produced by buildBootstrapBundle.ts for the resolved starter profile.",
+      "The GreenfieldBootstrapBundleArtifact must record the resolved bundle for the selected starter profile, including the normalized brief, selected profile, starter profile summary, stack decision, template target categories, doc-generation instructions, scaffold-planning inputs, validation rules, unresolved decisions, and full-stack capability selection.",
     ],
     stopConditions: [
       "do not implement scaffold",
@@ -758,7 +758,7 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     ],
   },
   "stage.greenfield.idea-brief": {
-    taskInstructions: "Use src/greenfield/brief/loadProjectBrief.ts and normalizeProjectBrief.ts as the runtime source of truth for this stage's shape.\nThe IdeaBrief must preserve:",
+    taskInstructions: "The IdeaBrief preserves the normalized project-brief information.\nThe IdeaBrief must preserve:",
     validationRequirements: [
       "raw idea text",
       "project name if provided",
@@ -775,7 +775,7 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     stopConditions: [
       "do not scaffold files",
       "do not implement code",
-      "do not silently choose a mobile/Android profile as a default when the request is ambiguous (see src/greenfield/profiles/resolveGreenfieldProfile.ts)",
+      "do not silently choose a mobile/Android profile as a default when the request is ambiguous about product type or mobile platform; preserve the ambiguity explicitly instead",
       "do not claim validation or release readiness",
     ],
   },
@@ -831,7 +831,7 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     ],
     stopConditions: [
       "do not update the current repository's README.md or docs/ROADMAP.md",
-      "do not claim Android/mobile support unless the selected profile is android-compose (see src/greenfield/bootstrap/validateBootstrapDocs.ts)",
+      "do not claim Android/mobile support in generated documentation unless the selected starter profile ID is android-compose",
       "do not claim release, security, or publish completion",
     ],
   },
@@ -882,7 +882,7 @@ export const STAGE_INSTRUCTION_CONTENT: Record<string, StageInstructionContent> 
     ],
   },
   "stage.greenfield.starter-profile": {
-    taskInstructions: "Select only from the canonical SUPPORTED_PROFILES registry in src/greenfield/profiles/resolveGreenfieldProfile.ts. If the request is ambiguous or unsupported, record that result clearly; do not substitute a default silently.",
+    taskInstructions: "Select only from the supported starter profile IDs listed below (including recognized aliases). If the request is ambiguous or unsupported, record that result clearly; do not substitute a default silently.",
     validationRequirements: [
       "The StarterProfile artifact must record a profile ID from the canonical SUPPORTED_PROFILES registry, or explicitly record an unresolved/unsupported profile result.",
     ],

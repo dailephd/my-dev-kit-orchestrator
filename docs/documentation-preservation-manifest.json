@@ -41,7 +41,7 @@
       "export"
     ],
     "docs/PROJECT_OVERVIEW.md": ["workflow coordinator", "my-dev-kit", "my-dev-kit-lab", "Non-goals"],
-    "docs/CURRENT_STATE.md": ["1.4.0", "eight commands", "four starter profiles", "Current release", "v1.4.0", "Current limitations"],
+    "docs/CURRENT_STATE.md": ["1.4.1", "eight commands", "four starter profiles", "Current release", "v1.4.1", "Current limitations"],
     "docs/CONTRACTS.md": ["RunIntegrityGate", "judge integrity", "final-report eligibility", "ARTIFACTS.md"],
     "docs/COMMANDS.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export"],
     "docs/USAGE.md": [
@@ -138,7 +138,7 @@
       "Reconciliation and stop threshold"
     ],
     "docs/RELEASE_CHECKLIST.md": [
-      "current published release is `v1.3.3`",
+      "current published release is `v1.4.1`",
       "79 native stages",
       "eight CLI commands",
       "11 context-sensitive direct stages",
@@ -228,10 +228,10 @@
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.4.0",
-    "latestPublishedVersion": "1.4.0",
+    "packageMetadataVersion": "1.4.1",
+    "latestPublishedVersion": "1.4.1",
     "implementedUnpublishedVersions": [],
-    "plannedUnpublishedVersions": ["v1.4.1", "v1.5.0", "v1.6.0"],
+    "plannedUnpublishedVersions": ["v1.5.0", "v1.6.0"],
     "cliCommands": [
       "init",
       "start",
@@ -291,7 +291,7 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.3.3 with older releases historically scoped and later versions remaining planned",
+    "published v1.4.1 with older releases historically scoped and later versions remaining planned",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -352,7 +352,7 @@
       "orderedHeadingGroups": [
         ["What it helps you do", "Current release", "Run-integrity enforcement (v1.2.3)", "Quick start", "Command overview", "Tool boundaries", "Documentation"]
       ],
-      "versionStatusPolicy": "v1.3.3 is the latest published release; older releases remain historical and later versions remain planned.",
+      "versionStatusPolicy": "v1.4.1 is the latest published release; older releases remain historical and later versions remain planned.",
       "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
       "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
@@ -367,7 +367,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
       "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
       "orderedHeadingGroups": [["v1.3.0 - Mobile Profile Expansion and Scaffold Verification", "v1.2.3 - Run-Integrity and Judge-Verdict Enforcement", "v1.2.2 - Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
-      "versionStatusPolicy": "v1.3.3 is the current published release and its finalized section carries the release date.",
+      "versionStatusPolicy": "v1.4.1 is the current published release and its finalized section carries the release date.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
@@ -476,7 +476,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
       "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Published v1.3.1", "Published v1.3.2", "Published v1.3.3", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.3.3 as the current published milestone while older releases remain historical and later versions remain high level.",
+      "versionStatusPolicy": "Keep v1.4.1 as the current published milestone while older releases remain historical and later versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],
