@@ -33,6 +33,12 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
+- Installed-package parity is otherwise clean, but four confirmed greenfield
+  stage instructions (`idea-brief`, `starter-profile`, `scaffold-plan`, and
+  `bootstrap-bundle`) still expose Orchestrator-maintainer source-path guidance
+  to coding agents working on generated user projects. This is a shipped
+  prompt-content defect, not a missing package asset; `v1.4.1` is planned as a
+  bounded correction.
 
 ## Active next direction
 
@@ -72,8 +78,16 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-The next implementation direction after the released `v1.4.0` is
-the separately deferred Greenfield-to-Feature Workflow Handoff Hardening.
+The immediate next planned work is `v1.4.1`, Installed Greenfield Instruction
+Surface Correction. It will replace inappropriate Orchestrator-maintainer
+source-path guidance in shipped greenfield prompts with direct artifact,
+behavior, validation, and completion requirements while preserving the
+underlying instruction intent and installed package surface.
+
+After `v1.4.1`, `v1.5.0` remains the planned Semantic Continuity and
+Evidence-to-Implementation Bridge, followed by `v1.6.0` Workflow Economics and
+Deterministic Run Telemetry. Greenfield-to-Feature Workflow Handoff Hardening
+and optional mobile-profile candidates remain separately deferred.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a
