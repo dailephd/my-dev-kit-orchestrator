@@ -3,7 +3,7 @@
 > [RELEASE.md](RELEASE.md) is the canonical maintainer release procedure. This file remains the detailed smoke, compatibility, and historical checklist.
 
 Use this checklist for release-readiness work. This file is a checklist
-template, not evidence that the listed steps have already run. The current published release is `v1.3.3`.
+template, not evidence that the listed steps have already run. The current published release is `v1.4.1`.
 Older releases remain historical baselines.
 
 ## Current release baseline
@@ -13,7 +13,7 @@ Older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current source greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`, `python-cli`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify `v1.3.3` as the current published release and scope older versions historically
+- [ ] docs identify `v1.4.1` as the current published release and scope older versions historically
 - [ ] docs preserve the 15-file public project-document baseline while classifying `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` as generated-project instructions
 
 ## Required local validation

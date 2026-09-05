@@ -67,7 +67,7 @@ export function buildCompatibilityManifest(): Record<string, unknown> {
     schemaVersion: '1.0.0',
     baselineCommit: '983a476da2d483f76f92fef73a0b324c9ed77ea7',
     packageName: '@dailephd/my-dev-kit-orchestrator',
-    currentPackageVersion: '1.4.0',
+    currentPackageVersion: '1.4.1',
     targetVersion: '1.2.1',
     workflowCount: workflows.length,
     stageCount,

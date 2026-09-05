@@ -29,7 +29,7 @@ describe('v1.2.1 package regression (npm pack --dry-run)', () => {
 
   it('package identity matches the current release', () => {
     expect(packageInfo?.name).toBe('@dailephd/my-dev-kit-orchestrator');
-    expect(packageInfo?.version).toBe('1.4.0');
+    expect(packageInfo?.version).toBe('1.4.1');
   });
 
   it('every included file is under dist/ or is an explicitly allowed root package file', () => {

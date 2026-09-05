@@ -23,9 +23,16 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.4.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.4.1`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
+
+`v1.4.1` corrects the installed greenfield instruction surface for five stage
+prompts (`idea-brief`, `starter-profile`, `bootstrap-bundle`, `project-docs`,
+and `scaffold-plan`): installed coding-agent prompts no longer depend on
+Orchestrator-maintainer source paths, and required artifact/behavior/
+validation/stop-condition/profile guidance remains explicit. No CLI command,
+workflow mode, native stage, or package dependency was added.
 
 `v1.4.0` ships phase-aware readiness, explicit proof-only verification,
 lifecycle and trace corrections, and a dependency-free bounded Observer v0.6

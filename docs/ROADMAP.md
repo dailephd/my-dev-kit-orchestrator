@@ -2,12 +2,11 @@
 
 Versions are listed in chronological order.
 
-`v1.4.0` is the current published release. `v1.3.3`, `v1.3.2`, `v1.3.1`, `v1.3.0`,
-`v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
-releases remain part of the published project history. `v1.4.1` is implemented
-and independently validated, including packed-install acceptance, but not yet
-released. `v1.5.0` and `v1.6.0` remain planned after `v1.4.1` releases;
-deferred scopes remain separate.
+`v1.4.1` is the current published release. `v1.4.0`, `v1.3.3`, `v1.3.2`,
+`v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
+and the `v0.x.0` releases remain part of the published project history.
+`v1.5.0` and `v1.6.0` remain planned after `v1.4.1`; deferred scopes remain
+separate.
 
 ## Version summary
 
@@ -58,9 +57,7 @@ deferred scopes remain separate.
   public generated prompts (five affected stages: `idea-brief`,
   `starter-profile`, `bootstrap-bundle`, `project-docs`, and `scaffold-plan`)
   with direct artifact, behavior, validation, and completion requirements.
-  Implementation and independent packed-install acceptance (installing the
-  actual npm tarball outside the repository) are both complete; the version
-  is not yet released.
+  Released on 2026-09-05.
 - `v1.5.0` will provide the Semantic Continuity and Evidence-to-Implementation
   Bridge; richer semantic chains remain opt-in for FULL_STAGE_CONTEXT.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
@@ -1190,11 +1187,9 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.4.0` is the current published release. `v1.4.1` is implemented and
-independently packed-install validated, but not yet released. After `v1.4.1`
-releases, `v1.5.0` remains the next planned feature version, followed by
-`v1.6.0`. Greenfield-to-Feature Workflow Handoff Hardening and optional
-mobile-profile candidates remain deferred scopes.
+`v1.4.1` is the current published release. `v1.5.0` remains the next planned
+feature version, followed by `v1.6.0`. Greenfield-to-Feature Workflow Handoff
+Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
 
@@ -1213,7 +1208,7 @@ Implemented scope:
 
 ### v1.4.1 - Installed Greenfield Instruction Surface Correction
 
-Status: Implementation and packed-install validation complete; not released.
+Status: Released as `1.4.1` on 2026-09-05.
 
 Audit basis:
 

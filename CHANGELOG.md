@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.4.1 - Installed Greenfield Instruction Surface Correction
+
+Release date: 2026-09-05.
+
+### Fixed
+
+- corrected the emitted greenfield coding-agent instruction surface for `idea-brief`, `starter-profile`, `bootstrap-bundle`, `project-docs`, and `scaffold-plan` so installed-package prompts no longer depend on Orchestrator-maintainer source files or internal validator symbols
+- replaced nine internal implementation references with direct artifact, field, profile, behavior, validation, and stop-condition guidance while preserving the existing workflow and artifact contracts
+- preserved the canonical starter-profile registry and the specialized `scaffold-plan` renderer rather than introducing a duplicate registry or prompt subsystem
+
+### Compatibility
+
+- no CLI command, workflow mode, native stage, package dependency, package-file inventory, export surface, Observer contract, or core retrieval-engine behavior changed
+- isolated `npm pack` installation acceptance confirmed that corrected source-build and installed-package prompts are equivalent for all five affected stages
+
 ## v1.4.0 - Maintained-Line Reconciliation and Proof-Only Workflow Support
 
 Release date: 2026-09-01.
