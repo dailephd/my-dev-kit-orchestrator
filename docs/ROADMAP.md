@@ -4,8 +4,8 @@ Versions are listed in chronological order.
 
 `v1.4.0` is the current published release. `v1.3.3`, `v1.3.2`, `v1.3.1`, `v1.3.0`,
 `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`, and the `v0.x.0`
-releases remain part of the published project history. `v1.4.0` is released;
-later versions remain planned.
+releases remain part of the published project history. `v1.4.1`, `v1.5.0`, and
+`v1.6.0` are planned; deferred scopes remain separate.
 
 ## Version summary
 
@@ -51,6 +51,11 @@ later versions remain planned.
   phase-aware readiness and explicit proof-only verification, and adds a
   bounded Observer v0.6 evidence consumer validated against fresh pushed
   Observer source.
+- `v1.4.1` will correct the installed greenfield instruction surface by
+  replacing inappropriate Orchestrator-maintainer source-path guidance in
+  public generated prompts with direct artifact, behavior, validation, and
+  completion requirements, with isolated packed-install regression coverage
+  and no packaging or workflow redesign.
 - `v1.5.0` will provide the Semantic Continuity and Evidence-to-Implementation
   Bridge; richer semantic chains remain opt-in for FULL_STAGE_CONTEXT.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
@@ -1180,9 +1185,10 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.4.0` is the current published release. Greenfield-to-Feature
-Workflow Handoff Hardening and optional mobile-profile candidates remain
-deferred scopes.
+`v1.4.0` is the current published release. `v1.4.1` is the next planned patch;
+`v1.5.0` remains the next planned feature version after that, followed by
+`v1.6.0`. Greenfield-to-Feature Workflow Handoff Hardening and optional
+mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
 
@@ -1198,6 +1204,88 @@ Implemented scope:
 - bounded Observer v0.6 evidence consumption and public-contract hardening
 - reproducible Observer-to-Orchestrator compatibility using fresh pushed
   source; no current claim of a reproducible Lab leg
+
+### v1.4.1 - Installed Greenfield Instruction Surface Correction
+
+Status: Planned patch before `v1.5.0`.
+
+Audit basis:
+
+- isolated `npm pack` installation reproduced all eight public commands and all
+  seven workflow modes with behavior matching the source build
+- package contents, runtime assets, dependencies, exports, and repository-root
+  independence were otherwise clean
+- four confirmed greenfield stage instructions (`idea-brief`,
+  `starter-profile`, `scaffold-plan`, and `bootstrap-bundle`) expose
+  Orchestrator-maintainer source paths such as `src/greenfield/**/*.ts` to
+  coding agents working on generated user projects
+- the defect is shipped instruction content, not a missing package asset or a
+  package-files problem
+
+Goal:
+
+Make every shipped greenfield instruction self-contained for the coding agent
+operating on the generated project, while preserving the artifact, behavior,
+validation, and completion requirements currently hidden behind inappropriate
+Orchestrator-maintainer source references.
+
+Planned scope:
+
+- audit the complete rendered public greenfield instruction surface for
+  equivalent Orchestrator-internal source-path leakage
+- correct the confirmed `idea-brief`, `starter-profile`, `scaffold-plan`, and
+  `bootstrap-bundle` instruction content in the existing instruction owner
+- for every removed internal reference, identify the requirement it was meant
+  to communicate and state that requirement directly rather than deleting the
+  guidance without replacement
+- add focused regression coverage that rejects inappropriate Orchestrator
+  repository source paths in public generated prompts while allowing legitimate
+  maintainer-only source references in internal code and documentation
+- validate affected prompts from both the source build and an isolated packed
+  installation outside the repository
+- preserve source-build and installed-package behavior parity
+
+Acceptance criteria:
+
+- no confirmed affected public greenfield prompt instructs a generated-project
+  coding agent to inspect `src/greenfield/**/*.ts`
+- every meaningful requirement represented by a removed internal path remains
+  present as direct artifact, behavior, validation, or completion guidance
+- the complete rendered greenfield prompt surface is checked for equivalent
+  leakage, not only the four known examples
+- affected source-build prompt tests and isolated packed-install acceptance pass
+- all eight public CLI commands and all seven workflow modes remain available
+- package contents, runtime dependencies, exports, workflow modes, native stage
+  order, artifact families, and existing greenfield architecture remain
+  unchanged unless new evidence proves a narrowly required correction
+
+Compatibility expectations:
+
+- no new workflow mode, native stage, CLI command, package asset family, or
+  runtime dependency
+- no prompt subsystem rewrite; the correction stays in the established
+  instruction-content ownership path
+- no change to Observer evidence consumption, proof-only behavior, context
+  readiness, lifecycle, judge integrity, or final-report eligibility
+- preserve `NO_CORE_RETRIEVAL_ENGINE_CHANGE_REQUIRED`; this finding provides no
+  evidence of a `my-dev-kit` core retrieval-engine defect
+
+Explicit exclusions:
+
+- no Semantic Continuity and Evidence-to-Implementation Bridge or WF-002 work
+- no Workflow Economics or deterministic telemetry work
+- no Greenfield-to-Feature Workflow Handoff Hardening
+- no optional mobile-profile work
+- no Observer consumer redesign
+- no reconstruction of the lost historical Lab compatibility candidate
+- no package-files redesign, packaging architecture change, or dependency
+  expansion solely to correct instruction wording
+
+Relationship to later work:
+
+`v1.4.1` is a bounded corrective patch and does not replace or absorb
+`v1.5.0`. After this patch, the next planned feature version remains the
+Semantic Continuity and Evidence-to-Implementation Bridge.
 
 ### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
