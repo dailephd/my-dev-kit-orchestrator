@@ -46,6 +46,23 @@ const BATCH_4_RETURN_FORMAT_CHANGED_KEYS = new Set([
   'greenfield:scaffold-plan',
 ]);
 
+// v1.4.1 installed greenfield instruction surface correction: these three
+// prompts' "Return format:" text named internal Orchestrator source files
+// (briefTypes.ts, profileTypes.ts, bootstrapBundleTypes.ts) as the shape
+// reference for the produced JSON artifact -- a coding agent operating from
+// an installed package has no access to those paths. The return format now
+// spells out the required fields directly instead of pointing at a source
+// file, per docs/reports/v1.4.1-installed-instruction-surface-audit.md.
+// This is an intentional, approved return-format correction against the
+// frozen prompt-structure.json baseline (same convention as the Batch 4
+// exclusion above, and not regenerated for the same reason); every other
+// field for these three keys is unaffected and still fully checked.
+const V1_4_1_RETURN_FORMAT_CHANGED_KEYS = new Set([
+  'greenfield:idea-brief',
+  'greenfield:starter-profile',
+  'greenfield:bootstrap-bundle',
+]);
+
 // v1.3.1 verification-report path correction: the greenfield verification/
 // judge/initial-index prompts previously told the coding agent to write/read
 // the verification artifact at "reports/verification-report.txt", which
@@ -189,7 +206,11 @@ describe('v1.2.1 prompt structure compatibility (Batch 3)', () => {
         current.outputFileLine !== entry.outputFileLine
       )
         mismatches.push({ key, field: 'outputFileLine' });
-      if (!BATCH_4_RETURN_FORMAT_CHANGED_KEYS.has(key) && current.returnFormatHash !== entry.returnFormatHash)
+      if (
+        !BATCH_4_RETURN_FORMAT_CHANGED_KEYS.has(key) &&
+        !V1_4_1_RETURN_FORMAT_CHANGED_KEYS.has(key) &&
+        current.returnFormatHash !== entry.returnFormatHash
+      )
         mismatches.push({ key, field: 'returnFormat' });
     }
     expect(mismatches).toEqual([]);

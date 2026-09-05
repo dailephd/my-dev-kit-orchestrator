@@ -38,10 +38,10 @@ Produce ${ctx.runFolder}/artifacts/scaffold-plan.txt (artifact: ScaffoldPlan), a
 The ScaffoldPlan must define:
 - the selected profile id
 - planned file groups (illustrative paths only; this stage does not create files)
-- target paths, one normalized relative path per line, matching the
-  selected profile's target expectations (used by
-  validateGreenfieldScaffoldPlan() for required-target and path-safety
-  checks; do not invent paths beyond scaffoldPlanningInputs)
+- target paths, one normalized relative path per line, that must exactly
+  match the selected profile's declared target-path expectations from the
+  bootstrap bundle, including required-target and path-safety requirements;
+  do not invent additional target paths
 - first runnable behavior
 - setup commands, one per line in the exact form
   "- <command text>: required" / "- <command text>: optional, <nonblank environment-note or reason>",
@@ -53,7 +53,7 @@ The ScaffoldPlan must define:
 - unresolved decisions
 - non-goals
 
-Use the bootstrap bundle's scaffoldPlanningInputs (src/greenfield/bootstrap/bootstrapBundleTypes.ts) as the source of truth; do not invent structure beyond it.
+Use the bootstrap bundle's scaffoldPlanningInputs as the source of truth. Do not invent structure beyond those inputs.
 
 Required output artifact: ScaffoldPlan
 Output file: ${ctx.runFolder}/artifacts/scaffold-plan.txt

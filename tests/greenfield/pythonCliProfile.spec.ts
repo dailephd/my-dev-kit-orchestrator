@@ -183,7 +183,12 @@ describe('python-cli greenfield starter profile (v1.3.3 Batch 3)', () => {
 
   it('TST-021/TST-022: uses registry-owned starter guidance and preserves the 15 public documents', () => {
     const starterProfile = STAGE_INSTRUCTION_CONTENT['stage.greenfield.starter-profile'];
-    expect(starterProfile.taskInstructions).toMatch(/canonical SUPPORTED_PROFILES registry/);
+    // v1.4.1: taskInstructions no longer names the internal
+    // SUPPORTED_PROFILES registry source (not visible to an installed
+    // package's coding agent); it now points at the profile IDs the
+    // rendered prompt lists directly. The registry-owned validation
+    // requirement text is unaffected.
+    expect(starterProfile.taskInstructions).toMatch(/supported starter profile IDs listed below/);
     expect(starterProfile.validationRequirements.join('\n')).toMatch(/canonical SUPPORTED_PROFILES registry/);
     expect(`${starterProfile.taskInstructions}\n${starterProfile.validationRequirements.join('\n')}`).not.toMatch(
       /typescript-cli, nextjs-app, android-compose(?:, python-cli)?/,
