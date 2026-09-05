@@ -33,12 +33,25 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
-- Installed-package parity is otherwise clean, but four confirmed greenfield
-  stage instructions (`idea-brief`, `starter-profile`, `scaffold-plan`, and
-  `bootstrap-bundle`) still expose Orchestrator-maintainer source-path guidance
-  to coding agents working on generated user projects. This is a shipped
-  prompt-content defect, not a missing package asset; `v1.4.1` is planned as a
-  bounded correction.
+- The published `v1.4.0` package still ships the confirmed prompt-content
+  defect: five greenfield stage instructions (`idea-brief`, `starter-profile`,
+  `bootstrap-bundle`, `project-docs`, and `scaffold-plan`) expose
+  Orchestrator-maintainer source-path guidance to coding agents working on
+  generated user projects. This remains true for every `v1.4.0` npm install
+  until `v1.4.1` is released.
+- The maintained `fix/v1.4.1-installed-instruction-surface` branch now
+  contains a validated correction for all five affected stages. Independent
+  packed-install acceptance (installing the actual candidate npm tarball
+  outside the repository, not just the source build) confirmed: zero
+  forbidden Orchestrator source-path references remain in any of the five
+  corrected prompts; all required artifact/behavior/validation/completion
+  guidance is preserved; legitimate target-project `src/...` references are
+  unaffected; the installed package's rendered prompts are byte-identical
+  (after normalizing only run IDs and run-folder paths) to the source build's
+  rendered prompts; and no package-content, dependency, export, CLI-command,
+  workflow-mode, or working-directory regression was found versus the current
+  `1.4.0` packed baseline. This correction is not available to npm users
+  until `v1.4.1` is released.
 
 ## Active next direction
 
@@ -78,16 +91,17 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-The immediate next planned work is `v1.4.1`, Installed Greenfield Instruction
-Surface Correction. It will replace inappropriate Orchestrator-maintainer
-source-path guidance in shipped greenfield prompts with direct artifact,
-behavior, validation, and completion requirements while preserving the
-underlying instruction intent and installed package surface.
-
-After `v1.4.1`, `v1.5.0` remains the planned Semantic Continuity and
-Evidence-to-Implementation Bridge, followed by `v1.6.0` Workflow Economics and
-Deterministic Run Telemetry. Greenfield-to-Feature Workflow Handoff Hardening
-and optional mobile-profile candidates remain separately deferred.
+`v1.4.1`, Installed Greenfield Instruction Surface Correction, is implemented
+and independently validated but not yet released. It replaces inappropriate
+Orchestrator-maintainer source-path guidance in shipped greenfield prompts
+with direct artifact, behavior, validation, and completion requirements while
+preserving the underlying instruction intent and installed package surface.
+The active next direction is: (1) prepare and release `v1.4.1`; (2) after
+`v1.4.1` releases, `v1.5.0` remains the next planned feature version, the
+Semantic Continuity and Evidence-to-Implementation Bridge; (3) `v1.6.0`
+Workflow Economics and Deterministic Run Telemetry follows; (4)
+Greenfield-to-Feature Workflow Handoff Hardening remains deferred; (5)
+optional mobile-profile candidates remain deferred.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a

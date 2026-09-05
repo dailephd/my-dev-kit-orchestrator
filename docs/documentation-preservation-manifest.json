@@ -230,8 +230,8 @@
     "packageName": "@dailephd/my-dev-kit-orchestrator",
     "packageMetadataVersion": "1.4.0",
     "latestPublishedVersion": "1.4.0",
-    "implementedUnpublishedVersions": [],
-    "plannedUnpublishedVersions": ["v1.4.1", "v1.5.0", "v1.6.0"],
+    "implementedUnpublishedVersions": ["v1.4.1"],
+    "plannedUnpublishedVersions": ["v1.5.0", "v1.6.0"],
     "cliCommands": [
       "init",
       "start",
