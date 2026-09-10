@@ -100,8 +100,9 @@ All four current profiles share one validation architecture, owned by
 
 ### v1.3.1: standardized documents and full-stack capability
 
-`v1.3.1` (retained by the current `v1.3.3` release; see [CURRENT_STATE.md](CURRENT_STATE.md))
-is additive to the architecture above rather than a replacement:
+`v1.3.1` remains part of the current architecture; see
+[CURRENT_STATE.md](CURRENT_STATE.md). It is additive to the architecture above
+rather than a replacement:
 
 - `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
   `webFramework` fields to the raw and normalized brief. They are orthogonal

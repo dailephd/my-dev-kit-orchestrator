@@ -69,8 +69,8 @@ itself.
 documentation contracts, exact and bounded-pattern scaffold-target
 expectations with path safety, scaffold-plan and persisted-scaffold-plan
 validation, layered generated-file and verification-command evidence, and
-first-vertical-slice readiness, applied to all three current starter
-profiles. `status` and `check`/`check --all` surface the result using the
+first-vertical-slice readiness, applied to the starter profiles available in
+`v1.3.0`. `status` and `check`/`check --all` surface the result using the
 existing deterministic issue model, and a run created before this validation
 existed receives explicit legacy compatibility treatment rather than being
 retroactively failed. No new starter profile, CLI command, workflow mode, or

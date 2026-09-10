@@ -208,7 +208,7 @@ structure. Ready-context helpers, legacy-run fixtures, and deterministic
 generators cover readiness and compatibility. Two fixture-generator tests are
 intentionally skipped during an ordinary suite and run only when regenerating
 fixtures. Tests and fixtures are excluded from npm package output because the
-package `files` policy includes only `dist`.
+package `files` policy limits published contents to `dist` plus `CHANGELOG.md`.
 
 Context-readiness changes require both focused owner tests and the historical
 readiness matrix. The historical readiness matrix covers accepted producer

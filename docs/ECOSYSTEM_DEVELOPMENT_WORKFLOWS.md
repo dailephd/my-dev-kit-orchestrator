@@ -14,9 +14,9 @@ command reference. Follow the linked tool documentation when exact schemas or
 all command flags are needed.
 
 Canonical command references are the producer
-[command guide](https://github.com/dailephd/my-dev-kit/blob/b2fb19b72f2148127cbec194ea2317d90ffbd27d/docs/COMMANDS.md),
+[command guide](https://github.com/dailephd/my-dev-kit/blob/main/docs/COMMANDS.md),
 the orchestrator [usage guide](USAGE.md), and the lab
-[command guide](https://github.com/dailephd/my-dev-kit-lab/blob/dd715df1fe37d96b42c6ebcecf9a92f0e29a4151/docs/COMMANDS.md).
+[command guide](https://github.com/dailephd/my-dev-kit-lab/blob/main/docs/COMMANDS.md).
 
 This guide uses four evidence classes:
 
@@ -34,9 +34,9 @@ The inspected and published package versions are:
 
 | Tool | Current package | Ownership | Important boundary |
 | --- | --- | --- | --- |
-| Producer | `@dailephd/my-dev-kit@1.12.1` | Read-only indexing, structural and semantic artifacts, classification, code and data-model graphs, search, lookup, bounded source retrieval, slices, views, context evidence, and graph diff | It never edits source, executes the application, or makes security verdicts. |
-| Workflow controller | `@dailephd/my-dev-kit-orchestrator@1.3.3` | Stage order, profiles, prompts, run state, artifact lifecycle, integrity checks, correction routing, and portable handoffs | It does not run the producer, a coding agent, product tests, the lab, or a release. |
-| Validation tool | `@dailephd/my-dev-kit-lab@0.4.5` | Self-validation, external-target and package validation, dependency and security checks, code-rot auditing, readiness evidence, and reports | It does not replace product tests or modify the target. |
+| Producer | `@dailephd/my-dev-kit@1.12.3` | Read-only indexing, structural and semantic artifacts, classification, code and data-model graphs, search, lookup, bounded source retrieval, slices, views, context evidence, and graph diff | It never edits source, executes the application, or makes security verdicts. |
+| Workflow controller | `@dailephd/my-dev-kit-orchestrator@1.4.1` | Stage order, profiles, prompts, run state, artifact lifecycle, integrity checks, correction routing, and portable handoffs | It does not run the producer, a coding agent, product tests, the lab, or a release. |
+| Validation tool | `@dailephd/my-dev-kit-lab@0.4.6` | Self-validation, external-target and package validation, dependency and security checks, code-rot auditing, readiness evidence, and reports | It does not replace product tests or modify the target. |
 
 The orchestrator consumes producer evidence supplied through run artifacts. It
 does not invoke the producer. The lab can validate a producer, orchestrator,
@@ -60,18 +60,18 @@ Neither repository creation nor publication is performed automatically by the
 three tools.
 
 The orchestrator's producer-adequacy contract was originally documented
-against producer `1.10.4`. The inspected producer is `1.12.1` and retains the
-schema-major-1 compatibility used by current orchestrator checks. Use current
-command help and package versions, not the older validation baseline, for new
-work.
+against producer `1.10.4`. The current published producer is `1.12.3` and
+retains the schema-major-1 compatibility used by current orchestrator checks.
+Use current command help and package versions, not the older validation
+baseline, for new work.
 
 Current gaps must remain explicit: there is no automatic two-text-file
 ingestion, autonomous greenfield scaffold execution, automatic producer/lab
 invocation, GitHub repository creation, multi-repository release controller,
-or release publisher. Greenfield-to-feature handoff and additional starter
-profiles are planned rather than implemented. The lab's combined `quality`,
-`project`, and `all` audits and manual penetration-testing coverage are also
-planned/manual, not current commands.
+or release publisher. Greenfield-to-feature handoff and optional additional
+mobile profiles remain deferred rather than implemented. The lab's combined
+`quality`, `project`, and `all` audits and manual penetration-testing coverage
+are also planned/manual, not current commands.
 
 ## 3. Starting inputs
 
@@ -123,9 +123,12 @@ Use this decision sequence before creating a run or repository:
    the desired output is a new scaffold and first vertical slice. If a usable
    repository already exists, use the onboarding workflow in section 6.
 2. **Is there a supported profile?** Current implemented profiles are
-   `typescript-cli`, `nextjs-app`, and `android-compose`. Aliases include
-   `android`, `kotlin-compose`, `jetpack-compose`, and `compose-android`.
-   Generic “mobile” remains unresolved; iOS, Flutter, React Native, and a
+   `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
+   Android aliases include `android`, `kotlin-compose`, `jetpack-compose`, and
+   `compose-android`. The bounded Python CLI profile resolves from explicit
+   `python-cli`, the exact `python` alias, or clear Python-plus-CLI intent.
+   Generic “mobile” remains unresolved; bare Python and Python web/API/server
+   intent remain unresolved or unsupported; iOS, Flutter, React Native, and a
    general mobile profile are not implemented.
 3. **Are architecture and ownership resolved?** If no, use staged architecture
    work before authorizing scaffold implementation. A profile is a starting
@@ -1375,11 +1378,12 @@ preserved remaining milestones, reusable gates, risks, and the precise next
 action. Maintain the 50/30/10/10 future/workflow/history/current balance. A new
 chat resumes from that state; it does not reinterpret the original files.
 
-## 17. Source map
+## 17. Historical source map from the original standardization review
 
-The source map records the tracked documentation and command/implementation
-areas used to ground this guide. “Command help” means the locally built current
-CLI, not a roadmap proposal. No large source excerpts are reproduced.
+The source map below preserves the exact commits, package versions, and command
+checks used when this guide was originally standardized. It is provenance, not
+a statement of current package versions. Use section 2 and each package's
+current release documentation for current operational versions.
 
 ### 17.1 Producer — `b2fb19b72f2148127cbec194ea2317d90ffbd27d`
 
@@ -1479,6 +1483,7 @@ CLI, not a roadmap proposal. No large source excerpts are reproduced.
 
 ### 17.4 Version and publication evidence
 
-The three inspected `package.json` files and `npm view <package> version`
-reported producer `1.12.1`, orchestrator `1.3.0`, and lab `0.4.5`. Latest local
-tags were respectively `v1.12.1`, `v1.3.0`, and `v0.4.5`.
+At the original standardization snapshot, the three inspected `package.json`
+files and `npm view <package> version` reported producer `1.12.1`, orchestrator
+`1.3.0`, and lab `0.4.5`. Latest local tags were respectively `v1.12.1`,
+`v1.3.0`, and `v0.4.5`.
