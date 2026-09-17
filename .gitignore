@@ -23,3 +23,6 @@ docs/*.txt
 /reports/
 docs/RELEASE_CHECKLIST.md
 .claude/
+
+# Cross-tool workflows are canonical in dailephd/my-dev-kit.
+/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md

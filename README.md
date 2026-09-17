@@ -65,18 +65,17 @@ itself.
 
 ## Greenfield profile and scaffold verification
 
-`v1.3.0` adds shared profile and registry validation, explicit command and
+`v1.3.0` added shared profile and registry validation, explicit command and
 documentation contracts, exact and bounded-pattern scaffold-target
 expectations with path safety, scaffold-plan and persisted-scaffold-plan
 validation, layered generated-file and verification-command evidence, and
-first-vertical-slice readiness, applied to all three current starter
-profiles. `status` and `check`/`check --all` surface the result using the
-existing deterministic issue model, and a run created before this validation
+first-vertical-slice readiness. That architecture now applies to all four
+current profiles. `status` and `check`/`check --all` surface the result using the
+existing deterministic issue model. A run created before the validation
 existed receives explicit legacy compatibility treatment rather than being
-retroactively failed. No new starter profile, CLI command, workflow mode, or
-native stage
-was added, and no command is executed by any of this. See
-[docs/ROADMAP.md](docs/ROADMAP.md#published-v130) for delivered scope.
+retroactively failed. The v1.3.0 validation change itself added no profile,
+CLI command, workflow mode, or native stage, and executes no project command.
+See [docs/ROADMAP.md](docs/ROADMAP.md#published-v130).
 
 ## Run-integrity enforcement (v1.2.3)
 
@@ -190,9 +189,9 @@ its own. After code exists, the `initial-index` stage guides the first
 Every current profile's effective scaffold contract includes four common
 coding-agent instruction outputs: `agents.txt`, `claude.txt`, `AGENTS.md`, and
 `CLAUDE.md`. They are generated-project instructions, distinct from the
-standardized 15-file public project-document baseline. The lower-case manuals
-derive from one normalized project-instruction model; the upper-case files are
-small deterministic adapters.
+standardized 15-file public canonical project-document baseline. The lower-case
+manuals derive from one normalized project-instruction model; the upper-case
+files are small deterministic adapters.
 
 The bounded `python-cli` profile targets `pyproject.toml`, `src/main.py`,
 `tests/test_main.py`, and `README.md`, with Python compile, pytest, and CLI help
@@ -222,20 +221,29 @@ my-dev-kit-orchestrator check
 my-dev-kit-orchestrator export
 ```
 
-See [docs/COMMANDS.md](docs/COMMANDS.md) for flags, defaults, run selection, check
-variants, export options, and troubleshooting.
+See [docs/COMMANDS.md](docs/COMMANDS.md) for flags, defaults, run selection,
+check variants, export options, and troubleshooting.
 
 ## Tool boundaries
 
 - `my-dev-kit` indexes and retrieves bounded context from an existing codebase.
-- `my-dev-kit-orchestrator` manages workflow stages, prompts, artifacts, checks,
+- `my-dev-kit-orchestrator` manages native stages, prompts, artifacts, checks,
   correction routing, and handoff export.
+- `my-frontend-observer` produces rendered browser evidence, comparisons,
+  frontend contracts, and explicit reference-fidelity evidence.
 - `my-dev-kit-lab` owns experiments, audits, security validation, and
   release-readiness evidence.
 
 These integrations are explicit and prompt-guided. The orchestrator does not
-autonomously run coding agents, `my-dev-kit`, security validation, publishing,
-or release workflows.
+autonomously run coding agents, `my-dev-kit`, Observer, security validation,
+publishing, or release workflows.
+
+Cross-tool documentation is centralized in the
+[ecosystem guide in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md).
+The local duplicate is intentionally untracked and ignored. The guide's
+continuous full-stack recipes preserve native stage order and readiness.
+They are not additional built-in modes or proof that every composition was
+executed. A coding agent supplies actual application, browser, and test evidence.
 
 ## Current limitations
 
@@ -246,13 +254,12 @@ or release workflows.
 - Tests currently use both `src/__tests__/*.test.ts` and `tests/**/*.spec.ts`.
 - The mobile and autonomous-execution boundaries described above remain in
   effect.
-- The `scaffold-plan` and `scaffold-implementation` stages retain their
-  specialized greenfield scaffold renderer; they still receive catalog
-  entries and instruction-packet sidecars.
+- `scaffold-plan` and `scaffold-implementation` retain their specialized
+  greenfield scaffold renderer and still receive catalog entries and sidecars.
 - `status` is human-readable and has no JSON option.
-- `start --output-dir` creates a run in the requested directory, but the other
-  commands in `v1.2.3` cannot rediscover custom-output runs. Omit this option
-  for a run that must be resumed through the CLI.
+- `start --output-dir` creates a run in the requested directory, but later
+  commands cannot rediscover custom-output runs in the reviewed release.
+  Omit this option for a run that must be resumed through the CLI.
 
 ## Documentation
 
@@ -275,8 +282,8 @@ Common canonical documents:
 
 Project-specific and compatibility references:
 
-- [Ecosystem development workflows](docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
-- [Usage and command reference](docs/USAGE.md)
+- [Ecosystem development workflows, canonical in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
+- [Usage compatibility guide](docs/USAGE.md)
 - [Workflow modes and stage procedures](docs/WORKFLOWS.md)
 - [Artifact contracts and lifecycle](docs/ARTIFACTS.md)
 - [Architecture and subsystem boundaries](docs/ARCHITECTURE.md)

@@ -1,65 +1,42 @@
 # Workflows
 
-Use this guide for ordered workflow decisions. Consult [Commands](COMMANDS.md)
-for exact CLI syntax and [Artifacts](ARTIFACTS.md) for detailed artifact
-contracts.
+This guide owns Orchestrator's native modes, stage order, lifecycle, and completion rules. Consult [Commands](COMMANDS.md) for exact CLI syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
-`my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to
-choose a mode and follow its stages. See [Usage](USAGE.md) for complete command
-syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
+Cross-repository recipes have one home: [Ecosystem development workflows in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md). That guide combines my-dev-kit, Orchestrator, Lab, Observer, and project test commands. This repository does not maintain a second copy.
 
-Each workflow uses a fixed ordered stage list. The CLI advances by checking whether the expected artifact file for a stage exists and its lifecycle state (v0.3.0+).
+`my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to choose a mode and follow its stages. [Usage](USAGE.md) retains detailed usage compatibility guidance.
 
-Choose a mode by the change's primary goal. `feature` changes behavior;
-`repair` reconciles observed and intended behavior; `test` adds or improves
-tests without a production implementation stage; `refactor` preserves
-behavior while changing structure; `harden` strengthens failure handling;
-`extraction` transfers bounded behavior between repositories; and `greenfield`
-plans a new project before useful code exists. Every mode uses the shared
-lifecycle, context-readiness, judge-correction, and final-report rules below.
+Each workflow uses a fixed ordered stage list. Advancement consults effective artifact lifecycle and the applicable readiness/integrity gates, not file presence alone.
 
-Proof-only is not an eighth mode. It is an explicit run capability for a
-verification task with a declared proof responsibility: ordinary runs retain
-changed-surface expectations, while proof-only runs require exact proof
-evidence and remain subject to lifecycle, readiness, integrity, judge, and
-final-report gates. Repository evidence becomes blocking only at its owning
-stage; future-stage evidence does not block an earlier phase.
+Choose a mode by the change's primary goal. `feature` changes behavior; `repair` reconciles observed and intended behavior; `test` adds or improves tests without a production implementation stage; `refactor` preserves behavior while changing structure; `harden` strengthens failure handling; `extraction` transfers bounded behavior between repositories; and `greenfield` plans a new project before useful code exists. Every mode uses the shared lifecycle, context-readiness, judge-correction, and final-report rules below.
+
+Proof-only is not an eighth mode. It is an explicit run capability for a verification task with a declared proof responsibility. Ordinary runs retain changed-surface expectations. Proof-only runs require exact proof evidence and remain subject to lifecycle, readiness, integrity, judge, and final-report gates. Repository evidence becomes blocking only at its owning stage. Future-stage evidence does not block an earlier phase.
+
+A coding agent may continue through authorized native stages within one session. A continuous full-stack task does not authorize skipping `test-implementation`, bypassing readiness, or declaring success after backend-only work. The cross-repository guide defines the outer user-flow acceptance and feedback record without adding native modes or stages here.
 
 ## Content check layer (v0.4.0)
 
-A separate content check layer is available via `my-dev-kit-orchestrator check`.
-Content checks are deterministic and artifact-format aware: text artifacts are
-checked for their expected section headers, while registered structured JSON
-artifacts are parsed and checked against their required structured fields. They
-run independently and do not block stage advancement.
+A separate content check layer is available via `my-dev-kit-orchestrator check`. Content checks are deterministic and artifact-format aware. Text artifacts are checked for expected section headers. Registered structured JSON artifacts are parsed and checked against their required structured fields. These checks are distinct from lifecycle advancement.
 
 ```bash
-my-dev-kit-orchestrator check          # check all artifacts and prompts
-my-dev-kit-orchestrator check --strict # exit 1 on any warn
+my-dev-kit-orchestrator check
+my-dev-kit-orchestrator check --strict
 ```
 
-Content checks complement the lifecycle layer - lifecycle state tracks whether an artifact is ready to proceed; content checks report what quality issues exist inside it.
+`--strict` exits nonzero on warnings. Content checks complement lifecycle and integrity checks. A structurally valid report does not prove that implementation or tests ran.
 
 The common design-to-code flow is:
 
 `request -> graph-guided architecture context -> ArchitectureContextPacket -> BehaviorModel -> PseudocodePacket -> TestStrategyPacket -> ImplementationReport -> TestImplementationReport -> VerificationReport -> JudgeReport -> FinalReport`
 
-In this model, `my-dev-kit` is used during context acquisition and `my-dev-kit-orchestrator` manages the downstream workflow after the synthesized ArchitectureContextPacket is saved.
+The coding agent uses `my-dev-kit` during context acquisition. Orchestrator manages the downstream native workflow after the synthesized ArchitectureContextPacket is saved.
 
 ## Feature
 
-Use `feature` for new behavior or intentional behavior changes.
-Do not use it for a behavior-preserving structural change or a new project.
-
-Command:
+Use `feature` for new behavior or intentional behavior changes. Do not use it for a behavior-preserving structural change or a new project.
 
 ```bash
 my-dev-kit-orchestrator start --mode feature "<request>"
-```
-
-Default form:
-
-```bash
 my-dev-kit-orchestrator start "<request>"
 ```
 
@@ -76,16 +53,11 @@ Stage order:
 9. `judge`
 10. `final-report`
 
-Completion requires verified implementation and tests, an accepted judge
-`PASS`, no active correction, and an eligible `final-report`.
+Completion requires verified implementation and tests, an accepted judge `PASS`, no active correction, and an eligible `final-report`. For a full-stack feature, the implementation responsibility includes all required layers and their real wiring, not just backend files.
 
 ## Repair
 
-Use `repair` when observed behavior diverges from intended behavior.
-Do not use it for unfocused defect hunting without an observed/expected
-behavior comparison.
-
-Command:
+Use `repair` when observed behavior diverges from intended behavior. Do not use it for unfocused defect hunting without an observed/expected comparison.
 
 ```bash
 my-dev-kit-orchestrator start --mode repair "<observed behavior>"
@@ -105,16 +77,11 @@ Stage order:
 10. `judge`
 11. `final-report`
 
-The correction design and regression strategy gate implementation. Completion
-requires evidence that the first divergence was corrected without breaking the
-intended behavior.
+The correction design and regression strategy gate implementation. Completion requires evidence that the first divergence was corrected without breaking intended behavior. Observer runtime evidence can inform the external diagnosis, but the native stage and artifact contracts remain unchanged.
 
 ## Test
 
-Use `test` for behavior-derived test planning or test implementation for existing behavior.
-Do not use it when production behavior must change; use `feature` or `repair`.
-
-Command:
+Use `test` for behavior-derived test planning or test implementation for existing behavior. When production behavior must change, use `feature` or `repair`.
 
 ```bash
 my-dev-kit-orchestrator start --mode test "<test target>"
@@ -132,15 +99,11 @@ Stage order:
 8. `judge`
 9. `final-report`
 
-Completion requires verification and an accepted judge `PASS`; this mode has
-no production `implementation` stage.
+Completion requires verification and an accepted judge `PASS`. This mode has no production `implementation` stage.
 
 ## Refactor
 
-Use `refactor` for structure changes that must preserve behavior.
-Do not use it when externally visible behavior is intended to change.
-
-Command:
+Use `refactor` for structure changes that must preserve behavior. Do not use it when externally visible behavior intentionally changes.
 
 ```bash
 my-dev-kit-orchestrator start --mode refactor "<refactor goal>"
@@ -160,15 +123,11 @@ Stage order:
 10. `judge`
 11. `final-report`
 
-The preserved-invariant list and compatibility strategy gate implementation.
-Completion requires verification that the declared behavior remained intact.
+The preserved-invariant list and compatibility strategy gate implementation. Completion requires verification that declared behavior remained intact. Shared frontend consumers can be protected through the external Observer contract workflow without adding a native refactor stage.
 
 ## Harden
 
-Use `harden` for validation, resilience, and failure-handling improvements.
-Do not use it to hide an architectural defect behind silent fallback behavior.
-
-Command:
+Use `harden` for validation, resilience, and failure-handling improvements. Do not hide an architectural defect behind silent fallback behavior.
 
 ```bash
 my-dev-kit-orchestrator start --mode harden "<hardening goal>"
@@ -188,23 +147,17 @@ Stage order:
 10. `judge`
 11. `final-report`
 
-The failure-mode matrix, guard design, and resilience strategy gate
-implementation. Completion requires verification of the intended failure
-handling and an accepted judge `PASS`.
+The failure-mode matrix, guard design, and resilience strategy gate implementation. Completion requires verification of the intended failure handling and an accepted judge `PASS`.
 
 ## Extraction
 
-Use `extraction` when you want to transfer a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository.
-
-This mode is not for normal feature implementation. It is for inspecting an existing source project, identifying the useful behavior, discarding unrelated architecture, preserving critical behavior, and implementing a cleaner version in the target project.
-
-**Implemented in v0.2.1.**
+Use `extraction` to transfer a bounded feature, workflow, subsystem, or behavior from an existing source repository into a new or separate target repository. It is not normal feature implementation or permission to copy an entire architecture. Extraction shipped in v0.2.1.
 
 ### Purpose
 
-- source repository: used for inspection and evidence only; treated as read-only by default
-- target repository: where the extracted workflow is implemented, tested, verified, and reported
-- the orchestrator must not assume the target should reproduce the full source architecture
+- Source repository: read-only inspection and evidence by default.
+- Target repository: implementation, tests, verification, and reports.
+- Port only the behavior and dependencies explicitly in scope.
 
 ### Command
 
@@ -215,7 +168,7 @@ npx @dailephd/my-dev-kit-orchestrator start --mode extraction \
   "<extraction request>"
 ```
 
-Windows example:
+PowerShell equivalent:
 
 ```powershell
 npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
@@ -243,448 +196,178 @@ npx @dailephd/my-dev-kit-orchestrator start --mode extraction `
 
 ### Stage behavior
 
-#### `request-brief`
+`request-brief` captures source/target paths, extracted workflow, scope, exclusions, critical preserved behavior, and deliverables.
 
-Capture the source repository path, target repository path, workflow to extract, desired target scope, features excluded from the extraction, critical behaviors to preserve, and expected deliverables.
-
-#### `source-architecture-context`
-
-Use `my-dev-kit` on the source repository. Index the source repository into its own `.my-dev-kit` directory:
+`source-architecture-context` inspects only the source identity and writes `artifacts/source-architecture-context-packet.txt`. Select actual source roots explicitly:
 
 ```bash
-npx @dailephd/my-dev-kit index --root <source-repo-root> --out <source-repo-root>/.my-dev-kit
+npx @dailephd/my-dev-kit index --root "<source-repo-root>" --src "<source-root-relative-to-project>" --out .my-dev-kit --json
 ```
 
-Do not use target repository indexing to infer source behavior. Source and target indices must stay separate.
-Write the synthesized result to
-`artifacts/source-architecture-context-packet.txt`.
+`source-workflow-map` writes `artifacts/source-workflow-map.txt`, describing current source behavior without deciding what to port.
 
-#### `source-workflow-map`
+`porting-map` writes both `artifacts/source-to-target-porting-map.txt` and `artifacts/do-not-port-list.txt`. Classify source subsystems as reusable, refactorable, rewritable, discardable, or postponed.
 
-Write `artifacts/source-workflow-map.txt`. This stage describes what exists in the source repository. It does not decide what to port yet.
+`golden-behavior-contract` writes `artifacts/golden-behavior-contract.txt`, defining the exact target behavior. A visual reference may supplement this contract but cannot substitute for functional behavior.
 
-#### `porting-map`
+`target-architecture` writes `artifacts/target-architecture-proposal.txt`. Inspect an existing target separately, or define its structure/contracts before scaffolding. Do not mix source and target index identities.
 
-Write `artifacts/source-to-target-porting-map.txt` and `artifacts/do-not-port-list.txt`. Classify each source subsystem as reusable, refactorable, rewritable, discardable, or postponed. Explicitly list systems that must not be ported.
+`behavior-model` derives target behavior from the golden contract. `pseudocode-packet` maps that behavior to the target architecture rather than blindly following source structure.
 
-#### `golden-behavior-contract`
+`test-strategy` assigns applicable contract, backend, frontend, state, integration, end-to-end, and golden-behavior regression tests before test implementation. Do not require unrelated test families merely to fill a list.
 
-Write `artifacts/golden-behavior-contract.txt`. Define the exact behavior the target implementation must satisfy. No production implementation should begin before this artifact exists.
+`implementation` changes the target only unless source edits are separately authorized. `test-implementation` adds or updates target tests. `verification` runs actual target commands and records outcomes.
 
-#### `target-architecture`
+`judge` compares the request, source workflow, porting map, do-not-port list, golden behavior, target architecture, behavior model, pseudocode, test strategy, and verification. `final-report` records the extracted workflow, source inspected, target modified, reused/rewritten/discarded components, tests, validation, judge result, and risks.
 
-Write `artifacts/target-architecture-proposal.txt`. If the target repository already exists, use `my-dev-kit` to inspect it. If the target repository does not exist yet, define the planned structure and contracts before scaffolding.
+### Source and target responsibilities
 
-#### `behavior-model`
-
-Write a behavior model for the target system using the golden behavior contract as the primary source of truth.
-
-#### `pseudocode-packet`
-
-Write pseudocode for the target implementation. The pseudocode must map to the target architecture, not the source architecture.
-
-#### `test-strategy`
-
-Write the test strategy before any test implementation begins. Include:
-
-- contract tests
-- backend unit tests
-- frontend component tests
-- state behavior tests
-- integration tests
-- E2E tests for the full extracted workflow
-- regression tests for every golden behavior item
-
-#### `implementation`
-
-Implement the extracted workflow in the target repository only. Do not modify the source repository unless the user explicitly permits it.
-
-#### `test-implementation`
-
-Add or update tests in the target repository.
-
-#### `verification`
-
-Run actual target project validation commands. Record results.
-
-#### `judge`
-
-Compare the target implementation against:
-
-- request brief
-- source workflow map
-- source-to-target porting map
-- do-not-port list
-- golden behavior contract
-- target architecture proposal
-- behavior model
-- pseudocode packet
-- test strategy
-- verification report
-
-#### `final-report`
-
-Summarize:
-
-- extracted workflow
-- source repository inspected
-- target repository modified
-- source components reused
-- source components rewritten
-- source components discarded
-- tests added
-- validation results
-- judge result
-- remaining risks
-
-### Source and target repository responsibilities
-
-| Responsibility | Source repository | Target repository |
-|---|---|---|
-| Graph-guided inspection | ✓ | - |
-| Index artifacts | `<source>/.my-dev-kit` | `<target>/.my-dev-kit` |
-| Orchestrator run workspace | - | `<target>/.my-dev-kit-orchestrator/runs/<run-id>/` |
-| Porting analysis | input | output |
-| Implementation | read-only evidence | ✓ implementation happens here |
-| Testing | - | ✓ |
-| Verification | - | ✓ |
-| Reports | - | ✓ |
+Keep a separate index under each repository. The run workspace belongs to the target at `.my-dev-kit-orchestrator/runs/<run-id>/`. Source evidence informs porting analysis. Target artifacts, implementation, tests, verification, and reports record the result. Do not modify the source to make target validation easier.
 
 ### Extraction guardrails
 
-- The source repository is evidence, not destiny. Do not port code just because it exists.
-- Do not recreate the old architecture wholesale inside the target project.
-- Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly in scope.
-- Do not preserve old UI labels if they conflict with the new workflow.
-- Five pre-implementation analysis stages produce six extraction gate files:
-  `source-architecture-context`, `source-workflow-map`, `porting-map` (which
-  produces both the porting map and `do-not-port-list.txt`),
-  `golden-behavior-contract`, and `target-architecture`. Do not implement until
-  all six files are complete.
-- Do not mark the run as passed unless the judge report confirms that the target implementation satisfies the golden behavior contract.
-- Modify only the target repository unless the user explicitly permits source repository changes.
-
----
+- The source repository is evidence, not a required architecture.
+- Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly included.
+- Do not preserve obsolete UI labels when they contradict the requested target behavior.
+- Five pre-implementation analysis stages produce six extraction gate files: `source-architecture-context`, `source-workflow-map`, `porting-map` with its two files, `golden-behavior-contract`, and `target-architecture`. All six files must be complete before implementation.
+- Judge acceptance must establish the golden behavior contract. A local implementation summary is not enough.
+- The source-to-target runtime-reference composition is documented in the canonical ecosystem guide. Incompatible application URLs must not be disguised as comparable before/after observations.
 
 ## Greenfield
 
-Use `greenfield` to start a new project before useful code exists. Do not use
-it to add behavior to an established codebase; use `feature` for that work.
+Use `greenfield` to start a new project before useful code exists. Use `feature` for an established codebase.
 
 ```bash
 my-dev-kit-orchestrator start --mode greenfield "<project idea>"
 ```
 
-The greenfield foundation is platform-neutral. It supports four starter
-profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`. It also
-excludes security validation, release, and publishing workflows.
+The platform-neutral foundation supports four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`. Ordinary greenfield bootstrap excludes security validation, release, and publishing workflows.
 
-`start` stores the request but does not resolve a profile at the CLI layer.
-Profile resolution
-(`src/greenfield/profiles/resolveGreenfieldProfile.ts`) happens when a coding
-agent executes the `starter-profile` stage prompt, using the normalized
-brief's profile, platform, stack, project-type, and framework signals.
-Explicit `python-cli`, the exact `python` alias, and clear Python-plus-CLI
-intent resolve to the Python profile. Bare Python and Python web/API/server
-intent remain unresolved/unsupported rather than falling through to
-TypeScript CLI or Next.js. `prompt`
-itself renders static, mode-and-stage-keyed template text; profile-specific
-correctness is carried through that static wording and the artifacts a coding
-agent produces, not through a separate CLI Android/mobile/Python mode.
+`start` stores the request but does not resolve a profile at the CLI layer. The coding agent resolves it during `starter-profile` from normalized profile/platform/stack/project-type/framework evidence. Explicit `python-cli`, the exact `python` alias, and clear Python-plus-CLI intent resolve to that profile. Bare Python and Python web/API/server intent remain unresolved or unsupported. No separate CLI Android/mobile/Python mode is inferred.
 
-Android Compose is profile-guided planning support, not an Android build
-runner: the orchestrator does not run Gradle, does not require the Android
-SDK, and does not check for a connected device or emulator.
-`./gradlew connectedAndroidTest` is optional validation guidance, dependent on
-a device or emulator being available where the generated project is actually
-built -- not something the orchestrator itself runs or verifies. A generic
-"mobile" or "mobile app" request does not silently resolve to
-`android-compose`; it is reported as `unresolved`. iOS, Flutter, and React
-Native remain unsupported profiles.
+Android Compose is planning/scaffold guidance. The orchestrator does not run Gradle, does not require the Android SDK, and does not check for an emulator or device. `./gradlew connectedAndroidTest` is optional generated-project validation when its runtime prerequisites exist. Generic mobile intent remains unresolved. iOS, Flutter, and React Native are unsupported profiles.
 
 The 13 stages are:
 
-1. `idea-brief` - capture and normalize the project idea.
-2. `product-boundary` - define goals, users, constraints, and non-goals.
-3. `stack-decision` - record the platform-neutral stack decision.
-4. `starter-profile` - resolve a supported profile and its validation rules.
-5. `bootstrap-bundle` - assemble deterministic brief, profile, template,
-   documentation, scaffold, and validation inputs.
-6. `project-docs` - prepare and validate structured in-memory project
-   documentation content.
-7. `scaffold-plan` - define bounded files, commands, and acceptance criteria.
-8. `scaffold-implementation` - guide a coding agent through the approved
-   scaffold plan.
-9. `first-vertical-slice` - guide the smallest useful runnable behavior.
-10. `verification` - record actual implementation-level evidence.
-11. `initial-index` - hand the now-existing codebase to `my-dev-kit` for its
-    first index and context retrieval.
-12. `judge` - compare implementation and evidence with the greenfield plan.
-13. `final-report` - summarize the run, verdict, risks, and next action.
+1. `idea-brief`: normalize the idea.
+2. `product-boundary`: goals, users, constraints, and non-goals.
+3. `stack-decision`: platform-neutral stack decision.
+4. `starter-profile`: profile resolution and validation requirements.
+5. `bootstrap-bundle`: brief/profile/template/document/scaffold/validation inputs.
+6. `project-docs`: structured in-memory documentation content.
+7. `scaffold-plan`: bounded files, commands, and acceptance.
+8. `scaffold-implementation`: coding-agent scaffold execution.
+9. `first-vertical-slice`: smallest meaningful runnable behavior.
+10. `verification`: actual implementation evidence.
+11. `initial-index`: first my-dev-kit index after source exists.
+12. `judge`: compare evidence with the plan.
+13. `final-report`: outcome, risks, and next action.
 
-Scaffold planning and implementation are prompt-guided. The CLI generates a
-bounded prompt for one stage; the user gives that prompt to a coding agent and
-saves the returned artifact. It does not invoke an LLM or autonomously write a
-project.
+The CLI generates bounded stage prompts. The agent creates project files and runs commands outside the orchestrator. Bootstrap assembly is deterministic without disk I/O or timestamps. Project-document bootstrap supplies in-memory content. Component documentation remains empty when the brief supplies no component/module hints.
 
-The bootstrap runtime is deterministic and has no disk I/O or timestamps.
-Project-doc bootstrap returns structured in-memory content rather than writing
-template files. Component documentation remains empty until the brief schema
-has module or component hints.
+Greenfield readiness applies the selected profile's exact targets/commands, scaffold-plan validation, generated-file evidence, verification-command evidence, documentation findings, and first-slice completeness. `status` and `check`/`check --all` expose the result. A legacy scaffold report without a `Profile:` section receives compatibility treatment, not retroactive failure for evidence it could not supply. See [Artifacts](ARTIFACTS.md#greenfield-mode-artifacts).
 
-Greenfield readiness checking applies to all four current profiles. The
-scaffold plan, scaffold implementation report, verification report, and
-first vertical slice are validated against the selected profile's exact
-contract: required targets, required and optional commands, generated-file
-evidence, and first-slice completeness. `status` and `check`/`check --all`
-surface the result. A run created before this validation existed (no
-`Profile:` section in its scaffold implementation report) is treated as
-legacy: it is not retroactively failed for evidence it could not have
-produced. See [docs/ARTIFACTS.md](ARTIFACTS.md#greenfield-mode-artifacts)
-for the exact structured sections each artifact carries.
+### Common project instructions and Python CLI
 
-### v1.3.3: common project instructions and Python CLI
+Every profile receives the common exact targets `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`. Lower-case manuals derive from one normalized instruction model. Upper-case files are small adapters. These are generated-project instructions, separate from the 15 public project documents and native run artifacts.
 
-Every selected profile receives the common exact generated-project targets
-`agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md`. The lower-case manuals
-derive from one normalized instruction model; the upper-case files are small
-adapters. These files are separate from the 15 canonical public project
-documents and are not native run artifacts.
+The effective targets compose common targets, profile targets, and an optional compatible capability. The same set drives scaffold planning, persisted-plan validation, generated-file evidence, optional filesystem corroboration, and readiness. For `python-cli`, profile targets are `pyproject.toml`, `src/main.py`, `tests/test_main.py`, and `README.md`. Entry-point selection uses profile-owned metadata, not a generic extension list. Initial indexing remains the same generic handoff.
 
-The effective target set is composed once as common targets plus the selected
-profile's targets plus an optional compatible capability's targets. The same
-set drives scaffold planning, persisted plan validation, generated-file
-evidence, optional filesystem corroboration, and canonical readiness. For
-`python-cli`, it yields the four common targets plus `pyproject.toml`,
-`src/main.py`, `tests/test_main.py`, and `README.md`. Runnable behavior uses the
-profile's required exact `entry-point` target metadata, not a language-extension
-list. The existing `initial-index` stage remains the generic handoff after code
-exists; no Python-specific stage or execution path was added.
+### Standardized documents and full-stack composition
 
-### v1.3.1: standardized documents and full-stack composition
+The v1.3.1 capability is retained in the current release. It does not change the 13-stage sequence:
 
-`v1.3.1` (retained by the current `v1.3.3` release; see
-[CURRENT_STATE.md](CURRENT_STATE.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md#v131-standardized-documents-and-full-stack-capability))
-does not add, remove, reorder, or rename any of the 13 stages above; it
-carries additional resolved information through the same stages:
+1. `idea-brief` and `stack-decision` can carry `projectType: fullstack-web` and `webFramework: nextjs`, independently of profile selection.
+2. `starter-profile` resolves the existing `nextjs-app` profile plus the bounded PostgreSQL/Prisma/Docker capability when intent is compatible. There is no `nextjs-fullstack` profile or CLI `--profile`, `--project-type`, or `--framework` flag.
+3. `bootstrap-bundle` carries the capability beside the profile.
+4. `project-docs` uses the standardized 15-file baseline: README, CHANGELOG, and 13 `docs/*.md` files. Full-stack content is additive only when selected, not imposed on other profiles or ordinary frontend Next.js requests.
+5. `scaffold-plan` composes base and capability targets/commands, including Dockerfile, Compose files, Prisma/schema/migrations, environment templates, readiness scripts, and the database-backed `app/api/health/route.ts` first slice.
+6. Implementation, first slice, and verification record actual selected evidence. Full-stack proof crosses Next.js through the canonical Prisma client into PostgreSQL and observes a result. A static page or file does not satisfy that responsibility.
+7. `initial-index` and `judge` preserve their roles. Final-report eligibility consults canonical greenfield readiness for every profile, not only full-stack runs.
 
-1. `idea-brief`/`stack-decision` may capture optional `projectType`
-   (`fullstack-web`) and `webFramework` (`nextjs`) intent, orthogonal to
-   starter-profile selection.
-2. `starter-profile` still resolves one of the three existing profiles
-   (`typescript-cli`, `nextjs-app`, `android-compose`); when the resolved
-   profile is `nextjs-app` with `fullstack-web`/`nextjs` intent, the single
-   supported full-stack capability (PostgreSQL, Prisma, Docker) also
-   resolves.
-3. `bootstrap-bundle` carries the resolved capability alongside the resolved
-   profile.
-4. `project-docs` populates the standardized 15-file canonical document
-   baseline (README.md, CHANGELOG.md, and 13 `docs/*.md` files) for every
-   profile, with full-stack-specific content layered additively into those
-   common documents only when the capability is selected; `typescript-cli`
-   and `android-compose` runs, and ordinary `nextjs-app` runs without the
-   capability, never receive full-stack content.
-5. `scaffold-plan` composes the base profile's targets/commands with the
-   capability's targets/commands (Dockerfile, Compose files, Prisma schema,
-   environment templates, readiness scripts, and the database-backed
-   `app/api/health/route.ts` first-slice entry point) into one plan.
-6. `scaffold-implementation`, `first-vertical-slice`, and `verification`
-   record the same evidence contract as before, extended with the
-   capability's required targets and commands where selected; a
-   full-stack first vertical slice must cross Next.js through the canonical
-   Prisma database client to PostgreSQL and observe a result -- a static
-   page or file's existence cannot satisfy it.
-7. `initial-index` and `judge` are unchanged in shape; `judge` still reviews
-   the same evidence, now inclusive of full-stack evidence when present.
-8. `final-report` eligibility for every greenfield run (not only full-stack
-   runs) now consults the same canonical greenfield readiness `status` and
-   `check` already surface; an authored judge `PASS` cannot make a run
-   eligible while that readiness is incomplete.
-
-No new CLI flag, workflow mode, or native stage was added. The orchestrator
-still never executes Docker, PostgreSQL, Prisma, or any other project
-command itself; it generates prompts and validates evidence a coding agent
-supplies.
+The orchestrator never executes Docker, PostgreSQL, Prisma, or other project commands. It generates instructions and validates supplied evidence. The ecosystem guide owns the manual transition into the next complete feature, not a new built-in handoff capability.
 
 ## Instruction packets and context-sensitive behavior
 
-The seven workflow definitions contain 79 native stages in total. The stage
-orders documented above are the exact `getAllWorkflows()` order and are
-unchanged by the implemented instruction and context integration.
-
-All 79 stages have stable catalog identities and deterministic
-instruction-packet sidecars. Seventy-seven stages use the generalized
-packet-backed prompt rendering path. The greenfield `scaffold-plan` and
-`scaffold-implementation` stages retain their specialized scaffold renderer;
-both exceptions still have catalog entries and sidecars, and their stage
-names, prompt filenames, artifacts, and lifecycle behavior are unchanged.
+The seven workflows contain 79 native stages. All have stable instruction-catalog identities and deterministic `WorkflowInstructionPacket` sidecars. Seventy-seven stages use the generalized renderer. `scaffold-plan` and `scaffold-implementation` retain the specialized scaffold renderer and still receive catalog entries and sidecars.
 
 ### Context-sensitive direct stages
 
-Repository evidence is attached only to this exact 11-stage matrix:
+Repository evidence attaches to the existing 11-stage matrix:
 
-| Context kind | Workflow mode | Native stage |
+| Context | Modes | Native stage |
 | --- | --- | --- |
-| Implementation context | `feature` | `implementation` |
-| Implementation context | `repair` | `implementation` |
-| Implementation context | `refactor` | `implementation` |
-| Implementation context | `harden` | `implementation` |
-| Implementation context | `extraction` | `implementation` |
-| Test context | `feature` | `test-implementation` |
-| Test context | `repair` | `test-implementation` |
-| Test context | `test` | `test-implementation` |
-| Test context | `refactor` | `test-implementation` |
-| Test context | `harden` | `test-implementation` |
-| Test context | `extraction` | `test-implementation` |
+| Implementation | `feature`, `repair`, `refactor`, `harden`, `extraction` | `implementation` |
+| Test | `feature`, `repair`, `test`, `refactor`, `harden`, `extraction` | `test-implementation` |
 
-There are five implementation-context stages and six test-context stages.
-Greenfield requires neither context kind and no native context stage exists.
+There are five implementation-context stages and six test-context stages. Greenfield requires neither supplemental kind. No native context stage is added.
 
-New context-sensitive runs start with templates, so a direct
-`implementation` or `test-implementation` prompt may initially be a
-refresh-only prompt. It prohibits normal production or test work and directs
-the user to refresh the required evidence. Printing a prompt reevaluates
-readiness but does not write sidecars, generate templates, or mutate run files.
-Normal work resumes after readiness passes.
+New context-sensitive runs include templates. A direct-stage prompt may be refresh-only until its required repository evidence is ready. It then prohibits normal editing and requests exact evidence recovery. Printing `prompt` reevaluates readiness but does not write sidecars, generate templates, or mutate run files.
 
-Producer readiness for a bounded implementation or test request is not the
-same as project-wide Architecture Assimilation. For an unfamiliar existing
-project, the planner must first complete the manual onboarding gate in
-[ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md](ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#65-architecture-assimilation-gate).
-The current CLI does not create or enforce that onboarding result; it continues
-to enforce only its implemented run and repository-evidence contracts.
+For an unfamiliar existing repository, complete the manual [Architecture Assimilation gate in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#6-existing-project-onboarding-workflow) first. The CLI does not itself create or enforce that onboarding report. Task-level producer readiness and project-wide understanding remain distinct.
 
-A refresh-required decision always carries an actionable issue. One
-deterministic primary blocker supplies the primary reason, corrective action,
-and evidence target; blocking and supporting issue codes retain canonical
-order. Direct prompts, `status`, `check`, verification, judge, correction
-routing, and `export` consume that same summary rather than selecting their
-own blocker.
+A refresh-required result identifies one deterministic primary blocker with primary reason, corrective action, evidence target, and ordered blocking/supporting issue codes. `prompt`, `status`, `check`, verification, judge routing, and `export` consume the same summary.
 
-`v1.2.3` makes this one canonical run-integrity
-decision, not just a shared summary: automatic stage detection, explicit
-prompt selection, lifecycle resolution, `mark`, `status`, `check`, and
-`export` all evaluate it once and cannot disagree. A refresh-required
-`implementation`/`test-implementation` artifact is forced to `blocked` for
-lifecycle purposes regardless of file presence or a manual `complete`
-record, so it cannot advance the run while required context is not ready.
+`RunIntegrityGate` controls stage detection, explicit prompt selection, lifecycle resolution, mark/check/export, and final eligibility. A context-blocked implementation/test artifact is effectively blocked despite file presence or a manual complete record. A safe manual source read may inform a corrected request but cannot overwrite generated readiness.
 
 ### Verification, judge, and correction flow
 
-Verification and judge in `feature`, `repair`, `refactor`, `harden`, and
-`extraction` review implementation and test context. In `test`, they review
-test context only. Greenfield performs no repository-context review.
+Verification/judge review implementation and test context in feature, repair, refactor, harden, and extraction. Test mode reviews test context only. Greenfield uses its own readiness rather than these supplemental repository-context pairs.
 
-Blocked judge prompts use the existing `NEED_CONTEXT` verdict; no new verdict
-was added. They require a valid exact `Recommended next stage`:
+A blocked context judge uses the supported `NEED_CONTEXT` verdict and an exact `Recommended next stage`:
 
-- recommend `implementation` first when implementation context is blocked;
-- recommend `test-implementation` when only test context is blocked;
-- recommend `test-implementation` for test mode.
+- `implementation` first when implementation context is blocked.
+- `test-implementation` when only test context is blocked, including test mode.
 
-The recommendation overrides the older default table through existing
-correction routing. There is no correction-specific instruction-packet
-sidecar and no correction-specific context file.
+The canonical readiness recommendation overrides a conflicting prose route. No correction-specific packet or context file is created.
 
-`v1.2.3` rejects an authored `Verdict: PASS`
-whenever the canonical expected verdict is still `NEED_CONTEXT`, routing back
-to the recommended stage above rather than clearing correction state. An
-accepted `NEED_CONTEXT` always uses that same canonical recommendation, even
-when the judge report's own `Recommended next stage:` names a different
-stage. Every other supported verdict -- including `SCOPE_VIOLATION` and
-`BLOCKED`, which remain terminal -- keeps its existing routing unchanged. A
-normal `final-report` requires the accepted verdict to be `PASS` with no
-active correction route and no remaining readiness blocker; artifact
-presence and a manual `complete` mark cannot substitute for that.
+An authored `Verdict: PASS` cannot override a required `NEED_CONTEXT`. It is rejected rather than accepted and then hidden by a final report. Other supported verdicts retain their correction behavior. `SCOPE_VIOLATION` and `BLOCKED` remain terminal. A normal final report requires accepted PASS, no active correction, and no remaining readiness blocker.
 
 ## Shared stage gates and completion rules
 
-- The CLI generates one prompt file per stage when a run starts.
-- `prompt` without a stage selects the first stage whose effective artifact state is not `complete`.
-- `prompt <stage>` requires prior stage artifacts to exist (file-existence check).
-- The implementation and test-implementation stages are meant to consume the same design context rather than reinterpret the request independently.
+- `start` generates the run's stage prompts and applicable sidecars.
+- `prompt` without a stage selects the first stage whose effective state is not complete.
+- Explicit stage selection still checks predecessor and current integrity requirements.
+- Implementation and test implementation consume the same design rather than reinterpret the request independently.
 - `my-dev-kit-orchestrator` does not execute a coding agent or `my-dev-kit` automatically.
-- (`v1.2.3`) a context-blocked implementation/
-  test-implementation stage, or a final-report stage that is not eligible,
-  is never treated as `complete` for advancement purposes by the canonical
-  run-integrity decision, even when its artifact file exists or carries a
-  manual `complete` record.
+- A context-blocked stage or ineligible final report cannot advance through file presence or a manual completion mark.
+- External runtime/test/assurance results must describe the final candidate. The ecosystem guide's PASS labels do not expand the native judge vocabulary.
 
 ## Lifecycle-aware progression (v0.3.0)
 
-Stage progression now respects artifact lifecycle states:
-
-- **`missing`**: artifact file does not exist - stage remains current
-- **`incomplete`**: artifact exists but is marked unfinished - stage remains current
-- **`blocked`**: cannot proceed due to a blocker - stage remains current
-- **`stale`**: an upstream artifact changed after this one was completed - stage returns here
-- **`complete`**: artifact is ready - stage advances to the next
+Effective states are `missing`, `incomplete`, `blocked`, `stale`, and `complete`. Missing means no artifact. Incomplete means unfinished. Blocked means an unmet gate. Stale means upstream evidence changed. Complete permits advancement only under current integrity rules.
 
 ### Setting lifecycle states
 
-Use the `mark` command to set manual states:
-
 ```bash
-my-dev-kit-orchestrator mark request-brief.txt --state blocked --reason "Waiting for PM"
+my-dev-kit-orchestrator mark request-brief.txt --state blocked --reason "Required product decision missing"
 my-dev-kit-orchestrator mark behavior-model.txt --state incomplete --reason "Edge cases missing"
 my-dev-kit-orchestrator mark request-brief.txt --state complete
 ```
 
-`missing` and `stale` are computed automatically and cannot be set manually.
+Only incomplete, blocked, and complete are manually settable. Missing and stale are computed. Manual completion is not a bypass.
 
 ### Stale artifact recovery
 
-An artifact becomes stale when an upstream artifact is updated after it was completed.
-
-Recovery flow:
-
-1. `status` shows the stale artifact and which upstream caused it
-2. `prompt` returns to the stale artifact's stage and shows a reconciliation context block
-3. Update the artifact to reflect the newer upstream content
-4. Mark it complete to advance again
+Inspect `status` for the upstream cause, retrieve the stage's current prompt, reconcile its artifact with new evidence, and complete it only when its gates permit. Repeat downstream stages whose evidence was invalidated.
 
 ### Blocked artifact handling
 
-When an artifact is blocked:
-
-1. Mark it blocked with a reason: `mark <artifact> --state blocked --reason "<blocker>"`
-2. `prompt` shows a blocked context block explaining the situation
-3. When unblocked, write the artifact file and mark it complete
+Preserve the exact blocker and completed evidence. Resolve the required input or correction, regenerate relevant artifacts, and re-run readiness before marking the artifact complete. Do not rewrite a failing generated verdict.
 
 ### Backward compatibility
 
-Existing runs without `artifact-state.json` continue to work:
-
-- file present -> `complete`
-- file missing -> `missing`
-
-No migration is needed for runs created before v0.3.0.
+Runs predating lifecycle metadata retain legacy file-present/file-missing behavior where applicable. Current readiness and final-report rules still govern supported current evidence. Do not rewrite old runs merely to produce a new-looking state file.
 
 ## Practical architecture-context flow
 
-For an architecture-context stage, a task-specific coding-agent prompt can combine both tools in a bounded sequence:
+For a bounded architecture-context stage:
 
-1. run `my-dev-kit` retrieval commands to gather project context
-2. write `reports/architecture-context-retrieval-report.txt`
-3. write `artifacts/architecture-context-packet.txt`
-4. continue the orchestrator workflow with the synthesized architecture context
+1. Run a verified my-dev-kit CLI against the correct current repository/index.
+2. Save `reports/architecture-context-retrieval-report.txt` in the run.
+3. Save the synthesized `artifacts/architecture-context-packet.txt`.
+4. Continue the generated native stage sequence.
 
-This is intentionally prompt-driven rather than rigid. ChatGPT can tailor the architecture-context prompt to the project, change request, and available retrieval evidence without changing the orchestrator command surface.
+For an unfamiliar existing project, first obtain `ARCHITECTURE_ASSIMILATION_PASS` under the canonical ecosystem guide. Establish the existing owner, extension point, analogous implementation, canonical contracts/state, dependencies, excluded layers, tests to extend, and architecture that must not be duplicated. One task query is not automatically a complete onboarding report.
 
-For an unfamiliar existing project, do not start this implementation workflow
-or choose direct versus staged execution until the ecosystem Architecture
-Assimilation Report has produced `ARCHITECTURE_ASSIMILATION_PASS`. The report
-must establish the relevant owner, extension point, analogous implementation,
-canonical contracts/state, dependencies, excluded owning layers, tests to
-extend, and architecture that must not be duplicated. One feature-specific
-architecture-context request is insufficient unless its evidence genuinely
-covers all important onboarding domains.
-
-After the pass, prompt assembly carries only those conclusions relevant to the
-bounded task and still performs current task-specific retrieval. It must tell
-the agent to build on the established architecture and prohibit a parallel
-owner, registry, state representation, persistence path, analyzer, command
-path, service layer, or other competing architecture unless an approved
-replacement is explicitly in scope. Refresh or partially re-assimilate after a
-material architecture change; do not reuse a stale result indefinitely.
+Carry only relevant conclusions into each subsequent bounded prompt and refresh current task evidence. Preserve existing owners, registries, state representations, persistence paths, analyzers, command paths, and service layers unless an explicit replacement is in scope. Re-assimilate only the domains invalidated by a material architecture change.

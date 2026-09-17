@@ -27,8 +27,14 @@ The surrounding tools retain separate responsibilities:
   classification.
 - `my-dev-kit-orchestrator` owns workflow instructions, stage requirements,
   readiness evaluation, and routing policy for supplied evidence.
+- `my-frontend-observer` owns rendered browser evidence, frontend contracts,
+  reference fidelity, and explicit runtime/static correlation.
 - `my-dev-kit-lab` owns evaluation and experiments; it is not part of the
   orchestrator's production runtime.
+
+Cross-repository workflow composition is documented once in
+[my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md).
+Documentation ownership does not move these runtime responsibilities.
 
 Repository retrieval is manual. The orchestrator does not execute `my-dev-kit`
 and does not automatically retrieve evidence, run a coding agent, edit
@@ -90,18 +96,18 @@ All four current profiles share one validation architecture, owned by
   delegates to the pure evaluator.
 - All of the above reuse the shared `ProfileValidationIssue`
   (code/severity/profileId/affectedContract/reason/correctiveAction) and
-  deterministic ordering from Batch 1; there is no second issue system, no
-  profile-ID branch inside a shared validator, and no parallel readiness
-  authority.
+  deterministic ordering from the original validation implementation. There
+  is no second issue system, profile-ID branch inside a shared validator,
+  or parallel readiness authority.
 - A run's evidence is treated as legacy (evaluated for compatibility, not
   failed for missing v1.3.0-only fields) using the presence of a "Profile"
-  section in the scaffold implementation report as the sole discriminator --
+  section in the scaffold implementation report as the sole discriminator,
   not a timestamp.
 
 ### v1.3.1: standardized documents and full-stack capability
 
-`v1.3.1` (retained by the current `v1.3.3` release; see [CURRENT_STATE.md](CURRENT_STATE.md))
-is additive to the architecture above rather than a replacement:
+`v1.3.1` is retained by the current release and is additive to the architecture
+above rather than a replacement:
 
 - `src/greenfield/brief/briefTypes.ts` adds optional `projectType` and
   `webFramework` fields to the raw and normalized brief. They are orthogonal
@@ -115,8 +121,8 @@ is additive to the architecture above rather than a replacement:
   `README.md`, `CHANGELOG.md`, and the 13 `docs/*.md` files through
   `DOCUMENTATION_PRESERVATION_POLICY.md`, in one deterministic order, applied
   to the `typescript-cli`, `nextjs-app`, and `android-compose` profiles present
-  in that release. `src/greenfield/bootstrap/
-  populateCanonicalProjectDocumentsFromBrief.ts` derives per-document content
+  in that release. `src/greenfield/bootstrap/`
+  `populateCanonicalProjectDocumentsFromBrief.ts` derives per-document content
   from the actual brief/profile/capability, not copied ecosystem prose.
   Profile- and capability-specific requirements layer additively into these
   common owners; there is no default `DATABASE.md`/`ENVIRONMENT.md`/
@@ -166,8 +172,8 @@ is additive to the architecture above rather than a replacement:
 
 ### v1.3.3: common project instructions and Python CLI
 
-The `v1.3.3` release extends the same architecture without adding a workflow mode,
-stage, native artifact, or readiness subsystem:
+The `v1.3.3` release extends the same architecture without adding a workflow
+mode, stage, native artifact, or readiness subsystem:
 
 - `src/greenfield/bootstrap/projectInstructions/projectInstructionTypes.ts`
   owns one normalized in-memory project-instruction model and exactly four
@@ -179,10 +185,10 @@ stage, native artifact, or readiness subsystem:
   `GREENFIELD_CANONICAL_DOCUMENTS` public-document registry and are not native
   orchestrator artifacts.
 - `src/greenfield/scaffold/effectiveTargetExpectations.ts` owns the common
-  exact targets and `composeEffectiveGreenfieldTargetExpectations()`. Its
-  deterministic order is common, selected profile, then optional capability.
-  Scaffold planning, plan validation, generated-file evidence, filesystem
-  corroboration, and canonical readiness consume the same composition.
+  exact targets and `composeEffectiveGreenfieldTargetExpectations()`.
+  Its deterministic order is common, selected profile, then optional
+  capability. Scaffold planning, plan validation, generated-file evidence,
+  filesystem corroboration, and canonical readiness consume the same composition.
 - `src/greenfield/profiles/pythonCliProfile.ts` defines the fourth profile via
   the existing `GreenfieldProfile` contract: `pyproject.toml`, `src/main.py`,
   `tests/test_main.py`, and `README.md`, with Python setup/compile/pytest/help
@@ -291,8 +297,7 @@ not create sidecars or templates and does not mutate `run.json` or
 `artifact-state.json`.
 
 For an unfamiliar existing project, prompt assembly also has a manual ecosystem
-precondition: the Architecture Assimilation Gate defined in
-[ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md](ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#65-architecture-assimilation-gate)
+precondition: the [Architecture Assimilation Gate in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#6-existing-project-onboarding-workflow)
 must return `ARCHITECTURE_ASSIMILATION_PASS` before ChatGPT chooses direct or
 staged execution or supplies an implementation prompt. This is deliberately
 not a second native stage, persisted schema, or producer artifact. The current
@@ -336,11 +341,11 @@ sections. Raw `my-dev-kit` capsule and audit JSON are parsed into bounded
 projections; full raw documents are not embedded in the instruction packet or
 stage bundle.
 
-`RepositoryEvidenceReference` describes evidence that is applicable to a stage.
-The exact requirement registry contains five implementation-context direct
-stages and six test-context direct stages. Greenfield requires no repository
-context. Verification and judge review mode-level context requirements rather
-than adding native context stages.
+`RepositoryEvidenceReference` describes evidence applicable to a stage. The
+exact requirement registry contains five implementation-context direct stages
+and six test-context direct stages. Greenfield requires no supplemental
+repository context. Verification and judge review mode-level context requirements
+rather than adding native context stages.
 
 ## Context readiness
 
@@ -369,29 +374,27 @@ ordered issues and a blocked decision.
 field (condition-aware role adequacy with retained required-condition witness
 IDs) when present. The released `@dailephd/my-dev-kit@1.10.4` package emits
 the additive field when applicable; its absence on older schema-major-1
-evidence -- including `1.10.3` -- remains legacy-compatible and never blocks
-by itself. Producer
-`roleAdequacy` and `requiredEvidenceLost` remain authoritative and are never
-recomputed. Optional-only evidence truncation is nonblocking whenever producer
-adequacy remains sufficient; an actual lost required-condition witness raises
-a dedicated code independent of general truncation. Capsule/audit parity
-checks extend to the additive field, and packet/report declarations (for
-example, responsibility-mapping-truncation claims) are reconciled against raw
-producer evidence, not only against each other -- an agreeing packet/report
-pair cannot mask a contradiction with the raw capsule or audit.
+evidence, including `1.10.3`, remains legacy-compatible and never blocks
+by itself. Producer `roleAdequacy` and `requiredEvidenceLost` remain authoritative
+and are never recomputed. Optional-only truncation is nonblocking whenever
+producer adequacy remains sufficient. An actual lost required-condition witness
+raises a dedicated code independent of general truncation. Capsule/audit parity
+checks extend to that field. Packet/report declarations are reconciled against
+raw producer evidence, not just each other. An agreeing supplemental pair
+cannot mask a contradiction with the raw capsule or audit.
 
 Every refresh-required result is finalized with an actionable canonical
 blocker summary. The summary contains `contextKind`, `primaryCode`,
 `primaryReason`, `correctiveAction`, `evidenceTarget`, `blockingIssueCodes`,
 and `supportingIssueCodes`. Primary selection uses one deterministic priority
-order; run-level aggregation preserves implementation-before-test priority and
-never converts an error-bearing result to ready.
+order. Run aggregation preserves implementation-before-test priority and never
+converts an error-bearing result to ready.
 
 ## Lifecycle boundaries
 
 Each native stage produces its expected artifact file. Lifecycle progression
-uses artifact existence and artifact state; explicit content and dependency
-checks do not replace that mechanism.
+uses artifact existence and artifact state with applicable integrity decisions.
+Explicit content and dependency checks do not replace that mechanism.
 
 Instruction-packet sidecars are inspection aids, not native lifecycle artifacts.
 They are absent from `run.json` and `artifact-state.json`, are not mark targets,
@@ -407,82 +410,67 @@ summaries without changing the native lifecycle graph.
 `src/runIntegrityGate.ts` is the sole canonical run-integrity evaluator. It
 derives `contextReady`, `blockedStageNames`, deterministic blocking codes, the
 recommended correction stage, and `expectedJudgeVerdict` (`PASS` when context
-is ready or not required, `NEED_CONTEXT` otherwise) directly from `Context
-Readiness`/`RunContextReadiness` results -- it never recomputes readiness
-itself. Every readiness-sensitive command (automatic and explicit prompt
+is ready or not required, `NEED_CONTEXT` otherwise) directly from
+`ContextReadiness`/`RunContextReadiness` results. It does not recompute readiness.
+Every readiness-sensitive command evaluates this gate once per invocation and
+threads the same result through its decisions: automatic/explicit prompt
 selection, lifecycle resolution, stage detection, `mark`, `status`, `check`,
-`check --all`, `check --artifacts`, and `export`) evaluates this gate once per
-invocation and threads the same result through every decision it makes,
-rather than rediscovering readiness or the expected verdict independently.
-`resolveArtifactStateWithRunIntegrity` is the single override point: it forces
-a context-blocked implementation/test-implementation artifact, and, given a
-computed final-report eligibility, an ineligible final-report artifact, to
-`blocked` regardless of file presence or a manual `complete` record.
+`check --all`, `check --artifacts`, and `export`.
+
+`resolveArtifactStateWithRunIntegrity` is the single override point. It forces
+a context-blocked implementation/test artifact, or an ineligible final report,
+to `blocked` regardless of file presence or a manual complete record.
 
 `src/judgeIntegrity.ts` composes on top of the gate. It parses the authored
-judge verdict through the existing judge parser and compares it with
-`expectedJudgeVerdict`: an authored `PASS` is rejected when `NEED_CONTEXT` is
-expected and routes back to the gate's recommended stage rather than clearing
-correction state; an accepted `NEED_CONTEXT` uses that same recommended stage,
-overriding both the routing table's default and a conflicting authored
-recommendation; every other supported verdict (including `SCOPE_VIOLATION`
-and `BLOCKED`, which remain terminal) is accepted as authored and routed
-through the existing correction table unchanged. Missing, malformed, and
-unknown verdicts fail closed and are never guessed.
+judge verdict and compares it with `expectedJudgeVerdict`. An authored PASS
+is rejected when NEED_CONTEXT is expected and routes to the gate's recommended
+stage. Accepted NEED_CONTEXT uses that same recommendation, overriding both
+the routing-table default and conflicting authored prose. Other supported
+verdicts retain their existing behavior. `SCOPE_VIOLATION` and `BLOCKED` remain
+terminal. Missing, malformed, and unknown verdicts fail closed.
 
-A normal final report is eligible only when the accepted verdict is `PASS`,
-no correction route is active, and every required prior native artifact
-resolves to `complete` under the same gate-aware lifecycle resolution.
-Artifact presence, a manual `complete` mark, an explicit `prompt final-report`
-request, and a structurally valid final-report file cannot substitute for
-that decision.
+A normal final report requires accepted PASS, no active correction, and all
+required prior native artifacts effectively complete under the same gate.
+Artifact presence, manual completion, explicit final-report selection, or
+structurally valid final-report content cannot substitute for this decision.
 
 ## Status, check, and export
 
-`status` reports human-readable implementation and test readiness, freshness,
-adequacy, the primary blocker and reason, corrective action, evidence target,
-ordered issue codes, and the recommended next stage. The current CLI has no
-status JSON option.
+`status` reports human-readable implementation/test readiness, freshness,
+adequacy, primary blocker/reason, corrective action, evidence target, ordered
+issue codes, and the next stage. It has no status JSON option.
 
-`check` evaluates context readiness together with its selected existing checks.
-Blocking context issues fail the command, warning-only conditions do not, and
-duplicate failures for the same context kind are suppressed. Its failure
-message uses the same canonical blocker summary. `check` and `check --all` are
-read-only.
+`check` evaluates context readiness alongside its selected checks. Blocking
+context issues fail the command. Warning-only conditions do not, and duplicate
+failures for the same context kind are suppressed. Its failure message uses
+the same canonical blocker summary. Checks do not advance lifecycle state.
 
-For a greenfield run with a selected profile, `status` and
-`check`/`check --all` additionally surface `checkGreenfieldRunReadiness()`
-findings using the same shared, deterministic issue model as every other
-check. This is presentation only: it consumes the existing readiness
-evaluator rather than adding a second lifecycle, gate, or issue system, and a
-non-greenfield run or a greenfield run with no profile selected yet is
-unaffected.
+For a greenfield run with a selected profile, `status` and `check`/`check --all`
+also surface `checkGreenfieldRunReadiness()` findings through the same shared
+issue model. They consume existing readiness rather than introduce another
+gate. Non-greenfield runs and runs without a selected profile are unaffected
+by that presentation path.
 
-`export` includes a structured readiness summary and preserves an honest blocked
-state, including the canonical primary blocker fields when blocked. It does not
-embed full raw capsule or audit content and does not copy external evidence
-merely because a supplemental file references it. Existing path-safety checks
-remain in effect. `export` reports the same accepted judge state and
-final-report eligibility as `status` and `check`, rather than an unreconciled
-authored verdict.
+`export` preserves honest readiness, accepted judge state, correction, and
+final eligibility. It includes canonical primary-blocker fields when blocked,
+but does not embed raw capsule/audit JSON or copy external evidence merely
+because a supplemental file references it. Existing path-safety rules remain.
 
 ## Judge and correction routing
 
-Verification and judge prompts review the context kinds required by their mode.
+Verification and judge prompts review context kinds required by their mode.
 Feature, repair, refactor, harden, and extraction review implementation and test
-context; test mode reviews test context only; greenfield reviews neither.
+context. Test mode reviews test context only. Greenfield reviews neither of
+these supplemental kinds and retains canonical greenfield readiness.
 
-A blocked judge uses the existing `NEED_CONTEXT` verdict and includes an exact
-`Recommended next stage`. Recommendation priority is implementation first when
-implementation context is blocked, then `test-implementation` when only test
-context is blocked. Test mode recommends `test-implementation`.
+A blocked context judge uses `NEED_CONTEXT` and an exact `Recommended next stage`.
+Implementation takes priority when implementation context is blocked, otherwise
+use test-implementation. Test mode recommends test-implementation.
 
-Existing correction routing honors a valid recommendation override for every
-verdict other than an accepted `NEED_CONTEXT`, where the gate's recommended
-stage wins over both the routing table's default and a conflicting authored
-recommendation (see "RunIntegrityGate and judge integrity"). There is no
-new verdict, correction-specific sidecar, correction-specific context file, or
-automatic correction execution.
+Normal valid recommended-stage overrides remain supported, except that accepted
+NEED_CONTEXT uses canonical readiness routing over the table default and
+conflicting prose. There is no new verdict, correction sidecar, context file,
+or automatic correction execution.
 
 ## Determinism
 
@@ -505,26 +493,25 @@ interpretation remain compatible with `v1.2.0`.
 Run storage is local. The CLI rejects unsafe export traversal and symlink
 targets, does not call external services, and does not execute agents or
 repository tools. `npm run test:security` validates package identity, semver,
-CLI bin policy, package-file policy, and dry-run package contents; it does not
+CLI bin policy, package-file policy, and dry-run package contents. It does not
 replace broader evaluation owned by `my-dev-kit-lab`.
 
-Repository evidence is treated as supplied data. Parsing is bounded, raw
-external files are referenced rather than embedded, and prompt rendering does
-not grant evidence authority beyond the explicit stage requirements.
+Repository evidence is supplied data. Parsing is bounded, raw external files
+are referenced rather than embedded, and prompt rendering does not grant
+evidence authority beyond explicit stage requirements.
 
 ## Known limitations
 
-- `scaffold-plan` and `scaffold-implementation` retain the specialized
-  greenfield renderer.
-- Extraction command examples are not fully promoted into command catalog
-  entries.
-- Extraction has no generic architecture-context stage; exact `NEED_CONTEXT`
-  recommendations use implementation or test-implementation, while generic
-  non-`NEED_CONTEXT` architecture routing retains a pre-existing edge case.
-- Repository evidence retrieval and producer CLI selection remain manual; the
-  orchestrator does not execute `my-dev-kit` automatically.
+- `scaffold-plan` and `scaffold-implementation` retain the specialized renderer.
+- Extraction command examples are not fully promoted into command catalog entries.
+- Extraction has no generic architecture-context stage. Exact NEED_CONTEXT
+  recommendations use implementation/test-implementation. Generic non-context
+  architecture routing retains a pre-existing edge case.
+- Repository evidence retrieval and producer CLI selection remain manual.
 - The current CLI has no status JSON output.
-- There is no shared cross-repository schema package or lab runtime integration.
+- There is no shared cross-repository schema package or Lab runtime integration.
+- Cross-tool recipes are externally executed compositions. Documentation
+  consolidation does not add an automatic browser or full-stack executor.
 
 ## Non-goals
 
