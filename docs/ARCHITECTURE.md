@@ -36,9 +36,10 @@ Cross-repository workflow composition is documented once in
 [my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md).
 Documentation ownership does not move these runtime responsibilities.
 
-Repository retrieval is manual. The orchestrator does not execute `my-dev-kit`
-and does not automatically retrieve evidence, run a coding agent, edit
-source code, execute tests, or publish packages.
+Repository retrieval and project-command execution remain external to
+Orchestrator. It does not automatically retrieve evidence, run a coding agent,
+edit source code, execute tests, or publish packages. A user or coding agent
+invokes `my-dev-kit` separately and supplies its evidence.
 
 Artifact content validation remains one shared system. Artifact-kind entries in
 the registry select their native format contract: text artifacts use the
