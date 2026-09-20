@@ -131,7 +131,7 @@ my-dev-kit-orchestrator status --run <run-id> --root <project-root>
 
 Status reports identity, request, folder, current stage, prompts, artifact lifecycle, supporting reports, implementation/test context, freshness/adequacy, blockers, and next command. Judge/final-report integrity includes expected and authored verdicts, acceptance, correction state, and eligibility.
 
-`status` is human-readable. There is no JSON option. Do not invent `status --json`.
+`status` is human-readable. There is no JSON option. Do not invent a JSON-output flag for `status`.
 
 For selected greenfield profiles, status also surfaces scaffold/readiness evidence. It consumes the existing evaluator rather than executing project commands or proving runtime correctness.
 
