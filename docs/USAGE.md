@@ -55,7 +55,7 @@ my-dev-kit-orchestrator start --proof-only --verification-responsibility artifac
 
 Proof-only is not inferred from an empty diff. The declared proof file must contain the exact line `Proof result: PASS`. Normal readiness, integrity, judge, and final-report requirements still apply.
 
-`start --output-dir <path>` supports placement outside the default workspace, but subsequent `prompt`, `status`, `list`, `mark`, `check`, and `export` commands do not rediscover custom-output runs in the reviewed release. They search under `.my-dev-kit-orchestrator/runs/` at the selected root and do not accept `--output-dir`. Even `--run` does not fix that limitation. Omit custom placement for a resumable CLI workflow.
+`start --output-dir <path>` supports placement outside the default workspace, but subsequent `prompt`, `status`, `list`, `mark`, `check`, and `export` commands cannot rediscover custom-output runs in the reviewed release. They search under `.my-dev-kit-orchestrator/runs/` at the selected root and do not accept `--output-dir`. Even `--run` does not fix that limitation. Omit custom placement for a resumable CLI workflow.
 
 ## Start and inspect a greenfield run
 
@@ -96,7 +96,7 @@ my-dev-kit-orchestrator prompt implementation
 my-dev-kit-orchestrator prompt verification --run 20260621T120000-release-docs
 ```
 
-Without a stage, the CLI selects the first effective incomplete stage. Missing, blocked, stale, context-blocked, and ineligible states remain visible. Explicit stage selection cannot bypass missing predecessors or readiness. Completed runs print completion instead of another task.
+Without a stage, the CLI selects the first stage whose effective gate-aware state is not complete. Missing, blocked, stale, context-blocked, and ineligible states remain visible. Explicit stage selection cannot bypass missing predecessors or readiness. Completed runs print completion instead of another task.
 
 ## Save artifacts between prompts
 
