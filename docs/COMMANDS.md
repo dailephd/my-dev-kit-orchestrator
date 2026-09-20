@@ -245,6 +245,18 @@ Supported correction verdicts retain their native meanings. `DESIGN_INCOMPLETE`,
 
 `NEED_CONTEXT` follows canonical readiness: implementation first when blocked, otherwise test-implementation. This overrides conflicting authored recommendations. An authored PASS is rejected while NEED_CONTEXT is required. Final-report eligibility requires accepted PASS, no active correction, complete current predecessors, and applicable readiness. File presence, explicit final-report selection, or a manual mark cannot bypass these rules.
 
+## Cross-tool compatibility handoffs
+
+The authoritative command-surface composition map is [my-dev-kit ecosystem workflow section 9.15](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#915-command-surface-compatibility-map).
+
+Current boundaries that matter when composing commands:
+
+- my-dev-kit context capsules/audits are **raw producer evidence**, not native Orchestrator artifacts. The coding agent must populate the fixed implementation/test supplemental packet and retrieval-report contracts that reference them.
+- Observer's released bounded-agent-context schema has a **direct programmatic** consumer in Orchestrator through `consumeBoundedObserverEvidence(...)`. There is no CLI flag that launches Observer or imports an arbitrary Observer evidence directory.
+- Observer `check --json`, Lab security/audit reports, my-dev-kit `graph-diff`, and project-test results can be cited in verification/final reports, but current Orchestrator commands do not generically parse those files.
+- `export` produces a portable human/coding-agent handoff. It is not a machine-input format accepted by my-dev-kit, Lab, or Observer.
+- Lab stage-context experiments can consume Orchestrator `WorkflowInstructionPacket` evidence through Lab's documented programmatic experiment configuration. That is Lab library/source-checkout integration, not an Orchestrator CLI route.
+
 ## Cross-tool limitations
 
 Observer evidence consumption is a documented library boundary, not a browser-executing CLI subcommand. Lab runs separately under its own command contract. Full-stack continuation, runtime-to-source repair, shared-component protection, reference fidelity, experiments, releases, and ecosystem feedback are externally executed recipes in the canonical my-dev-kit guide.
