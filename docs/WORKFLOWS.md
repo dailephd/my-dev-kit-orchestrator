@@ -2,7 +2,7 @@
 
 This guide owns Orchestrator's native modes, stage order, lifecycle, and completion rules. Consult [Commands](COMMANDS.md) for exact CLI syntax and [Artifacts](ARTIFACTS.md) for artifact contracts.
 
-Cross-repository recipes have one home: [Ecosystem development workflows in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md). That guide combines my-dev-kit, Orchestrator, Lab, Observer, and project test commands. This repository does not maintain a second copy.
+Cross-repository recipes have one home: [Ecosystem development workflows in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md). The [command-surface compatibility map](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#915-command-surface-compatibility-map) adds combinations found by matching the actual four-tool command inputs/outputs rather than only the named workflows. That guide combines my-dev-kit, Orchestrator, Lab, Observer, and project test commands. This repository does not maintain a second copy.
 
 `my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to choose a mode and follow its stages. [Usage](USAGE.md) retains detailed usage compatibility guidance.
 
