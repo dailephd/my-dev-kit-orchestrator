@@ -239,7 +239,7 @@ autonomously run coding agents, `my-dev-kit`, Observer, security validation,
 publishing, or release workflows.
 
 Cross-tool documentation is centralized in the
-[ecosystem guide in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md).
+[ecosystem guide in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md), including its [command-surface compatibility map](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#915-command-surface-compatibility-map).
 The local duplicate is intentionally untracked and ignored. The guide's
 continuous full-stack recipes preserve native stage order and readiness.
 They are not additional built-in modes or proof that every composition was
