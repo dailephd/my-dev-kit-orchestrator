@@ -4,6 +4,8 @@ coverage/
 *.js.map
 .my-dev-kit-orchestrator/
 .my-dev-kit
+/.my-dev-kit-context/
+/.my-dev-kit-workflow/
 *.log
 *.txt
 npm-debug.log*

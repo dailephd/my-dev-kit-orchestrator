@@ -515,10 +515,11 @@ from source when a profile is added or removed.
 - Run `npm run lint` when changing TypeScript files.
 - Complete validation requires both `npm test` and `npm run verify`, in either
   order, each exactly once. `npm test` runs the complete Jest suite. `npm run
-  verify` runs the non-test verification chain (typecheck, build, lint,
-  lint:docs, docs:check, the package-content security contract check, and the
-  CLI smoke checks) and intentionally excludes the test suite, so running
-  both does not execute the suite twice. `npm run verify` alone is not a
+  verify` runs the non-test verification chain (typecheck, build, the
+  context-readiness CLI smoke, lint, lint:docs, docs:check, the package-content
+  security contract check, and the CLI smoke checks) and intentionally excludes
+  the test suite, so running both does not execute the suite twice.
+  `npm run verify` alone is not a
   substitute for `npm test`.
 - Keep required validation on Node.js 24, with supplementary Node.js 26
   pre-release coverage, across `ubuntu-latest`, `windows-latest`, and
