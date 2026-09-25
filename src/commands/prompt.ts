@@ -10,6 +10,7 @@ import {
   getNextStageWithRunIntegrity,
   isRunCompleteWithRunIntegrity,
   resolveCurrentArtifactStatesWithRunIntegrity,
+  resolveGateCurrentStage,
 } from '../stageDetector';
 import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
@@ -100,8 +101,10 @@ export function makePromptCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
-        currentStage: meta.currentStage,
+        currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
+        semanticContinuityVersion: meta.semanticContinuityVersion,
+        proofOnly: meta.proofOnly === true,
       });
       // Canonical judge-integrity / final-report eligibility (v1.2.3
       // Batch 3): computed once from the same gate, reused for the

@@ -143,6 +143,27 @@ export function getNextStageWithLifecycle(
   return null;
 }
 
+// The stage the canonical RunIntegrityGate should be evaluated at
+// (v1.5.0 Batch 4). Runs that have not opted into semantic continuity keep
+// their persisted cursor exactly as before. Opted-in runs use the lifecycle
+// phase (the same phase reconcileRunLifecycle() evaluates), because a
+// correction route can move the persisted cursor back to an earlier stage and
+// semantic legs, unlike repository-context requirements, are not monotone in
+// the cursor: evaluating at the cursor would let a rejected verdict look
+// acceptable again.
+export function resolveGateCurrentStage(
+  meta: {
+    currentStage: string;
+    semanticContinuityVersion?: string;
+    runFolder: string;
+    stages: ReadonlyArray<{ name: string; artifactFile: string; additionalArtifactFiles?: string[] }>;
+  },
+  stateFile: ArtifactStateFile,
+): string {
+  if (meta.semanticContinuityVersion === undefined) return meta.currentStage;
+  return getNextStageWithLifecycle(meta as unknown as RunMetadata, stateFile)?.name ?? '(complete)';
+}
+
 export function isRunCompleteWithLifecycle(
   meta: RunMetadata,
   stateFile: ArtifactStateFile,

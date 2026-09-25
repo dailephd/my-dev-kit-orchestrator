@@ -21,6 +21,7 @@ import {
 import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
 import { ContextReadinessResult } from '../instructions/contextReadiness';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { resolveGateCurrentStage } from '../stageDetector';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult, FinalReportEligibilityResult } from '../judgeIntegrity';
 import { RunMetadata } from '../run';
 import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
@@ -176,15 +177,17 @@ function formatContextReadinessCheck(summary: RunContextReadinessSummary): { lin
 // for a run (mirrors formatContextReadinessCheck's "evaluate once, format
 // deterministically for check and check --all" convention). Read-only.
 function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeIntegrityResult; eligibility: FinalReportEligibilityResult } {
+  const stateFile = readArtifactStateFile(meta.runFolder);
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
-    currentStage: meta.currentStage,
+    currentStage: resolveGateCurrentStage(meta, stateFile),
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
-  const stateFile = readArtifactStateFile(meta.runFolder);
   const eligibility = evaluateFinalReportEligibility({
     gate,
     judgeIntegrity,

@@ -23,6 +23,8 @@ export function reconcileRunLifecycle(meta: RunMetadata): RunMetadata {
     workflowStageNames: meta.stages.map((stage) => stage.name),
     currentStage: lifecycleNextStage?.name ?? '(complete)',
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const finalReportEligibility = evaluateFinalReportEligibility({

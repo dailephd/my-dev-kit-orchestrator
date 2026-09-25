@@ -135,6 +135,8 @@ export function makeMarkCommand(): Command {
             workflowStageNames: meta.stages.map((s) => s.name),
             currentStage: targetStage?.name ?? meta.currentStage,
             projectRoot: meta.projectRoot,
+            semanticContinuityVersion: meta.semanticContinuityVersion,
+            proofOnly: meta.proofOnly === true,
           });
           const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
           const preMarkStateFile = readArtifactStateFile(meta.runFolder);
@@ -159,6 +161,19 @@ export function makeMarkCommand(): Command {
                 (finalReportEligibility.primaryReason ? `  Reason: ${finalReportEligibility.primaryReason}\n` : '') +
                 (judgeIntegrity.acceptedCorrectionStage ? `  Recommended correction stage: ${judgeIntegrity.acceptedCorrectionStage}\n` : '') +
                 `\nManual completion cannot override an unaccepted judge verdict. Resolve the blocking issue and rerun\n` +
+                `  my-dev-kit-orchestrator check\n` +
+                `before marking this artifact complete.`,
+              );
+            } else if (gate.contextReady && !gate.semanticContinuityReady) {
+              // Semantic Continuity is the actual blocker (v1.5.0 Batch 4):
+              // report the unified gate fields, not a context message.
+              console.error(
+                `Error: cannot mark "${path.basename(artifactKey)}" complete -- semantic continuity is not satisfied.\n` +
+                `  Semantic classification: ${gate.semanticContinuityClassification}\n` +
+                (gate.primaryBlockingCode ? `  Primary blocker: ${gate.primaryBlockingCode}\n` : '') +
+                (gate.primaryBlockingReason ? `  Reason: ${gate.primaryBlockingReason}\n` : '') +
+                `  Recommended correction stage: ${gate.recommendedCorrectionStage ?? '(none)'}\n\n` +
+                `Manual completion cannot override semantic continuity. Repair the recorded responsibility evidence and rerun\n` +
                 `  my-dev-kit-orchestrator check\n` +
                 `before marking this artifact complete.`,
               );

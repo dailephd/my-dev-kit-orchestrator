@@ -314,6 +314,8 @@ function evaluateFinalReportEligibilityForRun(meta: RunMetadata, currentStage = 
     workflowStageNames: meta.stages.map((s) => s.name),
     currentStage,
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const stateFile = readArtifactStateFile(meta.runFolder);

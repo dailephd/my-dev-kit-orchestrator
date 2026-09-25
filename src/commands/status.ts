@@ -8,12 +8,13 @@ import {
   getArtifactLifecycleStatusesWithRunIntegrity,
   getNextStageWithRunIntegrity,
   ArtifactLifecycleStatus,
+  resolveGateCurrentStage,
 } from '../stageDetector';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
-import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
+import { evaluateRunIntegrityGateFromSummary } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
 
@@ -61,14 +62,17 @@ export function makeStatusCommand(): Command {
       // "Repository context readiness" section below, so the artifact list
       // and "Current / next stage" line can never contradict it (invariant
       // 6.5 -- avoid duplicate contradictory readiness sections).
-      const readiness = evaluateRunContextReadiness({
+      const gateInput = {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
-        currentStage: meta.currentStage,
+        currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
-      });
-      const gate = deriveRunIntegrityGateResult(meta.mode, readiness);
+        semanticContinuityVersion: meta.semanticContinuityVersion,
+        proofOnly: meta.proofOnly === true,
+      };
+      const readiness = evaluateRunContextReadiness(gateInput);
+      const gate = evaluateRunIntegrityGateFromSummary(gateInput, readiness);
       // Canonical judge-integrity / final-report eligibility (v1.2.3
       // Batch 3): computed once here, reused for the artifact list,
       // current/next stage, and the single "Judge and final-report

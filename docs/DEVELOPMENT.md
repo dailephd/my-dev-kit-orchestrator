@@ -173,6 +173,10 @@ Important implementation files:
   Batch 2; tests in `tests/verificationResponsibilityEvidence.test.ts`)
 - `src/instructions/semanticContinuity.ts`: the one phase-aware Semantic Continuity evaluator composing
   Batch 0-2 results (v1.5 Batch 3; tests in `tests/semanticContinuity.test.ts`)
+- `src/instructions/runSemanticContinuity.ts`: run-folder adapter and versioned activation for Semantic
+  Continuity (v1.5 Batch 4; tests in `tests/runSemanticContinuity.test.ts`,
+  `tests/semanticContinuityRunIntegrity.test.ts`, fixtures in `tests/semanticRunTestHelpers.ts`);
+  enforcement lives in `src/runIntegrityGate.ts`
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation

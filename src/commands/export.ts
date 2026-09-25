@@ -6,6 +6,7 @@ import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { resolveGateCurrentStage } from '../stageDetector';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult } from '../judgeIntegrity';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { StageDefinition } from '../workflows';
@@ -232,23 +233,27 @@ export function buildExportText(meta: {
   stages: Array<{ name: string; artifactFile: string }>;
   proofOnly?: boolean;
   verificationResponsibility?: string;
+  semanticContinuityVersion?: string;
 }): string {
   const parts: string[] = [];
 
   // Canonical judge-integrity state (v1.2.3 Batch 4), computed once and
   // reused for every section below so export cannot disagree with
   // status/check on whether a verdict was actually accepted.
+  const exportStateFile = readArtifactStateFile(meta.runFolder);
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
-    currentStage: meta.currentStage,
+    currentStage: resolveGateCurrentStage(meta, exportStateFile),
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const finalEligibility = evaluateFinalReportEligibility({
     gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages as StageDefinition[],
-    stateFile: readArtifactStateFile(meta.runFolder),
+    stateFile: exportStateFile,
     proofOnly: meta.proofOnly === true, verificationResponsibility: meta.verificationResponsibility,
   });
 
