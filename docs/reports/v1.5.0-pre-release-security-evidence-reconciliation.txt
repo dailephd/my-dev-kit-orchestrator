@@ -1,0 +1,166 @@
+1. FINAL_STATUS
+PASS_ORCHESTRATOR_SECURITY_EVIDENCE_RECONCILIATION
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+642119651b193e9fdbd3925833d0d30d1f44fe6b
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged; intended later release 1.5.0)
+
+6. WORKING_TREE_DEPENDENCY_REMEDIATION
+Preserved and reviewed. package.json updates markdownlint-cli2 0.23.2 to 0.23.3 and its markdown-it override 14.3.0 to 15.0.1; brace-expansion override 5.0.9 remains. package-lock.json refreshes the compatible graph, including browserslist 4.29.1, js-yaml 3.15.2/4.3.2/5.4.1, and smol-toml 1.8.0. No force update or unrelated direct dependency change.
+
+7. PRIOR_SECURITY_BLOCKERS
+The original Lab 0.6.0 run reported development dependency vulnerabilities, nine Lab-specific package paths absent from the Orchestrator package, a static check for Lab's own commandRunner.ts, and two generic secret-assignment findings in parser/trace message templates. Dependency audit findings are remediated. The other three families were source-reviewed and replaced with target-owned evidence below.
+
+8. LAB_PACKAGE_POLICY_SOURCE_EVIDENCE
+Inspected pinned installed @dailephd/my-dev-kit-lab@0.6.0 dist/src/securityValidation/packageChecks/requiredPackageContents.js and runPackageChecks.js. REQUIRED_PACKAGE_CONTENTS is one static inventory with Lab CLI/runtime/benchmark/example paths. runSecurityValidation calls runPackageChecks for the external target without deriving its package contract from the target manifest; the checker falls back to the Lab inventory.
+
+9. LAB_PACKAGE_POLICY_CLASSIFICATION
+LAB_EXTERNAL_TARGET_PACKAGE_POLICY_MISMATCH. The absent Lab files do not belong in the Orchestrator package.
+
+10. TARGET_PACKAGE_REPLACEMENT_EVIDENCE
+PASS. tests/v121PackageRegression.test.ts passed (1 suite, 7 tests); npm run test:security passed; npm pack --dry-run --json and npm pack --dry-run passed; 448-file tarball policy and forbidden-content checks passed; actual external tarball installation passed. package.json has main=dist/index.js, bin=dist/cli.js, files=[dist, CHANGELOG.md]. No Lab-only paths were added.
+
+11. LAB_SUBPROCESS_SCENARIO_SOURCE_EVIDENCE
+Pinned Lab 0.6.0 subprocessInjectionScenario.js resolves ../../commandRunner.ts relative to its own module in dist/src/securityValidation/attackScenarios/scenarios. That is Lab-owned static source evidence, not a scan of Orchestrator subprocess code. The preceding Lab report recorded that every shell-metacharacter argv payload round-tripped as one literal argument.
+
+12. LAB_SUBPROCESS_FRAMEWORK_CLASSIFICATION
+LAB_INSTALLED_SUBPROCESS_STATIC_SOURCE_EVIDENCE_DEFECT. In a compiled installed package, the static helper still requests a .ts path, although the shipped implementation is .js.
+
+13. TARGET_PRODUCTION_SUBPROCESS_SURFACE
+TARGET_PRODUCTION_SUBPROCESS_SURFACE = NONE. Production src scan found no child_process import or subprocess invocation (spawn, spawnSync, execFile, execFileSync, execSync, or fork). No production shell:true or shell:false option exists. The child-process usages found in tests are test harnesses, not target production execution.
+
+14. TARGET_SUBPROCESS_REPLACEMENT_EVIDENCE
+PASS. npx jest tests/v121SecurityRegression.test.ts --runInBand passed (1 suite, 13 tests); npm run test:security passed. Existing tests cover shell-like input staying inert, repository-context evaluation without spawning a child, and rejection of traversal/URL evidence paths. Prior Lab behavioral argv round-trip passed. No test was added solely to satisfy Lab's Lab-owned static-source wording.
+
+15. LAB_SECRET_SCANNER_SOURCE_EVIDENCE
+Pinned Lab 0.6.0 secretLeakageScenario.js uses QUOTED_ASSIGNMENT_PATTERN on per-line source text. The regex requires a sensitive identifier, separator, quoted value of at least eight characters; it does not parse JavaScript/TypeScript template-literal boundaries or interpolation syntax. Shaped-token patterns are a separate scan path.
+
+16. SECRET_FINDING_JUDGEPARSER_REVIEW
+src/judgeParser.ts:60 is the template-literal message `Unrecognized verdict token: "${token}". Supported: ...`. token is parser terminology and ${token} is runtime interpolation. The source stores no credential assignment or literal credential value.
+
+17. SECRET_FINDING_TRACECHECKER_REVIEW
+src/traceChecker.ts:97 is the template-literal message `Malformed trace ID token: "${token}" (not a valid trace ID format)`. token is trace terminology and ${token} is runtime interpolation. The source stores no credential assignment or literal credential value.
+
+18. LAB_SECRET_FALSE_POSITIVE_CLASSIFICATION
+LAB_SECRET_SCANNER_TEMPLATE_LITERAL_FALSE_POSITIVE. On both lines the regex reads token: "${token}" inside template text as an assignment whose apparent value is the literal interpolation syntax. That string is not an evaluated secret.
+
+19. TARGET_OWNED_SECRET_SCAN
+PASS after manual adjudication. Bounded tracked src/scripts/config scans found no private-key markers or credential-shaped gh[pousr]_, sk-, or AKIA literals. The only quoted sensitive-identifier matches were the two reviewed token-message templates above; neither contains a credential. No raw secret values were emitted.
+
+20. SECURITY_APPLICABILITY_MATRIX
+CHECK_FAMILY | LAB_CHECK | APPLICABLE_TO_EXTERNAL_ORCHESTRATOR | LAB_RESULT | FRAMEWORK_LIMITATION | TARGET_OWNED_REPLACEMENT_EVIDENCE | FINAL_TARGET_SECURITY_RESULT
+deps | deps | YES | PASS | None affecting audit result | npm audit full/runtime; npm ls --all; npm ci | PASS
+package | package | NO for Lab static required-file assertion | Excluded; Lab report counts this omitted mandatory check as 1 requiredEvidenceMissing | Lab's inventory is Lab-specific | Package regression, security contract, JSON/normal pack, external tarball install, CLI/feature smoke | PASS
+static | static | YES | Semgrep PASS; CodeQL unavailable | CodeQL optional CLI unavailable | Bounded source review and target scans | PASS (optional skip recorded)
+cli-adversarial | cli-adversarial | YES | PASS | None affecting result | test:security and v121SecurityRegression | PASS
+fuzz | fuzz | YES | PASS, 9 targets/450 iterations | None | v121SecurityRegression | PASS
+boundary | boundary | YES | PASS, including target sandbox/package/output/path/config/report scenarios | None affecting result | Target-owned package policy and immutability checks | PASS
+subprocess | subprocess | Lab argv behavior applicable; Lab static helper-source assertion inapplicable | Prior argv round-trip PASS; static source blocked | Lab helper seeks its own .ts source in installed distribution | No target production subprocess surface; security regressions PASS | PASS
+secrets | secrets | Findings require interpretation; template-text assignment assertion inapplicable | Two findings manually adjudicated as false positives | Scanner does not parse template literals | Exact source review and bounded target-owned scan | PASS
+network | network | YES | PASS, static scan: 147 files, 0 unexpected matches | Static-only claim; no dynamic network instrumentation | Target CLI/package acceptance | PASS
+
+21. NPM_AUDIT_FULL_RESULT
+PASS; 0 vulnerabilities (0 critical, high, moderate, or low).
+
+22. NPM_AUDIT_RUNTIME_RESULT
+PASS; npm audit --omit=dev --json reports 0 vulnerabilities (all severities zero).
+
+23. NPM_LS_RESULT
+PASS; npm ls --all exited 0 with no invalid/missing dependency errors.
+
+24. NPM_CI_RESULT
+PASS; npm ci installed 463 packages, audited 464, and reported 0 vulnerabilities.
+
+25. LINT_DOCS_RESULT
+PASS; markdownlint-cli2 0.23.3 linted 23 files with 0 issues.
+
+26. DOCS_CHECK_RESULT
+PASS; canonical docs remain consistent for Orchestrator 1.4.1. Tracked Markdown contains no exact claims for markdownlint-cli2 0.23.2, markdown-it 14.3.0, browserslist 4.28.2, or smol-toml 1.7.0.
+
+27. FULL_TEST_RESULT
+PASS; npm test -- --runInBand: 142 suites passed, 3 skipped; 3,538 tests passed, 11 skipped, 0 failed.
+
+28. VERIFY_RESULT
+PASS; npm run verify completed typecheck, build, context smoke, lint, docs lint/check, security contract, and all normal/lifecycle/extraction/check/trace/correction/export/greenfield CLI smoke modes.
+
+29. PACKAGE_REGRESSION_RESULT
+PASS; npx jest tests/v121PackageRegression.test.ts --runInBand: 1 suite, 7 tests.
+
+30. PACKAGE_DRY_RUN_JSON_RESULT
+PASS; package identity @dailephd/my-dev-kit-orchestrator@1.4.1, 448 files, no forbidden/local-only paths under regression policy.
+
+31. PACKAGE_DRY_RUN_RESULT
+PASS; npm pack --dry-run completed and identified @dailephd/my-dev-kit-orchestrator@1.4.1 with 448 files.
+
+32. ISOLATED_PACKED_INSTALL_RESULT
+PASS; produced tarball installed in an external temporary directory outside the repository.
+
+33. PACKED_SEMANTIC_CONTINUITY_RESULT
+PASS; installed CLI --version returned 1.4.1, --help worked, feature start worked, and generated run.json contains semanticContinuityVersion=1.0.0.
+
+34. APPLICABLE_LAB_RERUN_COMMAND
+npx -y @dailephd/my-dev-kit-lab@0.6.0 --workspace "C:\Users\daile\AppData\Local\Temp\orchestrator-lab-rerun-c8511c1f4ba34b52a65419c13ff64ecf" security validate --target "C:\Users\daile\Projects\my-dev-kit-orchestrator" --profile node-cli-package --checks deps,static,cli-adversarial,fuzz,boundary,network
+
+35. APPLICABLE_LAB_RERUN_REPORT_PATHS
+C:\Users\daile\AppData\Local\Temp\orchestrator-lab-rerun-c8511c1f4ba34b52a65419c13ff64ecf\reports\security\my-dev-kit-orchestrator-v1.4.1-security-validation.txt and .json.
+
+36. APPLICABLE_LAB_RERUN_RESULT
+Pinned Lab 0.6.0 report: 13 passed, 1 warned, 0 failed, 3 skipped; 0 release blockers, 0 target-project blockers, 0 tool-framework blockers, and 0 adversarial scenario failures. One Lab verdictReasonSummary.requiredEvidenceMissingCount remains because the deliberately excluded Lab npm-pack-dry-run check is mandatory under Lab's unchanged accounting. It is fully replaced by the target-owned package evidence in Sections 10, 30-33; this is a scoped Lab reporting limitation, not an unexplained missing target security category. Lab verdict: READY EXCEPT OPTIONAL MANUAL CHECKS.
+
+37. OPTIONAL_SKIPS
+CodeQL CLI unavailable; OSV-Scanner not installed; symlink/junction environment-specific scenario skipped. These were reported as skips, not passes. The Lab package check was deliberately excluded and is the single requiredEvidenceMissing count (not an optional tool skip).
+
+38. COMBINED_SECURITY_CATEGORY_RESULTS
+Dependency PASS; package PASS via target-owned evidence; static PASS (CodeQL optional skip); CLI adversarial PASS; fuzz PASS; boundary PASS; subprocess PASS via target-owned evidence; secrets PASS via target-owned evidence; network PASS via Lab bounded static scan. Every target security category has evidence; no target category remains unevidenced.
+
+39. REMAINING_TARGET_SECURITY_BLOCKERS
+NONE. Remaining Lab limitations are documented in Section 40; no Orchestrator production security defect was found.
+
+40. LAB_FRAMEWORK_LIMITATIONS
+LAB_EXTERNAL_TARGET_PACKAGE_POLICY_MISMATCH; LAB_INSTALLED_SUBPROCESS_STATIC_SOURCE_EVIDENCE_DEFECT; LAB_SECRET_SCANNER_TEMPLATE_LITERAL_FALSE_POSITIVE. Lab 0.6.0 also counts an explicitly excluded mandatory package check as requiredEvidenceMissing; target-owned package acceptance supplies the replacement evidence. No Lab patch was made.
+
+41. MY_DEV_KIT_LAB_CHANGED
+NO.
+
+42. PRODUCTION_SOURCE_CHANGED
+NO. Orchestrator production source remains unchanged; only the pre-existing dependency manifest and lockfile remediation are included.
+
+43. DOCUMENTATION_RECONCILIATION_REQUIRED
+NO. Canonical documentation does not state the changed dependency versions.
+
+44. TARGET_IMMUTABILITY_RESULT
+PASS. Before and after Lab, branch and HEAD remained feature/v1.5.0-semantic-continuity / 642119651b193e9fdbd3925833d0d30d1f44fe6b. Only the intended package.json and package-lock.json tracked modifications existed; no Lab output entered the target.
+
+45. FILES_CHANGED
+package.json; package-lock.json; docs/reports/v1.5.0-pre-release-security-evidence-reconciliation.txt. No production source or Lab files changed.
+
+46. GIT_DIFF_CHECK_RESULT
+git diff --check passed for tracked dependency changes; report text reviewed for trailing whitespace. Exact intended files staged and staged diff check passed before commit.
+
+47. FINAL_GIT_STATUS
+Pre-commit review: feature/v1.5.0-semantic-continuity at 642119651b193e9fdbd3925833d0d30d1f44fe6b; only package.json, package-lock.json, and this ignored report are intended for the commit.
+48. COMMIT
+fix(deps): reconcile v1.5.0 security evidence; this report is included in the resulting commit.
+49. PUSH_RESULT
+Push the report-containing commit to origin/feature/v1.5.0-semantic-continuity after local commit; verify the remote branch update before reporting completion.
+50. NEW_CANDIDATE_SHA
+The SHA of the commit containing this report; capture from git rev-parse HEAD after commit and return in the completion summary.
+51. STALE_VALIDATION_BRANCHES
+validation/v1.5.0-pre-release and validation/v1.5.0-pre-release-r2 were not reset, moved, deleted, reused, or force-pushed.
+
+52. CODE_ROT_RUN
+NO.
+
+53. VERSION_BUMPED
+NO; package.json and package-lock root version remain 1.4.1. No tag, GitHub Release, or publish was created.
+
+54. NEXT_ACTION
+Resume the separately scoped v1.5.0 pre-release readiness workflow using the new candidate SHA; this reconciliation did not run code-rot or create a release.
