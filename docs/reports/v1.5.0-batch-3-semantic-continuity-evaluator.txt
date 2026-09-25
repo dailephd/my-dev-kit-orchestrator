@@ -1,0 +1,161 @@
+1. FINAL_STATUS
+PASS_V1_5_BATCH_3_SEMANTIC_CONTINUITY_EVALUATOR
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+67724dccd81a66e798f754956d6a0a44c7ccbb1c
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. RETRIEVAL_LOG
+Index: .my-dev-kit-context/v1.5.0/batch-3/index (@dailephd/my-dev-kit@1.12.4, --src src --src tests --call-graph), ignored/uncommitted.
+Searches (limit 4): "semantic responsibility evidence bridge"; "implementation responsibility bridge state"; "test implementation responsibility bridge state";
+"verification responsibility attribution"; "workflow test strategy implementation test implementation verification"; "run integrity lifecycle stage order".
+Recall: good for the three bridge/attribution owners (their files ranked first), poor for the workflow and run-integrity queries (returned test files).
+Selected node: symbol:src/instructions/verificationResponsibilityEvidence.ts#evaluateVerificationAttribution -> lookup (3 incoming edges), slice depth 1 (3 nodes, 3 edges).
+Source retrieval: symbol:src/instructions/testResponsibilityCriticality.ts#findTestStrategySourceRequirement.
+Direct owner retrieval where search was insufficient: built workflows (dist/workflows.js) stage order per mode; export listings (grep ^export) of runIntegrityGate.ts and stageDetector.ts
+to identify later integration seams only. No behavior in those files was read for change. No full-file fallback.
+
+7. BATCH_0_CONTRACT_PRESERVED
+semanticResponsibility.ts untouched; RSP identity, upstream prefixes and structural validation consumed as-is.
+
+8. BATCH_1_CONTRACT_PRESERVED
+implementationResponsibilityEvidence.ts untouched; its bridge result and state vocabulary are consumed directly.
+
+9. BATCH_2_CONTRACT_PRESERVED
+Test bridge, verification attribution, shared helpers and raw projection untouched.
+
+10. EVALUATOR_OWNER
+src/instructions/semanticContinuity.ts (evaluateSemanticContinuity). The single policy owner; the Batch 0-2 modules remain evidence-leg owners.
+Input reuses the existing Batch 0-2 result types (validations and bridge/attribution results) plus declaredUpstreamTraceIds, mode, currentStage, optional proofOnly.
+
+11. APPLICABILITY
+applicable | not-applicable. Applicable modes: feature, repair, test, refactor, harden, extraction (those with a TEST_STRATEGY_SOURCE_REQUIREMENTS owner).
+Not applicable: proof-only (checked first), greenfield, any mode without a strategy owner; each with a deterministic applicabilityReason.
+
+12. PHASE_MODEL
+Stage order and owner stages are taken from the workflow definition; the strategy stage is taken from the registry (stage id with the "stage.<mode>." prefix removed).
+Unknown current stage (or unresolvable strategy stage) -> SEMANTIC_CONTINUITY_STAGE_UNKNOWN, overall invalid, no guessing.
+Strategy inactive -> overall pending, nothing evaluated.
+
+13. ACTIVE_LEG_RULES
+A leg is active iff currentStageIndex > ownerStageIndex (strictly). Strategy owner = registry strategy stage; implementation/test-implementation/verification = workflow stages of those names.
+Test mode has no "implementation" stage: implementationApplicable=false, leg state not-applicable at every phase. Inactive legs are pending; their issues/orphans are ignored.
+
+14. UPSTREAM_TRACE_EXISTENCE
+Each responsibility's upstreamTraceIds must be present in the supplied declaredUpstreamTraceIds set (exact, case-sensitive, no substring/fuzzy). Each absent ID ->
+SEMANTIC_CONTINUITY_UPSTREAM_TRACE_MISSING (responsibilityId, traceId) and the responsibility is invalid. The evaluator does not build the set or parse traces.
+
+15. LEG_STATE_VOCABULARY
+pending, not-applicable, satisfied, partial, unsatisfied, missing, indeterminate, failed, skipped, blocked, invalid.
+Implementation/test: corroborated->satisfied, partially-corroborated->partial, uncorroborated->unsatisfied, missing-declaration->missing, producer-mapping-unavailable->indeterminate.
+Verification: passed->satisfied, failed->failed, skipped->skipped, blocked->blocked, missing-declaration->missing.
+
+16. RESPONSIBILITY_STATE_VOCABULARY
+complete, incomplete, indeterminate, failed, blocked, invalid (phase-relative). Strategy state: satisfied | invalid.
+Result fields: responsibilityId, criticality, upstreamTraceIds, missingUpstreamTraceIds, strategyState, implementation/testImplementation/verificationState, state, issueCodes; strategy declaration order preserved.
+
+17. OVERALL_STATE_VOCABULARY
+not-applicable, pending, complete, incomplete, indeterminate, failed, blocked, invalid.
+Top-level also exposes mode, currentStage, applicability(+Reason), strategyActive, implementationApplicable, implementationActive, testImplementationActive, verificationActive, issues, diagnostics, summary.
+
+18. STATE_PRECEDENCE
+Responsibility: invalid > failed > blocked > incomplete (partial/unsatisfied/missing/skipped) > indeterminate > complete.
+Overall: invalid (global active issue, active orphan, or any invalid responsibility) > failed > blocked > incomplete (also zero active-strategy responsibilities) > indeterminate > complete.
+
+19. STRUCTURAL_INVALIDITY_POLICY
+Active-leg structural issues are propagated as SEMANTIC_CONTINUITY_{STRATEGY,IMPLEMENTATION,TEST_IMPLEMENTATION,VERIFICATION}_INVALID with the exact underlying code in sourceIssueCode.
+An issue naming a canonical responsibility makes only that responsibility/leg invalid; an issue that cannot be attributed to a canonical responsibility makes the overall state invalid.
+Strategy issues are matched by responsibility ID and block index. Inactive-leg issues are ignored.
+
+20. VERIFICATION_DIAGNOSTIC_POLICY
+VERIFICATION_RESPONSIBILITY_STATUS_EVIDENCE_INCONSISTENT never invalidates; when verification is active it is preserved in result.diagnostics (leg, sourceIssueCode, message, responsibilityId)
+and the leg stays satisfied for a declared pass.
+
+21. ORPHAN_POLICY
+Active-leg IMPLEMENTATION_/TEST_IMPLEMENTATION_/VERIFICATION_RESPONSIBILITY_ORPHAN -> SEMANTIC_CONTINUITY_ORPHAN_DECLARATION (leg, sourceIssueCode, responsibilityId), overall invalid.
+Inactive-leg orphans are ignored. Strategy remains authoritative.
+
+22. CRITICALITY_SUMMARY
+Descriptive only. summary: totalResponsibilities, critical/noncritical counts, complete/incomplete/indeterminate/failed/blocked/invalid counts, and ID lists
+criticalComplete/criticalUnsatisfied/noncriticalComplete/noncriticalUnsatisfied (unsatisfied = any state other than complete). One addition beyond the planner list:
+unclassifiedResponsibilityIds for responsibilities whose criticality is undefined (a Batch 0 structural defect that already makes them invalid); they are excluded from the critical/noncritical lists.
+No enforcement policy; criticality never changes a state (tested by swapping the gap between critical and noncritical).
+
+23. CORRECTION_ROUTE_SAFETY
+PASS. With mode=feature, currentStage=implementation, malformed/orphan downstream test and verification data leaves the result identical to a clean run and emits no issues;
+the same data at judge becomes invalid with the TEST_IMPLEMENTATION_INVALID, VERIFICATION_INVALID and ORPHAN issues. Verified across implementation/test-implementation/verification.
+
+24. PERSISTENCE
+None. Pure derived in-memory result; no new file.
+
+25. PRODUCTION_FILES_CHANGED
+src/instructions/semanticContinuity.ts (new)
+
+26. TEST_FILES_CHANGED
+tests/semanticContinuity.test.ts (new)
+
+27. DOCUMENTATION_FILES_CHANGED
+docs/CONTRACTS.md, docs/DEVELOPMENT.md, this report
+
+28. FOCUSED_TEST_RESULTS
+Batch 0-3 suites + raw evidence (6 suites): 307 tests passed; semanticContinuity alone: 71.
+
+29. PHASE_MATRIX_RESULTS
+All six modes: strategy stage from the registry, activation transitions exact for every stage of each workflow; feature stage-by-stage flags exact; test mode implementation not-applicable throughout. PASS.
+
+30. CORRECTION_PHASE_RESULTS
+PASS (see 23).
+
+31. BATCH_0_2_REGRESSION_RESULTS
+Batch 0, 1, 2 suites and raw evidence pass unchanged.
+
+32. CONTEXT_READINESS_REGRESSION
+testResponsibilityCriticality + contextReadiness + contextReadinessHistoricalMatrix: 107 passed. Trace suites: 113 passed.
+
+33. FULL_TEST_RESULTS
+npm test -- --runInBand: 137 suites passed, 3 skipped (pre-existing); 3225 tests passed, 11 skipped.
+
+34. VERIFY_RESULT
+npm run verify exit 0.
+
+35. SMOKE_CONTEXT_RESULT
+smoke:context passed within verify.
+
+36. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (version 1.4.1, 436 files); git diff --check clean apart from line-ending notices.
+
+37. PUBLIC_SURFACE_CONFIRMATION
+No CLI, workflow, stage, greenfield, proof-only or Observer source touched; no dependency change; 8 commands / 7 modes unchanged.
+
+38. PROMPT_SURFACE_UNCHANGED
+Yes.
+
+39. ARTIFACT_GATE_UNCHANGED
+Yes. artifactChecker.ts untouched.
+
+40. RUN_INTEGRITY_UNCHANGED
+Yes. runIntegrityGate.ts untouched.
+
+41. JUDGE_INTEGRITY_UNCHANGED
+Yes. judgeIntegrity.ts untouched.
+
+42. OUT_OF_SCOPE_CONFIRMATION
+No enforcement, run-folder adapter, prompt activation, correction routing, status/check/export/mark change, final-report change, my-dev-kit change, version bump,
+or edits to README/CHANGELOG/CURRENT_STATE/ROADMAP.
+
+43. COMMIT
+feat: add semantic continuity evaluator (SHA in final response)
+
+44. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (see final response)
+
+45. NEXT_ACTION
+READY_FOR_V1_5_BATCH_4_RUN_INTEGRITY_AND_LIFECYCLE_INTEGRATION

@@ -1,0 +1,136 @@
+1. FINAL_STATUS
+PASS_V1_5_BATCH_1_IMPLEMENTATION_EVIDENCE_BRIDGE
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+ecf7f7207ba89b7e5f018870f4bed2ed583d8c5a
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. MY_DEV_KIT_PRODUCER_IDENTITY
+@dailephd/my-dev-kit 1.12.4; local producer checkout at fcf58329820ddae781ceb75d3936024ed87d5f72 (inspected read-only, unchanged).
+EvidenceItemRef (src/context/types.ts) = {id, itemKind, path?, symbolId?, nodeId?, sourceLocation?, relationship, basis, provenance, metadata?};
+id is a project-relative path, a symbol:<path>#<name> ID, or a graph nodeId.
+
+7. RETRIEVAL_LOG
+Index: .my-dev-kit-context/v1.5.0/batch-1/index (--src src --src tests --call-graph), ignored/uncommitted.
+Searches (limit 4): "semanticResponsibility validateSemanticResponsibilities"; "RawResponsibilityMappingEntry productionSymbols";
+"projectRawEvidence responsibilityMappings"; "context readiness responsibility mapping"; "ImplementationReport implementation stage";
+"TEST_STRATEGY_SOURCE_REQUIREMENTS implementation".
+Selected nodes: symbol:src/instructions/semanticResponsibility.ts#validateSemanticResponsibilities;
+symbol:src/instructions/myDevKitEvidenceSummary.ts#RawResponsibilityMappingEntry; symbol:src/instructions/myDevKitEvidenceSummary.ts#projectRawEvidence;
+symbol:src/instructions/testResponsibilityCriticality.ts#TEST_STRATEGY_SOURCE_REQUIREMENTS; file:src/instructions/contextReadiness.ts.
+Lookups: projectRawEvidence, TEST_STRATEGY_SOURCE_REQUIREMENTS. Slice: projectRawEvidence depth 1 (2 nodes, 1 edge).
+Source retrievals: validateSemanticResponsibilities; a contextReadiness.ts symbol (bounded preview).
+Search recall was weak for the last three queries (they returned test files). The remaining implementation facts were established by
+reading myDevKitEvidenceSummary.ts in full (needed to edit its parser), the built workflow definitions, and the producer types directly.
+No other full-file fallback.
+
+8. BATCH_0_CONTRACT_PRESERVED
+RSP-NNN identity, SEMANTIC_RESPONSIBILITY_ID_RE reused (no second regex), upstream prefixes; semanticResponsibility.ts unchanged.
+
+9. IMPLEMENTATION_MAPPING_CONTRACT
+Carrier: existing ImplementationReport (future; not activated). Block: "implementation responsibility ID: RSP-NNN" followed by repeatable
+"production file:" / "production symbol:" entries; block ends at the next ID line or end of input; at least one evidence entry required.
+A duplicate RSP block is reported and the first declaration stays authoritative.
+
+10. PRODUCTION_FILE_CONTRACT
+Project-relative, trimmed, backslash -> slash, case preserved. Rejected: empty, ".", absolute (POSIX/UNC), drive letter, URL scheme, NUL, ".." segment.
+Empty and "." segments are dropped. No filesystem access.
+
+11. PRODUCTION_SYMBOL_CONTRACT
+symbol:<path>#<name>, path per file rules, exactly one "#", non-empty name. No file: prefix, no fuzzy matching.
+
+12. RAW_PRODUCER_PROJECTION_CHANGE
+New RawEvidenceItemRef {id, itemKind?, path?, symbolId?, nodeId?}. RawResponsibilityMappingEntry gains productionSymbols?: RawEvidenceItemRef[]
+(optional in the type so existing literals stay valid; the parser always populates it). No other producer fields projected.
+
+13. LEGACY_PRODUCER_COMPATIBILITY
+PASS. Absent productionSymbols -> []; empty array valid; present-but-malformed (non-array, non-object item, missing/empty id,
+non-string optional field) -> raw evidence "malformed" (fail closed). Schema major stays 1; frozen fixtures untouched.
+
+14. CORROBORATION_SEMANTICS
+Exact same-ID mapping selected, then exact identity match: symbol via item id or symbolId; file via item path or id.
+Corroborated = identity present in bounded producer production evidence. Not causal proof and not proof that a file changed.
+
+15. REQUEST_SCOPED_EVIDENCE_LIMITATION
+Preserved in code comments and docs/CONTRACTS.md. Identical shared producer evidence on two mappings corroborates each RSP independently
+(tested); no deduplication and no causality claim.
+
+16. BRIDGE_STATE_VOCABULARY
+corroborated, partially-corroborated, uncorroborated, missing-declaration, producer-mapping-unavailable.
+Producer mappingStatus retained as producerMappingStatus and never substituted for reference corroboration; criticality carried, not enforced.
+
+17. STRUCTURAL_ISSUE_CODES
+IMPLEMENTATION_RESPONSIBILITY_ID_MISSING (empty ID value), _ID_INVALID, _DUPLICATE, _EVIDENCE_MISSING (no production file/symbol
+lines at all), _FILE_INVALID, _SYMBOL_INVALID, _EVIDENCE_DUPLICATE.
+
+18. BRIDGE_ISSUE_CODES
+IMPLEMENTATION_RESPONSIBILITY_ORPHAN, _DECLARATION_MISSING, _PRODUCER_MAPPING_MISSING, _PRODUCER_MAPPING_TRUNCATED,
+_EVIDENCE_UNCORROBORATED (one per unmatched reference, exact reference in context).
+
+19. WORKFLOW_APPLICABILITY_BOUNDARY
+workflowHasProductionImplementationStage(mode) derives applicability from workflow definitions (stage named "implementation"):
+feature/repair/refactor/harden/extraction true; test, greenfield, unknown false. Informational only; not wired into any gate.
+
+20. PRODUCTION_FILES_CHANGED
+src/instructions/implementationResponsibilityEvidence.ts (new); src/instructions/myDevKitEvidenceSummary.ts
+
+21. TEST_FILES_CHANGED
+tests/implementationResponsibilityEvidence.test.ts (new); tests/myDevKitEvidenceSummary.test.ts;
+tests/testResponsibilityCriticality.test.ts (one added test proving the criticality summary ignores productionSymbols)
+
+22. DOCUMENTATION_FILES_CHANGED
+docs/CONTRACTS.md, docs/DEVELOPMENT.md, this report
+
+23. FOCUSED_TEST_RESULTS
+semanticResponsibility + implementationResponsibilityEvidence + myDevKitEvidenceSummary: 3 suites, 142 tests passed. Trace suites: 113 passed.
+
+24. RAW_EVIDENCE_COMPATIBILITY_RESULTS
+myDevKitEvidenceSummary suite passed including all pre-existing tests unchanged.
+
+25. CONTEXT_READINESS_REGRESSION_RESULTS
+testResponsibilityCriticality + contextReadiness + contextReadinessHistoricalMatrix: 106 tests passed (before adding one test), none weakened.
+
+26. FULL_TEST_RESULTS
+npm test -- --runInBand: 134 suites passed, 3 skipped (pre-existing); 3060 tests passed, 11 skipped.
+
+27. VERIFY_RESULT
+npm run verify exit 0.
+
+28. SMOKE_CONTEXT_RESULT
+smoke:context passed within verify.
+
+29. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (version 1.4.1, 420 files); git diff --check clean.
+
+30. PUBLIC_SURFACE_CONFIRMATION
+No CLI, workflow, stage, greenfield, proof-only or Observer source touched; no new dependency. 8 commands / 7 modes unchanged.
+
+31. RUN_INTEGRITY_UNCHANGED
+Yes. src/runIntegrityGate.ts untouched.
+
+32. JUDGE_INTEGRITY_UNCHANGED
+Yes. src/judgeIntegrity.ts untouched.
+
+33. PROMPT_SURFACE_UNCHANGED
+Yes. src/promptGenerator.ts and stage instruction text untouched; artifact checker untouched.
+
+34. OUT_OF_SCOPE_CONFIRMATION
+No my-dev-kit change, no test/verification evidence bridge, no gate/status/check/export/final-report change, no version bump,
+README/CHANGELOG/CURRENT_STATE/ROADMAP untouched.
+
+35. COMMIT
+feat: add implementation responsibility evidence bridge (SHA in final response)
+
+36. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (see final response)
+
+37. NEXT_ACTION
+READY_FOR_V1_5_BATCH_2_TEST_AND_VERIFICATION_EVIDENCE_BRIDGE

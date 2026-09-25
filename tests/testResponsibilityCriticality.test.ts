@@ -311,3 +311,17 @@ test level: unit
     expect(summary.duplicateResponsibilityIds).toEqual(['TST-001']);
   });
 });
+
+describe('criticality summary ignores additive producer production evidence (v1.5 Batch 1)', () => {
+  it('yields the same summary with and without productionSymbols on mappings', () => {
+    const parsed = parseTestResponsibilityBlocks(VALID_BLOCK);
+    const plain = [
+      { responsibilityId: 'TST-001', mappingStatus: 'mapped' },
+      { responsibilityId: 'TST-002', mappingStatus: 'unmapped' },
+    ];
+    const withEvidence = plain.map((m) => ({ ...m, productionSymbols: [{ id: 'symbol:src/a.ts#run', path: 'src/a.ts' }] }));
+    expect(computeCriticalResponsibilitySummary(parsed, withEvidence)).toEqual(
+      computeCriticalResponsibilitySummary(parsed, plain),
+    );
+  });
+});

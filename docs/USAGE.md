@@ -47,6 +47,8 @@ my-dev-kit-orchestrator start --name prompt-hardening "guard invalid run IDs in 
 
 The default mode is `feature`. `start` initializes the workspace if necessary, creates a run folder, writes `00-request.txt` and `run.json`, and generates its native prompt files.
 
+New runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction` automatically activate Semantic Continuity: `start` prints `Semantic continuity: active (1.0.0)` and records `semanticContinuityVersion` in `run.json`. There is no flag to turn it on or off. `greenfield` and `--proof-only` runs are not activated, and runs created before v1.5.0 stay legacy. Activation changes what the stage prompts ask the coding agent to write (see [WORKFLOWS.md](WORKFLOWS.md#semantic-continuity-prompt-contract)); you do not need to learn the internal details to use the commands.
+
 For explicit proof-only verification:
 
 ```bash
@@ -98,6 +100,8 @@ my-dev-kit-orchestrator prompt verification --run 20260621T120000-release-docs
 
 Without a stage, the CLI selects the first stage whose effective gate-aware state is not complete. Missing, blocked, stale, context-blocked, and ineligible states remain visible. Explicit stage selection cannot bypass missing predecessors or readiness. Completed runs print completion instead of another task.
 
+In an activated run, when Semantic Continuity blocks the current stage (for example the test-implementation stage while a critical responsibility has no implementation mapping), `prompt` prints the blocked stage, the blocker, the affected responsibility, the broken leg, and the recommended correction stage, followed by repair guidance for that earlier stage only. It does not print the blocked stage's normal work. If no correction stage exists (for example an unsupported contract version), it says external resolution is required and names no stage.
+
 ## Save artifacts between prompts
 
 The CLI does not call a coding agent directly. The operating loop is:
@@ -140,7 +144,9 @@ The v1.2.1 evidence workflow remains manual. Feature, repair, refactor, harden, 
 6. Run `status` and `check` or `check --all`.
 7. Print the target prompt again and proceed only when its readiness permits normal work.
 
-The released `@dailephd/my-dev-kit@1.10.4` package is the historical verified producer authority for this contract. New runs must record the actual compatible producer version used. No source checkout path is part of the public interface.
+The released `@dailephd/my-dev-kit@1.10.4` package is the verified producer authority for the readiness contract, and the Semantic Continuity mapping fields were validated against `@dailephd/my-dev-kit@1.12.4`. New runs must record the actual compatible producer version used. No source checkout path is part of the public interface.
+
+In an activated run, populate the request with the canonical strategy `RSP-NNN` IDs as `testResponsibilityRefs` and request `responsibility-mappings` in addition to the evidence kinds the role already needs. Refresh the implementation evidence after production changes and the test evidence after test changes. A refresh-only prompt lists the exact IDs currently declared by a valid strategy artifact.
 
 Fixed supplemental paths:
 
@@ -193,7 +199,7 @@ my-dev-kit-orchestrator status
 my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 ```
 
-Status reports run ID/mode/request/folder, current stage, prompts and artifacts, supporting reports, context decisions/freshness/adequacy/blockers, and the next command. Its judge/final-report integrity section shows expected and authored verdicts, acceptance, correction state, and eligibility from the shared canonical decision.
+Status reports run ID/mode/request/folder, current stage, prompts and artifacts, supporting reports, context decisions/freshness/adequacy/blockers, and the next command. An activated run also shows a compact `Semantic continuity:` section (classification, blocking and warning responsibility IDs, and the recommended correction stage). Its judge/final-report integrity section shows expected and authored verdicts, acceptance, correction state, and eligibility from the shared canonical decision.
 
 `status` is human-readable and has no JSON option.
 
@@ -236,7 +242,7 @@ my-dev-kit-orchestrator mark request-brief.txt --state complete
 my-dev-kit-orchestrator mark pseudocode-packet.txt --state blocked --reason "Need design decision" --run 20260601T120000-add-logging
 ```
 
-Marking complete cannot override current readiness or final-report eligibility.
+Marking complete cannot override current readiness, Semantic Continuity blockers, or final-report eligibility; the attempt fails and changes nothing.
 
 ## Interpret lifecycle state in status output
 
@@ -275,7 +281,7 @@ After `judge-report.txt` is saved, status and prompt use its accepted correction
 - `TEST_COVERAGE_INCOMPLETE`: test-strategy.
 - `ARCHITECTURE_MISMATCH`: architecture-context.
 - `NEED_VERIFICATION`: verification.
-- `NEED_CONTEXT`: architecture-context is the historical/general default. For current context readiness, use the canonical `Recommended next stage`: implementation first when it is blocked, otherwise test-implementation. Test mode uses test-implementation.
+- `NEED_CONTEXT`: architecture-context is the historical/general default. For current run integrity, use the canonical `Recommended next stage`: for repository context, implementation first when it is blocked, otherwise test-implementation (test mode uses test-implementation); for Semantic Continuity, the canonical correction stage, which may be a mode-owned strategy stage (`regression-test-strategy` in repair, `compatibility-test-strategy` in refactor, `resilience-test-strategy` in harden). When run integrity names no stage, none is used.
 - `SCOPE_VIOLATION` and `BLOCKED`: external resolution, no correction stage.
 - `PASS`: no correction only when accepted by integrity gates.
 
@@ -300,7 +306,7 @@ my-dev-kit-orchestrator check --strict --trace
 my-dev-kit-orchestrator check --strict --design-map
 ```
 
-Trace checks distinguish malformed IDs, duplicate declarations, orphan IDs, and missing link targets. Canonical IDs use a prefix from `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `IMP`, `VER`, or `RISK`, followed by a hyphen and at least three zero-padded digits. Links use `FROM_ID -> TO_ID`, one per line.
+Trace checks distinguish malformed IDs, duplicate declarations, orphan IDs, and missing link targets. Canonical IDs use a prefix from `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `RSP`, `IMP`, `VER`, or `RISK`, followed by a hyphen and at least three zero-padded digits. A declaration is a line that begins `ID: text` (its text may contain `->`, as in `TRN-001: invalid-input -> validation-error`). Links use `FROM_ID -> TO_ID`, one per line, and never declare their targets.
 
 Codes:
 
@@ -352,6 +358,8 @@ Artifact checks cover:
 
 Registered JSON artifacts remain strict JSON with structured-field validation. Text artifacts use their section contracts. Shared existence/predecessor/integrity checking does not impose one syntax on every artifact.
 
+In an activated run, `check`, `check --artifacts`, and `check --all` also report a `=== Semantic continuity ===` section: a blocked result fails the command, a warning-only result exits 0 (and exits 1 under `--strict`), and a ready result passes.
+
 `check --artifacts` also reports context readiness and judge/final-report integrity. Structurally valid sections do not imply run eligibility. `check --all` combines artifact contracts, stage gates, trace and design-map checks, correction state, context readiness, and judge/final-report integrity. A rejected, malformed, or unknown judge verdict fails integrity. An ordinary accepted correction-required verdict is reported and does not fail solely because correction remains necessary.
 
 ## Export a run handoff
@@ -363,7 +371,7 @@ my-dev-kit-orchestrator export --out handoff.txt
 my-dev-kit-orchestrator export --out handoff.txt --overwrite
 ```
 
-Export includes identity/status/current stage, original request, artifact checklist, missing artifacts, accepted judge result, correction state, verification excerpt, content/trace summaries, structured context readiness, and the next command. It never presents an integrity-rejected authored PASS as accepted.
+Export includes identity/status/current stage, original request, artifact checklist, missing artifacts, accepted judge result, correction state, verification excerpt, content/trace summaries, structured context readiness, a compact Semantic Continuity summary for activated runs, and the next command. It never presents an integrity-rejected authored PASS as accepted.
 
 Default output is stdout. `--out` writes a file and refuses an existing file unless `--overwrite` is supplied. It rejects raw parent traversal, symlink targets, directory targets, and nonexistent parent directories. It does not copy referenced external evidence or embed full raw capsules/audits. Preserve separately required project-level handoff facts through the canonical ecosystem guide.
 

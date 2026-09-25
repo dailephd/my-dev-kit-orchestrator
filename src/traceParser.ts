@@ -1,4 +1,4 @@
-import { isValidTraceId, isMalformedTraceId } from './traceModel';
+import { TRACE_PREFIXES, isValidTraceId, isMalformedTraceId } from './traceModel';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,8 +27,7 @@ export interface ParsedTrace {
 // ─── Inline patterns ──────────────────────────────────────────────────────────
 
 // Matches valid trace IDs embedded in text content
-const TRACE_ID_INLINE_RE =
-  /(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})/g;
+const TRACE_ID_INLINE_RE = new RegExp(`(${TRACE_PREFIXES.join('|')})-(\\d{3,})`, 'g');
 
 // Matches link expressions: FROM -> TO (non-whitespace tokens around ->)
 const TRACE_LINK_RE = /(\S+)\s*->\s*(\S+)/g;

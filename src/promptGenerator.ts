@@ -20,9 +20,20 @@ import {
 import { writeSupplementalContextTemplates } from './instructions/supplementalContextTemplates';
 import { ContextReadinessBlockerSummary, ContextReadinessResult } from './instructions/contextReadiness';
 import { RunContextReadinessSummary } from './instructions/runContextReadiness';
-import { evaluateRunIntegrityGate } from './runIntegrityGate';
+import { evaluateRunIntegrityGate, evaluateStageRunIntegrity, RunIntegrityGateResult } from './runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, FinalReportEligibilityResult } from './judgeIntegrity';
 import { readArtifactStateFile } from './artifactLifecycle';
+import {
+  isSemanticContinuityPromptActive,
+  renderSemanticContextRefreshBlock,
+  renderSemanticContinuityPromptSection,
+  semanticPromptRoleForStage,
+} from './instructions/semanticContinuityPrompt';
+import {
+  SemanticContinuitySurfaceSummary,
+  renderSemanticContinuityJudgeLines,
+  summarizeSemanticContinuityGate,
+} from './semanticContinuitySurface';
 
 interface PromptContext {
   stage: string;
@@ -41,6 +52,9 @@ interface PromptContext {
   // own Task:/Stop conditions: text, so that content is never duplicated
   // between the catalog and promptGenerator.ts.
   stageInstructionText: string;
+  // Activated runs only (v1.5.0 Batch 5): the my-dev-kit request guidance that
+  // carries the canonical RSP IDs, appended to a context-refresh-only prompt.
+  semanticRefreshText?: string;
 }
 
 function renderCanonicalBlockerLines(
@@ -130,7 +144,11 @@ function renderRepositoryEvidenceSection(ref: RepositoryEvidenceReference, readi
 // verification or judge stage, which reviews every mode-required context
 // kind rather than owning a single direct reference (Batch 5 sections
 // 16-17).
-function renderContextReadinessReviewSection(summary: RunContextReadinessSummary, stageKind: 'verification' | 'judge'): string {
+function renderContextReadinessReviewSection(
+  summary: RunContextReadinessSummary,
+  stageKind: 'verification' | 'judge',
+  semanticActive = false,
+): string {
   const lines = ['Context readiness review:', `  Overall decision: ${summary.overallDecision}`];
 
   for (const [label, result] of [
@@ -154,7 +172,9 @@ function renderContextReadinessReviewSection(summary: RunContextReadinessSummary
     lines.push(
       stageKind === 'verification'
         ? '  All required repository context is ready. Compare the implementation and tests against this evidence before running verification commands.'
-        : '  All required repository context is ready. Judge freely on the complete evidence.',
+        : semanticActive
+          ? '  All required repository context is ready. The canonical run-integrity decision (including Semantic Continuity) is given below and governs the verdict; ordinary judgment still applies in addition to it.'
+          : '  All required repository context is ready. Judge freely on the complete evidence.',
     );
   } else {
     if (summary.primaryBlocker) {
@@ -171,14 +191,14 @@ function renderContextReadinessReviewSection(summary: RunContextReadinessSummary
   return lines.join('\n');
 }
 
-function renderStageInstructionBlockFromBundle(bundle: StageContextBundle): string {
+function renderStageInstructionBlockFromBundle(bundle: StageContextBundle, semanticActive = false): string {
   const packetText = renderWorkflowInstructionPacket(bundle.workflowInstructionPacket);
   if (bundle.repositoryEvidenceReference) {
     return `${renderRepositoryEvidenceSection(bundle.repositoryEvidenceReference, bundle.repositoryContextReadiness)}\n\n${packetText}`;
   }
   if (bundle.runContextReadinessSummary) {
     const stageKind = bundle.taskState.selectedStage === 'judge' ? 'judge' : 'verification';
-    return `${renderContextReadinessReviewSection(bundle.runContextReadinessSummary, stageKind)}\n\n${packetText}`;
+    return `${renderContextReadinessReviewSection(bundle.runContextReadinessSummary, stageKind, semanticActive)}\n\n${packetText}`;
   }
   return packetText;
 }
@@ -190,7 +210,20 @@ function renderStageInstructionBlock(
   correctionState?: CorrectionRouteResult,
 ): string {
   const bundle = assembleStageContextBundleOrThrow(meta, selectedStage, upstreamArtifacts, correctionState);
-  return renderStageInstructionBlockFromBundle(bundle);
+  return renderStageInstructionBlockFromBundle(bundle, isSemanticContinuityPromptActive(meta));
+}
+
+// Appends the activated-run Semantic Continuity guidance (if any) to a stage's
+// packet-backed instruction text. Legacy, greenfield, and proof-only runs get
+// the text back unchanged.
+function withSemanticContinuity(
+  base: string,
+  meta: RunMetadata,
+  stageName: string,
+  options: { judgeSummary?: SemanticContinuitySurfaceSummary; correction?: boolean } = {},
+): string {
+  const section = renderSemanticContinuityPromptSection(meta, stageName, options);
+  return section.length > 0 ? `${base}\n\n${section}` : base;
 }
 
 // Renders a context-refresh-only prompt for a blocked direct stage
@@ -233,6 +266,10 @@ function renderContextRefreshOnlyPrompt(ctx: PromptContext, readiness: ContextRe
   lines.push('     "Source context capsule:" / "Source retrieval audit:" fields, replacing "unknown".');
   lines.push('  4. Set Status: populated and resolve the blocking issues listed above.');
   lines.push('');
+  if (ctx.semanticRefreshText) {
+    lines.push(ctx.semanticRefreshText);
+    lines.push('');
+  }
   lines.push('Automatic retrieval: disabled.');
   lines.push('');
   lines.push('Stop conditions:');
@@ -314,6 +351,8 @@ function evaluateFinalReportEligibilityForRun(meta: RunMetadata, currentStage = 
     workflowStageNames: meta.stages.map((s) => s.name),
     currentStage,
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const stateFile = readArtifactStateFile(meta.runFolder);
@@ -1850,13 +1889,23 @@ Produce the artifact as a plain-text file following the FinalReport template.
 
 // ─── Stage router ─────────────────────────────────────────────────────────────
 
-export function generateStagePrompt(meta: RunMetadata, stageName: string): string {
+// Saved-template / gate-independent render. For an activated run it includes
+// the Semantic Continuity authoring contract for the stage but does NOT apply
+// the current RunIntegrityGate block state -- initial prompt files are written
+// before any stage artifact exists, so they must stay useful templates. The
+// live `prompt` command uses generateLiveStagePrompt(), which adds the gate.
+export function generateStagePrompt(
+  meta: RunMetadata,
+  stageName: string,
+  options: { judgeSummary?: SemanticContinuitySurfaceSummary } = {},
+): string {
   const stageIndex = meta.stages.findIndex((s) => s.name === stageName);
   if (stageIndex === -1) {
     throw new Error(`Stage "${stageName}" not found in ${meta.mode} workflow`);
   }
 
   const bundle = assembleStageContextBundleOrThrow(meta, stageName);
+  const semanticActive = isSemanticContinuityPromptActive(meta);
 
   const ctx: PromptContext = {
     stage: stageName,
@@ -1868,7 +1917,15 @@ export function generateStagePrompt(meta: RunMetadata, stageName: string): strin
     totalStages: meta.stages.length,
     sourceRepoRoot: meta.sourceRepoRoot,
     targetRepoRoot: meta.targetRepoRoot,
-    stageInstructionText: renderStageInstructionBlockFromBundle(bundle),
+    stageInstructionText: withSemanticContinuity(
+      renderStageInstructionBlockFromBundle(bundle, semanticActive),
+      meta,
+      stageName,
+      { judgeSummary: options.judgeSummary },
+    ),
+    ...((stageName === 'implementation' || stageName === 'test-implementation') && semanticActive
+      ? { semanticRefreshText: renderSemanticContextRefreshBlock(meta) }
+      : {}),
   };
 
   // Batch 5: a direct context-sensitive stage (implementation or
@@ -1985,6 +2042,24 @@ const CORRECTION_STAGE_INPUTS: Record<string, string[]> = {
     'artifacts/behavior-model.txt',
     'artifacts/pseudocode-packet.txt',
   ],
+  // Mode-owned strategy stages (v1.5.0 Batch 5): same inputs as each stage's
+  // normal prompt. Routable only for the owning mode (see correctionRouter.ts).
+  'regression-test-strategy': [
+    'artifacts/divergence-report.txt',
+    'artifacts/correction-design.txt',
+    'artifacts/architecture-context-packet.txt',
+  ],
+  'compatibility-test-strategy': [
+    'artifacts/existing-behavior-map.txt',
+    'artifacts/preserved-invariant-list.txt',
+    'artifacts/architecture-context-packet.txt',
+  ],
+  'resilience-test-strategy': [
+    'artifacts/assumption-report.txt',
+    'artifacts/failure-mode-matrix.txt',
+    'artifacts/guard-pseudocode-packet.txt',
+    'artifacts/architecture-context-packet.txt',
+  ],
   'test-implementation': [
     'artifacts/behavior-model.txt',
     'artifacts/pseudocode-packet.txt',
@@ -2063,7 +2138,12 @@ export function generateCorrectionPrompt(
       source: 'correction-context' as const,
     })),
   ];
-  const stageInstructionText = renderStageInstructionBlock(meta, routedStage, upstreamArtifacts, correctionState);
+  const stageInstructionText = withSemanticContinuity(
+    renderStageInstructionBlock(meta, routedStage, upstreamArtifacts, correctionState),
+    meta,
+    routedStage,
+    { correction: true },
+  );
 
   return [
     `Stage: ${routedStage} (correction)`,
@@ -2117,11 +2197,14 @@ export function generateCorrectionPrompt(
 // specific sidecar.
 function renderCorrectionContextRefreshPrompt(
   meta: RunMetadata,
-  correctionState: CorrectionRouteResult,
+  correctionState: CorrectionRouteResult | undefined,
   routedStage: string,
   readiness: ContextReadinessResult,
+  // Semantic-blocker correction (no judge report yet): replaces the judge
+  // correction-context/inputs lines. Repository context still wins.
+  semanticContextLines?: string[],
 ): string {
-  const verdict = correctionState.verdict ?? 'UNKNOWN';
+  const verdict = correctionState?.verdict ?? 'UNKNOWN';
   const lines: string[] = [
     `Stage: ${routedStage} (correction, context-blocked)`,
     `Workflow mode: ${meta.mode}`,
@@ -2129,14 +2212,18 @@ function renderCorrectionContextRefreshPrompt(
     `Project root: ${meta.projectRoot}`,
     `Run folder: ${meta.runFolder}`,
     ``,
-    `Correction context:`,
-    `  Judge verdict: ${verdict}`,
-    `  Routed correction stage: ${routedStage}`,
-    ...(correctionState.recommendedStage ? [`  Judge recommended: ${correctionState.recommendedStage}`] : []),
-    ``,
-    `Inputs:`,
-    `- ${meta.runFolder}/artifacts/judge-report.txt`,
-    ``,
+    ...(semanticContextLines && semanticContextLines.length > 0
+      ? [...semanticContextLines, ``]
+      : [
+          `Correction context:`,
+          `  Judge verdict: ${verdict}`,
+          `  Routed correction stage: ${routedStage}`,
+          ...(correctionState?.recommendedStage ? [`  Judge recommended: ${correctionState.recommendedStage}`] : []),
+          ``,
+          `Inputs:`,
+          `- ${meta.runFolder}/artifacts/judge-report.txt`,
+          ``,
+        ]),
     `This correction is BLOCKED on repository context. Production or test correction is prohibited until context is refreshed.`,
     ``,
     `Context kind: ${readiness.kind}`,
@@ -2159,6 +2246,10 @@ function renderCorrectionContextRefreshPrompt(
     '  3. Record the resulting context capsule and retrieval audit paths in the packet/report.',
     '  4. Set Status: populated and resolve the blocking issues listed above.',
     '',
+  );
+  const semanticRefreshBlock = renderSemanticContextRefreshBlock(meta);
+  if (semanticRefreshBlock.length > 0) lines.push(semanticRefreshBlock, '');
+  lines.push(
     'Automatic retrieval: disabled.',
     '',
     'Stop conditions:',
@@ -2180,12 +2271,167 @@ function renderCorrectionContextRefreshPrompt(
   return lines.join('\n');
 }
 
+// ─── Live (gate-aware) prompt rendering (v1.5.0 Batch 5) ─────────────────────
+
+function semanticBlockedHeaderLines(
+  meta: RunMetadata,
+  gate: RunIntegrityGateResult,
+  blockedStage: string,
+): string[] {
+  const primary = gate.primarySemanticBlocker;
+  const lines = [
+    `Current blocked stage: ${blockedStage}`,
+    `Semantic blocker: ${primary?.primaryCode ?? gate.semanticContinuityBlockingCodes[0] ?? '(unknown)'}`,
+  ];
+  if (primary?.primaryReason) lines.push(`Reason: ${primary.primaryReason}`);
+  if (primary?.responsibilityId) lines.push(`Affected responsibility: ${primary.responsibilityId}`);
+  if (primary?.responsibilityState) lines.push(`Responsibility state: ${primary.responsibilityState}`);
+  if (primary?.leg) lines.push(`Broken leg: ${primary.leg}`);
+  if (gate.semanticContinuityBlockingResponsibilityIds.length > 1) {
+    lines.push(`All blocking responsibility IDs: ${gate.semanticContinuityBlockingResponsibilityIds.join(', ')}`);
+  }
+  lines.push(
+    `Recommended correction stage: ${gate.semanticRecommendedCorrectionStage ?? 'none (external resolution required)'}`,
+  );
+  return lines;
+}
+
+// Blocked prompt for a stage the canonical gate blocks on Semantic
+// Continuity. It never renders the blocked stage's normal work: with a
+// canonical correction stage it returns bounded repair guidance for that
+// earlier stage only; without one (for example an unsupported contract
+// version) it states that external/run-contract resolution is required and
+// never guesses a stage. No artifact is written by this function.
+function renderSemanticBlockedPrompt(meta: RunMetadata, gate: RunIntegrityGateResult, blockedStage: string): string {
+  const stageIndex = meta.stages.findIndex((s) => s.name === blockedStage);
+  const ctx: PromptContext = {
+    stage: blockedStage,
+    mode: meta.mode,
+    runId: meta.runId,
+    projectRoot: meta.projectRoot,
+    runFolder: meta.runFolder,
+    stageNumber: stageIndex + 1,
+    totalStages: meta.stages.length,
+    sourceRepoRoot: meta.sourceRepoRoot,
+    targetRepoRoot: meta.targetRepoRoot,
+    stageInstructionText: '',
+  };
+  const summary = summarizeSemanticContinuityGate(gate);
+  const target = gate.semanticRecommendedCorrectionStage;
+  const lines: string[] = [header(ctx)];
+  lines.push('=== SEMANTIC CONTINUITY BLOCK ===');
+  lines.push(`This stage is BLOCKED by Semantic Continuity (contract ${gate.semanticContinuityVersion ?? 'unknown'}). Normal work for this stage is prohibited.`);
+  lines.push('');
+  const headerLines = semanticBlockedHeaderLines(meta, gate, blockedStage);
+  lines.push(...headerLines, '');
+
+  if (blockedStage === 'judge' && summary) {
+    lines.push('Canonical run-integrity summary (do not re-derive from prose):');
+    lines.push(...renderSemanticContinuityJudgeLines(summary));
+    lines.push('  Do not return PASS while the expected verdict is NEED_CONTEXT.', '');
+  }
+
+  if (target === null) {
+    lines.push(
+      'No workflow stage can repair this blocker: external / run-contract resolution is required.',
+      'Do not guess a correction stage and do not attempt normal work for this stage.',
+      '',
+      'Stop conditions:',
+      '  - do not write the artifact for the blocked stage',
+      '  - do not modify production code or write test files',
+      '  - resolve the run contract outside the workflow, then rerun `my-dev-kit-orchestrator check`',
+      '',
+    );
+    return lines.join('\n');
+  }
+
+  // Context blocker precedence: a context-sensitive correction target with
+  // stale/insufficient repository evidence becomes refresh-only.
+  if (target === 'implementation' || target === 'test-implementation') {
+    const bundle = assembleStageContextBundleOrThrow(meta, target);
+    if (bundle.repositoryContextReadiness?.decision === 'refresh-required') {
+      return renderCorrectionContextRefreshPrompt(meta, undefined, target, bundle.repositoryContextReadiness, [
+        '=== SEMANTIC CONTINUITY CORRECTION (context-blocked) ===',
+        ...headerLines,
+      ]);
+    }
+  }
+
+  const priorInputs = CORRECTION_STAGE_INPUTS[target] ?? [];
+  const outputFile = path.join(meta.runFolder, 'artifacts', stageToArtifactBasename(target));
+  const upstreamArtifacts: UpstreamArtifactReference[] = priorInputs.map((f) => ({
+    stageName: target,
+    artifactFile: f,
+    path: `${meta.runFolder}/${f}`,
+    purpose: 'prior artifact for the corrected stage',
+    required: true,
+    source: 'correction-context' as const,
+  }));
+  const stageInstructionText = withSemanticContinuity(
+    renderStageInstructionBlock(meta, target, upstreamArtifacts),
+    meta,
+    target,
+    { correction: true },
+  );
+
+  lines.push(
+    `Correction task: repair ONLY the ${target} contract/evidence named by the blocker above. Do not perform normal work for the blocked stage.`,
+    'Read the blocker details above, then revise the existing artifact so the affected responsibility is carried through correctly.',
+    'Preserve every unaffected RSP ID and block; do not regenerate or renumber the whole artifact.',
+    '',
+    'Inputs:',
+    ...priorInputs.map((f) => `- ${meta.runFolder}/${f}`),
+    `- ${outputFile} (current artifact to revise, if present)`,
+    '',
+    stageInstructionText,
+    '',
+    `Required output artifact: ${artifactKindForStage(target)}`,
+    `Output file: ${outputFile}`,
+    '',
+    'Stop conditions:',
+    `  - revise only the ${target} artifact`,
+    '  - do not perform the blocked stage\'s normal work or write its artifact',
+    '  - do not broaden scope beyond the semantic blocker',
+    '  - do not run any external agent, LLM call, or automated tool',
+    '  - do not claim the blocker is resolved without updating the artifact',
+    '',
+    'Return format:',
+    'Produce the updated artifact as a plain-text file.',
+    'Update the Status: field to complete when the correction is done.',
+    '',
+  );
+  return lines.join('\n');
+}
+
+// Live `prompt` render: honors the CURRENT canonical RunIntegrityGate.
+// - non-activated runs: identical to generateStagePrompt()
+// - a stage blocked by Semantic Continuity: semantic correction guidance
+//   (repository-context refresh still wins for a context-blocked direct stage;
+//   final-report keeps its own eligibility-blocked prompt)
+// - the judge stage otherwise: the canonical Semantic Continuity summary
+export function generateLiveStagePrompt(meta: RunMetadata, stageName: string, gate: RunIntegrityGateResult): string {
+  const summary = summarizeSemanticContinuityGate(gate);
+  // The gate (not the prompt predicate) decides: an unsupported contract
+  // version is not prompt-active but must still block fail-closed.
+  if (!summary) return generateStagePrompt(meta, stageName);
+  const decision = evaluateStageRunIntegrity(gate, stageName);
+  if (stageName !== 'final-report' && decision.semanticBlocked && !decision.contextBlocked) {
+    return renderSemanticBlockedPrompt(meta, gate, stageName);
+  }
+  return generateStagePrompt(meta, stageName, {
+    ...(semanticPromptRoleForStage(meta.mode, stageName) === 'judge' ? { judgeSummary: summary } : {}),
+  });
+}
+
 function stageToArtifactBasename(stageName: string): string {
   const map: Record<string, string> = {
     'architecture-context': 'architecture-context-packet.txt',
     'behavior-model': 'behavior-model.txt',
     'pseudocode-packet': 'pseudocode-packet.txt',
     'test-strategy': 'test-strategy-packet.txt',
+    'regression-test-strategy': 'regression-test-strategy.txt',
+    'compatibility-test-strategy': 'compatibility-test-strategy.txt',
+    'resilience-test-strategy': 'resilience-test-strategy.txt',
     'test-implementation': 'test-implementation-report.txt',
     'implementation': 'implementation-report.txt',
     'verification': 'verification-report.txt',
@@ -2199,6 +2445,9 @@ function artifactKindForStage(stageName: string): string {
     'behavior-model': 'BehaviorModel',
     'pseudocode-packet': 'PseudocodePacket',
     'test-strategy': 'TestStrategyPacket',
+    'regression-test-strategy': 'RegressionTestStrategy',
+    'compatibility-test-strategy': 'CompatibilityTestStrategy',
+    'resilience-test-strategy': 'ResilienceTestStrategy',
     'test-implementation': 'TestImplementationReport',
     'implementation': 'ImplementationReport',
     'verification': 'VerificationReport',

@@ -55,6 +55,8 @@ Stage order:
 
 Completion requires verified implementation and tests, an accepted judge `PASS`, no active correction, and an eligible `final-report`. For a full-stack feature, the implementation responsibility includes all required layers and their real wiring, not just backend files.
 
+New staged runs activate Semantic Continuity (see [Semantic continuity prompt contract](#semantic-continuity-prompt-contract)); `test-strategy` declares the `RSP` responsibilities that the implementation, test-implementation, and verification stages must carry.
+
 ## Repair
 
 Use `repair` when observed behavior diverges from intended behavior. Do not use it for unfocused defect hunting without an observed/expected comparison.
@@ -79,6 +81,8 @@ Stage order:
 
 The correction design and regression strategy gate implementation. Completion requires evidence that the first divergence was corrected without breaking intended behavior. Observer runtime evidence can inform the external diagnosis, but the native stage and artifact contracts remain unchanged.
 
+New staged runs activate Semantic Continuity (see [Semantic continuity prompt contract](#semantic-continuity-prompt-contract)); `regression-test-strategy` declares the `RSP` responsibilities that the implementation, test-implementation, and verification stages must carry.
+
 ## Test
 
 Use `test` for behavior-derived test planning or test implementation for existing behavior. When production behavior must change, use `feature` or `repair`.
@@ -100,6 +104,8 @@ Stage order:
 9. `final-report`
 
 Completion requires verification and an accepted judge `PASS`. This mode has no production `implementation` stage.
+
+New staged runs activate Semantic Continuity (see [Semantic continuity prompt contract](#semantic-continuity-prompt-contract)); `test-strategy` declares the `RSP` responsibilities that `test-implementation` and `verification` must carry. Because there is no `implementation` stage, no production implementation mapping is required.
 
 ## Refactor
 
@@ -125,6 +131,8 @@ Stage order:
 
 The preserved-invariant list and compatibility strategy gate implementation. Completion requires verification that declared behavior remained intact. Shared frontend consumers can be protected through the external Observer contract workflow without adding a native refactor stage.
 
+New staged runs activate Semantic Continuity (see [Semantic continuity prompt contract](#semantic-continuity-prompt-contract)); `compatibility-test-strategy` declares the `RSP` responsibilities that the implementation, test-implementation, and verification stages must carry.
+
 ## Harden
 
 Use `harden` for validation, resilience, and failure-handling improvements. Do not hide an architectural defect behind silent fallback behavior.
@@ -148,6 +156,8 @@ Stage order:
 11. `final-report`
 
 The failure-mode matrix, guard design, and resilience strategy gate implementation. Completion requires verification of the intended failure handling and an accepted judge `PASS`.
+
+New staged runs activate Semantic Continuity (see [Semantic continuity prompt contract](#semantic-continuity-prompt-contract)); `resilience-test-strategy` declares the `RSP` responsibilities that the implementation, test-implementation, and verification stages must carry.
 
 ## Extraction
 
@@ -229,6 +239,7 @@ Keep a separate index under each repository. The run workspace belongs to the ta
 - The source repository is evidence, not a required architecture.
 - Do not port authentication, persistence, workspaces, database schema, background jobs, or downstream workflows unless explicitly included.
 - Do not preserve obsolete UI labels when they contradict the requested target behavior.
+- Semantic Continuity is active for extraction runs (`test-strategy` declares the `RSP` responsibilities). Production and test responsibility mappings are target-repository identities; a source-repository path is evidence, not target implementation evidence.
 - Five pre-implementation analysis stages produce six extraction gate files: `source-architecture-context`, `source-workflow-map`, `porting-map` with its two files, `golden-behavior-contract`, and `target-architecture`. All six files must be complete before implementation.
 - Judge acceptance must establish the golden behavior contract. A local implementation summary is not enough.
 - The source-to-target runtime-reference composition is documented in the canonical ecosystem guide. Incompatible application URLs must not be disguised as comparable before/after observations.
@@ -323,6 +334,22 @@ The canonical readiness recommendation overrides a conflicting prose route. No c
 
 An authored `Verdict: PASS` cannot override a required `NEED_CONTEXT`. It is rejected rather than accepted and then hidden by a final report. Other supported verdicts retain their correction behavior. `SCOPE_VIOLATION` and `BLOCKED` remain terminal. A normal final report requires accepted PASS, no active correction, and no remaining readiness blocker.
 
+### Semantic continuity prompt contract
+
+Semantic Continuity is active for staged CLI runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction`, and is absent from `greenfield` and proof-only runs and from legacy runs whose `run.json` has no `semanticContinuityVersion`. `DIRECT_IMPLEMENTATION` and `FULL_STAGE_CONTEXT` are planner policies, not modes or flags: the staged `start` workflow is the full-stage-context surface, and a direct implementation that bypasses it stays lightweight and outside Semantic Continuity. Activation is automatic and there is no flag. The contract is enforced by `RunIntegrityGate`: a critical responsibility that is not carried through every applicable leg blocks the current stage, while a noncritical gap is a visible warning that does not block. The chain an activated run teaches, stage by stage:
+
+1. Stages before the mode-owned strategy stage teach upstream trace authoring: declare canonical `REQ`, `CTX`, `BEH`, `INV`, `TRN`, and `PSE` IDs as `<ID>: <text>` lines where the content warrants them. On correction, preserve an ID for the same semantic item, do not renumber unaffected IDs, do not reuse an ID for a different meaning, and add new IDs with unused numbers. This is an authored identity discipline; the runtime cannot prove semantic sameness after a rewrite.
+2. The mode-owned strategy stage (`test-strategy`, `regression-test-strategy`, `compatibility-test-strategy`, or `resilience-test-strategy`) requires canonical `RSP-NNN` responsibility blocks with all fields, at least one responsibility, and `traces to:` only actually declared upstream IDs. `TST-*` IDs never substitute for `RSP-*`. Criticality is explained by enforcement consequence, and a required responsibility must not be marked `noncritical` merely to avoid a blocking gate. When revising, keep the ID of a responsibility whose meaning is preserved, do not renumber, add new IDs, and remove rather than repurpose obsolete ones. The runtime keeps no separate ID history.
+3. `implementation` (not present in `test` mode) requires an `implementation responsibility ID:` block with `production file:` and/or `production symbol:` for every strategy RSP inside the existing `ImplementationReport`. The mapping is an authored declaration that my-dev-kit later corroborates; it does not prove causality, and a declared file may be an existing owner rather than a changed file. Before the stage is ready to advance, the agent refreshes the post-change index and updates the implementation-role context request, capsule/audit, packet, and retrieval report.
+4. `test-implementation` requires a `test implementation responsibility ID:` block with exact project-relative `test file:` lines for every RSP (file-level only; there is no test-symbol contract) and the equivalent post-test evidence refresh, preserving existing role-specific evidence such as closest tests and test infrastructure.
+5. In both refresh steps the my-dev-kit request carries the canonical strategy IDs as `testResponsibilityRefs` and merges `responsibility-mappings` into its existing `requestedEvidenceKinds` without replacing them. A refresh-only prompt lists the exact IDs currently declared by a valid strategy artifact, and never invents IDs when the strategy cannot provide a valid list. The orchestrator still never executes my-dev-kit.
+6. `verification` requires a `verification responsibility ID:` block per RSP with `verification status:` `pass`, `fail`, `skipped`, or `blocked`. `pass`/`fail` need the command, working directory, and exit code actually observed; `skipped`/`blocked` need a `reason:`. One real command may support several RSP blocks. The evidence is coding-agent-reported and is not executed by the orchestrator.
+7. The live `judge` prompt receives the canonical `RunIntegrityGate` summary and is told not to re-derive it, not to override a canonical `NEED_CONTEXT` with `PASS`, to report the canonical correction stage exactly (or invent none when it is null), and that noncritical warnings alone do not require a non-PASS verdict.
+
+In `test` mode there are no production implementation blocks. In `extraction`, production and test responsibility paths are target-repository identities; the source repository remains read-only evidence.
+
+A stage blocked by Semantic Continuity renders correction guidance for the canonical correction stage instead of its own work; see [COMMANDS.md](COMMANDS.md#prompt). Mode-owned strategy stages are valid correction targets only for their owning mode (`repair` for `regression-test-strategy`, `refactor` for `compatibility-test-strategy`, `harden` for `resilience-test-strategy`), and when the gate requires `NEED_CONTEXT` its correction stage, including none, is authoritative over any authored recommendation. A correction to a mode-owned strategy stage preserves unaffected `RSP` IDs.
+
 ## Shared stage gates and completion rules
 
 - `start` generates the run's stage prompts and applicable sidecars.
@@ -330,7 +357,7 @@ An authored `Verdict: PASS` cannot override a required `NEED_CONTEXT`. It is rej
 - Explicit stage selection still checks predecessor and current integrity requirements.
 - Implementation and test implementation consume the same design rather than reinterpret the request independently.
 - `my-dev-kit-orchestrator` does not execute a coding agent or `my-dev-kit` automatically.
-- A context-blocked stage or ineligible final report cannot advance through file presence or a manual completion mark.
+- A context-blocked stage, a semantically blocked stage, or an ineligible final report cannot advance through file presence or a manual completion mark.
 - External runtime/test/assurance results must describe the final candidate. The ecosystem guide's PASS labels do not expand the native judge vocabulary.
 
 ## Lifecycle-aware progression (v0.3.0)

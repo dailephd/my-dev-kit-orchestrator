@@ -22,7 +22,7 @@ Artifact and supplemental-evidence parsers use versioned contracts and determini
 
 ## Readiness and proof boundary
 
-`RunIntegrityGate`, judge integrity, and final-report eligibility prevent a structurally blocked run from becoming an accepted normal `PASS`. They do not establish runtime correctness, vulnerability absence, safe deployment, or store readiness. Security validation belongs to `my-dev-kit-lab`; static repository evidence belongs to `my-dev-kit`.
+`RunIntegrityGate`, judge integrity, and final-report eligibility prevent a structurally blocked run from becoming an accepted normal `PASS`. They do not establish runtime correctness, vulnerability absence, safe deployment, or store readiness. Semantic Continuity is an integrity and traceability feature, not a security-validation subsystem: responsibility declarations and verification results are authored by the coding agent, are never executed or independently proven by the orchestrator, and its corroboration only shows that a declared file or symbol identity exists in bounded producer evidence. Security validation belongs to `my-dev-kit-lab`; static repository evidence belongs to `my-dev-kit`.
 
 ## Reporting security issues
 

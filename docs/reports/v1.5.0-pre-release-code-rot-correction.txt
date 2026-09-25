@@ -1,0 +1,128 @@
+1. FINAL_STATUS
+PASS_V1_5_CODE_ROT_BLOCKER_CORRECTED
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+aff927a331823cd84920c4cb97f6a88bac28c5e5
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. PRIOR_READINESS_RESULT
+BLOCKED_CODE_ROT_AUDIT after prior readiness gates passed.
+
+7. PRIOR_CODE_ROT_RAW_RELEASE_BLOCKERS
+3
+
+8. REAL_STALE_CLAIM
+CHANGELOG.md:694 under ## v0.2.1 - Extraction Mode said the tag would be created during release preparation, although the v0.2.1 Git tag already exists.
+
+9. CHANGELOG_BEFORE
+**Not published to npm.** Tag will be created on release preparation.
+
+10. TAG_EVIDENCE
+v0.2.1 exists locally as annotated tag object d2162f9ffb6ec3c51f667d82df2696c105adcfcb and remotely; peeled commit c2654e32f937eb1d8aa044c123c7a71daa6499f2. npm view @dailephd/my-dev-kit-orchestrator versions --json returned published versions 1.0.0 through 1.4.1, excluding 0.2.1.
+v0.2.0 exists locally as annotated tag object 8f1fae9159a51c198c91bbde351c90dc046bac68 and remotely; peeled commit 3cdb19e7e9aad973b88f8587b2e76740dc5c4012. npm published version list excludes 0.2.0.
+
+11. CHANGELOG_AFTER
+**Not yet published to npm.** Tag `v0.2.1` exists.
+
+12. HISTORICAL_FALSE_POSITIVE_FINDINGS
+package-release-rot:CHANGELOG.md:unsupported-publish-claim:746; package-release-rot:docs/ROADMAP.md:unsupported-publish-claim:85.
+
+13. HISTORICAL_FALSE_POSITIVE_EVIDENCE
+Both v0.2.0 statements are historically accurate: local and remote v0.2.0 tag evidence is recorded above; the live npm version list excludes 0.2.0. Both are classified FALSE_POSITIVE_ACCURATE_HISTORICAL_FACT and remain unchanged.
+
+14. LINT_DOCS_RESULT
+PASS — npm run lint:docs; 23 files, zero issues.
+
+15. DOCS_CHECK_RESULT
+PASS — npm run docs:check; package/version and documentation consistency confirmed.
+
+16. CODE_ROT_RERUN_COMMAND
+npx -y @dailephd/my-dev-kit-lab@0.6.0 --workspace "<new external temp workspace>" audit --target "C:\Users\daile\Projects\my-dev-kit-orchestrator" --types code-rot
+Lab version verified: 0.6.0. Final workspace: C:\Users\daile\AppData\Local\Temp\orchestrator-v1.5-code-rot-correction-rerun-20260925-131553
+
+17. CODE_ROT_RAW_EXIT_RESULT
+Exit 1; the configured blocker threshold was breached solely by the two independently adjudicated accurate v0.2.0 historical claims.
+
+18. CODE_ROT_RAW_FINDING_COUNTS
+Total 212; blocker 2; high 6; medium 68; low 118; info 18; releaseBlocking 2; implementationBlocking 0. Prior to the wording refinement, the audit showed 213 total and 3 blockers, including the v0.2.1 line.
+
+19. CODE_ROT_RAW_RELEASE_BLOCKERS
+CHANGELOG.md:746 v0.2.0 tag/unpublished claim; docs/ROADMAP.md:85 v0.2.0 unpublished claim.
+
+20. CODE_ROT_ADJUDICATION_MATRIX
+FINDING_ID: package-release-rot:CHANGELOG.md:unsupported-publish-claim:694
+FILE: CHANGELOG.md
+LINE: 694
+RAW_RELEASE_BLOCKING: true (first rerun); absent in final rerun
+CLAIM: v0.2.1 tag status and npm unpublished status
+EVIDENCE: v0.2.1 tag exists locally and remotely; npm published-version list excludes 0.2.1; the prior future-tag wording was stale.
+CLASSIFICATION: REPAIRED_DEFECT
+RESOLUTION: Changed the statement to “Not yet published to npm. Tag v0.2.1 exists.”; final audit no longer reports this finding.
+
+FINDING_ID: package-release-rot:CHANGELOG.md:unsupported-publish-claim:746
+FILE: CHANGELOG.md
+LINE: 746
+RAW_RELEASE_BLOCKING: true
+CLAIM: v0.2.0 was tagged in git and not published to npm
+EVIDENCE: Local and remote v0.2.0 tag; npm published-version list excludes 0.2.0.
+CLASSIFICATION: FALSE_POSITIVE_ACCURATE_HISTORICAL_FACT
+RESOLUTION: Left historical statement intact.
+
+FINDING_ID: package-release-rot:docs/ROADMAP.md:unsupported-publish-claim:85
+FILE: docs/ROADMAP.md
+LINE: 85
+RAW_RELEASE_BLOCKING: true
+CLAIM: v0.2.0 was not published to npm
+EVIDENCE: Local and remote v0.2.0 tag; npm published-version list excludes 0.2.0.
+CLASSIFICATION: FALSE_POSITIVE_ACCURATE_HISTORICAL_FACT
+RESOLUTION: Left historical statement intact.
+
+21. UNRESOLVED_REAL_RELEASE_BLOCKERS
+0
+
+22. IMPLEMENTATION_BLOCKERS
+0
+
+23. NONBLOCKING_FINDINGS
+210 total: high 6, medium 68, low 118, informational 18. None was release- or implementation-blocking; none indicated a newly discovered release-safety issue.
+
+24. TARGET_IMMUTABILITY_RESULT
+PASS — Lab outputs were written outside the repository. Before commit, HEAD remained aff927a331823cd84920c4cb97f6a88bac28c5e5; only CHANGELOG.md was modified; no staged or untracked repository files and no other tracked changes.
+
+25. PRODUCTION_SOURCE_CHANGED
+NO
+
+26. TEST_FILES_CHANGED
+NO
+
+27. OTHER_DOCS_CHANGED
+NO
+
+28. GIT_DIFF_CHECK_RESULT
+PASS — git diff --check.
+
+29. FILES_CHANGED
+CHANGELOG.md; docs/reports/v1.5.0-pre-release-code-rot-correction.txt
+
+30. COMMIT
+Required subject: docs: correct historical v0.2.1 tag status. Final commit SHA is recorded in the correction workflow result.
+
+31. PUSH_RESULT
+Pushed and verified on origin/feature/v1.5.0-semantic-continuity; remote candidate SHA is recorded below.
+
+32. NEW_CANDIDATE_SHA
+Final pushed feature-branch HEAD; see the correction workflow result.
+
+33. STALE_VALIDATION_BRANCHES
+validation/v1.5.0-pre-release; validation/v1.5.0-pre-release-r2; validation/v1.5.0-pre-release-r3 (untouched).
+
+34. NEXT_ACTION
+READY_TO_RESTART_V1_5_PRE_RELEASE_READINESS_FROM_CODE_ROT_CORRECTED_CANDIDATE

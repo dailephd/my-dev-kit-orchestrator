@@ -1,0 +1,155 @@
+1. FINAL_STATUS
+PASS_V1_5_BATCH_2_TEST_AND_VERIFICATION_EVIDENCE_BRIDGE
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+350d2299b3a4f9334a6d3bf5d5f2f19eda1d2f00
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. MY_DEV_KIT_PRODUCER_IDENTITY
+@dailephd/my-dev-kit 1.12.4; local producer checkout fcf58329820ddae781ceb75d3936024ed87d5f72 (read-only, unchanged).
+Producer facts confirmed: responsibilityMapping.ts builds proposedOrExistingTestFiles from selected/related tests (EvidenceItemRef);
+testInfrastructureDiscovery.ts emits itemKind "test-file" items (file-level).
+
+7. RETRIEVAL_LOG
+Index: .my-dev-kit-context/v1.5.0/batch-2/index (--src src --src tests --call-graph), ignored/uncommitted.
+Searches (limit 4): "TestImplementationReport test responsibility evidence"; "VerificationReport commands exit codes";
+"proposedOrExistingTestFiles responsibilityMappings"; "testImplementation stage test context";
+"semanticResponsibility implementationResponsibilityEvidence"; "myDevKitEvidenceSummary responsibilityMappings".
+Search recall was poor for four of six queries (returned test files / unrelated symbols), so retrieval continued through exact owners:
+Selected node: symbol:src/instructions/implementationResponsibilityEvidence.ts#evaluateImplementationEvidenceBridge
+  lookup (3 incoming edges); slice depth 1 (3 nodes, 3 edges).
+Direct bounded source retrievals: implementationResponsibilityEvidence.ts#normalizeProductionFilePath (path policy to share);
+  myDevKitEvidenceSummary.ts#RawResponsibilityMappingEntry.
+Producer facts read via bounded grep/sed of ../my-dev-kit (responsibilityMapping.ts, types.ts EvidenceItemRef, testInfrastructureDiscovery.ts).
+Full-file fallback: myDevKitEvidenceSummary.ts was read in full during Batch 1 and edited here through targeted replacements; no other full-file fallback.
+
+8. BATCH_0_CONTRACT_PRESERVED
+semanticResponsibility.ts untouched; SEMANTIC_RESPONSIBILITY_ID_RE reused by every new parser.
+
+9. BATCH_1_CONTRACT_PRESERVED
+Path normalization moved to responsibilityEvidenceShared.ts (normalizeProjectRelativePath); normalizeProductionFilePath remains exported and delegates
+(equivalence tested). ImplementationEvidenceState is now an alias of the shared EvidenceCorroborationState (same literal union). All Batch 1 tests pass unchanged.
+
+10. TEST_IMPLEMENTATION_MAPPING_CONTRACT
+Carrier: existing TestImplementationReport (future; not activated). Block: "test implementation responsibility ID: RSP-NNN" + repeatable "test file:".
+Block ends at next ID line or end of input; at least one test file required; first duplicate RSP block authoritative, never merged.
+
+11. TEST_FILE_CONTRACT
+Identical to the production-file policy (shared helper): project-relative, "\" -> "/", case preserved; rejects empty, ".", absolute, drive letter, UNC, URL, NUL, "..".
+File-level only; no test-symbol contract.
+
+12. RAW_PRODUCER_TEST_EVIDENCE_PROJECTION
+RawResponsibilityMappingEntry.proposedOrExistingTestFiles?: RawEvidenceItemRef[] (reuses the Batch 1 shape). Absent -> []. Present-but-malformed
+(non-array, non-object item, missing/empty id, non-string optional field) -> malformed raw evidence. Only this field is added; reusableHelpers/oracleEvidence/testCommands are not projected.
+The shared validator now covers both productionSymbols and proposedOrExistingTestFiles. One Batch 1 test that asserted the whole projected mapping object
+gained the additive "proposedOrExistingTestFiles: []" expectation (exact assertion retained, not weakened).
+
+13. TEST_CORROBORATION_SEMANTICS
+Exact same-ID mapping, then exact item path or id equality against proposedOrExistingTestFiles. itemKind not required. Corroborated = identity present in bounded
+Kit test evidence; not proof of coverage, correctness, execution, or pass. Producer mappingStatus retained for context only.
+
+14. TEST_BRIDGE_STATE_VOCABULARY
+corroborated, partially-corroborated, uncorroborated, missing-declaration, producer-mapping-unavailable (shared type with Batch 1).
+
+15. TEST_STRUCTURAL_ISSUE_CODES
+TEST_IMPLEMENTATION_RESPONSIBILITY_ID_MISSING, _ID_INVALID, _DUPLICATE, _EVIDENCE_MISSING, _FILE_INVALID, _EVIDENCE_DUPLICATE.
+
+16. TEST_BRIDGE_ISSUE_CODES
+TEST_IMPLEMENTATION_RESPONSIBILITY_ORPHAN, _DECLARATION_MISSING, _PRODUCER_MAPPING_MISSING, _PRODUCER_MAPPING_TRUNCATED, _EVIDENCE_UNCORROBORATED.
+
+17. VERIFICATION_MAPPING_CONTRACT
+Carrier: existing VerificationReport (future; not activated). "verification responsibility ID: RSP-NNN" starts a block; "verification evidence:" starts a record within it.
+Text outside recognized fields, and command/cwd/exit-code lines outside a record, are ignored. Repeated status/reason/record fields keep the first value.
+Duplicate RSP blocks: first authoritative. A block with a missing/invalid status yields structural issues and no declaration.
+Attribution by exact RSP identity only; command text is never interpreted.
+
+18. VERIFICATION_STATUS_VOCABULARY
+Declaration status: pass, fail, skipped, blocked (exact, lowercase). Evaluation state: passed, failed, skipped, blocked, missing-declaration.
+
+19. VERIFICATION_COMMAND_EVIDENCE_CONTRACT
+Record = command (non-empty, verbatim), working directory (non-empty, no NUL, kept verbatim incl. absolute), exit code (signed decimal safe integer; negatives and large values ok).
+pass/fail need >=1 record; skipped/blocked need a non-empty reason. Only fully valid records are kept as evidence. Status is never inferred from exit codes.
+No command is executed; nothing is proven about execution.
+
+20. VERIFICATION_STRUCTURAL_ISSUE_CODES
+VERIFICATION_RESPONSIBILITY_ID_MISSING, _ID_INVALID, _DUPLICATE, _STATUS_MISSING, _STATUS_INVALID, _EVIDENCE_MISSING, _COMMAND_MISSING,
+_WORKING_DIRECTORY_MISSING (also used for a NUL-containing value; the planner list has no separate invalid code), _EXIT_CODE_MISSING, _EXIT_CODE_INVALID,
+_REASON_MISSING, _STATUS_EVIDENCE_INCONSISTENT (diagnostic only; declared status is not rewritten).
+
+21. VERIFICATION_ATTRIBUTION_ISSUE_CODES
+VERIFICATION_RESPONSIBILITY_ORPHAN, VERIFICATION_RESPONSIBILITY_DECLARATION_MISSING.
+
+22. PROOF_ONLY_BOUNDARY
+src/proofOnly.ts untouched; proof-only gains no RSP semantics.
+
+23. GREENFIELD_BOUNDARY
+No greenfield source touched; greenfield has no test-implementation stage and is outside this chain.
+
+24. WORKFLOW_APPLICABILITY
+workflowHasTestImplementationStage(mode), derived from workflow definitions: feature, repair, test, refactor, harden, extraction true; greenfield and unknown false.
+Informational only; not wired into any gate.
+
+25. PRODUCTION_FILES_CHANGED
+src/instructions/responsibilityEvidenceShared.ts (new); src/instructions/testImplementationResponsibilityEvidence.ts (new);
+src/instructions/verificationResponsibilityEvidence.ts (new); src/instructions/implementationResponsibilityEvidence.ts (delegates to shared helper);
+src/instructions/myDevKitEvidenceSummary.ts
+
+26. TEST_FILES_CHANGED
+tests/testImplementationResponsibilityEvidence.test.ts (new); tests/verificationResponsibilityEvidence.test.ts (new); tests/myDevKitEvidenceSummary.test.ts
+
+27. DOCUMENTATION_FILES_CHANGED
+docs/CONTRACTS.md, docs/DEVELOPMENT.md, this report
+
+28. FOCUSED_TEST_RESULTS
+semantic + implementation + test-implementation + verification + raw-evidence suites: 5 suites, 236 tests passed.
+
+29. RAW_EVIDENCE_COMPATIBILITY
+myDevKitEvidenceSummary suite passed, including historical schema-major-1 fixtures unchanged and Batch 1 productionSymbols behavior.
+
+30. CONTEXT_READINESS_REGRESSION
+testResponsibilityCriticality + contextReadiness + contextReadinessHistoricalMatrix: 107 tests passed, none weakened. Trace suites: 113 passed.
+
+31. FULL_TEST_RESULTS
+npm test -- --runInBand: 136 suites passed, 3 skipped (pre-existing); 3154 tests passed, 11 skipped.
+
+32. VERIFY_RESULT
+npm run verify exit 0 (run after documentation edits).
+
+33. SMOKE_CONTEXT_RESULT
+smoke:context passed within verify.
+
+34. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (version 1.4.1, 432 files); git diff --check clean apart from line-ending notices.
+
+35. PUBLIC_SURFACE_CONFIRMATION
+No CLI, workflow, stage, greenfield, proof-only, or Observer source touched; no new dependency; 8 commands / 7 modes unchanged.
+
+36. PROMPT_SURFACE_UNCHANGED
+Yes. promptGenerator.ts, stageInstructionContent.ts and artifactChecker.ts untouched.
+
+37. RUN_INTEGRITY_UNCHANGED
+Yes. runIntegrityGate.ts untouched.
+
+38. JUDGE_INTEGRITY_UNCHANGED
+Yes. judgeIntegrity.ts untouched.
+
+39. OUT_OF_SCOPE_CONFIRMATION
+No whole-chain evaluator, gate, status/check/export, correction routing, final-report change, my-dev-kit change, Observer/Lab integration, version bump,
+or edits to README/CHANGELOG/CURRENT_STATE/ROADMAP.
+
+40. COMMIT
+feat: add test and verification responsibility evidence (SHA in final response)
+
+41. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (see final response)
+
+42. NEXT_ACTION
+READY_FOR_V1_5_BATCH_3_SEMANTIC_CONTINUITY_EVALUATOR

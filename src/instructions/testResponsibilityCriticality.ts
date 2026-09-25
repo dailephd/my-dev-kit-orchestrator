@@ -111,6 +111,9 @@ const REQUIRED_BLOCK_FIELDS = [
   'test level',
 ];
 const RESPONSIBILITY_BODY_FIELDS = REQUIRED_BLOCK_FIELDS.filter((field) => field !== 'test responsibility id');
+// Additional field captured (never required by the legacy contract) so the
+// v1.5 semantic contract can consume this parser instead of re-parsing.
+const CAPTURED_BLOCK_FIELDS = [...REQUIRED_BLOCK_FIELDS, 'responsibility'];
 const RESPONSIBILITY_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._:/#-]*$/;
 
 export interface ParsedTestResponsibility {
@@ -119,6 +122,10 @@ export interface ParsedTestResponsibility {
   criticalityRaw: string | undefined;
   missingFields: string[];
   blockIndex: number;
+  // Raw trimmed field values keyed by lowercase field name (first occurrence wins).
+  fieldValues: Readonly<Record<string, string>>;
+  // Lowercase names of captured fields declared more than once in this block.
+  duplicateFields: string[];
 }
 
 export type TestResponsibilityParseIssueCode =
@@ -211,12 +218,17 @@ export function parseTestResponsibilityBlocks(text: string): TestResponsibilityP
 
   blocks.forEach((blockLines, blockIndex) => {
     const fields: Record<string, string> = {};
+    const duplicateFields: string[] = [];
     for (const line of blockLines) {
       const match = line.trim().match(FIELD_RE);
       if (!match) continue;
       const key = match[1].trim().toLowerCase();
-      if (REQUIRED_BLOCK_FIELDS.includes(key) && !(key in fields)) {
-        fields[key] = match[2].trim();
+      if (CAPTURED_BLOCK_FIELDS.includes(key)) {
+        if (!(key in fields)) {
+          fields[key] = match[2].trim();
+        } else if (!duplicateFields.includes(key)) {
+          duplicateFields.push(key);
+        }
       }
     }
 
@@ -277,7 +289,15 @@ export function parseTestResponsibilityBlocks(text: string): TestResponsibilityP
 
     const missingFields = REQUIRED_BLOCK_FIELDS.filter((f) => !(f in fields));
 
-    responsibilities.push({ responsibilityId, criticality, criticalityRaw, missingFields, blockIndex });
+    responsibilities.push({
+      responsibilityId,
+      criticality,
+      criticalityRaw,
+      missingFields,
+      blockIndex,
+      fieldValues: { ...fields },
+      duplicateFields,
+    });
   });
 
   return { responsibilities, issues, duplicateResponsibilityIds };

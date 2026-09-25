@@ -3,13 +3,14 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.4.1`
-- Current release: `v1.4.1`
+- Package metadata version: `1.5.0`
+- Current release: `v1.5.0`
+- Release date: `2026-09-25`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.4.1`
-- Latest Git tag and GitHub Release: `v1.4.1`
+- Latest npm version: `1.5.0`
+- Latest Git tag and GitHub Release: `v1.5.0`
 
-Package metadata, npm, the `v1.4.1` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.5.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -22,6 +23,21 @@ equivalent for all five affected stages. All eight commands, seven workflow
 modes, 79 native stages, 13 greenfield stages, and four starter profiles
 remain unchanged; no package, dependency, export, or core retrieval-engine
 change was required.
+
+## Current release: Semantic Continuity
+
+`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, is the current release. It ships the following behavior:
+
+Implemented behavior:
+
+- stable `RSP-NNN` responsibility identity declared in the mode-owned test-strategy artifact and traced to upstream `REQ`/`CTX`/`BEH`/`INV`/`TRN`/`PSE` IDs
+- per-responsibility mappings in the existing `ImplementationReport`, `TestImplementationReport`, and `VerificationReport`, corroborated by exact match against same-ID my-dev-kit evidence (identity only, not causal proof)
+- one phase-aware evaluator enforced through the existing `RunIntegrityGate` (gate schema `1.1.0`, contract `1.0.0`): critical gaps block, noncritical gaps warn, and blocked stages render bounded correction guidance instead of normal work
+- automatic activation of new staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction` through `run.json`; `greenfield`, proof-only, and legacy runs are unaffected
+- a compact Semantic Continuity summary in `status`, `check`, `export`, and the judge prompt, with `mark` and authored `PASS` unable to bypass a blocker
+- mode-aware strategy correction routing for `repair`, `refactor`, and `harden`
+
+The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
 ## Implemented operational surface
 
@@ -37,6 +53,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
+- Semantic Continuity corroboration shows identity presence in bounded my-dev-kit evidence, not causality; verification results are agent-reported; and the reuse of an `RSP` ID for a different meaning cannot be detected.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
 
 ## Active next direction
@@ -64,7 +81,7 @@ still 13 stages and the same `typescript-cli`, `nextjs-app`, and
 `android-compose` profile set. See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
 
-The current release, `v1.4.0`, retains `v1.3.2`'s shared artifact-validation
+`v1.4.1` retains `v1.3.2`'s shared artifact-validation
 correction so the three native greenfield JSON artifacts retain strict JSON and
 structured-field contracts without receiving incompatible text-header
 requirements. Python CLI Greenfield Profile and Coding-Agent Instruction
@@ -77,16 +94,15 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the current
-released version. It replaces inappropriate Orchestrator-maintainer
+`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the previous
+release. It replaces inappropriate Orchestrator-maintainer
 source-path guidance in shipped greenfield prompts with direct artifact,
 behavior, validation, and completion requirements while preserving the
 underlying instruction intent and installed package surface. The active next
-direction is: (1) `v1.5.0`, Semantic Continuity and Evidence-to-Implementation
-Bridge, is the next planned feature version; (2) `v1.6.0` Workflow Economics
-and Deterministic Run Telemetry follows; (3) Greenfield-to-Feature Workflow
-Handoff Hardening remains deferred; (4) optional mobile-profile candidates
-remain deferred.
+direction is: (1) `v1.6.0` Workflow Economics and Deterministic Run
+Telemetry is the next planned feature version; (2) Greenfield-to-Feature
+Workflow Handoff Hardening remains deferred; (3) optional mobile-profile
+candidates remain deferred.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a

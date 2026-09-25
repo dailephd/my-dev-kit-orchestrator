@@ -6,12 +6,12 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.4.1`, correcting the installed greenfield
-instruction surface while retaining the prior greenfield, integrity, and
-instruction-bootstrap contracts, `v1.4.0`'s maintained-line trace/lifecycle
-reconciliation, phase-aware readiness, explicit proof-only verification, and
-the bounded Observer v0.6 consumer. Architecture is organized by current
-responsibility rather than by release version.
+The current release is `v1.5.0`, which ships Semantic Continuity alongside
+the prior greenfield, integrity, and instruction-bootstrap contracts,
+`v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
+readiness, explicit proof-only verification, and the bounded Observer v0.6
+consumer. Architecture is organized by current responsibility rather than by
+release version.
 
 ## System boundaries
 
@@ -64,6 +64,9 @@ The core architecture consists of:
 - plain-text native artifacts and supplemental repository-evidence files
 - deterministic context-readiness evaluation
 - lifecycle, status, check, export, judge, and correction integration
+- Semantic Continuity: stable `RSP-NNN` responsibility identity carried through
+  strategy, implementation, test-implementation, and verification evidence, and
+  enforced by the same `RunIntegrityGate`
 
 Android Compose support already shipped in `v1.2.0` as the explicit
 `android-compose` greenfield starter profile alongside `typescript-cli` and
@@ -262,8 +265,9 @@ The implemented deterministic contract versions are:
 | Supplemental context packet | `1.0.0` |
 | Supplemental context retrieval report | `1.0.0` |
 | `ContextReadiness` | `1.0.0` |
-| `RunIntegrityGate` | `1.0.0` |
+| `RunIntegrityGate` | `1.1.0` |
 | `JudgeIntegrity` | `1.0.0` |
+| Semantic Continuity contract | `1.0.0` |
 
 ## WorkflowInstructionPacket
 
@@ -312,6 +316,15 @@ layers intentionally excluded, tests to extend, architecture that must not be
 duplicated, and accepted noncritical uncertainty. Task-specific repository
 evidence remains required and must be refreshed against the current candidate;
 the full assimilation report is not copied into every prompt.
+
+For an activated run (see Semantic Continuity below), `src/instructions/semanticContinuityPrompt.ts`
+owns the conditional authoring guidance that `promptGenerator.ts` appends to
+each participating stage's packet-backed instructions. Saved prompt files are
+templates that carry this guidance but never live gate state; the live `prompt`
+command renders through `generateLiveStagePrompt()`, which also honors the
+current `RunIntegrityGate` and replaces a semantically blocked stage's normal
+work with bounded correction guidance for the canonical correction stage.
+Legacy, greenfield, and proof-only prompts receive none of it.
 
 The two greenfield scaffold stages keep their specialized renderer without
 changing their stage names, prompt filenames, sidecars, or lifecycle behavior.
@@ -420,8 +433,9 @@ selection, lifecycle resolution, stage detection, `mark`, `status`, `check`,
 `check --all`, `check --artifacts`, and `export`.
 
 `resolveArtifactStateWithRunIntegrity` is the single override point. It forces
-a context-blocked implementation/test artifact, or an ineligible final report,
-to `blocked` regardless of file presence or a manual complete record.
+a context-blocked implementation/test artifact, a semantically blocked current
+stage artifact, or an ineligible final report, to `blocked` regardless of file
+presence or a manual complete record.
 
 `src/judgeIntegrity.ts` composes on top of the gate. It parses the authored
 judge verdict and compares it with `expectedJudgeVerdict`. An authored PASS
@@ -435,6 +449,38 @@ A normal final report requires accepted PASS, no active correction, and all
 required prior native artifacts effectively complete under the same gate.
 Artifact presence, manual completion, explicit final-report selection, or
 structurally valid final-report content cannot substitute for this decision.
+
+### Semantic Continuity
+
+Semantic Continuity carries one stable responsibility identity, `RSP-NNN`,
+through four legs: the mode-owned strategy artifact declares the
+responsibilities and traces them to upstream `REQ`/`CTX`/`BEH`/`INV`/`TRN`/`PSE`
+IDs; the existing `ImplementationReport`, `TestImplementationReport`, and
+`VerificationReport` carry per-RSP mappings and results. No native artifact,
+stage, mode, command, or persisted state is added.
+
+- The bridge modules (`implementationResponsibilityEvidence.ts`,
+  `testImplementationResponsibilityEvidence.ts`,
+  `verificationResponsibilityEvidence.ts`, with shared path policy in
+  `responsibilityEvidenceShared.ts`) parse the authored blocks and corroborate
+  declared production and test identities by exact match against same-ID
+  my-dev-kit mappings. Corroboration shows only that an identity exists in
+  bounded producer evidence; it does not prove causality, execution, or
+  correctness. Verification results are agent-reported and never executed.
+- `semanticContinuity.ts` is the single pure, phase-aware evaluator: a leg is
+  active only after its owner stage, so correcting an earlier stage ignores
+  future downstream defects.
+- `runSemanticContinuity.ts` is the only I/O adapter. It is activated by the
+  `semanticContinuityVersion` field in `run.json` (supported value `1.0.0`);
+  `start` sets it for new staged runs in every mode that owns a test
+  strategy (all except `greenfield`). Absent means legacy, an unsupported value fails closed.
+- `runIntegrityGate.ts` projects the result into the one gate: critical
+  incomplete responsibilities and global integrity defects block, noncritical
+  ones warn, and a repository-context blocker keeps primary precedence. Lifecycle,
+  `mark`, judge integrity, correction routing, and final-report eligibility
+  consume that same gate.
+- `semanticContinuitySurface.ts` projects the computed gate for `status`,
+  `check`, `export`, and the judge prompt so no surface re-derives continuity.
 
 ## Status, check, and export
 
@@ -453,6 +499,11 @@ issue model. They consume existing readiness rather than introduce another
 gate. Non-greenfield runs and runs without a selected profile are unaffected
 by that presentation path.
 
+For an activated run, `status`, `check`, `check --artifacts`, `check --all`, and
+`export` each add one compact Semantic Continuity section projected from the
+same gate. Blocked semantic state fails `check`; a warning fails only under
+`--strict`.
+
 `export` preserves honest readiness, accepted judge state, correction, and
 final eligibility. It includes canonical primary-blocker fields when blocked,
 but does not embed raw capsule/audit JSON or copy external evidence merely
@@ -470,8 +521,11 @@ Implementation takes priority when implementation context is blocked, otherwise
 use test-implementation. Test mode recommends test-implementation.
 
 Normal valid recommended-stage overrides remain supported, except that accepted
-NEED_CONTEXT uses canonical readiness routing over the table default and
-conflicting prose. There is no new verdict, correction sidecar, context file,
+NEED_CONTEXT uses the canonical run-integrity recommendation over the table
+default and conflicting prose, including when that recommendation is none.
+Mode-owned strategy stages (`regression-test-strategy` for `repair`,
+`compatibility-test-strategy` for `refactor`, `resilience-test-strategy` for
+`harden`) are correctable only in their owning mode. There is no new verdict, correction sidecar, context file,
 or automatic correction execution.
 
 ## Determinism
@@ -510,6 +564,11 @@ evidence authority beyond explicit stage requirements.
   recommendations use implementation/test-implementation. Generic non-context
   architecture routing retains a pre-existing edge case.
 - Repository evidence retrieval and producer CLI selection remain manual.
+- Semantic Continuity cannot detect that an `RSP` ID was semantically
+  repurposed: identity discipline is authored, and the runtime keeps no ID
+  history or semantic comparison.
+- Producer corroboration is exact identity presence only; my-dev-kit evidence is
+  request-scoped and does not establish per-responsibility causality.
 - The current CLI has no status JSON output.
 - There is no shared cross-repository schema package or Lab runtime integration.
 - Cross-tool recipes are externally executed compositions. Documentation
@@ -524,6 +583,8 @@ The architecture intentionally excludes:
 - automatic source editing, test generation, or test execution
 - Gradle execution, Android SDK validation, and device or emulator detection
 - fuzzy, semantic, or LLM catalog selection
+- semantic scoring, probabilistic or fuzzy responsibility matching, or
+  persisted semantic state
 - on-disk `TaskState` or `StageContextBundle`
 - native context stages
 - automatic target-repository creation

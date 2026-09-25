@@ -6,10 +6,12 @@ import { readTraceCheckResults } from '../traceChecker';
 import { readCheckResults } from '../promptChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { resolveGateCurrentStage } from '../stageDetector';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult } from '../judgeIntegrity';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { StageDefinition } from '../workflows';
 import type { WorkflowMode } from '../types';
+import { renderSemanticContinuityExportLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
@@ -232,23 +234,27 @@ export function buildExportText(meta: {
   stages: Array<{ name: string; artifactFile: string }>;
   proofOnly?: boolean;
   verificationResponsibility?: string;
+  semanticContinuityVersion?: string;
 }): string {
   const parts: string[] = [];
 
   // Canonical judge-integrity state (v1.2.3 Batch 4), computed once and
   // reused for every section below so export cannot disagree with
   // status/check on whether a verdict was actually accepted.
+  const exportStateFile = readArtifactStateFile(meta.runFolder);
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
     runFolder: meta.runFolder,
     workflowStageNames: meta.stages.map((s) => s.name),
-    currentStage: meta.currentStage,
+    currentStage: resolveGateCurrentStage(meta, exportStateFile),
     projectRoot: meta.projectRoot,
+    semanticContinuityVersion: meta.semanticContinuityVersion,
+    proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
   const finalEligibility = evaluateFinalReportEligibility({
     gate, judgeIntegrity, runFolder: meta.runFolder, stages: meta.stages as StageDefinition[],
-    stateFile: readArtifactStateFile(meta.runFolder),
+    stateFile: exportStateFile,
     proofOnly: meta.proofOnly === true, verificationResponsibility: meta.verificationResponsibility,
   });
 
@@ -266,6 +272,12 @@ export function buildExportText(meta: {
     parts.push(`  Proof-only:  active`);
     parts.push(`  Verification responsibility: ${meta.verificationResponsibility}`);
     parts.push(`  Proof evidence: ${finalEligibility.proofEvidence?.state ?? 'invalid'}`);
+  }
+
+  // v1.5.0 Batch 5: activated runs only; projected from the same gate above.
+  const semanticSummary = summarizeSemanticContinuityGate(gate);
+  if (semanticSummary) {
+    parts.push(`  Semantic continuity: active (${semanticSummary.contractVersion})`);
   }
 
   parts.push(sectionHeader('Request'));
@@ -292,6 +304,11 @@ export function buildExportText(meta: {
 
   parts.push(sectionHeader('Repository context readiness'));
   parts.push(formatContextReadinessSummary(meta));
+
+  if (semanticSummary) {
+    parts.push(sectionHeader('Semantic continuity'));
+    parts.push(renderSemanticContinuityExportLines(semanticSummary).join('\n'));
+  }
 
   parts.push(sectionHeader('Next command'));
   parts.push(formatNextCommand(meta, judgeIntegrity));

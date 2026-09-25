@@ -1,0 +1,185 @@
+1. FINAL_STATUS
+PASS_V1_5_BATCH_4_RUN_INTEGRITY_AND_LIFECYCLE_INTEGRATION
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+77a464598154230c8122ca498249806c0ceaf15c
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. RETRIEVAL_LOG
+Index: .my-dev-kit-context/v1.5.0/batch-4/index (@dailephd/my-dev-kit@1.12.4, --src src --src tests --call-graph), ignored/uncommitted. It was built after the first
+implementation edits, so it also indexes the new adapter.
+Searches (limit 3): "RunIntegrityGate evaluateStageRunIntegrity" (owner file first); "resolveArtifactStateWithRunIntegrity stageDetector" (exact symbol first);
+"JudgeIntegrity final report eligibility" (test files, poor); "semanticContinuity evaluateSemanticContinuity" (owner first); "supplemental raw source capsule context readiness"
+(contextReadiness.ts/test, adequate); "mark complete run integrity" (CLI integration tests and runIntegrityGate.ts).
+Selected node symbol:src/runIntegrityGate.ts#evaluateStageRunIntegrity -> lookup (2 incoming edges), slice depth 1 (2 nodes, 2 edges).
+Source retrieval: symbol:src/instructions/semanticContinuity.ts#evaluateSemanticContinuity (bounded preview).
+Direct owner reading where search recall was insufficient or where whole-file behavior was needed to edit safely: runIntegrityGate.ts (full), judgeIntegrity.ts (evaluateJudgeIntegrity
+and evaluateFinalReportEligibility bodies), runLifecycle.ts (full), stageDetector.ts (lifecycle/run-integrity sections), runContextReadiness.ts (evaluateRunContextReadiness),
+the gate call sites in prompt.ts, mark.ts, status.ts, check.ts, export.ts, promptGenerator.ts, and correctionRouter.ts CORRECTABLE_STAGES. Full-file fallback: those direct reads only.
+Every call site of evaluateRunIntegrityGate / deriveRunIntegrityGateResult was located with grep and threaded (see 14).
+
+7. BATCH_0_3_CONTRACTS_PRESERVED
+Batch 0-3 source files are untouched. evaluateSemanticContinuity() is the sole continuity policy owner; the gate and adapter consume its exact result.
+
+8. ACTIVATION_CONTRACT
+RunMetadata.semanticContinuityVersion?: string. Supported value "1.0.0" (SEMANTIC_CONTINUITY_CONTRACT_VERSION, defined once in runSemanticContinuity.ts). createRun() accepts and persists it only
+when explicitly supplied. No CLI flag.
+
+9. LEGACY_RUN_POLICY
+Absent version => semantic classification not-required and behavior unchanged, even if artifacts contain RSP-looking text. Legacy commands keep evaluating the gate at meta.currentStage.
+
+10. UNSUPPORTED_VERSION_POLICY
+Present but != "1.0.0" => blocking SEMANTIC_CONTINUITY_CONTRACT_VERSION_UNSUPPORTED, recommended correction stage null, current phase stage blocked, expected judge verdict NEED_CONTEXT.
+
+11. RUN_ADAPTER_OWNER
+src/instructions/runSemanticContinuity.ts (evaluateRunSemanticContinuity): I/O adapter only, no policy. Result: {contractVersion?, activation: not-required|active|unsupported, phaseStage?, continuity?, integrationIssues}.
+
+12. RAW_EVIDENCE_REUSE
+The adapter consumes the ContextReadinessResult objects from the same gate invocation (readiness is not recomputed; status.ts passes its summary through the new evaluateRunIntegrityGateFromSummary) and
+reads producer mappings with readRawContextCapsule() from the accepted sourceCapsulePath. A refresh-required or missing context yields no fabricated evidence, so bridges report producer-mapping-unavailable while the
+context blocker remains the canonical diagnosis. No second capsule/audit parity check.
+
+13. UPSTREAM_TRACE_COLLECTION
+parseDeclaredTraceIds() over artifactFile + additionalArtifactFiles of stages before the mode-owned strategy stage; only existing files; exact case-sensitive IDs, exact-deduplicated; link-only and prose mentions do not count.
+
+14. RUN_INTEGRITY_GATE_INTEGRATION
+runIntegrityGate.ts remains the sole enforcement owner. New input: semanticContinuityVersion, proofOnly. evaluateRunIntegrityGate() evaluates context once, then evaluateRunIntegrityGateFromSummary() runs the adapter and derives
+the result. All call sites thread the metadata: prompt.ts, mark.ts, status.ts, check.ts, export.ts, promptGenerator.ts (final-report eligibility), runLifecycle.ts. prompt/check/status/export evaluate at
+resolveGateCurrentStage(meta, stateFile) (added to stageDetector.ts): for opted-in runs the lifecycle phase reconcileRunLifecycle() uses, for legacy runs the unchanged meta.currentStage.
+Reason: a rejected PASS routes the persisted cursor back to an earlier stage; semantic legs (unlike context requirements) are not monotone in the cursor, so evaluating at the cursor would make the same rejected PASS look acceptable again
+(e.g. cursor "test-implementation": test/verification legs inactive => PASS accepted while reconciliation rejects it).
+
+15. SEMANTIC_CLASSIFICATION
+not-required | ready | warning | blocked. Batch 3 pending/complete => ready; noncritical gaps or diagnostics => warning; any blocker or unsupported version => blocked. Additive gate fields: semanticContinuityVersion,
+semanticContinuityRequired/Ready/Classification, semanticContinuity, ...BlockingCodes/WarningCodes, ...BlockingResponsibilityIds/WarningResponsibilityIds, semanticContinuityBlockers (ordered), semanticBlockedStageNames,
+primarySemanticBlocker, semanticRecommendedCorrectionStage, runIntegrityReady, primaryBlockingCode/Reason. contextRequired/contextReady/readinessClassification/implementationContext/testContext keep repository-context meaning.
+
+16. CRITICAL_ENFORCEMENT
+Non-complete critical responsibility => blocker SEMANTIC_CONTINUITY_CRITICAL_RESPONSIBILITY_UNSATISFIED (id in semanticContinuityBlockingResponsibilityIds).
+
+17. NONCRITICAL_ENFORCEMENT
+Non-complete noncritical (including attributable invalidity) => warning SEMANTIC_CONTINUITY_NONCRITICAL_RESPONSIBILITY_UNSATISFIED only: no stage block, expected verdict stays PASS, final report unaffected.
+
+18. GLOBAL_AND_UNCLASSIFIED_POLICY
+Unclassified responsibility => blocker SEMANTIC_CONTINUITY_UNCLASSIFIED_RESPONSIBILITY. Unknown stage, empty active strategy, orphan declarations and issues not attributable to a canonical responsibility =>
+SEMANTIC_CONTINUITY_GLOBAL_INTEGRITY_INVALID with sourceIssueCode preserved (leg and responsibilityId kept where known). Diagnostics stay warnings.
+
+19. BLOCKER_PRECEDENCE
+Context blocker wins primaryBlockingCode/Reason and recommendedCorrectionStage (context recommendation ?? semantic ?? null). Semantic blockers remain in the semantic fields. Because a refresh-required context gives the adapter no producer
+evidence, semantic legs that depend on it become indeterminate (blocking for critical); the context blocker is still what is reported first.
+
+20. CORRECTION_STAGE_SELECTION
+Earliest correction-owner stage in workflow order, then canonical responsibility order, then stable issue order. strategy leg -> mode-owned strategy stage (registry); implementation / test-implementation / verification as named.
+Unknown stage and unsupported version -> null. Known limitation (existing router behavior, untouched): CORRECTABLE_STAGES lists only "test-strategy", not regression-/compatibility-/resilience-test-strategy, so for repair/refactor/harden
+a strategy-owned defect rejects an authored PASS but yields no accepted correction stage in JudgeIntegrity; the gate still reports the exact recommended stage.
+
+21. STAGE_BLOCKING
+evaluateStageRunIntegrity gains contextBlocked and semanticBlocked; blocked = contextBlocked || semanticBlocked; contextSensitive unchanged; all four stage-permission fields false when blocked. The blocked stage is the current phase stage;
+the correction target is not force-blocked.
+
+22. LIFECYCLE_INTEGRATION
+isRunIntegrityBlockedArtifactFile = context blocked OR semantic blocked OR final-report ineligible (new isSemanticBlockedArtifactFile; isContextBlockedArtifactFile keeps context-only meaning).
+resolveArtifactStateWithRunIntegrity therefore forces a semantic-blocked artifact to blocked regardless of file existence or a manual complete record. resolveArtifactState is unchanged. Stage progression stops at the blocked stage.
+
+23. MARK_INTEGRATION
+mark reuses isRunIntegrityBlockedArtifactFile; rejection happens before any artifact-state.json mutation (tested byte-for-byte). New message for a semantic-only blocker (primaryBlockingCode/Reason and recommended stage) so it never claims
+repository context is refresh-required; the context-specific and final-report messages are preserved. Warning-only gaps do not block manual completion.
+
+24. JUDGE_INTEGRITY_INTEGRATION
+judgeIntegrity.ts is untouched: it trusts gate.expectedJudgeVerdict and recommendedCorrectionStage. Authored PASS with a critical semantic blocker is rejected via the existing contradiction path (accepted correction stage = semantic
+recommendation when correctable); noncritical warning-only PASS is accepted; context recommendation wins when both block; unsupported version rejects PASS. Ordinary non-PASS verdict handling is unchanged. (The existing contradiction message text still says
+"repository-context readiness"; it is user-facing text in an untouched file and was left as is.)
+
+25. FINAL_REPORT_INTEGRATION
+evaluateFinalReportEligibility is unchanged; a critical semantic blocker makes it ineligible through the judge decision and blocked prior artifacts. Warning-only stays eligible.
+
+26. CORRECTION_PHASE_SAFETY
+PASS. Downstream malformed/orphan test and verification data is inactive and non-blocking at implementation and active at judge; correction targets can still render/complete while only the phase stage is blocked;
+loadRun reconciliation routes an activated run with a critical verification gap back to "verification" while an identical legacy run is unaffected.
+
+27. PERSISTENCE
+No semantic file or timestamp. Only the activation version lives in run.json, and only when explicitly supplied.
+
+28. RUN_CREATION_ACTIVATION_STATUS
+Ordinary createRun() does NOT activate (tested: run.json has no semanticContinuityVersion key). Explicit programmatic activation works (tested).
+
+29. PRODUCTION_FILES_CHANGED
+src/instructions/runSemanticContinuity.ts (new); src/runIntegrityGate.ts; src/run.ts; src/stageDetector.ts; src/runLifecycle.ts; src/promptGenerator.ts (metadata threading only, no prompt text);
+src/commands/prompt.ts, mark.ts, status.ts, check.ts, export.ts (threading; mark.ts also a semantic-only error message).
+
+30. TEST_FILES_CHANGED
+tests/runSemanticContinuity.test.ts (new); tests/semanticContinuityRunIntegrity.test.ts (new; one focused suite covering gate, lifecycle, mark, judge, final report, reconciliation);
+tests/semanticRunTestHelpers.ts (new fixtures). No existing test file was modified; the frozen gate/judge/lifecycle suites pass unchanged.
+
+31. DOCUMENTATION_FILES_CHANGED
+docs/CONTRACTS.md, docs/DEVELOPMENT.md, this report
+
+32. RUN_ADAPTER_TEST_RESULTS
+tests/runSemanticContinuity.test.ts: 23 passed.
+
+33. RUN_INTEGRITY_TEST_RESULTS
+tests/semanticContinuityRunIntegrity.test.ts gate/classification/precedence/correction-phase groups passed (39 tests in the file, all passing); legacy runIntegrityGate suites: 81 passed.
+
+34. LIFECYCLE_TEST_RESULTS
+Semantic-blocked artifact resolves blocked (file exists, manual complete recorded); correction target not blocked; progression stops at the blocked stage; warning does not block. PASS.
+
+35. MARK_TEST_RESULTS
+Critical semantic blocker: exit 1, artifact-state.json unchanged, semantic message; warning-only completes; context message preserved. PASS.
+
+36. JUDGE_TEST_RESULTS
+Critical blocker + authored PASS rejected with NEED_CONTEXT expected; warning accepted; context precedence; unsupported version; non-PASS verdict unchanged. PASS.
+
+37. FINAL_REPORT_TEST_RESULTS
+Critical blocker => ineligible; warning-only and complete => eligible. PASS.
+
+38. LEGACY_REGRESSION_RESULTS
+Legacy (unversioned) run: semantic not required, context-only decisions, gate stage equals persisted cursor. Frozen run-integrity, judge-integrity, lifecycle, CLI, prompt and documentation suites pass unchanged.
+
+39. BATCH_0_3_REGRESSION_RESULTS
+Batch 0-3 suites + raw evidence + criticality: 7 suites, 334 tests passed. contextReadiness + historical matrix: 80 passed.
+
+40. FULL_TEST_RESULTS
+npm test -- --runInBand: 139 suites passed, 3 skipped (pre-existing); 3287 tests passed, 11 skipped.
+
+41. VERIFY_RESULT
+npm run verify exit 0 (includes lint, lint:docs, docs:check, security tests and all smoke:cli scenarios).
+
+42. SMOKE_CONTEXT_RESULT
+smoke:context passed within verify.
+
+43. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (version 1.4.1, 440 files); git diff --check clean apart from line-ending notices.
+
+44. PUBLIC_SURFACE_CONFIRMATION
+No new command, flag, mode, stage or dependency; 8 commands / 7 modes unchanged; proof-only and greenfield behavior unchanged; Observer consumer untouched.
+
+45. PROMPT_SURFACE_UNCHANGED
+Yes. No prompt text changed; promptGenerator.ts only threads run metadata into its internal eligibility gate call. Frozen prompt tests pass unchanged.
+
+46. AUTOMATIC_ACTIVATION_DEFERRED
+Yes; deferred to Batch 5 together with prompt contract activation.
+
+47. GATE_SCHEMA_VERSION_DECISION
+RUN_INTEGRITY_GATE_SCHEMA_VERSION bumped 1.0.0 -> 1.1.0. Inspection found no test or doc asserting the gate schema constant (the "1.0.0" in tests/runIntegrityGate.test.ts is raw my-dev-kit evidence), the change is purely additive,
+and judge integrity keeps its own schema constant.
+
+48. OUT_OF_SCOPE_CONFIRMATION
+No prompt/RSP authoring requirement, no automatic activation, no CLI flag, no user-facing semantic section in status/check/export, no artifact-checker change, no my-dev-kit change, no version bump,
+no edits to README/CHANGELOG/CURRENT_STATE/ROADMAP, judgeIntegrity.ts untouched.
+
+49. COMMIT
+feat: integrate semantic continuity with run integrity (SHA in final response)
+
+50. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (see final response)
+
+51. NEXT_ACTION
+READY_FOR_V1_5_BATCH_5_PROMPT_AND_COMMAND_SURFACE_ACTIVATION

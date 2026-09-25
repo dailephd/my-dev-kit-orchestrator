@@ -1,0 +1,196 @@
+v1.5.0 BATCH 5 - PROMPT AND COMMAND SURFACE ACTIVATION
+
+1. FINAL_STATUS
+PASS_V1_5_BATCH_5_PROMPT_AND_COMMAND_SURFACE_ACTIVATION
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+6369e4e9382b4bfce164a64723824f974b655e37 (verified clean tree before edits)
+
+5. PACKAGE_VERSION
+1.4.1 before and after (unchanged)
+
+6. RETRIEVAL_LOG
+Tool: @dailephd/my-dev-kit@1.12.4. Evidence under .my-dev-kit-context/v1.5.0/batch-5/ (uncommitted).
+- index: --src src --language typescript --call-graph -> 138 files, 1322 symbols.
+- search (all six required queries; results in search-log.txt): start/createRun/semanticContinuityVersion; generateStagePrompt test strategy implementation verification; context refresh testResponsibilityRefs responsibility mappings; status check export run integrity; judge NEED_CONTEXT correction router strategy; mode specific test strategy correction.
+- lookup: createRun, generateStagePrompt, evaluateRunIntegrityGate. slice: generateStagePrompt (depth 1). source: createRun (bounded).
+- Search recall was weak for symbol-level queries (results dominated by test files and generic tokens), so retrieval continued with exact owner nodes.
+- Full-file fallback: src/promptGenerator.ts, src/runIntegrityGate.ts, src/judgeIntegrity.ts, src/correctionRouter.ts, src/commands/{start,prompt,status,check,export}.ts, src/run.ts, src/workflows.ts, src/instructions/{semanticResponsibility,runSemanticContinuity,testResponsibilityCriticality,stageRepositoryEvidenceRequirements}.ts, and the head of semanticContinuity.ts were read directly because the edits needed exact surrounding text.
+
+7. BATCH_0_4_CONTRACTS_PRESERVED
+RSP-NNN identity, the Batch 0-3 parsers/bridges/evaluator, contract version 1.0.0, gate schema 1.1.0, and RunIntegrityGate as sole enforcement owner are untouched. One bounded repair was made (see 13): parseDeclaredTraceIds no longer skips a declaration line merely because its text contains "->". No Batch 0-4 evaluator, bridge, or gate code changed. JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY is unchanged.
+
+8. AUTOMATIC_ACTIVATION_POLICY
+src/commands/start.ts supplies SEMANTIC_CONTINUITY_CONTRACT_VERSION to createRun() when shouldActivateSemanticContinuity(mode, proofOnly) is true (capable mode and not proof-only). createRun() itself still persists a version only when supplied, so absent-version legacy runs remain creatable. `start` prints "Semantic continuity:\n  active (1.0.0)" only for activated runs. No flag, option, or mode was added.
+
+9. DIRECT_IMPLEMENTATION_BOUNDARY
+Preserved. DIRECT_IMPLEMENTATION and FULL_STAGE_CONTEXT are planner policies, not modes or flags; nothing was added to VALID_MODES. The staged `start` workflow is the full-stage-context surface; a direct implementation that bypasses it stays outside Semantic Continuity. Documented in COMMANDS/WORKFLOWS/CONTRACTS.
+
+10. ACTIVATED_MODES
+feature, repair, test, refactor, harden, extraction. The set is derived from TEST_STRATEGY_SOURCE_REQUIREMENTS (findTestStrategySourceRequirement), not a second registry.
+
+11. EXCLUDED_RUN_TYPES
+greenfield, proof-only, and legacy absent-version runs (including programmatic createRun() callers that omit the version).
+
+12. PROMPT_CONTRACT_OWNER
+src/instructions/semanticContinuityPrompt.ts (new). Predicate: version === "1.0.0" AND capable mode AND proofOnly !== true. Stage roles (upstream, strategy, implementation, test-implementation, verification, judge) derive from workflow stage order plus the strategy registry. src/promptGenerator.ts remains the integration owner; the guidance is appended to each stage's packet-backed instruction text, so no static instruction text changed and no per-prompt-function literal was duplicated. Companion: src/semanticContinuitySurface.ts (pure gate projection shared by status/check/export/judge prompt).
+
+13. UPSTREAM_TRACE_AUTHORING
+Every stage before the mode-owned strategy stage (all six modes) teaches REQ/CTX/BEH/INV/TRN/PSE meanings, the canonical "<ID>: <text>" syntax with the three spec examples, "use the prefixes that match the content", and the ID-stability discipline (preserve, do not renumber, do not reuse, add unused, do not fabricate links). It states this is authored discipline, not runtime-provable.
+BOUNDED REPAIR (contract conflict, resolved in-batch, not a blocker): the spec's canonical example "TRN-001: invalid-input -> validation-error" was NOT recognized by parseDeclaredTraceIds because that function skipped every line containing "->". An agent following the prompt would have produced an undeclared TRN and any RSP tracing to it would have been blocked (UPSTREAM_TRACE_MISSING). Fix in src/traceChecker.ts: the declaration regex already requires "ID:" at line start, so real link lines ("REQ-001 -> BEH-999") never match it; the blanket "->" skip was removed. No existing src/tests/docs line relied on the skip. Regression tests assert the prompt's taught declarations are all recognized, that a link line declares nothing, and that a declaration containing "->" does.
+
+14. STRATEGY_RSP_AUTHORING
+The four mode-owned strategy stage names (test-strategy, regression-test-strategy, compatibility-test-strategy, resilience-test-strategy) require canonical RSP blocks with all fields, at least one responsibility, traces only to actually declared upstream IDs (the mode's upstream artifact files are listed), stop-and-report when upstream declarations are absent, and no TST-for-RSP substitution.
+
+15. CRITICALITY_GUIDANCE
+critical/noncritical definitions with the enforcement consequence, and the exact sentence "Do not mark a required responsibility noncritical merely to avoid a blocking gate."
+
+16. ID_STABILITY_GUIDANCE
+Preserve RSP IDs for preserved meaning, do not renumber unchanged, add with unused IDs, remove rather than repurpose. Semantic correction prompts add: keep unaffected RSP IDs and blocks; do not regenerate or renumber the whole strategy. No persistent ID history is claimed.
+
+17. CONTEXT_REQUEST_RSP_PROPAGATION
+renderContextRequestRspGuidance(): request keeps its existing role-specific evidence request and adds "testResponsibilityRefs": [...] and merges "responsibility-mappings" into requestedEvidenceKinds without replacing existing kinds. Refresh-only prompts (renderContextRefreshOnlyPrompt and renderCorrectionContextRefreshPrompt, extended in place; no new workflow) list "Canonical semantic responsibility IDs for this run:" with the exact IDs from a cleanly parsing strategy artifact and "Use exactly these IDs in my-dev-kit's testResponsibilityRefs. Do not substitute TST IDs or invent a separate responsibility namespace." When the strategy cannot provide a valid list, no IDs are invented (placeholder only) and the run is routed back to strategy repair by the gate. The orchestrator still never executes my-dev-kit.
+
+18. IMPLEMENTATION_PROMPT_CONTRACT
+For the five modes with a native implementation stage: "implementation responsibility ID / production file / production symbol" blocks inside the existing ImplementationReport for every strategy RSP; at least one file or symbol per block; RSP->production identity is an authored declaration corroborated (not proven causal) by my-dev-kit; a declared file may be an existing owner and need not be changed. Extraction scopes identities to the TARGET repository.
+
+19. POST_IMPLEMENTATION_CONTEXT_REFRESH
+Mandatory steps in the implementation prompt: refresh index post-change, create/update the implementation-role request with RSP IDs and responsibility-mappings, provide changed files/symbols, produce capsule and audit, update the existing implementation context packet and retrieval report with the current capsule/audit and final index identity. No new artifact. Stop condition: not semantically complete until mappings exist and evidence is refreshed; no verification-success claim.
+
+20. TEST_IMPLEMENTATION_PROMPT_CONTRACT
+All six modes: "test implementation responsibility ID / test file" blocks per RSP, exact project-relative files, file-level only. No test-symbol contract or wording exists. Test mode states no production implementation blocks are required; extraction scopes files to the target repository.
+
+21. POST_TEST_CONTEXT_REFRESH
+Same six-step refresh for the test-implementation role, preserving existing role-specific test evidence (closest tests, test-infrastructure), with the post-test index and the existing test context packet/report. States that corroboration does not prove assertions are correct or executed.
+
+22. VERIFICATION_PROMPT_CONTRACT
+Per-RSP "verification responsibility ID / verification status / verification evidence: command / working directory / exit code"; statuses exactly pass | fail | skipped | blocked (taken from VERIFICATION_STATUSES); pass/fail need command-result evidence; skipped/blocked need reason:; do not infer or invent results; record the actual command, directory, and exit code; one real command may support several RSPs; evidence is agent-reported and not executed by the orchestrator.
+
+23. JUDGE_PROMPT_INTEGRATION
+The live judge prompt embeds the canonical gate summary (contract version, classification, continuity state, run integrity ready, expected verdict, blocking/warning RSP IDs, primary code/reason, canonical correction stage) only for fields present, plus the policy (RunIntegrityGate is canonical; do not re-derive; do not override NEED_CONTEXT with PASS; use the exact canonical stage or invent none; noncritical warnings alone do not require non-PASS; ordinary judgment still applies). For activated runs the ready-state "Judge freely on the complete evidence" sentence is replaced by a coherent sentence; legacy prompts keep the original wording. No judge-specific semantic evaluator exists.
+
+24. SEMANTIC_BLOCKED_PROMPT_BEHAVIOR
+generateLiveStagePrompt(meta, stage, gate) (used by `prompt`, explicit and auto-selected) renders, for a stage the gate blocks on Semantic Continuity: Current blocked stage / Semantic blocker / Reason / Affected responsibility / Broken leg / Recommended correction stage, then bounded repair guidance for that earlier stage only (inputs, output file, artifact kind, stage packet, activated contract, RSP stability), and never the blocked stage's own work or output artifact. With a null correction stage it states external/run-contract resolution is required and guesses nothing (unsupported version case). A refresh-required repository context for the correction target still wins (refresh-only prompt with the semantic header). final-report keeps its eligibility-blocked prompt. The generic lifecycle "document the blocker in this artifact" block is suppressed in this case. The judge stage blocked by a verification gap also shows the canonical verdict summary and "Do not return PASS". Saved prompt files written by writeStagePrompts() remain templates (authoring contract, no live gate state).
+
+25. MODE_SPECIFIC_CORRECTION_ROUTING
+isCorrectableStage(stage, mode) is mode-aware: regression-test-strategy (repair), compatibility-test-strategy (refactor), resilience-test-strategy (harden), ownership derived from TEST_STRATEGY_SOURCE_REQUIREMENTS. Negative controls hold (feature/resilience, test/regression, repair/compatibility, and no-mode all rejected). test-strategy and target-architecture unchanged; route-table defaults unchanged. Correction prompt tables (inputs, output basename, artifact kind) extended exactly as specified and include the activated RSP contract. Authored PASS against a strategy blocker routes to the exact mode-owned stage for repair/refactor/harden.
+
+26. NEED_CONTEXT_CANONICAL_ROUTING
+judgeIntegrity: when authored NEED_CONTEXT and expected NEED_CONTEXT, the gate recommendation is authoritative including null (no architecture-context fallback: acceptedCorrectionStage null, correctionRequired false, route null). A canonical semantic stage (implementation) beats a conflicting authored "architecture-context". When the gate expects PASS, ordinary authored/table routing is unchanged. Wording now says "canonical run integrity" in both warnings.
+
+27. STATUS_SURFACE
+One "Semantic continuity:" section from the already-computed gate: contract version, classification, continuity state, run integrity ready, critical/noncritical total / unsatisfied, blocking and warning RSP IDs, blocking and warning codes, and recommended correction stage (blocked only). Absent for legacy, greenfield, proof-only.
+
+28. CHECK_SURFACE
+"=== Semantic continuity ===" in check (default), check --artifacts, and check --all (not in --trace/--artifact/--prompts; no --semantic flag). blocked -> [fail] exit 1 with primary code, reason, affected RSP, broken leg, correction stage; warning -> [warn] exit 0, exit 1 with --strict; ready/pending -> [pass]. check --all summary adds a Semantic continuity line. Uses the gate already computed for the judge check (no second evaluation, no parsing; artifactChecker untouched).
+
+29. EXPORT_SURFACE
+Run identity gains "Semantic continuity: active (1.0.0)" for activated runs and a compact "=== Semantic continuity ===" section (contractVersion, semanticClassification, continuityState, runIntegrityReady, critical/noncritical counts and unsatisfied IDs, blockingCodes, warningCodes, expectedJudgeVerdict, recommendedCorrectionStage, plus IDs and primary blocker when present). No raw capsule/audit/parser output. Legacy exports unchanged.
+
+30. CROSS_SURFACE_AGREEMENT
+All four surfaces call summarizeSemanticContinuityGate() on the gate they already hold. A test compares status, check, export, and the judge prompt on a blocked and a warning fixture (classification, blocking/warning RSP IDs, primary blocker, correction stage, expected verdict, run integrity readiness): all agree.
+
+31. LEGACY_PROMPT_COMPATIBILITY
+An absent-version run receives no semantic text in any stage prompt or saved prompt file, no RSP text, and keeps "Judge freely" wording; live and status behavior unchanged. Existing frozen legacy/prompt-hash/compatibility suites pass unmodified (no legacy assertion weakened or edited).
+
+32. GREENFIELD_COMPATIBILITY
+Greenfield never activates via start and never receives the contract even when a version is present; v1.4.1 internal-source-path correction and greenfield suites pass unchanged.
+
+33. PROOF_ONLY_COMPATIBILITY
+Proof-only never activates via start and receives no semantic contract or RSP/responsibility requirements even with a version present; "Proof result: PASS" preamble preserved.
+
+34. TEST_MODE_COMPATIBILITY
+Test mode is activated (strategy RSPs, test-implementation mappings, verification mappings) and receives no production implementation contract (asserted across every stage prompt).
+
+35. EXTRACTION_COMPATIBILITY
+Activated; production and test identities are stated to be TARGET-repository identities and a source file is never target implementation evidence; source read-only default preserved.
+
+36. PRODUCTION_FILES_CHANGED
+NEW: src/instructions/semanticContinuityPrompt.ts, src/semanticContinuitySurface.ts
+MODIFIED: src/commands/start.ts, src/commands/prompt.ts, src/commands/status.ts, src/commands/check.ts, src/commands/export.ts, src/promptGenerator.ts, src/correctionRouter.ts, src/judgeIntegrity.ts, src/traceChecker.ts (bounded repair), src/run.ts (comment only)
+
+37. TEST_FILES_CHANGED
+NEW: tests/semanticContinuityPromptActivation.test.ts, tests/semanticContinuityCommandSurface.test.ts
+EXTENDED: tests/semanticContinuityRunIntegrity.test.ts, src/__tests__/correction-router.test.ts
+
+38. DOCUMENTATION_FILES_CHANGED
+docs/COMMANDS.md, docs/WORKFLOWS.md (subsection of the existing Instruction packets chapter, to satisfy the preservation manifest), docs/CONTRACTS.md (new Batch 5 section; two now-stale Batch 4 statements corrected), docs/DEVELOPMENT.md. README.md, CHANGELOG.md, docs/CURRENT_STATE.md, docs/ROADMAP.md, docs/ARTIFACTS.md not changed.
+
+39. ACTIVATION_TEST_RESULTS
+Real `start` CLI path: feature/repair/test/refactor/harden/extraction persist "1.0.0" and print the active line; greenfield and proof-only absent with no line; bare createRun() absent; strategy-registry derivation asserted; no activation/status-JSON flag. PASS.
+
+40. PROMPT_ACTIVATION_TEST_RESULTS
+tests/semanticContinuityPromptActivation.test.ts: 80 tests PASS (trace, strategy, implementation, test-implementation, verification, judge template, legacy/greenfield/proof-only isolation, saved-template behavior, parser round-trip).
+
+41. CONTEXT_REFRESH_TEST_RESULTS
+Refresh-only implementation and test-implementation prompts list exactly RSP-001/RSP-002 with testResponsibilityRefs and responsibility-mappings; no invented IDs when strategy is invalid; legacy carries none; judge-correction refresh also lists IDs. PASS.
+
+42. SEMANTIC_BLOCKED_PROMPT_TEST_RESULTS
+Real `prompt` command: test-implementation blocked by implementation gap, verification blocked by test gap, judge blocked by verification gap, explicit-stage form, repair strategy target, context-precedence, unsupported version (no guessed stage, no Required output artifact / Output file), ready and legacy controls. PASS.
+
+43. CORRECTION_ROUTER_TEST_RESULTS
+src/__tests__/correction-router.test.ts 26 PASS (accepted/rejected matrix, preserved test-strategy/target-architecture). tests/semanticContinuityRunIntegrity.test.ts 47 PASS including PASS-contradiction routing for repair/refactor/harden, null-route NEED_CONTEXT, canonical implementation wins, mode-owned strategy canonical route, PASS-expected preservation, wording. Correction prompt inputs/output/kind for the three new stages asserted in the prompt suite.
+
+44. JUDGE_TEST_RESULTS
+Judge prompt blocked/warning/ready/legacy via real CLI; judgeIntegrity and judgeIntegrityCliIntegration suites pass unmodified. PASS.
+
+45. STATUS_TEST_RESULTS
+pending, ready, warning, blocked, unsupported, legacy, greenfield. PASS.
+
+46. CHECK_TEST_RESULTS
+ready/pending -> exit 0, warning -> exit 0, warning+--strict -> exit 1, blocked -> exit 1, for default, --artifacts, --all; legacy has no section; --trace has none; no --semantic flag. NOTE: tests/semanticContinuityCommandSurface.test.ts stubs only the ordinary content checkers (artifact/prompt/contract/trace) file-wide, because minimal fixtures always fail them and would mask semantic exit codes; gate, judge integrity, and context readiness are real. PASS.
+
+47. EXPORT_TEST_RESULTS
+Blocked/warning/ready sections, no raw capsule/parser output, legacy unchanged. PASS.
+
+48. LEGACY_REGRESSION_RESULTS
+Explicit historical set (context readiness, frozen RunIntegrityGate replay, judge, lifecycle, correction, prompt compatibility, legacy-run, leakage, proof-only, greenfield, prompt-generation): 54 suites passed / 1 skipped; 1237 tests passed, 9 skipped (skips pre-existing).
+
+49. BATCH_0_4_REGRESSION_RESULTS
+The nine listed Batch 0-4 suites: 9 suites, 404 tests PASS.
+
+50. FULL_TEST_RESULTS
+npm test -- --runInBand: 141 suites passed, 3 skipped (pre-existing); 3423 tests passed, 11 skipped, 0 failed. Before this batch: 3287 passed.
+
+51. VERIFY_RESULT
+npm run verify: exit 0 (typecheck, build, smoke:context, eslint, markdownlint, docs:check, test:security, smoke:cli normal/lifecycle/extraction/check/trace/correction/export/greenfield). docs:check first failed on a new top-level WORKFLOWS heading (preservation manifest); fixed by making it a subsection.
+
+52. SMOKE_CONTEXT_RESULT
+CONTEXT_CLI_SMOKE_PASS (inside verify; fixtures unchanged).
+
+53. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (448 files, package 1.4.1); git diff --check clean.
+
+54. PUBLIC_COMMAND_COUNT
+8 (init, start, status, prompt, list, mark, check, export).
+
+55. WORKFLOW_MODE_COUNT
+7.
+
+56. NATIVE_STAGE_COUNT
+79 (unchanged); 13 greenfield stages, 4 profiles, 11 context-sensitive stages, no new dependency.
+
+57. PROMPT_SURFACE_ACTIVATION_CONFIRMED
+YES. Built-CLI disposable-run smoke (smoke-cli.txt): 8 run types match policy exactly; activated run showed upstream trace guidance, strategy RSP block, and a context-blocked implementation refresh listing exact RSP-001/RSP-002 with responsibility-mappings and no normal output artifact; a legacy programmatic createRun() run had 0 stages with semantic text and no status section. In that smoke the judge stage was semantically blocked (fixture context templates unpopulated) and correctly rendered the semantic header with the context-refresh precedence; the ready/warning/blocked judge continuity review and the implementation/test mapping blocks (which require ready context) are proven by the Jest suites through the real prompt command. Disposable runs were deleted; none tracked.
+
+58. NO_NEW_PERSISTED_SEMANTIC_STATE
+Confirmed. No semantic-continuity.json, semantic-check-results.json, or rsp-state.json; a test walks the workspace after all surface commands and finds no semantic/rsp-state file. Only the existing run.json field is written.
+
+59. OUT_OF_SCOPE_CONFIRMATION
+Not implemented: Batch 6 adversarial matrix, telemetry, workflow economics, ORC-EVIDENCE, Lab, Observer expansion, greenfield-to-feature handoff, mobile profiles, status JSON, automatic my-dev-kit or LLM execution, semantic scoring/fuzzy matching, version bump, release. No new command, flag, mode, stage, artifact family, or dependency. my-dev-kit was not modified.
+
+60. COMMIT
+feat: activate semantic continuity workflow contract
+(SHA recorded in the final response; a report cannot contain its own commit id.)
+
+61. PUSH_RESULT
+Recorded in the final response (origin/feature/v1.5.0-semantic-continuity; no pull request opened).
+
+62. NEXT_ACTION
+READY_FOR_V1_5_BATCH_6_COMPATIBILITY_AND_ADVERSARIAL_MATRIX

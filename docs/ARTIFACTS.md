@@ -25,7 +25,7 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
   reports/
 ```
 
-New ordinary runs persist `proofOnly: false`. Explicit proof-only runs also
+New ordinary runs persist `proofOnly: false`. New staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction` also persist `semanticContinuityVersion: "1.0.0"` in `run.json`; runs without the field are legacy, and greenfield and proof-only runs do not carry it. Explicit proof-only runs also
 persist their `verificationResponsibility`; the declared file is evidence owned
 by that responsibility, not a new Orchestrator artifact family. Observer
 evidence consumption adds no run persistence.
@@ -195,7 +195,7 @@ Recommended next stage: implementation
 **Unknown verdicts** fail the parser - they are not guessed.
 **Missing verdict** field returns `missing_verdict` status without error.
 
-The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage, **except** for an accepted `NEED_CONTEXT` (`v1.2.3`): the canonical run-integrity recommendation always wins there, overriding both the table default and a conflicting authored value.
+The `Recommended next stage:` field overrides the routing table default when it names a valid correctable stage, **except** for an accepted `NEED_CONTEXT` (`v1.2.3`): the canonical run-integrity recommendation always wins there, overriding both the table default and a conflicting authored value, and a canonical result of no stage is never replaced by the table default. The mode-owned strategy stages `regression-test-strategy`, `compatibility-test-strategy`, and `resilience-test-strategy` are valid correction targets only in `repair`, `refactor`, and `harden` respectively.
 
 Correction routing is computed fresh on each `status` or `prompt` call. No additional persistence file is required.
 
@@ -710,6 +710,21 @@ run-specific paths, repository context, context-readiness state, or timestamps.
 They are not native artifacts, do not appear in `run.json` or
 `artifact-state.json`, are not mark targets, and do not participate in
 lifecycle progression.
+
+### Semantic Continuity carriers and persistence
+
+Semantic Continuity adds no native artifact and no run file. It reads existing carriers:
+
+| Content | Carrier |
+| --- | --- |
+| Upstream trace declarations (`REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`) | artifacts of the stages before the strategy stage |
+| `RSP-NNN` responsibility blocks | the mode-owned strategy artifact (`test-strategy-packet.txt`, `regression-test-strategy.txt`, `compatibility-test-strategy.txt`, or `resilience-test-strategy.txt`) |
+| `implementation responsibility ID:` blocks | `artifacts/implementation-report.txt` |
+| `test implementation responsibility ID:` blocks | `artifacts/test-implementation-report.txt` |
+| `verification responsibility ID:` blocks | `artifacts/verification-report.txt` |
+| my-dev-kit responsibility mappings | the raw capsule and audit referenced by the existing implementation and test context packet/report pairs |
+
+The continuity result is derived from these files on every command, so there is no `semantic-continuity.json`, `rsp-state.json`, or similar cache. Exact block syntax is in [CONTRACTS.md](CONTRACTS.md).
 
 ### Fixed supplemental context files
 

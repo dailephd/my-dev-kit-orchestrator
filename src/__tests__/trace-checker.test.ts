@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import {
   parseDeclaredTraceIds,
+  suggestCorrectionStageFromTraceIssue,
   checkArtifactTrace,
   checkDesignMapTrace,
   readTraceCheckResults,
@@ -405,3 +406,25 @@ describe('trace check results persistence', () => {
   });
 });
 
+
+describe('RSP trace family (v1.5 Batch 0)', () => {
+  it('recognizes RSP-NNN declarations consistently', () => {
+    const result = parseDeclaredTraceIds('RSP-001: reject malformed configuration\n- RSP-0002: another');
+    expect(result.map((r) => r.id)).toEqual(['RSP-001', 'RSP-0002']);
+  });
+
+  it('does not treat malformed RSP-like labels as declarations', () => {
+    expect(parseDeclaredTraceIds('RSP-01: bad\nRSP001: bad')).toEqual([]);
+  });
+
+  it('routes RSP link-target problems to the generic test-strategy owner', () => {
+    expect(
+      suggestCorrectionStageFromTraceIssue({
+        code: 'TRACE_MISSING_LINK_TARGET',
+        severity: 'error',
+        message: 'x',
+        context: 'RSP-001',
+      } as never),
+    ).toBe('test-strategy');
+  });
+});

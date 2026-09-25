@@ -20,6 +20,9 @@ export interface RunMetadata {
   targetRepoRoot?: string;
   proofOnly?: boolean;
   verificationResponsibility?: string;
+  // Explicit, versioned Semantic Continuity activation (v1.5.0 Batch 4).
+  // Absent means legacy behavior; never inferred from artifact contents.
+  semanticContinuityVersion?: string;
 }
 
 function sanitizeSlug(input: string): string {
@@ -63,6 +66,11 @@ export function createRun(options: {
   targetRepoRoot?: string;
   proofOnly?: boolean;
   verificationResponsibility?: string;
+  // Persisted only when explicitly supplied. createRun() never activates
+  // semantic continuity on its own: the `start` command supplies it for
+  // semantic-capable staged runs, and programmatic callers that omit it create
+  // legacy (absent-version) runs.
+  semanticContinuityVersion?: string;
 }): RunMetadata {
   const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
   const runId = makeRunId(request, name);
@@ -98,6 +106,7 @@ export function createRun(options: {
     ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
     proofOnly: options.proofOnly === true,
     ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
+    ...(options.semanticContinuityVersion !== undefined ? { semanticContinuityVersion: options.semanticContinuityVersion } : {}),
   };
 
   fs.writeFileSync(

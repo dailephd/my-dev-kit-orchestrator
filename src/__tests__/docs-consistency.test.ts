@@ -33,6 +33,9 @@ function makeFixture(): string {
     'src/instructions/supplementalContextTypes.ts',
     'src/instructions/contextReadiness.ts',
     'src/instructions/stageRepositoryEvidenceRequirements.ts',
+    'src/instructions/runSemanticContinuity.ts',
+    'src/instructions/testResponsibilityCriticality.ts',
+    'src/runIntegrityGate.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;
@@ -121,7 +124,7 @@ describe('docs consistency check script', () => {
 
   it('fails when README drops a common canonical document link', () => {
     const root = makeFixture();
-    mutate(root, 'README.md', (content) => content.replace('](docs/CONTRACTS.md)', '](docs/ARCHITECTURE.md)'));
+    mutate(root, 'README.md', (content) => content.replace(/\]\(docs\/CONTRACTS\.md\)/g, '](docs/ARCHITECTURE.md)'));
     const result = run(root);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('[README_CANONICAL_LINK_MISSING]');

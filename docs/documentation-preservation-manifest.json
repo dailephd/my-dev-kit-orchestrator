@@ -15,12 +15,13 @@
       "design-first", "eight-command CLI surface", "seven workflow modes", "79 native stages",
       "current release", "v1.2.2", "refresh-only prompt", "primary blocker", "corrective action",
       "evidence target", "does not execute `my-dev-kit`", "status", "check", "export",
-      "https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md"
+      "https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md",
+      "Semantic Continuity", "ships"
     ],
     "docs/PROJECT_OVERVIEW.md": ["workflow coordinator", "my-dev-kit", "my-dev-kit-lab", "Non-goals"],
-    "docs/CURRENT_STATE.md": ["1.4.1", "eight commands", "four starter profiles", "Current release", "v1.4.1", "Current limitations"],
-    "docs/CONTRACTS.md": ["RunIntegrityGate", "judge integrity", "final-report eligibility", "ARTIFACTS.md"],
-    "docs/COMMANDS.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export"],
+    "docs/CURRENT_STATE.md": ["1.5.0", "eight commands", "four starter profiles", "Current release", "v1.5.0", "Current limitations", "Semantic Continuity", "v1.6.0"],
+    "docs/CONTRACTS.md": ["RunIntegrityGate", "judge integrity", "final-report eligibility", "ARTIFACTS.md", "Semantic Continuity", "RSP-NNN", "semanticContinuityVersion"],
+    "docs/COMMANDS.md": ["init", "start", "prompt", "status", "list", "mark", "check", "export", "Semantic Continuity", "semanticContinuityVersion"],
     "docs/USAGE.md": [
       "init", "start", "prompt", "status", "list", "mark", "check", "export", "<MY_DEV_KIT_CLI>",
       "no JSON option", "refresh-only", "primary blocker", "corrective action", "evidence target",
@@ -28,7 +29,7 @@
     ],
     "docs/WORKFLOWS.md": [
       "feature", "repair", "test", "refactor", "harden", "extraction", "greenfield",
-      "79 native stages", "Seventy-seven stages", "11-stage matrix", "Recommended next stage",
+      "79 native stages", "Seventy-seven stages", "11-stage matrix", "Recommended next stage", "Semantic Continuity",
       "primary blocker", "corrective action", "evidence target", "Architecture Assimilation",
       "ARCHITECTURE_ASSIMILATION_PASS",
       "https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md"
@@ -45,19 +46,19 @@
     "docs/ARCHITECTURE.md": [
       "CLI command layer", "Workflow mode layer", "WorkflowInstructionPacket", "TaskState", "StageContextBundle",
       "ContextReadiness", "never persisted", "does not automatically retrieve", "primaryCode", "correctiveAction",
-      "evidenceTarget", "ARCHITECTURE_ASSIMILATION_PASS"
+      "evidenceTarget", "ARCHITECTURE_ASSIMILATION_PASS", "Semantic Continuity", "RSP-NNN"
     ],
     "docs/DEVELOPMENT.md": [
       "docs:check", "lint:docs", "test:security", "Node.js 24", "Node.js 26", "src/__tests__/",
-      "tests/greenfield/", "released `@dailephd/my-dev-kit@1.10.4`", "historical readiness matrix"
+      "tests/greenfield/", "released `@dailephd/my-dev-kit@1.10.4`", "historical readiness matrix", "semanticContinuityAdversarialMatrix"
     ],
     "docs/DOCUMENTATION_PRESERVATION_POLICY.md": ["Document classes and authority", "Protected structure", "Reconciliation and stop threshold"],
     "docs/RELEASE_CHECKLIST.md": [
-      "current published release is `v1.4.1`", "79 native stages", "eight CLI commands", "11 context-sensitive direct stages",
+      "current published release is `v1.5.0`", "79 native stages", "eight CLI commands", "11 context-sensitive direct stages",
       "<MY_DEV_KIT_CLI>", "Node.js 24", "Node.js 26", "primary blocker", "historical readiness matrix"
     ],
     "CHANGELOG.md": ["v1.2.2 - Context Readiness and Documentation Safeguards", "Release date: 2026-07-28", "v1.2.1", "Release date: 2026-07-21", "v1.2.0", "v1.1.0", "v1.0.0"],
-    "docs/ROADMAP.md": ["Published v1.2.2", "Published v1.2.1", "Published as `1.2.1`", "Ecosystem responsibility boundaries", "Non-goals", "Conceptual workflow model"]
+    "docs/ROADMAP.md": ["v1.5.0", "implemented", "Published v1.2.2", "Published v1.2.1", "Published as `1.2.1`", "Ecosystem responsibility boundaries", "Non-goals", "Conceptual workflow model"]
   },
   "roadmapVersions": ["v0.1.0", "v0.2.0", "v0.2.1", "v0.3.0", "v0.4.0", "v0.5.0", "v0.6.0", "v1.0.0", "v1.1.0", "v1.2.0", "v1.2.1", "v1.2.2", "v1.2.3", "v1.3.0", "v1.3.1", "v1.3.2", "v1.3.3", "v1.4.0", "v1.4.1", "v1.5.0", "v1.6.0"],
   "greenfieldStageOrder": ["idea-brief", "product-boundary", "stack-decision", "starter-profile", "bootstrap-bundle", "project-docs", "scaffold-plan", "scaffold-implementation", "first-vertical-slice", "verification", "initial-index", "judge", "final-report"],
@@ -67,10 +68,11 @@
   "roadmapCandidateAssignments": {"v1.3.0": ["android-xml", "python-cli", "typescript-cli", "nextjs-app"]},
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.4.1",
-    "latestPublishedVersion": "1.4.1",
+    "packageMetadataVersion": "1.5.0",
+    "latestPublishedVersion": "1.5.0",
+    "currentReleaseDate": "2026-09-25",
     "implementedUnpublishedVersions": [],
-    "plannedUnpublishedVersions": ["v1.5.0", "v1.6.0"],
+    "plannedUnpublishedVersions": ["v1.6.0"],
     "cliCommands": ["init", "start", "status", "prompt", "list", "mark", "check", "export"],
     "workflowModeCount": 7,
     "nativeStageCount": 79,
@@ -84,7 +86,8 @@
     "schemaVersions": {
       "catalogSchema": "1.0.0", "catalogVersion": "1.0.0", "workflowInstructionPacket": "1.0.0",
       "taskState": "1.0.0", "stageContextBundle": "1.0.0", "supplementalContextPacket": "1.0.0",
-      "supplementalContextRetrievalReport": "1.0.0", "contextReadiness": "1.0.0"
+      "supplementalContextRetrievalReport": "1.0.0", "contextReadiness": "1.0.0",
+      "runIntegrityGate": "1.1.0", "semanticContinuityContract": "1.0.0"
     },
     "fixedContextPaths": ["artifacts/implementation-context-packet.txt", "reports/implementation-context-retrieval-report.txt", "artifacts/test-context-packet.txt", "reports/test-context-retrieval-report.txt"],
     "manualRepositoryRetrieval": true,
@@ -93,14 +96,18 @@
     "stageContextBundlePersisted": false,
     "statusJsonSupported": false,
     "customOutputRunRediscoverySupported": false,
-    "currentProducerVersion": "1.10.4",
+    "currentProducerVersion": "1.12.4",
+    "readinessContractProducerVersion": "1.10.4",
+    "semanticContinuityActivatedModes": ["feature", "repair", "test", "refactor", "harden", "extraction"],
     "generalizedPacketRendererStageCount": 77,
     "specializedRendererStages": ["stage.greenfield.scaffold-plan", "stage.greenfield.scaffold-implementation"],
     "contextReadinessBlockerFields": ["contextKind", "primaryCode", "primaryReason", "correctiveAction", "evidenceTarget", "blockingIssueCodes", "supportingIssueCodes"]
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.4.1 with older releases historically scoped and later versions remaining planned",
+    "published v1.5.0 with older releases historically scoped, and v1.6.0 remaining planned",
+    "v1.5.0 has a finalized changelog section with the current release date",
+    "derived semantic continuity contract version, gate schema version, and activated-mode set",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -115,7 +122,7 @@
     "source-derived actionable context blocker fields",
     "no unsupported workflow, stage, or run identity claim"
   ],
-  "crossDocumentConsistency": ["version state", "CLI commands", "workflow modes and stage counts", "greenfield profiles", "schema versions", "fixed context paths and context-sensitive stage matrix", "manual retrieval and lifecycle boundaries", "readiness, judge, and correction behavior", "canonical actionable blocker fields", "Node and CI evidence"],
+  "crossDocumentConsistency": ["version state", "Semantic Continuity activation, contract, and gate schema versions", "CLI commands", "workflow modes and stage counts", "greenfield profiles", "schema versions", "fixed context paths and context-sensitive stage matrix", "manual retrieval and lifecycle boundaries", "readiness, judge, and correction behavior", "canonical actionable blocker fields", "Node and CI evidence"],
   "documentStructures": {
     "README.md": {
       "purpose": "Public overview, installation, current capabilities, navigation, and concise development status.",
@@ -126,7 +133,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^v[0-9]+\\.[0-9]+\\.[0-9]+.*\\(planned\\)", "^Migration strategy$", "^Candidate architecture$", "^Implementation batches$"],
       "forbiddenContentPatterns": ["Status:\\s*planned,\\s*not implemented", "candidate implementation batches", "conceptual and non-final", "subject to implementation-time", "planned fields", "planned scope"],
       "orderedHeadingGroups": [["What it helps you do", "Current release", "Run-integrity enforcement (v1.2.3)", "Quick start", "Command overview", "Tool boundaries", "Documentation"]],
-      "versionStatusPolicy": "v1.4.1 is the latest published release; older releases remain historical and later versions remain planned.",
+      "versionStatusPolicy": "v1.5.0 is the latest published release; older releases remain historical and v1.6.0 remains planned.",
       "sourceOfTruthOwners": ["package.json", "src/program.ts", "src/types.ts", "src/workflows.ts"],
       "duplicateFactPolicy": "Keep implementation detail in the relevant technical document and summarize it here.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/WORKFLOWS.md", "docs/ARTIFACTS.md", "docs/USAGE.md", "docs/ROADMAP.md", "CHANGELOG.md"],
@@ -141,7 +148,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Planned:", "^Migration plan$", "^Candidate architecture$", "^Implementation chronology$"],
       "forbiddenContentPatterns": ["Batch\\s+[1-9]", "implementation chronology", "candidate architecture", "migration plan"],
       "orderedHeadingGroups": [["v1.3.0 - Mobile Profile Expansion and Scaffold Verification", "v1.2.3 - Run-Integrity and Judge-Verdict Enforcement", "v1.2.2 - Context Readiness and Documentation Safeguards", "v1.2.1 - Workflow Instruction and Context Readiness", "v1.2.0 - Android Compose Greenfield Profile"]],
-      "versionStatusPolicy": "v1.4.1 is the current published release and its finalized section carries the release date.",
+      "versionStatusPolicy": "v1.5.0 is the current published release and its finalized section carries the release date; future changes use an Unreleased section.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Record release deltas, not implementation tracking.",
       "linkInsteadOfDuplicate": ["docs/ARCHITECTURE.md", "docs/ROADMAP.md"],
@@ -231,7 +238,7 @@
       "forbiddenTopLevelHeadingPatterns": ["^Implementation batches$", "^Batch [0-9]+"],
       "forbiddenContentPatterns": ["Batch\\s+[0-9]+", "Files modified:", "Tests passed:", "[0-9,]+ tests passed", "command transcript", "implementation prompt", "per-batch acceptance criteria"],
       "orderedHeadingGroups": [["Version summary", "Published v1.2.0", "Published v1.2.1", "Published v1.2.2", "Published v1.2.3", "Published v1.3.0", "Published v1.3.1", "Published v1.3.2", "Published v1.3.3", "Planned milestones", "Ecosystem responsibility boundaries", "Non-goals"]],
-      "versionStatusPolicy": "Keep v1.4.1 as the current published milestone while older releases remain historical and later versions remain high level.",
+      "versionStatusPolicy": "Keep v1.5.0 as the current published milestone while older releases remain historical and later versions remain high level.",
       "sourceOfTruthOwners": ["package.json", "tests/fixtures/v121-compatibility/compatibility-manifest.json"],
       "duplicateFactPolicy": "Keep only goals, scope, dependencies, exclusions, and high-level status.",
       "linkInsteadOfDuplicate": ["project-local planning records are not public links"],

@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
-import { generateStagePrompt } from '../promptGenerator';
+import { generateLiveStagePrompt } from '../promptGenerator';
 import {
   getNextStage,
   isRunComplete,
@@ -10,12 +10,23 @@ import {
   getNextStageWithRunIntegrity,
   isRunCompleteWithRunIntegrity,
   resolveCurrentArtifactStatesWithRunIntegrity,
+  resolveGateCurrentStage,
 } from '../stageDetector';
 import { readArtifactStateFile, ArtifactStateFile, ArtifactLifecycleState } from '../artifactLifecycle';
-import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateRunIntegrityGate, evaluateStageRunIntegrity, RunIntegrityGateResult } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 import { StageDefinition } from '../workflows';
 import { generateCorrectionPrompt } from '../promptGenerator';
+
+// A stage blocked by Semantic Continuity renders semantic correction guidance
+// (or an external-resolution notice), never the generic "document the blocker
+// in this artifact" lifecycle text, which would contradict it. A context-blocked
+// stage and the final-report stage keep their existing lifecycle text.
+function isSemanticCorrectionRendered(gate: RunIntegrityGateResult, stageName: string): boolean {
+  if (stageName === 'final-report') return false;
+  const decision = evaluateStageRunIntegrity(gate, stageName);
+  return decision.semanticBlocked && !decision.contextBlocked;
+}
 
 function buildLifecycleContextBlock(
   stage: StageDefinition,
@@ -100,8 +111,10 @@ export function makePromptCommand(): Command {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
-        currentStage: meta.currentStage,
+        currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
+        semanticContinuityVersion: meta.semanticContinuityVersion,
+        proofOnly: meta.proofOnly === true,
       });
       // Canonical judge-integrity / final-report eligibility (v1.2.3
       // Batch 3): computed once from the same gate, reused for the
@@ -140,10 +153,10 @@ export function makePromptCommand(): Command {
 
         const stageObj = meta.stages.find((s) => s.name === stage)!;
         const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, stageObj, gate, finalReportEligibility.eligible);
-        const lifecycleBlock = buildLifecycleContextBlock(stageObj, states, stateFile);
+        const lifecycleBlock = isSemanticCorrectionRendered(gate, stage) ? '' : buildLifecycleContextBlock(stageObj, states, stateFile);
 
         try {
-          const promptText = generateStagePrompt(meta, stage);
+          const promptText = generateLiveStagePrompt(meta, stage, gate);
           process.stdout.write(lifecycleBlock + promptText);
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);
@@ -202,10 +215,10 @@ export function makePromptCommand(): Command {
         }
 
         const states = resolveCurrentArtifactStatesWithRunIntegrity(meta, stateFile, nextStage, gate, finalReportEligibility.eligible);
-        const lifecycleBlock = buildLifecycleContextBlock(nextStage, states, stateFile);
+        const lifecycleBlock = isSemanticCorrectionRendered(gate, nextStage.name) ? '' : buildLifecycleContextBlock(nextStage, states, stateFile);
 
         try {
-          const promptText = generateStagePrompt(meta, nextStage.name);
+          const promptText = generateLiveStagePrompt(meta, nextStage.name, gate);
           process.stdout.write(lifecycleBlock + promptText);
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);

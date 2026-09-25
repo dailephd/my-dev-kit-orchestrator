@@ -4,6 +4,8 @@ import { VALID_MODES, isValidMode } from '../types';
 import { createRun } from '../run';
 import { initWorkspace } from '../workspace';
 import { validateVerificationResponsibility } from '../proofOnly';
+import { SEMANTIC_CONTINUITY_CONTRACT_VERSION } from '../instructions/runSemanticContinuity';
+import { shouldActivateSemanticContinuity } from '../instructions/semanticContinuityPrompt';
 
 export function makeStartCommand(): Command {
   const cmd = new Command('start');
@@ -68,6 +70,13 @@ export function makeStartCommand(): Command {
           targetRepoRoot,
           proofOnly: options.proofOnly,
           verificationResponsibility: options.verificationResponsibility,
+          // Staged CLI runs are the FULL_STAGE_CONTEXT surface: activation is
+          // automatic (no flag) for the semantic-capable modes, and never for
+          // greenfield or proof-only. Programmatic createRun() callers that
+          // omit the version stay legacy.
+          ...(shouldActivateSemanticContinuity(options.mode, options.proofOnly)
+            ? { semanticContinuityVersion: SEMANTIC_CONTINUITY_CONTRACT_VERSION }
+            : {}),
         });
 
         const lines = [`Created workflow run:\n${meta.runFolder}\n\nMode:\n${meta.mode}`];
@@ -78,6 +87,9 @@ export function makeStartCommand(): Command {
           lines.push(`\nTarget repository:\n${meta.targetRepoRoot}`);
         }
         if (meta.proofOnly) lines.push(`\nProof-only: active\nVerification responsibility:\n${meta.verificationResponsibility}`);
+        if (meta.semanticContinuityVersion !== undefined) {
+          lines.push(`\nSemantic continuity:\n  active (${meta.semanticContinuityVersion})`);
+        }
         lines.push(`\nNext:\n  my-dev-kit-orchestrator prompt`);
         console.log(lines.join(''));
       } catch (err) {

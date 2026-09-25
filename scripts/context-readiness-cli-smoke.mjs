@@ -91,6 +91,16 @@ function writeJson(target, value) {
   fs.writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
+function adaptCopiedRepositoryIdentity(capsulePath, auditPath, intendedRepositoryRoot) {
+  // The frozen producer identity is historical provenance. The compatibility
+  // smoke adapts only the repository location checked against the active run.
+  // Index identity and all other producer evidence remain unchanged.
+  mutateRawPair(capsulePath, auditPath, (capsule, audit) => {
+    capsule.index.projectRoot = intendedRepositoryRoot;
+    audit.index.projectRoot = intendedRepositoryRoot;
+  });
+}
+
 function createFixtureRun(root) {
   const meta = createRun({ request: 'context readiness CLI fixture smoke', mode: 'feature', projectRoot: root });
   const runJsonPath = path.join(meta.runFolder, 'run.json');
@@ -102,6 +112,7 @@ function createFixtureRun(root) {
   const auditPath = path.join(meta.runFolder, 'implementation-audit.json');
   fs.copyFileSync(path.join(fixtureRoot, 'context-capsule.json'), capsulePath);
   fs.copyFileSync(path.join(fixtureRoot, 'retrieval-audit-record.json'), auditPath);
+  adaptCopiedRepositoryIdentity(capsulePath, auditPath, repositoryRoot);
   populateSupplemental(meta.runFolder, 'implementation', capsulePath, auditPath);
 
   for (const stage of meta.stages) {

@@ -24,7 +24,7 @@ Readiness owners under `src/instructions/` select one deterministic primary bloc
 
 ## RunIntegrityGate, judge integrity, and final-report eligibility
 
-`src/runIntegrityGate.ts` is the canonical readiness-sensitive decision. `src/judgeIntegrity.ts` prevents an authored `PASS` from overriding a required `NEED_CONTEXT` state and evaluates final-report eligibility. A normal final report requires an accepted `PASS`, no active correction, and no remaining readiness blocker. Artifact presence or a manual lifecycle mark cannot substitute.
+`src/runIntegrityGate.ts` is the canonical run-integrity decision. It combines repository-context readiness with Semantic Continuity (see "Semantic Continuity activation and enforcement" below) and reports one expected judge verdict. `src/judgeIntegrity.ts` prevents an authored `PASS` from overriding a required `NEED_CONTEXT` state and evaluates final-report eligibility. A normal final report requires an accepted `PASS`, no active correction, and no remaining readiness or semantic blocker. Artifact presence or a manual lifecycle mark cannot substitute.
 
 ## Proof-only and bounded Observer-evidence contracts
 
@@ -47,6 +47,99 @@ The canonical 15-file greenfield document baseline is owned by `src/greenfield/b
 `src/greenfield/scaffold/effectiveTargetExpectations.ts` owns the common exact targets and `composeEffectiveGreenfieldTargetExpectations()`, whose stable order is common targets, selected-profile targets, then optional-capability targets. Scaffold planning, scaffold validation, generated-file evidence, filesystem corroboration, and canonical readiness consume that composition rather than rebuilding it.
 
 `python-cli` uses the existing profile registry, resolver, command, terminology, target, scaffold, evidence, and readiness contracts. It owns four profile targets (`pyproject.toml`, `src/main.py`, `tests/test_main.py`, `README.md`); the common instruction targets are not duplicated in the profile. Runnable entry-point selection is owned by required exact `entry-point` target metadata, and Python terminology is permitted through the profile's closed terminology declaration. Python is not compatible with the Next.js full-stack capability. The orchestrator lists setup and validation commands as evidence contracts but does not execute them.
+
+## Semantic responsibility contract
+
+The Orchestrator owns the canonical semantic responsibility identity `RSP-NNN`: the prefix `RSP`, a hyphen, and three or more decimal digits. `RSP-001` and `RSP-0001` are valid; `RSP-01`, `RSP001`, `RESP-001`, and `rsp-001` are not. `RSP` is part of the canonical trace vocabulary in `src/traceModel.ts`, and the trace parser and checker derive their patterns from it. Generic trace-correction suggestions for `RSP` use `test-strategy` only as the generic declaration owner.
+
+Responsibilities are declared in the existing mode-specific test-strategy artifacts, whose paths come from the `TEST_STRATEGY_SOURCE_REQUIREMENTS` registry. There is no separate artifact, stage, mode, or command. A canonical block requires `test responsibility ID` (an `RSP-*` value), `criticality` (`critical` or `noncritical`), `responsibility` (a non-blank statement), `traces to`, `setup`, `action or trigger`, `expected result`, and `test level`. `traces to` is a comma-separated list of unique canonical trace IDs whose prefixes are limited to `REQ`, `CTX`, `BEH`, `INV`, `TRN`, and `PSE`; `RSP`, `TST`, `IMP`, `VER`, and `RISK` are rejected as origins. The declared upstream IDs must exist in artifacts of stages before the strategy stage (see the evaluator below).
+
+A trace declaration is a line that begins with `ID: text`, and it remains a declaration when its text contains `->` (for example `TRN-001: invalid-input -> validation-error`). A link line such as `REQ-001 -> BEH-999` never begins with that label and declares nothing. Declaration matching is exact and case-sensitive.
+
+`src/instructions/semanticResponsibility.ts` validates this structure with stable `SEMANTIC_RESPONSIBILITY_*` issue codes. It consumes the existing block parser and is pure and deterministic. Legacy responsibility IDs (any previously accepted safe ID) remain valid for the legacy parser and context-readiness path; only the explicit canonical validator requires `RSP-*`. Malformed and duplicate canonical IDs fail deterministically, and the first declaration of a duplicated ID stays authoritative.
+
+## Implementation evidence bridge
+
+The carrier for semantic implementation mapping is the existing `ImplementationReport`; no artifact, stage, mode, or command is added. A canonical implementation responsibility block is:
+
+```text
+implementation responsibility ID: RSP-001
+production file: src/config/schema.ts
+production symbol: symbol:src/config/validate.ts#validateConfig
+```
+
+A block runs to the next `implementation responsibility ID:` line or end of input. The ID must be a canonical `RSP-NNN`. `production file:` and `production symbol:` may each repeat as list entries, and a block needs at least one of them. A file is a project-relative path: separators are normalized to `/`, case is preserved, and absolute, drive-letter, UNC, URL, NUL, `..`, empty, and `.` values are rejected. A symbol is `symbol:<project-relative-path>#<name>` with a non-empty path and name and exactly one `#`. Parsing is purely lexical and never reads the filesystem.
+
+`src/instructions/implementationResponsibilityEvidence.ts` also evaluates the bridge from the strategy-side responsibilities, the declarations, and the projected implementation-role my-dev-kit evidence. The evaluator selects the producer mapping with exactly the same responsibility ID and matches declared files and symbols exactly, with no basename, suffix, substring, or case-insensitive matching. A file is matched by a producer `productionSymbols` item whose `path` or `id` equals it, and a symbol by an item whose `id` or `symbolId` equals it. Per-responsibility states are `corroborated`, `partially-corroborated`, `uncorroborated`, `missing-declaration`, and `producer-mapping-unavailable`. Orphan declarations, missing declarations, missing or truncated producer mappings (kept distinct), and unmatched references are reported with stable `IMPLEMENTATION_RESPONSIBILITY_*` codes. The producer's whole `mappingStatus` is kept for context only.
+
+Corroboration means only that a declared repository identity appears exactly in the bounded my-dev-kit production evidence for that responsibility ID. In my-dev-kit 1.12.4 the production-symbol set is request-scoped and may be shared across mappings, so it neither proves that a file or symbol implements a responsibility nor proves that the file changed; a declared file may be an existing owner of the behavior. The relation between a responsibility and its implementation remains the coding agent's declaration. `productionSymbols` is projected additively: producers that omit it (older schema-major-1 evidence) remain valid and are treated as empty, while a malformed present value is rejected as malformed raw evidence. Production implementation evidence applies only to modes whose native workflow has an `implementation` stage; `test` and `greenfield` do not.
+
+## Test and verification evidence bridges
+
+### Test implementation contract
+
+The carrier is the existing `TestImplementationReport`. A block is:
+
+```text
+test implementation responsibility ID: RSP-001
+test file: tests/config/validate.spec.ts
+```
+
+A block runs to the next `test implementation responsibility ID:` line or end of input. Repeated `test file:` lines are list entries, and a block needs at least one. Test files use exactly the same project-relative lexical path policy as production files (`src/instructions/responsibilityEvidenceShared.ts`). A duplicate `RSP` block is reported and the first stays authoritative.
+
+`src/instructions/testImplementationResponsibilityEvidence.ts` corroborates declared files against the same-ID producer mapping's `proposedOrExistingTestFiles`, projected additively from my-dev-kit. The match is exact on item `path` or `id`; there is no basename, suffix, substring, or case-insensitive matching, and `itemKind` is not required. The contract is file-level only, because my-dev-kit 1.12.4 related-test discovery emits file-level `test-file` items and there is no test-symbol contract. States and issue semantics mirror the implementation bridge (`corroborated`, `partially-corroborated`, `uncorroborated`, `missing-declaration`, `producer-mapping-unavailable`, with `TEST_IMPLEMENTATION_RESPONSIBILITY_*` codes). Corroboration means only that the declared test-file identity appears exactly in bounded my-dev-kit test evidence for that mapping. It does not prove that the test implements the responsibility, that its assertions are correct, that it ran, or that it passed. Legacy producer evidence without `proposedOrExistingTestFiles` remains valid and is treated as empty; a malformed present value is rejected as malformed raw evidence. Applicability is derived from workflow definitions: every native mode with a `test-implementation` stage (feature, repair, test, refactor, harden, extraction) qualifies.
+
+### Verification contract
+
+The carrier is the existing `VerificationReport`. A block is:
+
+```text
+verification responsibility ID: RSP-001
+verification status: pass
+
+verification evidence:
+command: npm test -- tests/config/validate.spec.ts
+working directory: .
+exit code: 0
+```
+
+Status is exactly `pass`, `fail`, `skipped`, or `blocked`. `pass` and `fail` require at least one `verification evidence:` record, and `skipped` and `blocked` require a non-empty `reason:`. Each record needs a non-empty command, a non-empty working directory (kept verbatim, including absolute paths, since it records where the command ran), and a signed decimal integer exit code. Status is never inferred from exit codes; `pass` with only nonzero exit codes, or `fail` with only zero exit codes, is reported as the diagnostic `VERIFICATION_RESPONSIBILITY_STATUS_EVIDENCE_INCONSISTENT` and the declared status is kept. Declarations attribute to canonical strategy responsibilities by exact `RSP` identity (`passed`, `failed`, `skipped`, `blocked`, `missing-declaration`), with `VERIFICATION_RESPONSIBILITY_ORPHAN` and `VERIFICATION_RESPONSIBILITY_DECLARATION_MISSING` issues. Command text is never interpreted as coverage of any test file or production symbol.
+
+Command results are coding-agent-reported evidence. The parser validates structure and attribution only; it never executes a command and cannot prove one ran. Integration with external executable evidence is not part of the current contract.
+
+## Semantic Continuity evaluator
+
+`src/instructions/semanticContinuity.ts` is the one canonical Semantic Continuity evaluator. It composes the parsed strategy responsibilities, the implementation, test-implementation, and verification validations and bridges, and a caller-supplied set of declared upstream trace IDs. It is pure and derived: it reads no files, runs no commands, persists nothing, and uses no scoring, probability, or model inference.
+
+Continuity applies to the six native workflows that have a strategy owner in `TEST_STRATEGY_SOURCE_REQUIREMENTS` (feature, repair, test, refactor, harden, extraction). It is `not-applicable` to greenfield and proof-only runs.
+
+Evaluation is phase-aware. A leg is active only when the current stage is strictly after the stage that owns its output, so a stage's own output is never required while entering it. Strategy ownership comes from the registry, and the implementation, test-implementation, and verification owner stages come from the workflow definition. The `test` workflow has no production `implementation` stage, so its implementation leg is `not-applicable`. Inactive legs are `pending` and their structural issues and orphans are ignored, so a run corrected back to an earlier stage is not blocked by stale downstream mappings. An unknown current stage yields `SEMANTIC_CONTINUITY_STAGE_UNKNOWN` and state `invalid`.
+
+Each declared upstream trace of a responsibility must exist, by exact case-sensitive match, in the supplied declared-trace set; a missing trace invalidates that responsibility. Leg states are `pending`, `not-applicable`, `satisfied`, `partial`, `unsatisfied`, `missing`, `indeterminate`, `failed`, `skipped`, `blocked`, and `invalid`. Corroboration states map `corroborated`/`partially-corroborated`/`uncorroborated`/`missing-declaration`/`producer-mapping-unavailable` to `satisfied`/`partial`/`unsatisfied`/`missing`/`indeterminate`, and verification `passed`/`failed`/`skipped`/`blocked`/`missing-declaration` to `satisfied`/`failed`/`skipped`/`blocked`/`missing`. Malformed evidence on an active leg (a structural issue) makes that leg `invalid`, which is distinct from absent evidence (`missing`). Orphan declarations on an active leg make the overall state `invalid`. `VERIFICATION_RESPONSIBILITY_STATUS_EVIDENCE_INCONSISTENT` stays a diagnostic and never invalidates continuity.
+
+Per-responsibility state is phase-relative (complete through the currently active legs), with precedence `invalid` > `failed` > `blocked` > `incomplete` > `indeterminate` > `complete`. Overall states are `not-applicable`, `pending`, `invalid`, `failed`, `blocked`, `incomplete`, `indeterminate`, and `complete`; an active strategy with zero canonical responsibilities is `incomplete` and is never `complete`. The evaluator carries and summarizes criticality (critical/noncritical counts and complete/unsatisfied ID lists) but does not let it change a semantic state; enforcement policy belongs to `RunIntegrityGate`. Evaluator issues use `SEMANTIC_CONTINUITY_*` codes and keep the exact underlying bridge code in `sourceIssueCode`. Bridge-level codes for missing declarations, uncorroborated references, and missing or truncated producer mappings stay on the bridge results; the gate and command surfaces expose the resulting leg states.
+
+## Semantic Continuity activation and enforcement
+
+Semantic Continuity is enforced through the existing canonical `RunIntegrityGate` as one more input alongside repository-context readiness. There is no parallel semantic gate: `JudgeIntegrity`, artifact lifecycle, stage detection, `mark`, and final-report eligibility consume the same gate result and do not read continuity themselves. The gate schema version is `1.1.0` (the semantic fields are additive).
+
+Activation is explicit and versioned. Run metadata (`run.json`) may carry `semanticContinuityVersion`. The one supported value is `1.0.0` (`SEMANTIC_CONTINUITY_CONTRACT_VERSION`, owned by `src/instructions/runSemanticContinuity.ts`). The `start` command persists it automatically for new staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction`, derived from `TEST_STRATEGY_SOURCE_REQUIREMENTS` rather than a second mode list. Greenfield and `--proof-only` runs are not activated, and no CLI flag exists. `createRun()` persists a version only when the caller supplies one, so absent-version legacy runs remain creatable. When the field is absent the run is legacy: semantic continuity is `not-required` and every behavior is unchanged, even if artifacts happen to contain RSP-looking text; activation is never inferred from artifact contents. A present value other than `1.0.0` fails closed with the blocking code `SEMANTIC_CONTINUITY_CONTRACT_VERSION_UNSUPPORTED` and no guessed correction stage. `DIRECT_IMPLEMENTATION` and `FULL_STAGE_CONTEXT` are planner policies, not modes: the staged workflow is the full-stage-context surface, and a direct implementation that bypasses it stays outside Semantic Continuity.
+
+`src/instructions/runSemanticContinuity.ts` is the only I/O adapter. It reads the mode-owned strategy artifact from `TEST_STRATEGY_SOURCE_REQUIREMENTS`, the implementation, test-implementation and verification reports located through the workflow definition, and trace declarations (through `parseDeclaredTraceIds()`) from artifacts of stages before the strategy stage. It reuses the readiness results from the same gate invocation and `readRawContextCapsule()` for my-dev-kit evidence, so context readiness is evaluated once. It hands everything to `evaluateSemanticContinuity()` and re-models nothing. If a context is refresh-required, no producer evidence is fabricated, and the existing context blocker stays the primary diagnosis.
+
+The gate adds `semanticContinuityClassification` (`not-required`, `ready`, `warning`, `blocked`) and `runIntegrityReady` (`contextReady` and `semanticContinuityReady`); the expected judge verdict is `PASS` only when `runIntegrityReady` is true, otherwise `NEED_CONTEXT`. `pending` continuity counts as ready. A non-complete critical responsibility blocks (`SEMANTIC_CONTINUITY_CRITICAL_RESPONSIBILITY_UNSATISFIED`), an unclassified one blocks (`SEMANTIC_CONTINUITY_UNCLASSIFIED_RESPONSIBILITY`), and a non-complete noncritical responsibility only warns (`SEMANTIC_CONTINUITY_NONCRITICAL_RESPONSIBILITY_UNSATISFIED`), including noncritical attributable invalidity. Defects that cannot be attributed to a canonical responsibility (unknown stage, empty active strategy, orphan declarations, unattributable structural invalidity) block as `SEMANTIC_CONTINUITY_GLOBAL_INTEGRITY_INVALID`, with the underlying source issue code preserved. Diagnostics such as the verification status/exit-code inconsistency remain warnings. Proof-only and greenfield stay `not-required` even when a version is present, and test mode requires no production implementation continuity.
+
+A repository-context blocker keeps primary precedence for `primaryBlockingCode`, `primaryBlockingReason`, and `recommendedCorrectionStage`; semantic blockers stay visible in the semantic fields. The semantic correction stage comes from the earliest correction-owner stage in workflow order, then canonical strategy declaration order (the strategy leg maps to the mode-owned strategy stage), and is `null` for an unknown stage or unsupported version. Judge routing accepts only stages the correction router treats as correctable for the run's mode: `regression-test-strategy`, `compatibility-test-strategy`, and `resilience-test-strategy` are correctable only for `repair`, `refactor`, and `harden` respectively, while `test-strategy` and `target-architecture` behave as before and route-table defaults are unchanged.
+
+A blocking semantic defect blocks the current phase stage (not the correction target): its live prompt cannot render normal work, its artifact resolves `blocked` even when the file exists or is manually marked complete, `mark ... --state complete` is rejected before any state mutation, and progression stops there. A warning alone blocks nothing. Commands evaluate the gate at the lifecycle phase (the phase reconciliation uses), not at a correction cursor, because semantic legs are not monotone in the cursor. An authored `PASS` against a critical semantic blocker is rejected through the existing judge contradiction mechanism (`JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY`, worded in terms of canonical run integrity) and the run is not final-report eligible. When the gate expects `NEED_CONTEXT` and the authored verdict is `NEED_CONTEXT`, the gate's recommendation is authoritative, including `null` (no fallback to the generic table default); an authored `NEED_CONTEXT` while the gate expects `PASS` keeps ordinary authored routing. Semantic state is recomputed from current artifacts: no semantic file or timestamp is persisted.
+
+## Semantic Continuity prompt and command surface
+
+`src/instructions/semanticContinuityPrompt.ts` is the single owner of the activated-run authoring guidance: upstream trace declarations and ID stability, strategy `RSP` blocks and criticality meaning, implementation and test-implementation mappings with post-change and post-test evidence refresh, verification attribution, and the judge policy. It also owns the my-dev-kit request guidance that carries the canonical `RSP` IDs as `testResponsibilityRefs` and merges `responsibility-mappings` into the existing role-specific evidence kinds without replacing them. The guidance applies only when the version is `1.0.0`, the mode is activated, and the run is not proof-only; legacy, greenfield, and proof-only prompts are unchanged. `src/promptGenerator.ts` integrates it: saved prompt templates include the authoring guidance but never live gate state, while `generateLiveStagePrompt()` (used by `prompt`) honors the current `RunIntegrityGate`. The guidance teaches contracts the evaluator already validates and adds no validation.
+
+A stage the gate blocks on Semantic Continuity renders bounded correction guidance for `semanticRecommendedCorrectionStage` (inputs, output artifact, and artifact kind come from the existing correction stage tables, with unaffected `RSP` IDs preserved), never the blocked stage's own work. A null correction stage renders an external-resolution notice and guesses no stage. A refresh-required repository context for a context-sensitive correction target still takes precedence. The final-report stage keeps its eligibility-blocked prompt.
+
+`src/semanticContinuitySurface.ts` projects the already-computed `RunIntegrityGateResult` for `status`, `check`, `export`, and the live judge prompt, so no surface evaluates continuity separately and all agree on classification, blocking and warning IDs, primary blocker, correction stage, and expected verdict. `artifactChecker` does not parse responsibilities.
 
 ## Compatibility expectations
 

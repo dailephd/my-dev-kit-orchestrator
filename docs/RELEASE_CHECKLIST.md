@@ -3,7 +3,7 @@
 > [RELEASE.md](RELEASE.md) is the canonical maintainer release procedure. This file remains the detailed smoke, compatibility, and historical checklist.
 
 Use this checklist for release-readiness work. This file is a checklist
-template, not evidence that the listed steps have already run. The current published release is `v1.4.1`.
+template, not evidence that the listed steps have already run. The current published release is `v1.5.0`.
 Older releases remain historical baselines.
 
 ## Current release baseline
@@ -13,7 +13,7 @@ Older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current source greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`, `python-cli`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify `v1.4.1` as the current published release and scope older versions historically
+- [ ] docs identify `v1.5.0` as the current published release and scope older versions historically
 - [ ] docs preserve the 15-file public project-document baseline while classifying `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` as generated-project instructions
 
 ## Required local validation
@@ -68,6 +68,17 @@ Older releases remain historical baselines.
 - [ ] Node.js 24 is the required runtime and blocking cross-platform matrix;
   Node.js 26 coverage is supplementary and described separately from local
   Node.js 24.11.0 evidence
+- [ ] Semantic Continuity is documented consistently: contract `1.0.0`,
+  `RunIntegrityGate` schema `1.1.0`, automatic activation only for new staged
+  runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction`,
+  no activation flag, and no `greenfield`, proof-only, or legacy activation
+- [ ] docs state that Semantic Continuity adds no command, mode, native stage,
+  artifact family, dependency, `status` JSON option, or persisted semantic
+  state, and that corroboration is exact identity presence rather than
+  causal proof
+- [ ] critical-gap blocking, noncritical warning, `check --strict` promotion,
+  `mark` bypass rejection, and mode-aware strategy correction routing
+  (`repair`, `refactor`, `harden`) match the built CLI
 
 ## Temporary-directory smoke
 
@@ -139,7 +150,8 @@ request, in a separate temporary directory:
 - [ ] release notes do not claim autonomous project generation, publication, or security execution by the CLI itself
 - [ ] release notes disclose manual `my-dev-kit` execution and that the
   released `@dailephd/my-dev-kit@1.10.4` package is the verified producer
-  authority
+  authority for the readiness contract, with the Semantic Continuity mapping
+  fields validated against `@dailephd/my-dev-kit@1.12.4`
 
 ### v1.2.2 release preparation and publication procedure
 
@@ -348,11 +360,11 @@ Expected: no matches.
 - [ ] well-formed artifacts with correct trace IDs pass with exit 0
 - [ ] `status` shows `Trace check: not run` before first `check --trace`
 - [ ] `status` shows `Trace check: N pass, N warn, N fail` after `check --trace`
-- [ ] `parseDeclaredTraceIds` skips lines containing `->` (prevents false link-target declarations)
+- [ ] `parseDeclaredTraceIds` does not count link-only lines such as `REQ-001 -> BEH-999` as declarations (prevents false link-target declarations); a declaration whose text contains `->` is still a declaration
 
 ### Trace model verification
 
-- [ ] `TRACE_PREFIXES` = `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
+- [ ] `TRACE_PREFIXES` = `['REQ','CTX','BEH','INV','TRN','PSE','TST','RSP','IMP','VER','RISK']` (`RSP` was added after v0.5.0)
 - [ ] `isValidTraceId('BEH-001')` returns `true`
 - [ ] `isValidTraceId('BEH001')` returns `false`
 - [ ] `isValidTraceId('FOO-001')` returns `false`

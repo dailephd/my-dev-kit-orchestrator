@@ -1,0 +1,100 @@
+1. FINAL_STATUS
+PASS_V1_5_BATCH_0_RESPONSIBILITY_CONTRACT
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+5b68e04dd7ebffdbf28b09f229daec72e1f2e823
+
+5. PACKAGE_VERSION
+1.4.1 (unchanged)
+
+6. MY_DEV_KIT_VERSION_USED
+@dailephd/my-dev-kit@1.12.4 (index only; --src src --src tests --call-graph; output in .my-dev-kit-context/v1.5.0/batch-0/index, ignored)
+
+7. RETRIEVAL_EVIDENCE
+Batch 0 index built successfully. Bounded implementation facts (TRACE_PREFIXES, TRACE_ID_RE, trace-parser inline regex,
+trace-checker declaration regex and PREFIX_TO_STAGE, testResponsibilityCriticality.ts parser and
+TEST_STRATEGY_SOURCE_REQUIREMENTS) were established by targeted reads of the exact owning files; the index was not
+otherwise queried beyond building it.
+
+8. EXISTING_OWNERS_REUSED
+- src/traceModel.ts (single trace vocabulary)
+- src/instructions/testResponsibilityCriticality.ts (single responsibility-block parser; extended additively)
+- TEST_STRATEGY_SOURCE_REQUIREMENTS (mode-specific owner registry, unchanged)
+
+9. RESPONSIBILITY_ID_CONTRACT
+RSP-NNN: prefix RSP, "-", 3+ digits. Valid: RSP-001, RSP-0001. Invalid: RSP-01, RSP001, RESP-001, rsp-001.
+
+10. TRACE_VOCABULARY_CHANGE
+RSP added between TST and IMP. TRACE_ID_RE, traceParser inline regex and traceChecker declaration regex are now derived
+from TRACE_PREFIXES. PREFIX_TO_STAGE gains RSP -> test-strategy (generic only).
+
+11. CANONICAL_RESPONSIBILITY_BLOCK
+test responsibility ID (RSP-*), criticality, responsibility, traces to, setup, action or trigger, expected result, test level.
+
+12. ALLOWED_UPSTREAM_TRACE_PREFIXES
+REQ, CTX, BEH, INV, TRN, PSE (RSP, TST, IMP, VER, RISK rejected)
+
+13. LEGACY_COMPATIBILITY
+PASS. parseTestResponsibilityBlocks still accepts arbitrary safe IDs and issues/behavior are unchanged. It now
+additionally exposes fieldValues and duplicateFields on each parsed responsibility (additive). Duplicate fields remain
+first-wins in the legacy parser; only the canonical validator reports them. Existing context-readiness tests pass unmodified.
+
+14. IMPLEMENTATION_FILES_CHANGED
+src/traceModel.ts, src/traceParser.ts, src/traceChecker.ts, src/instructions/testResponsibilityCriticality.ts,
+src/instructions/semanticResponsibility.ts (new)
+
+15. TEST_FILES_CHANGED
+src/__tests__/trace-model.test.ts, src/__tests__/trace-parser.test.ts, src/__tests__/trace-checker.test.ts,
+tests/semanticResponsibility.test.ts (new)
+
+16. DOCUMENTATION_FILES_CHANGED
+docs/CONTRACTS.md, docs/DEVELOPMENT.md, docs/reports/v1.5.0-batch-0-responsibility-contract.txt
+
+17. NEW_ISSUE_CODES
+SEMANTIC_RESPONSIBILITY_ID_MISSING, _ID_INVALID, _DUPLICATE, _CRITICALITY_MISSING, _CRITICALITY_INVALID,
+_STATEMENT_MISSING, _STATEMENT_BLANK, _TRACES_MISSING, _TRACE_INVALID, _TRACE_PREFIX_INVALID, _TRACE_DUPLICATE,
+_FIELD_DUPLICATE, plus one addition: _FIELD_MISSING (required setup / action or trigger / expected result / test level
+absent or blank; the planner list had no code for these required fields). A blank traces-to maps to _TRACES_MISSING.
+
+18. FOCUSED_TEST_RESULTS
+5 suites, 183 tests passed. Context-readiness compatibility: 3 suites, 111 tests passed.
+
+19. FULL_TEST_RESULTS
+npm test -- --runInBand: 133 suites passed, 3 skipped (pre-existing); 2992 tests passed, 11 skipped.
+
+20. VERIFY_RESULT
+npm run verify: exit 0 (re-run after documentation edits).
+
+21. SMOKE_CONTEXT_RESULT
+smoke:context ran within verify and passed.
+
+22. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed (416 files, 1.4.1); no tarball left behind.
+
+23. PUBLIC_COMMAND_COUNT
+8 (unchanged; no CLI code touched)
+
+24. WORKFLOW_MODE_COUNT
+7 (unchanged)
+
+25. NATIVE_STAGE_COUNT
+Unchanged (no workflow/stage files touched)
+
+26. OUT_OF_SCOPE_CONFIRMATION
+No changes to RunIntegrityGate, JudgeIntegrity, observerEvidence, prompts, status/check/export, final-report eligibility,
+correction routing, my-dev-kit, README, CURRENT_STATE, ROADMAP, CHANGELOG, or package version.
+
+27. COMMIT
+feat: add semantic responsibility contract (SHA in final response)
+
+28. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (see final response)
+
+29. NEXT_ACTION
+READY_FOR_V1_5_BATCH_1_IMPLEMENTATION_EVIDENCE_BRIDGE

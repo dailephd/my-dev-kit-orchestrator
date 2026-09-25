@@ -8,14 +8,16 @@ import {
   getArtifactLifecycleStatusesWithRunIntegrity,
   getNextStageWithRunIntegrity,
   ArtifactLifecycleStatus,
+  resolveGateCurrentStage,
 } from '../stageDetector';
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { readCheckResults } from '../promptChecker';
 import { readTraceCheckResults } from '../traceChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
-import { deriveRunIntegrityGateResult } from '../runIntegrityGate';
+import { evaluateRunIntegrityGateFromSummary } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
+import { renderSemanticContinuityStatusLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 
 function lifecycleLabel(status: ArtifactLifecycleStatus): string[] {
   const label = `  [${status.lifecycleState.padEnd(10)}] ${status.artifactFile}`;
@@ -61,14 +63,17 @@ export function makeStatusCommand(): Command {
       // "Repository context readiness" section below, so the artifact list
       // and "Current / next stage" line can never contradict it (invariant
       // 6.5 -- avoid duplicate contradictory readiness sections).
-      const readiness = evaluateRunContextReadiness({
+      const gateInput = {
         mode: meta.mode,
         runFolder: meta.runFolder,
         workflowStageNames: meta.stages.map((s) => s.name),
-        currentStage: meta.currentStage,
+        currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
-      });
-      const gate = deriveRunIntegrityGateResult(meta.mode, readiness);
+        semanticContinuityVersion: meta.semanticContinuityVersion,
+        proofOnly: meta.proofOnly === true,
+      };
+      const readiness = evaluateRunContextReadiness(gateInput);
+      const gate = evaluateRunIntegrityGateFromSummary(gateInput, readiness);
       // Canonical judge-integrity / final-report eligibility (v1.2.3
       // Batch 3): computed once here, reused for the artifact list,
       // current/next stage, and the single "Judge and final-report
@@ -234,6 +239,15 @@ export function makeStatusCommand(): Command {
         }
       }
       lines.push(``);
+
+      // v1.5.0 Batch 5: compact Semantic Continuity summary projected from the
+      // SAME canonical gate computed above (never re-evaluated). Absent for
+      // legacy, greenfield, and proof-only runs.
+      const semanticSummary = summarizeSemanticContinuityGate(gate);
+      if (semanticSummary) {
+        lines.push(...renderSemanticContinuityStatusLines(semanticSummary));
+        lines.push(``);
+      }
 
       // v1.3.0 Batch 4: greenfield readiness (section 9.1). Read-only;
       // no-op for non-greenfield runs and for a greenfield run with no

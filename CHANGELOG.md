@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
+
+Release date: 2026-09-25.
+
+### Added
+
+- stable semantic responsibility identity `RSP-NNN`, declared in the existing mode-owned test-strategy artifacts with required fields and traced to upstream `REQ`, `CTX`, `BEH`, `INV`, `TRN`, and `PSE` IDs; `RSP` joins the canonical trace vocabulary
+- per-responsibility implementation, test, and verification mappings carried in the existing `ImplementationReport`, `TestImplementationReport`, and `VerificationReport`, with exact-match corroboration of production and test-file identity against same-ID my-dev-kit mappings (identity only, never causal proof) and verification results recorded as agent-reported command evidence
+- one phase-aware Semantic Continuity evaluator enforced through the existing `RunIntegrityGate` (gate schema `1.1.0`, contract `1.0.0`): critical incomplete responsibilities block, noncritical ones warn, and lifecycle, `mark`, judge integrity, correction routing, and final-report eligibility consume the same decision
+- automatic activation of new staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction` through a versioned `run.json` field, with no activation flag; `greenfield`, proof-only, and earlier runs are unchanged
+- stage prompts for activated runs that teach trace declarations, strategy responsibility blocks, implementation/test/verification mappings, and the my-dev-kit request fields (`testResponsibilityRefs`, `responsibility-mappings`) needed after production and test changes
+- bounded correction guidance instead of normal work when a stage is blocked by Semantic Continuity, and a compact Semantic Continuity summary in `status`, `check`, `check --artifacts`, `check --all`, `export`, and the judge prompt
+- mode-aware strategy correction routing for `repair`, `refactor`, and `harden`
+
+### Fixed
+
+- a trace declaration whose text contains `->` (for example `TRN-001: invalid-input -> validation-error`) is now recognized as a declaration; link-only lines still declare nothing
+- an authored `NEED_CONTEXT` now follows the canonical run-integrity recommendation, including when it is none, instead of falling back to the generic table default
+
+### Compatibility
+
+- no CLI command, workflow mode, native stage, artifact family, package dependency, or persisted semantic state was added, and `status` still has no JSON option
+- runs created without the activation field, greenfield runs, and proof-only runs keep their previous behavior
+- older schema-major-1 my-dev-kit evidence without the additive mapping fields remains accepted
+- `my-dev-kit` is still run manually by the user or coding agent
+
 ## v1.4.1 - Installed Greenfield Instruction Surface Correction
 
 Release date: 2026-09-05.
@@ -665,7 +691,7 @@ Known limitations in the released `v1.1.0` line:
 - `--create-target` remains future behavior and is not implemented
 - `--mode extraction` requires both `--source` and `--target`; errors clearly if either is missing
 
-**Not published to npm.** Tag will be created on release preparation.
+**Not yet published to npm.** Tag `v0.2.1` exists.
 
 ## v0.2.1 - Documentation preparation
 

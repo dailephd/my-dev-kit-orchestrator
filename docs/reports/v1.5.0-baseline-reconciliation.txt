@@ -1,0 +1,222 @@
+v1.5.0 BASELINE RECONCILIATION (PROMPT 0)
+
+1. FINAL_STATUS
+BLOCKED_BASELINE_VALIDATION
+(Also recorded separately: WORKSPACE_CLEANUP_PARTIAL_EMPTY_DIRECTORY_SHELL -- see section 3.)
+
+2. INITIAL_ORCHESTRATOR_STATE
+Branch: main. HEAD: 90c31804c9dd908d3e538e15ca6c82501a4dff55 (tag v1.3.3).
+Package: @dailephd/my-dev-kit-orchestrator 1.3.3. Status: behind origin/main by 33.
+Tracked changes: none. Untracked: 568 paths, all under .my-dev-kit-context/indexes (9,
+observer-v010-seams index) and .my-dev-kit-workflow (npm-cache 13, tmp 546).
+Snapshot: .my-dev-kit-context/v1.5.0-planning/baseline/initial-git-status.txt and
+initial-untracked-files.txt.
+
+3. EXTERNAL_WORKSPACE_RECOVERY
+Source: C:\Users\daile\Projects\my-dev-kit-orchestrator.my-dev-kit-context
+19 files (2 metadata, 1 report, 16 index files in 2 index roots). All had timestamps in the
+prior inspection run window (2026-09-24 15:54-16:16) and matched the names in the prior report.
+Each was copied, SHA-256 compared source vs destination (19/19 equal), then the source file
+was removed by exact path. No unknown file existed (set diff against manifest = 0).
+Removal of the remaining EMPTY directory shell (4 directories: indexes, reports, and the two
+index-root directories; 0 files) was denied by the tool permission classifier. It was not
+worked around. The external directory therefore still exists, empty of files.
+Test-Path on the sibling directory: True. User action needed: delete the empty directory tree.
+
+4. RECOVERED_EVIDENCE_PATHS
+.my-dev-kit-context/v1.5.0-planning/inspection-recovery/
+  recovery-manifest.txt (status, size, sha256, source-relative path, destination)
+  metadata/initial-kit-status.txt (0 bytes), metadata/initial-orchestrator-status.txt
+  reports/v1.5.0-cross-repo-planning-inspection.txt
+  indexes/my-dev-kit-v1.12.4-fcf5832-20260924T155442/ (8 files)
+  indexes/my-dev-kit-orchestrator-v1.3.3-90c3180-20260924T155442/ (8 files)
+
+5. UNKNOWN_EXTERNAL_CONTENT
+None.
+
+6. EXPECTED_UPSTREAM_BASELINE
+46e923e9ce643c8a47cd30933ea653ac6ed9edb3
+
+7. OBSERVED_UPSTREAM_BASELINE
+After git fetch origin --prune --tags: origin/main = 46e923e9ce643c8a47cd30933ea653ac6ed9edb3
+(match). HEAD...origin/main = 0 33 before fast-forward.
+
+8. FAST_FORWARD_RESULT
+No tracked modifications, no untracked collisions. git merge --ff-only origin/main succeeded.
+HEAD == 46e923e9ce643c8a47cd30933ea653ac6ed9edb3. No merge commit, reset, or rebase.
+
+9. POST_RECONCILIATION_REPOSITORY_STATE
+main == origin/main. Only untracked: .my-dev-kit-context/, .my-dev-kit-workflow/ (plus this
+report). NOTE FOR PLANNER: upstream .gitignore does not ignore .my-dev-kit-context or
+.my-dev-kit-workflow (git check-ignore exit 1). .gitignore was not changed.
+
+10. PACKAGE_AND_VERSION_STATE
+package.json 1.4.1; package-lock.json version 1.4.1; lock packages[""] 1.4.1.
+Node v24.20.0, npm 11.19.0.
+
+11. V1_5_SCOPE_CONFIRMATION
+ROADMAP/CURRENT_STATE/CHANGELOG confirm: v1.4.1 current; v1.5.0 = Semantic Continuity and
+Evidence-to-Implementation Bridge; v1.6.0 = Workflow Economics and Deterministic Run
+Telemetry; 8 commands, 7 modes, 79 native stages, 13 greenfield stages, 4 profiles;
+greenfield-to-feature handoff and optional mobile profiles remain deferred. No contradiction.
+COMMANDS.md, WORKFLOWS.md, CONTRACTS.md were not deeply audited beyond docs:check passing.
+
+12. VALIDATION_COMMANDS_AND_RESULTS
+Script composition: verify = typecheck, build, lint, lint:docs, docs:check, test:security,
+smoke:cli x8 (normal, lifecycle, extraction, check, trace, correction, export, greenfield).
+CI (validate.yml): npm ci, build, test, verify, --help, --version, npm pack --dry-run.
+DEVELOPMENT.md additionally lists npm run smoke:context (not in verify or CI).
+  npm ci ............ exit 0
+  npm run build ..... exit 0
+  npm test .......... exit 0 (132 suites passed, 3 skipped; 2934 tests passed, 11 skipped)
+  npm run verify .... exit 0
+  npm run smoke:context .... exit 1   <-- FAILURE
+  npm pack --dry-run  exit 0
+Logs: .my-dev-kit-context/v1.5.0-planning/baseline/*.log
+
+FAILURE DETAIL (BLOCKED_BASELINE_VALIDATION)
+  Command: npm run smoke:context (node scripts/context-readiness-cli-smoke.mjs)
+  Exit code: 1
+  Diagnostic: scenario "valid-schema-major-1-producer": expected "Implementation context:
+  ready" but got refresh-required / CONTEXT_SOURCE_REPOSITORY_MISMATCH: raw context capsule
+  declares "Z:/Users/newuser/Projects/my-dev-kit-orchestrator", expected
+  "C:\Users\daile\Projects\my-dev-kit-orchestrator".
+  Reproduces on untouched v1.4.1 baseline: yes (this is the untouched fast-forwarded tree;
+  no source changed).
+  Likely owner: repository test fixture/script portability (fixture capsule path is
+  checkout-location dependent; the script sets run projectRoot to the real checkout path).
+  Classification: repository script/fixture defect exposed by local checkout path. Not a
+  dependency or Node problem. Not exercised by CI or verify, so CI is unaffected.
+  Not repaired, per policy.
+
+13. CLI_SURFACE_VERIFICATION
+--version 1.4.1. help lists exactly init, start, status, prompt, list, mark, check, export.
+start --help shows --mode, --proof-only, --verification-responsibility. status --help has
+only --run and --root (no JSON flag). Stage counts and the four profiles are per
+CURRENT_STATE.md (79 native / 13 greenfield); not independently counted from source.
+
+14. PROOF_ONLY_BASELINE
+src/proofOnly.ts and tests/proofOnly.test.ts exist; dist/proofOnly.js is packed. Individual
+gate behaviors (path safety, exact PASS) are covered by the passing suite; not re-derived
+line by line here.
+
+15. OBSERVER_CONSUMER_BASELINE
+Owner: src/observerEvidence.ts; export consumeBoundedObserverEvidence via src/index.ts.
+Artifact kind my-frontend-observer/bounded-agent-context, schemaVersion 1.0.0, dependency-free
+structural mirror. Tests: tests/observerEvidence.test.ts, tests/eco1UnifiedHardening.test.ts.
+
+16. GREENFIELD_PROMPT_CORRECTION_BASELINE
+CHANGELOG v1.4.1 documents the correction for idea-brief, starter-profile, bootstrap-bundle,
+project-docs, scaffold-plan. Verified by CHANGELOG and passing suite; no dedicated source
+audit of generated prompt text was performed in this prompt.
+
+17. PACKAGE_INSPECTION
+npm pack --dry-run: dailephd-my-dev-kit-orchestrator-1.4.1.tgz, 412 files, 377.5 kB;
+includes CHANGELOG.md, dist/cli.js, dist/observerEvidence.*, dist/proofOnly.*. Not published.
+
+18. MY_DEV_KIT_PRODUCER_IDENTITY
+my-dev-kit HEAD fcf58329820ddae781ceb75d3936024ed87d5f72, version 1.12.4, worktree clean.
+No drift. Repository not modified.
+
+19. FEATURE_BRANCH
+NOT CREATED. feature/v1.5.0-semantic-continuity was deliberately not created because of
+BLOCKED_BASELINE_VALIDATION. No commit, no push.
+
+20. WORKSPACE_BOUNDARY_CONFIRMATION
+All new evidence is under .my-dev-kit-context/v1.5.0-planning (baseline/, inspection-recovery/).
+No new sibling directory created. The pre-existing sibling remains as an empty directory shell.
+Pre-existing untracked evidence was preserved.
+
+21. FINAL_GIT_STATUS
+Branch main, HEAD 46e923e9ce643c8a47cd30933ea653ac6ed9edb3, no tracked changes. Untracked:
+.my-dev-kit-context/, .my-dev-kit-workflow/, docs/reports/v1.5.0-baseline-reconciliation.txt.
+
+22. NEXT_ACTION
+PLANNER_DECISION_REQUIRED: either (a) approve a baseline repair of scripts/fixture for
+smoke:context path independence, or (b) declare smoke:context out of the baseline gate
+(it is not in CI/verify) and authorize branch creation, report commit, and push. Also delete
+the empty sibling directory tree.
+
+================================================================================
+BASELINE REPAIR (PREREQUISITE FOR V1.5.0; ORIGINAL FAILURE EVIDENCE ABOVE PRESERVED)
+================================================================================
+
+BASELINE_REPAIR_STATUS
+PASS. Repair performed on feature/v1.5.0-semantic-continuity from required parent
+46e923e9ce643c8a47cd30933ea653ac6ed9edb3. No changes were made on main.
+
+ROOT_CAUSE
+Confirmed. The frozen my-dev-kit 1.10.2 capsule and audit declare the historical
+consumer repository location Z:/Users/newuser/Projects/my-dev-kit-orchestrator in
+index.projectRoot. The active run supplies the current checkout root. Readiness
+correctly rejects unequal repository identities; the smoke adapter had not
+adapted its disposable fixture copies.
+
+FILES_CHANGED
+.gitignore
+docs/CI_CD.md
+docs/DEVELOPMENT.md
+docs/reports/v1.5.0-baseline-reconciliation.txt
+package.json
+scripts/context-readiness-cli-smoke.mjs
+
+FIX_DESCRIPTION
+After copying the frozen capsule and audit, the smoke updates only each copied
+document's index.projectRoot to its explicitly supplied runtime repositoryRoot.
+This is the minimum identity field required by context readiness. Historical
+index paths, query, provenance, generatedAt, producer version, and all other
+semantic producer evidence are preserved. The repository mismatch negative
+scenario subsequently mutates both copied identities to Z:/different/repository.
+verify now invokes smoke:context immediately after build. CI already calls
+verify in validate.yml and pre-release-matrix.yml, so no workflow change was
+needed. Exact repository-root ignore rules were added for the two generated
+workspace directories; their contents were not altered.
+
+FROZEN_FIXTURE_HASHES_BEFORE
+context-request.json B58404CC45DFF07E1816EA237B411DACF1CB904245A748DE35B3320B32C70160
+context-capsule.json 55EEB0A98E3C5C7B7F2FA6B8494A56C4B9DF2844EF16ABC81AE59682B2336AD1
+retrieval-audit-record.json F43F5EB0D505836AF8B7972B5042888B809254E70614DB75785BAA9745ECA6D
+PROVENANCE.txt 8615294EF2756DA1D85419748A09065C08A6BA94F6C99F83CBF2B93A5AC37CD8
+
+FROZEN_FIXTURE_HASHES_AFTER
+context-request.json B58404CC45DFF07E1816EA237B411DACF1CB904245A748DE35B3320B32C70160
+context-capsule.json 55EEB0A98E3C5C7B7F2FA6B8494A56C4B9DF2844EF16ABC81AE59682B2336AD1
+retrieval-audit-record.json F43F5EB0D505836AF8B7972B5042888B809254E70614DB75785BAA9745ECA6D
+PROVENANCE.txt 8615294EF2756DA1D85419748A09065C08A6BA94F6C99F83CBF2B93A5AC37CD8
+Result: all four before/after hashes are identical. Smoke source-tree hash also
+passed: 1eab77d1cc1baf901133053c0194d801bb6b333f3f86342ab1ca8354dc269aed.
+
+SMOKE_CONTEXT_RESULT
+PASS. npm run build and npm run smoke:context both exited 0. All nine named
+scenarios executed, including valid-schema-major-1-producer: ready.
+
+REPOSITORY_MISMATCH_NEGATIVE_RESULT
+PASS. repository-mismatch remained refresh-required with
+CONTEXT_SOURCE_REPOSITORY_MISMATCH.
+
+FOCUSED_TEST_RESULTS
+PASS. Four requested focused Jest commands passed: 111 passed; 40 passed and
+9 skipped (one suite skipped); 42 passed; 26 passed. Aggregate: 219 passed,
+9 skipped.
+
+FULL_TEST_RESULT
+PASS. npm test: 132 suites passed, 3 skipped; 2934 tests passed, 11 skipped.
+
+VERIFY_RESULT
+PASS. npm run verify exited 0; existing typecheck, build, lint, docs, security,
+and all eight CLI smoke families remain in the chain.
+
+VERIFY_CONTEXT_SMOKE_INTEGRATION
+YES. Actual verify output shows npm run smoke:context after npm run build and
+all nine context scenarios pass within verify.
+
+PACK_RESULT
+PASS. npm pack --dry-run: 412 files; package version remains 1.4.1.
+
+WORKSPACE_IGNORE_RESULT
+PASS. /.my-dev-kit-context/ and /.my-dev-kit-workflow/ are exact root ignore
+rules. Existing workspace contents were preserved (39 files in context and
+747 files in workflow at final inspection); neither directory was staged.
+
+FINAL_BASELINE_STATUS
+PASS_BASELINE_REPAIRED_READY_FOR_V1_5_BATCH_0

@@ -13,7 +13,7 @@ The matrix is Ubuntu latest, Windows latest, and macOS 15 on Node 24. Each job p
 1. checkout and cached `npm ci`;
 2. build;
 3. full Jest tests;
-4. `npm run verify` (typecheck, build, source lint, Markdown lint, docs consistency, security tests, and CLI smoke families);
+4. `npm run verify` (typecheck, build, the context-readiness CLI smoke, source lint, Markdown lint, docs consistency, security tests, and CLI smoke families);
 5. built CLI help and version smoke;
 6. `npm pack --dry-run`.
 
