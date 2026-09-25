@@ -49,11 +49,11 @@ describe('parseTraceIds', () => {
   });
 
   it('finds IDs from all valid prefixes', () => {
-    const content = 'REQ-001 CTX-002 BEH-003 INV-004 TRN-005 PSE-006 TST-007 IMP-008 VER-009 RISK-010';
+    const content = 'REQ-001 CTX-002 BEH-003 INV-004 TRN-005 PSE-006 TST-007 RSP-011 IMP-008 VER-009 RISK-010';
     const result = parseTraceIds(content);
-    expect(result).toHaveLength(10);
+    expect(result).toHaveLength(11);
     expect(result.map((r) => r.prefix)).toEqual([
-      'REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'IMP', 'VER', 'RISK',
+      'REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'RSP', 'IMP', 'VER', 'RISK',
     ]);
   });
 

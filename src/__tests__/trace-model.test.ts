@@ -9,14 +9,14 @@ import {
 // ─── TRACE_PREFIXES ───────────────────────────────────────────────────────────
 
 describe('TRACE_PREFIXES', () => {
-  it('contains the ten canonical prefixes', () => {
+  it('contains the eleven canonical prefixes', () => {
     expect(TRACE_PREFIXES).toEqual([
-      'REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'IMP', 'VER', 'RISK',
+      'REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'RSP', 'IMP', 'VER', 'RISK',
     ]);
   });
 
-  it('has exactly 10 entries', () => {
-    expect(TRACE_PREFIXES.length).toBe(10);
+  it('has exactly 11 entries', () => {
+    expect(TRACE_PREFIXES.length).toBe(11);
   });
 });
 
@@ -102,6 +102,7 @@ describe('isValidTraceId', () => {
     expect(isValidTraceId('TRN-001')).toBe(true);
     expect(isValidTraceId('PSE-001')).toBe(true);
     expect(isValidTraceId('TST-001')).toBe(true);
+    expect(isValidTraceId('RSP-001')).toBe(true);
     expect(isValidTraceId('IMP-001')).toBe(true);
     expect(isValidTraceId('VER-001')).toBe(true);
     expect(isValidTraceId('RISK-001')).toBe(true);
@@ -185,5 +186,36 @@ describe('isMalformedTraceId', () => {
 
   it('returns false for single-letter prefixes', () => {
     expect(isMalformedTraceId('A-001')).toBe(false);
+  });
+});
+
+describe('RSP trace family (v1.5 Batch 0)', () => {
+  it('accepts RSP-NNN with three or more digits', () => {
+    expect(isValidTraceId('RSP-001')).toBe(true);
+    expect(isValidTraceId('RSP-0001')).toBe(true);
+    expect(isValidTraceId('RSP-1000')).toBe(true);
+  });
+
+  it.each(['RSP-01', 'RSP001', 'RESP-001', 'rsp-001'])('rejects %s', (id) => {
+    expect(isValidTraceId(id)).toBe(false);
+  });
+
+  it('treats malformed RSP-like tokens as malformed trace IDs', () => {
+    expect(isMalformedTraceId('RSP-01')).toBe(true);
+    expect(isMalformedTraceId('RSP001')).toBe(true);
+    expect(isMalformedTraceId('RSP-001')).toBe(false);
+  });
+});
+
+describe("RSP trace family (v1.5 Batch 0)", () => {
+  it.each(["RSP-01", "RSP001", "RESP-001", "rsp-001"])("rejects %s", (id) => {
+    expect(isValidTraceId(id)).toBe(false);
+  });
+
+  it("accepts four-digit RSP and flags malformed RSP-like tokens", () => {
+    expect(isValidTraceId("RSP-1000")).toBe(true);
+    expect(isMalformedTraceId("RSP-01")).toBe(true);
+    expect(isMalformedTraceId("RSP001")).toBe(true);
+    expect(isMalformedTraceId("RSP-001")).toBe(false);
   });
 });

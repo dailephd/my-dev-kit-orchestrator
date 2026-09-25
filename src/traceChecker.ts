@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { CheckSeverity } from './artifactChecker';
-import { isValidTraceId, isMalformedTraceId } from './traceModel';
+import { TRACE_PREFIXES, isValidTraceId, isMalformedTraceId } from './traceModel';
 import { TraceId, TraceLink, parseTraceLinks } from './traceParser';
 import { RunMetadata } from './run';
 
@@ -32,8 +32,9 @@ export interface TraceCheckResultsFile {
 // A declaration is the documented label form at the start of a line, e.g.
 // "BEH-001: externally visible behavior". A valid ID mentioned in ordinary
 // prose is a reference, not a declaration.
-const TRACE_DECLARATION_RE =
-  /^\s*(?:[-*+]\s+)?(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})\s*:/;
+const TRACE_DECLARATION_RE = new RegExp(
+  `^\\s*(?:[-*+]\\s+)?(${TRACE_PREFIXES.join('|')})-(\\d{3,})\\s*:`,
+);
 
 // Malformed token pattern
 const MALFORMED_TOKEN_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
@@ -191,6 +192,8 @@ const PREFIX_TO_STAGE: Record<string, string> = {
   TRN: 'behavior-model',
   PSE: 'pseudocode-packet',
   TST: 'test-strategy',
+  // Generic responsibility-declaration owner only; mode-specific routing is out of scope for v1.5 Batch 0.
+  RSP: 'test-strategy',
   IMP: 'implementation',
   VER: 'verification',
   RISK: 'judge',

@@ -159,6 +159,8 @@ Important implementation files:
 - `src/instructions/myDevKitEvidenceSummary.ts`: raw capsule/audit projection
 - `src/instructions/testResponsibilityCriticality.ts`: criticality and mapping
   parsing
+- `src/instructions/semanticResponsibility.ts`: canonical `RSP-NNN` structural contract
+  validation (v1.5 Batch 0; tests in `tests/semanticResponsibility.test.ts`)
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation

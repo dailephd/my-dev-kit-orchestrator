@@ -48,6 +48,16 @@ The canonical 15-file greenfield document baseline is owned by `src/greenfield/b
 
 `python-cli` uses the existing profile registry, resolver, command, terminology, target, scaffold, evidence, and readiness contracts. It owns four profile targets (`pyproject.toml`, `src/main.py`, `tests/test_main.py`, `README.md`); the common instruction targets are not duplicated in the profile. Runnable entry-point selection is owned by required exact `entry-point` target metadata, and Python terminology is permitted through the profile's closed terminology declaration. Python is not compatible with the Next.js full-stack capability. The orchestrator lists setup and validation commands as evidence contracts but does not execute them.
 
+## Semantic Responsibility Contract foundation (v1.5.0 Batch 0)
+
+Orchestrator owns the canonical semantic responsibility identity `RSP-NNN` (prefix `RSP`, `-`, three or more decimal digits; `RSP-001` and `RSP-0001` are valid, `RSP-01`, `RSP001`, `RESP-001`, and `rsp-001` are not). `RSP` is part of the canonical trace vocabulary in `src/traceModel.ts`; the trace parser and checker derive their patterns from it. Generic trace-correction suggestions for `RSP` use `test-strategy` only as the generic declaration owner; there is no mode-specific semantic routing.
+
+Responsibilities are declared in the existing mode-specific test-strategy artifacts (the `TEST_STRATEGY_SOURCE_REQUIREMENTS` registry); there is no new artifact, stage, mode, or command. A canonical block requires `test responsibility ID` (an `RSP-*` value), `criticality` (`critical` or `noncritical`), `responsibility` (non-blank statement), `traces to`, `setup`, `action or trigger`, `expected result`, and `test level`. `traces to` is a comma-separated list of unique canonical trace IDs whose prefixes are limited to `REQ`, `CTX`, `BEH`, `INV`, `TRN`, and `PSE`; `RSP`, `TST`, `IMP`, `VER`, and `RISK` are rejected as origins.
+
+`src/instructions/semanticResponsibility.ts` validates this structure with stable `SEMANTIC_RESPONSIBILITY_*` issue codes. It consumes the existing block parser and is pure and deterministic. It checks structure only: it does not verify that upstream IDs exist in a run, that requirements have responsibilities, or that implementation, test, or verification evidence exists. Those checks belong to later v1.5 batches.
+
+Legacy responsibility IDs (any previously accepted safe ID) remain valid for the legacy parser and context-readiness path. Batch 0 does not change generated prompts, `RunIntegrityGate`, judge integrity, `status`, `check`, `export`, or final-report eligibility.
+
 ## Compatibility expectations
 
 Schema versions, fixed paths, stage order, command families, issue codes, legacy-run treatment, and documented non-execution boundaries are compatibility-sensitive. Additive evolution must preserve old-run readability or emit explicit legacy/not-evaluated evidence. See [ARCHITECTURE.md](ARCHITECTURE.md) for owners and [DOCUMENTATION_PRESERVATION_POLICY.md](DOCUMENTATION_PRESERVATION_POLICY.md) for anti-drift rules.

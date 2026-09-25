@@ -8,6 +8,7 @@ export const TRACE_PREFIXES = [
   'TRN',
   'PSE',
   'TST',
+  'RSP',
   'IMP',
   'VER',
   'RISK',
@@ -16,7 +17,8 @@ export const TRACE_PREFIXES = [
 export type TracePrefix = (typeof TRACE_PREFIXES)[number];
 
 // Canonical trace ID format: PREFIX-NNN (3+ zero-padded digits)
-export const TRACE_ID_RE = /^(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})$/;
+// Derived from TRACE_PREFIXES so the vocabulary has a single source of truth.
+export const TRACE_ID_RE = new RegExp(`^(${TRACE_PREFIXES.join('|')})-(\\d{3,})$`);
 
 // ─── Validation functions ─────────────────────────────────────────────────────
 
