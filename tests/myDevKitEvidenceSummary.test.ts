@@ -495,6 +495,8 @@ describe('productionSymbols projection (v1.5 Batch 1)', () => {
           productionSymbols: [
             { id: 'symbol:src/a.ts#run', itemKind: 'symbol', path: 'src/a.ts', symbolId: 'symbol:src/a.ts#run', nodeId: 'n1' },
           ],
+          // Batch 2 additive field: absent on this mapping, so defaults to [].
+          proposedOrExistingTestFiles: [],
         },
       ]);
     }
@@ -524,5 +526,80 @@ describe('productionSymbols projection (v1.5 Batch 1)', () => {
     const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped', productionSymbols: value }]);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.status).toBe('malformed');
+  });
+});
+
+describe('proposedOrExistingTestFiles projection (v1.5 Batch 2)', () => {
+  function project(mappings: unknown[]) {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ responsibilityMappings: { mappings, truncated: false } }), 'utf8');
+      return readRawContextCapsule(p, tmp);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  it('projects valid test-file items and ignores richer/unrelated mapping fields', () => {
+    const result = project([
+      {
+        responsibilityId: 'RSP-001',
+        mappingStatus: 'partially-mapped',
+        proposedOrExistingTestFiles: [
+          { id: 'tests/a.spec.ts', itemKind: 'test-file', path: 'tests/a.spec.ts', relationship: 'existing', basis: 'b', provenance: 'p' },
+        ],
+        reusableHelpers: [{ id: 'h' }],
+        oracleEvidence: [{ id: 'o' }],
+        testCommands: ['npm test'],
+      },
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.projection.responsibilityMappings).toEqual([
+        {
+          responsibilityId: 'RSP-001',
+          mappingStatus: 'partially-mapped',
+          productionSymbols: [],
+          proposedOrExistingTestFiles: [{ id: 'tests/a.spec.ts', itemKind: 'test-file', path: 'tests/a.spec.ts' }],
+        },
+      ]);
+    }
+  });
+
+  it('defaults absent to [] and accepts empty', () => {
+    for (const extra of [{}, { proposedOrExistingTestFiles: [] }]) {
+      const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped', ...extra }]);
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.projection.responsibilityMappings[0].proposedOrExistingTestFiles).toEqual([]);
+    }
+  });
+
+  it.each([
+    ['not an array', 'nope'],
+    ['item not an object', [1]],
+    ['item without id', [{ path: 'tests/a.ts' }]],
+    ['empty id', [{ id: '' }]],
+    ['non-string path', [{ id: 'a', path: 1 }]],
+    ['non-string itemKind', [{ id: 'a', itemKind: [] }]],
+  ])('fails closed on malformed present field: %s', (_n, value) => {
+    const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped', proposedOrExistingTestFiles: value }]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('malformed');
+  });
+
+  it('keeps productionSymbols and test-file evidence independent', () => {
+    const result = project([
+      {
+        responsibilityId: 'RSP-001',
+        mappingStatus: 'mapped',
+        productionSymbols: [{ id: 'symbol:src/a.ts#run', path: 'src/a.ts' }],
+      },
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.projection.responsibilityMappings[0].productionSymbols).toHaveLength(1);
+      expect(result.projection.responsibilityMappings[0].proposedOrExistingTestFiles).toEqual([]);
+    }
   });
 });

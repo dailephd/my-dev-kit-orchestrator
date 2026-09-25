@@ -164,6 +164,13 @@ Important implementation files:
 - `src/instructions/implementationResponsibilityEvidence.ts`: implementation responsibility block
   parsing and Kit-evidence corroboration bridge (v1.5 Batch 1; tests in
   `tests/implementationResponsibilityEvidence.test.ts`)
+- `src/instructions/responsibilityEvidenceShared.ts`: shared project-relative path policy and
+  corroboration-state type for the evidence bridges
+- `src/instructions/testImplementationResponsibilityEvidence.ts`: test-file mapping parsing and
+  Kit test-file corroboration (v1.5 Batch 2; tests in
+  `tests/testImplementationResponsibilityEvidence.test.ts`)
+- `src/instructions/verificationResponsibilityEvidence.ts`: verification attribution parsing (v1.5
+  Batch 2; tests in `tests/verificationResponsibilityEvidence.test.ts`)
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation

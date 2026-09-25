@@ -74,6 +74,41 @@ A block runs to the next `implementation responsibility ID:` line or end of inpu
 
 Corroboration means only that a declared repository identity appears exactly in the bounded my-dev-kit production evidence for that responsibility ID. In my-dev-kit 1.12.4 the production-symbol set is request-scoped and may be shared across mappings, so it neither proves that a file or symbol implements a responsibility nor proves that the file changed. The relation between a responsibility and its implementation remains the coding agent's declaration. `productionSymbols` is projected additively; producers that omit it remain valid (treated as empty), while a malformed present value is rejected as malformed raw evidence. Production implementation evidence applies only to modes whose native workflow has an `implementation` stage; `test` and `greenfield` do not. `RunIntegrityGate`, judge integrity, status, check, export, and final-report eligibility are not affected by Batch 1.
 
+## Test and verification evidence bridge foundation (v1.5.0 Batch 2)
+
+Batch 2 adds two independent, non-enforcing contracts. It adds no artifact, stage, mode, or command, does not change generated prompts or artifact-section requirements, and is not read by `RunIntegrityGate`, judge integrity, status, check, export, or final-report eligibility. Proof-only and greenfield remain outside both contracts.
+
+### Test implementation contract
+
+The future carrier is the existing `TestImplementationReport`. A block is:
+
+```text
+test implementation responsibility ID: RSP-001
+test file: tests/config/validate.spec.ts
+```
+
+A block runs to the next `test implementation responsibility ID:` line or end of input. Repeated `test file:` lines are list entries, and a block needs at least one. Test files use exactly the same project-relative lexical path policy as production files (`src/instructions/responsibilityEvidenceShared.ts`). A duplicate `RSP` block is reported and the first stays authoritative.
+
+`src/instructions/testImplementationResponsibilityEvidence.ts` corroborates declared files against the same-ID producer mapping's `proposedOrExistingTestFiles`, projected additively from my-dev-kit. The match is exact on item `path` or `id`; there is no basename, suffix, substring, or case-insensitive matching, and `itemKind` is not required. The contract is file-level only, because my-dev-kit 1.12.4 related-test discovery emits file-level `test-file` items and there is no test-symbol contract. States and issue semantics mirror the implementation bridge (`corroborated`, `partially-corroborated`, `uncorroborated`, `missing-declaration`, `producer-mapping-unavailable`, with `TEST_IMPLEMENTATION_RESPONSIBILITY_*` codes). Corroboration means only that the declared test-file identity appears exactly in bounded my-dev-kit test evidence for that mapping. It does not prove that the test implements the responsibility, that its assertions are correct, that it ran, or that it passed. Legacy producer evidence without `proposedOrExistingTestFiles` remains valid and is treated as empty; a malformed present value is rejected as malformed raw evidence. Applicability is derived from workflow definitions: every native mode with a `test-implementation` stage (feature, repair, test, refactor, harden, extraction) qualifies.
+
+### Verification contract
+
+The future carrier is the existing `VerificationReport`. A block is:
+
+```text
+verification responsibility ID: RSP-001
+verification status: pass
+
+verification evidence:
+command: npm test -- tests/config/validate.spec.ts
+working directory: .
+exit code: 0
+```
+
+Status is exactly `pass`, `fail`, `skipped`, or `blocked`. `pass` and `fail` require at least one `verification evidence:` record, and `skipped` and `blocked` require a non-empty `reason:`. Each record needs a non-empty command, a non-empty working directory (kept verbatim, including absolute paths, since it records where the command ran), and a signed decimal integer exit code. Status is never inferred from exit codes; `pass` with only nonzero exit codes, or `fail` with only zero exit codes, is reported as the diagnostic `VERIFICATION_RESPONSIBILITY_STATUS_EVIDENCE_INCONSISTENT` and the declared status is kept. Declarations attribute to canonical strategy responsibilities by exact `RSP` identity (`passed`, `failed`, `skipped`, `blocked`, `missing-declaration`), with `VERIFICATION_RESPONSIBILITY_ORPHAN` and `VERIFICATION_RESPONSIBILITY_DECLARATION_MISSING` issues. Command text is never interpreted as coverage of any test file or production symbol.
+
+Command results are coding-agent-reported evidence. The parser validates structure and attribution only; it never executes a command and cannot prove one ran. External executable-evidence integration is later scope.
+
 ## Compatibility expectations
 
 Schema versions, fixed paths, stage order, command families, issue codes, legacy-run treatment, and documented non-execution boundaries are compatibility-sensitive. Additive evolution must preserve old-run readability or emit explicit legacy/not-evaluated evidence. See [ARCHITECTURE.md](ARCHITECTURE.md) for owners and [DOCUMENTATION_PRESERVATION_POLICY.md](DOCUMENTATION_PRESERVATION_POLICY.md) for anti-drift rules.

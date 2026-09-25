@@ -38,6 +38,7 @@ import { getWorkflow } from '../workflows';
 import { isValidMode } from '../types';
 import { RawEvidenceProjection, RawEvidenceItemRef } from './myDevKitEvidenceSummary';
 import { SEMANTIC_RESPONSIBILITY_ID_RE, SemanticResponsibility } from './semanticResponsibility';
+import { EvidenceCorroborationState, normalizeProjectRelativePath } from './responsibilityEvidenceShared';
 import { TestResponsibilityCriticality } from './testResponsibilityCriticality';
 
 // ─── Structural contract ────────────────────────────────────────────────────
@@ -88,19 +89,9 @@ export interface ImplementationResponsibilityValidationResult {
 const BLOCK_START_RE = /^implementation responsibility id\s*:\s*(.*)$/i;
 const FIELD_RE = /^([a-zA-Z][a-zA-Z0-9 ]*):\s*(.*)$/;
 
-// Returns the normalized project-relative path, or undefined when invalid.
-// Purely lexical: never touches the filesystem.
+// Path policy is owned by responsibilityEvidenceShared.ts (shared with the test bridge).
 export function normalizeProductionFilePath(raw: string): string | undefined {
-  const trimmed = raw.trim();
-  if (trimmed.length === 0 || trimmed.includes('\0')) return undefined;
-  const slashed = trimmed.replace(/\\/g, '/');
-  if (/^[a-zA-Z]:/.test(slashed)) return undefined; // drive letter
-  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(slashed)) return undefined; // URL scheme
-  if (slashed.startsWith('/')) return undefined; // POSIX absolute or UNC
-  const segments = slashed.split('/').filter((s) => s.length > 0 && s !== '.');
-  if (segments.length === 0) return undefined;
-  if (segments.includes('..')) return undefined;
-  return segments.join('/');
+  return normalizeProjectRelativePath(raw);
 }
 
 // Returns the normalized "symbol:<path>#<name>" identity, or undefined.
@@ -253,12 +244,7 @@ export function validateImplementationResponsibilities(text: string): Implementa
 
 // ─── Bridge evaluation ──────────────────────────────────────────────────────
 
-export type ImplementationEvidenceState =
-  | 'corroborated'
-  | 'partially-corroborated'
-  | 'uncorroborated'
-  | 'missing-declaration'
-  | 'producer-mapping-unavailable';
+export type ImplementationEvidenceState = EvidenceCorroborationState;
 
 export interface ImplementationEvidenceBridgeEntry {
   responsibilityId: string;
