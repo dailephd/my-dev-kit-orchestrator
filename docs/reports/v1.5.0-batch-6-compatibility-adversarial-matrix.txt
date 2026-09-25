@@ -1,0 +1,275 @@
+v1.5.0 BATCH 6 - COMPATIBILITY AND ADVERSARIAL MATRIX
+
+Row format used below: CASE | EXPECTED | OBSERVED | RESULT | DEFECT_CLASSIFICATION | FIX
+Every row is an executable test in tests/semanticContinuityAdversarialMatrix.test.ts (test names carry the category code). "OBSERVED" is what the test asserted and the run confirmed.
+
+1. FINAL_STATUS
+PASS_V1_5_BATCH_6_COMPATIBILITY_AND_ADVERSARIAL_MATRIX
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+d8f4de35132da3b63be03734f4cceb070bafd12e (clean tree, verified)
+
+5. PACKAGE_VERSION
+1.4.1 before and after
+
+6. RETRIEVAL_LOG
+Tool @dailephd/my-dev-kit@1.12.4; evidence under .my-dev-kit-context/v1.5.0/batch-6/ (uncommitted).
+- index: --src src --language typescript --call-graph -> 140 files, 1360 symbols.
+- search, all eight required queries (semantic continuity adversarial compatibility; semanticContinuityRunIntegrity correction phase; semanticContinuityCommandSurface status check export; semantic continuity prompt activation; legacy run compatibility; correction router NEED_CONTEXT; trace declaration parseDeclaredTraceIds; artifact lifecycle semantic blocked). Output in retrieval-log.txt.
+- lookup: evaluateSemanticContinuity, evaluateRunSemanticContinuity, parseDeclaredTraceIds. slice: evaluateSemanticContinuity (depth 1). source: parseDeclaredTraceIds.
+- Search recall was weak for symbol-level intent (results dominated by test files), so exact owner nodes were used, then direct reads of: implementationResponsibilityEvidence.ts, responsibilityEvidenceShared.ts, verificationResponsibilityEvidence.ts (attribution half), semanticContinuity.ts (evaluator), runSemanticContinuity.ts, artifactChecker.ts/contractChecker.ts (content-contract requirements for the realistic fixture), tests/semanticRunTestHelpers.ts, tests/readyContextTestHelpers.ts, and the existing Batch 4/5 semantic suites. Full-file reads were needed for exact contract text (issue codes, path policy, phase model).
+
+7. MATRIX_SCOPE
+Categories A through BW of the batch plan, in one file with no stubs: real artifact/contract/trace/prompt checkers, real gate, judge integrity, context readiness. BQ additionally runs against the BUILT CLI (dist/cli.js) when present. Shared fixtures: tests/semanticRunTestHelpers.ts plus a realistic-run builder (below).
+
+8. MATRIX_CASE_COUNT
+110 executable tests in the matrix file (109 in-process/unit-level + built-CLI BQ variant), covering all 75 lettered categories; parameterized cases expand (R x4 malformed IDs, BI x3, BQ x3 check variants x 2 runners, AM x3, AH x3). Whole-suite totals are in section 55.
+
+9. LEGACY_COMPATIBILITY
+A1 | absent-version run with RSP-looking artifacts: no enforcement, no prompt block, no status/check/export section | gate not-required, expected PASS, no stage carries SEMANTIC CONTINUITY, three commands print no section | PASS | NONE | NONE
+A2 | lifecycle, judge, final-report, mark unchanged | complete lifecycle, PASS accepted, final-report eligible, mark accepted | PASS | NONE | NONE
+A3 | arbitrary legacy ID (TST-LEGACY-1) usable | contextReady true, semantic not required | PASS | NONE | NONE
+A4 | RSP-01 / rsp-001 / RESP-001 / RSP001 in a legacy strategy do not activate | not-required, no blocking codes, context ready | PASS | NONE | NONE
+NOTE (authoring): A2 first failed because a manual complete mark makes downstream artifacts stale, which is pre-existing legacy behavior; the test was reordered (TEST_EXPECTATION_DEFECT).
+
+10. UNSUPPORTED_VERSION
+B1 (version 999.0.0) | blocked, NEED_CONTEXT, null stage; prompt = external-resolution notice with no normal work; mark complete rejected with artifact-state.json unchanged; authored PASS rejected; authored NEED_CONTEXT yields no fallback stage; status/check/export agree; final report ineligible | all observed (check exit 1, export recommendedCorrectionStage "(none)") | PASS | NONE | NONE
+
+11. COMPLETE_CRITICAL_CHAIN
+C1 | one fully corroborated critical RSP: ready, runIntegrityReady, PASS, all four legs satisfied/complete, PASS accepted, final report eligible | observed | PASS | NONE | NONE
+
+12. COMPLETE_NONCRITICAL_CHAIN
+D1 | identical outcome for criticality noncritical | observed (same assertions) | PASS | NONE | NONE
+
+13. MIXED_CRITICAL_NONCRITICAL
+E1 | RSP-001/002 critical complete, RSP-003 noncritical incomplete: warning, ready, PASS, warning IDs [RSP-003], no blockers | observed; PASS accepted | PASS | NONE | NONE
+BQ-warning | check default/--artifacts/--all exit 0; --strict exit 1 (real checkers, in-process and built CLI) | observed | PASS | NONE | NONE
+
+14. IMPLEMENTATION_GAP_MATRIX
+F1 | missing declaration at test-implementation: implementation leg missing, correction implementation, current stage blocked, target stage actionable | observed | PASS | TEST_EXPECTATION_DEFECT (authoring: asserted a bridge issue code the gate does not propagate; now asserts leg state) | test only
+G1 | file+symbol declared, producer matches one: partial -> incomplete -> blocked; exact unmatched reference "src/a.ts" visible on bridge issue context | observed | PASS | NONE | NONE
+H1 | same-ID mapping, no match: unsatisfied -> incomplete -> blocked (no fuzzy rescue) | observed | PASS | TEST_EXPECTATION_DEFECT (same cause as F1) | test only
+I1/I2 | declaration but no producer mapping, not truncated: producer-mapping-unavailable/indeterminate, blocked; bridge code IMPLEMENTATION_RESPONSIBILITY_PRODUCER_MAPPING_MISSING | observed | PASS | NONE | NONE
+J1/J2 | truncated flag: distinct code IMPLEMENTATION_RESPONSIBILITY_PRODUCER_MAPPING_TRUNCATED (also for test bridge); at run level the leg is indeterminate and blocks while implementation context readiness stays ready | observed | PASS | NONE | NONE
+
+15. TEST_GAP_MATRIX
+K1 | missing test declaration at verification: leg missing, correction test-implementation, verification blocked | observed | PASS | TEST_EXPECTATION_DEFECT (as F1) | test only
+L1 | partial (two files, one matches) -> partial; nothing matches -> unsatisfied; mapping for another ID -> not ready; empty producer test files -> uncorroborated; no test-symbol inference | observed | PASS | TEST_EXPECTATION_DEFECT (as F1) | test only
+J1 (test bridge) | MISSING vs TRUNCATED codes distinct | observed | PASS | NONE | NONE
+
+16. VERIFICATION_GAP_MATRIX
+M1 missing at judge: verification leg, correction verification, judge blocked, NEED_CONTEXT | PASS | NONE | NONE
+N1 status fail (exit 1) and fail with exit 0: failed/failed, blocks; status never inferred from exit code | PASS | NONE | NONE
+O1 blocked+reason: blocked/blocked, blocks | PASS | NONE | NONE
+P1 skipped: incomplete; critical blocks, noncritical warns with PASS expected | PASS | NONE | NONE
+Q1/BH1 pass with exit 3: diagnostic VERIFICATION_RESPONSIBILITY_STATUS_EVIDENCE_INCONSISTENT only, leg satisfied, warning, PASS expected, ready; status/check/export all warning and export warningCodes carries the diagnostic | PASS | NONE | NONE
+
+17. MALFORMED_IDENTITY_MATRIX
+R1 (x4) activated strategy with RSP-01 / rsp-001 / RESP-001 / RSP001: SEMANTIC_RESPONSIBILITY_ID_INVALID, blocked | observed | PASS | NONE | NONE (legacy half is A4)
+S1 duplicate RSP-001: state invalid, SEMANTIC_RESPONSIBILITY_DUPLICATE, blocked, first declaration (critical) authoritative, not merged | PASS | NONE | NONE
+AS1 missing or invalid criticality: blocks, never defaulted to noncritical (no warning IDs, noncritical count 0) | PASS | NONE | NONE
+AT1 zero responsibilities: pending before strategy passes; after, SEMANTIC_CONTINUITY_RESPONSIBILITIES_MISSING, global blocker, correction test-strategy | PASS | NONE | NONE
+
+18. ORPHAN_MATRIX
+T1 implementation orphan RSP-999: ready at implementation, global blocker (ORPHAN_DECLARATION, GLOBAL_INTEGRITY_INVALID) once the leg is active | PASS | NONE | NONE
+U1 test orphan: inactive at test-implementation, blocking at verification | PASS | NONE | NONE
+V1 verification orphan: inactive at verification, blocking at judge | PASS | NONE | NONE
+
+19. UPSTREAM_TRACE_MATRIX
+W1 BEH-999 undeclared: UPSTREAM_TRACE_MISSING, strategy invalid, missing IDs [BEH-999]; critical blocks (correction test-strategy), noncritical warns with PASS | PASS | NONE | NONE
+Y1 beh-001 vs BEH-001: no case folding (invalid/missing) | PASS | NONE | NONE
+
+20. TRN_ARROW_REGRESSION
+X1 "TRN-001: invalid-input -> validation-error", "- TRN-002: a -> b", and a declaration after a link line are declarations; "BEH-001 -> TST-001", "REQ-001 -> BEH-999" and mid-line mentions are not | PASS | NONE | NONE
+X2 traces to TRN-001 resolves end to end (ready) | PASS | NONE | NONE
+X3 link-only text does not satisfy a trace (TST prefix rejected; BEH-777 link target stays missing) | PASS | NONE | NONE
+Mutation check: re-adding the old "->" skip made X1 and X2 fail; restored.
+
+21. EXACT_MATCH_NEGATIVE_CONTROLS
+Z1 same basename, other directory (production and test): unsatisfied | PASS
+Z2 suffix / prefix / substring paths (x/src/a.ts, src/a.ts.bak, src/a.t, src): unsatisfied | PASS
+AA1 same symbol name, other file: unsatisfied | PASS
+BL1 case difference (src/Config vs src/config, production and test): unsatisfied | PASS
+Mutation check: case-folding the production file match made BL1 fail; restored.
+All: DEFECT_CLASSIFICATION NONE, FIX NONE.
+
+22. STRATEGY_CHANGE_AFTER_DOWNSTREAM
+AB1 RSP-002 added after downstream artifacts: RSP-001 complete; RSP-002 missing on all three legs, incomplete, sole blocker, correction implementation | PASS
+AB2 lifecycle staleness independent (newer strategy makes implementation the next stage) | PASS
+AD1 prose rewritten with ID retained: identity and result unchanged (no semantic equivalence check) | PASS
+AE1 repurposed ID with unchanged downstream declarations stays complete: documented LIMITATION (no repurposing detection; prompt states identity discipline is authored and not runtime-provable); code makes no false claim | PASS
+Classification NONE, FIX NONE.
+
+23. RESPONSIBILITY_REMOVAL_AFTER_DOWNSTREAM
+AC1 RSP-002 removed from strategy: three orphan declarations (impl/test/verification) become global blockers; state ready before removal, blocked after | PASS | NONE | NONE
+
+24. CORRECTION_PHASE_SAFETY
+AF1 malformed test/verification mappings and an empty implementation artifact: at the implementation phase ready, nothing blocked, implementation live prompt is normal (no deadlock); at judge blocked with TEST_..._FILE_INVALID and VERIFICATION_..._STATUS_INVALID | PASS
+AG1 verification defect is inactive during a test-implementation correction; blocked later with correction test-implementation | PASS
+Classification NONE, FIX NONE.
+
+25. MODE_SPECIFIC_STRATEGY_CORRECTION
+AH1 (repair/refactor/harden): authored PASS against a strategy blocker: gate recommends regression-/compatibility-/resilience-test-strategy, JudgeIntegrity accepts it, live `prompt` renders "Stage: <stage> (correction)", every specified input file, and the RSP stability sentences | PASS | NONE | NONE
+AI1 feature+resilience, test+regression, repair+compatibility rejected (isCorrectableStage false; router falls back to test-strategy default with a warning) | PASS | NONE | NONE
+
+26. CONTEXT_VS_SEMANTIC_PRECEDENCE
+AJ1 context refresh-required plus semantic verification gap: context primary (primaryBlockingCode = context blocker, recommended stage implementation), semantic blocker still visible; status/export/check agree | PASS
+AK1 refresh-required then populated: implementation leg indeterminate then satisfied, classification ready (recomputed) | PASS
+AL1/BT1 replace producer capsule between evaluations: status/export/check flip blocked -> ready immediately; no cache | PASS
+Classification NONE, FIX NONE.
+
+27. MANUAL_MARK_BYPASS
+AM1 (x3: test-implementation blocked by implementation gap; verification blocked by test gap; judge blocked by verification gap): mark --state complete exits 1 and artifact-state.json is byte-identical | PASS
+AN1 blocked-stage artifact present on disk AND manually marked complete resolves "blocked" | PASS
+Classification NONE, FIX NONE.
+
+28. JUDGE_BYPASS_MATRIX
+AO1 authored PASS vs critical blocker (with a manually created final-report file): rejected, JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY, stage = canonical, ineligible | PASS
+AP1 canonical null + authored NEED_CONTEXT "architecture-context": accepted stage null, correctionRequired false | PASS
+AQ1 canonical implementation vs authored architecture-context: implementation wins | PASS
+AR1 noncritical warning + authored PASS: accepted, eligible | PASS
+BG1 critical verification failure at final-report with a manual final-report file: ineligible; final-report is the semantic-blocked stage | PASS
+Classification NONE, FIX NONE.
+
+29. TEST_MODE_COMPATIBILITY
+AU1 test mode: implementation leg not-applicable, complete chain ready/PASS without an ImplementationReport mapping requirement; missing test declaration and missing verification each block with the right leg | PASS | NONE | NONE
+
+30. GREENFIELD_COMPATIBILITY
+AV1 CLI start greenfield: no persisted version, no semantic text in any saved prompt, status/check/export print no semantic section | PASS | NONE | NONE
+BV1 (greenfield half) no maintainer paths in generated prompts | PASS
+
+31. PROOF_ONLY_COMPATIBILITY
+AW1 CLI start --proof-only: no persisted version, verificationResponsibility preserved, saved verification prompt keeps "Proof result: PASS" and contains no RSP verification block, status prints no semantic section | PASS | NONE | NONE
+
+32. EXTRACTION_SOURCE_TARGET_COMPATIBILITY
+AX1 activated extraction: a declared path that exists only in the source repository does not corroborate against target evidence (unsatisfied, blocked); the extraction implementation prompt states TARGET repository identities | PASS | NONE | NONE. The gate performs no filesystem lookup of declared paths.
+
+33. LEGACY_PRODUCER_COMPATIBILITY
+AY1 the 1.10.2 schema-major-1 capsule fixture (mappings replaced in memory by an entry lacking productionSymbols and proposedOrExistingTestFiles, fixture file untouched): parses, additive fields project to [], bridge yields uncorroborated with no crash or schema rejection | PASS | NONE | NONE
+
+34. CURRENT_PRODUCER_COMPATIBILITY
+AZ1 1.12.4-shaped evidence with productionSymbols and proposedOrExistingTestFiles: implementation and test legs satisfied, complete | PASS | NONE | NONE. my-dev-kit not modified.
+
+35. REQUEST_SCOPED_SHARED_EVIDENCE
+BA1 two mappings sharing one production symbol set: each RSP evaluated independently (RSP-002 declaring a different file is unsatisfied while RSP-001 is satisfied; when both declare the shared identity both complete); no per-RSP causality claimed | PASS | NONE | NONE
+
+36. ORDERING_AND_PRECEDENCE
+BB1 order RSP-010, RSP-002, RSP-100: continuity results, blocking IDs, primary blocker, status and export all keep strategy order | PASS
+BC1 same RSP implementation + verification gaps: implementation wins | PASS
+BD1 RSP-001 verification gap vs RSP-002 implementation gap: implementation correction and RSP-002 primary although RSP-001 is first | PASS
+BE1 same-leg tie (RSP-020 before RSP-003): first declared is primary | PASS
+Classification NONE, FIX NONE.
+
+37. PHASE_BOUNDARY_MATRIX
+BF1 strict "current > owner": strategy pending at test-strategy, active at the next stage; implementation/test/verification legs [F,F,F] at implementation, [T,F,F] at test-implementation, [T,T,F] at verification, [T,T,T] at judge and final-report | PASS | NONE | NONE
+BI1 (x3) malformed verification (status "success", missing command, exit code "abc"): invalid/blocked when active; ready and not blocking at verification | PASS | NONE | NONE
+
+38. PATH_AND_LINE_ENDING_MATRIX
+BJ1 ../escape.ts, C:\absolute\a.ts, /absolute/a.ts, https://example.com/a.ts: IMPLEMENTATION_..._FILE_INVALID and TEST_..._FILE_INVALID, blocked | PASS
+BK1 src\config\schema.ts matches producer src/config/schema.ts (production and test) | PASS
+BL1 case significant | PASS
+BM1 paths with spaces in declarations and evidence, and a temp project root containing spaces: match, and status/check/export/prompt render correctly | PASS
+BN1 LF vs CRLF artifacts (including a TRN arrow declaration): byte-identical continuity results, state complete | PASS
+Classification NONE, FIX NONE.
+
+39. LIVE_PROMPT_CONTEXT_TRANSITION
+BO1 through the CLI: fresh activated run's `prompt implementation` is refresh-only (no Required output artifact); after populating ready context, the same command returns the normal ImplementationReport prompt with "implementation responsibility ID: RSP-001" and the post-change refresh block; `prompt test-implementation` then shows "test implementation responsibility ID: RSP-001" and the post-test refresh block | PASS | NONE | NONE
+
+40. SAVED_VS_LIVE_PROMPT_BEHAVIOR
+BP1 saved test-implementation template carries the authoring contract and no "BLOCKED by Semantic Continuity"; the live prompt for the semantic-blocked current stage returns correction guidance (recommended stage implementation, no TestImplementationReport output); saved file byte-identical after the live command | PASS | NONE | NONE
+
+41. NON_STUBBED_CLI_MATRIX
+BQ builds a realistic activated run whose EVERY artifact satisfies its content contract (sections generated from the artifact section registry, non-placeholder prose, Status: complete, semantic blocks appended, prompt files regenerated), then runs the unmocked in-process commands AND the built dist/cli.js:
+- complete chain: default, --artifacts, --all exit 0, zero [fail] lines, and --strict also exit 0 (proves the fixture has no unrelated warnings).
+- warning (RSP-003 noncritical gap): exit 0 normally, exit 1 under --strict, zero [fail] lines.
+- blocker (verification block absent, authored NEED_CONTEXT so judge integrity stays accepted): exit 1 and every [fail] line is the semantic section; correction verification.
+Differential design proves the exit codes are caused by the semantic state, not by a minimal fixture. All variants PASS in-process and built | NONE | NONE.
+NOTE (authoring, TEST_FIXTURE_DEFECT): the first fixture drew PLACEHOLDER_CONTENT warnings on short kinds (behavior-model, pseudocode, judge, final report) that made --strict fail; a Notes line was added.
+
+42. CROSS_SURFACE_AGREEMENT
+BR1 (real blocked fixture, in-process and built CLI): status, check, export, judge prompt agree on contract version, classification, continuity state, run-integrity readiness, blocking RSP IDs, primary blocking code and reason, recommended correction stage, expected verdict | PASS
+BR2 (warning fixture): status/export/judge agree on warning IDs [RSP-003] and PASS | PASS
+Classification NONE, FIX NONE.
+
+43. NO_SEMANTIC_STATE_PERSISTENCE
+BS1 after status, check --all, export, prompt, prompt judge: no semantic-continuity.json, semantic-check-results.json, rsp-state.json or any semantic/rsp-state file anywhere in the workspace | PASS (in-process and built)
+BT1 see 26 (evidence replaced between evaluations) | PASS
+
+44. PUBLIC_SURFACE_REGRESSION
+BU1 8 commands, 7 modes, 79 native stages (sum of workflow stages), no --semantic/--continuity/--rsp/--direct/--full-stage-context flag, no status --json, version 1.4.1 | PASS. Built CLI checked separately: --version 1.4.1, 8 commands, mode list feature|repair|test|refactor|harden|extraction|greenfield, no activation or JSON flag (the only "direct"/"json"-substring flag hits were --root/--output-dir, i.e. "directory").
+
+45. PROMPT_LEAKAGE_REGRESSION
+BV1 activated feature prompts and every greenfield prompt contain no src/instructions, src/promptGenerator, docs/reports, .my-dev-kit-context, AGENTS.txt or tests/semantic paths; the v1.4.1 greenfield installed-prompt correction and the existing leakage suites (promptLeakage, stagePromptLeakageMatrix) still pass | PASS
+
+46. DEFECTS_DISCOVERED
+Production defects: 0. The matrix exposed no incorrect behavior in any Batch 0-5 production module.
+Authoring-time test defects, all fixed in the test file: five expectation defects (F1, H1, K1, L1 asserted bridge-level issue codes at the gate; A2 mark ordering) and two fixture defects (realistic fixture placeholder length; BM1 needed prior artifacts for the explicit judge prompt).
+Observation (not a defect, recorded for release review): bridge-level source issue codes such as *_DECLARATION_MISSING, *_EVIDENCE_UNCORROBORATED and *_PRODUCER_MAPPING_MISSING/TRUNCATED are visible on the bridge results but the Batch 3/4 contract does not propagate them onto gate blockers or command output; the gate exposes leg states (missing, partial, unsatisfied, indeterminate). The distinctions are asserted at bridge level (G1, I2/J1, L1) and at leg-state level at run level. Changing that would be a contract change, not a defect repair, so it was not done.
+Documented limitation (AE): repurposing of an RSP ID is undetectable.
+
+47. DEFECT_CLASSIFICATION
+SEMANTIC_CONTRACT_IMPLEMENTATION_DEFECT 0; RUN_INTEGRITY_INTEGRATION_DEFECT 0; PROMPT_CONTRACT_DEFECT 0; COMMAND_SURFACE_DEFECT 0; CORRECTION_ROUTING_DEFECT 0; LEGACY_COMPATIBILITY_DEFECT 0; PRODUCER_COMPATIBILITY_DEFECT 0; DOCUMENTATION_ONLY_DEFECT 0; PLANNER_CONTRACT_AMBIGUITY 0; TEST_EXPECTATION_DEFECT 5 (fixed); TEST_FIXTURE_DEFECT 2 (fixed).
+
+48. REPAIRS_APPLIED
+None to production. Repair cycles used: 0 of 3. Mutation checks (temporary, reverted, tree verified clean afterwards): case-folding production-file matching failed BL1; restoring the "->" line skip failed X1 and X2. This shows the matrix detects those regressions.
+
+49. PRODUCTION_FILES_CHANGED
+0
+
+50. TEST_FILES_CHANGED
+NEW: tests/semanticContinuityAdversarialMatrix.test.ts. No existing test or frozen fixture was modified.
+
+51. DOCUMENTATION_FILES_CHANGED
+None (no defect repair changed a documented fact). README.md, CHANGELOG.md, docs/CURRENT_STATE.md, docs/ROADMAP.md untouched.
+
+52. ADVERSARIAL_MATRIX_RESULT
+npx jest tests/semanticContinuityAdversarialMatrix.test.ts --runInBand: 110 passed, 0 failed (including the built-CLI variant).
+
+53. BATCH_0_5_REGRESSION_RESULT
+The eleven listed Batch 0-5 semantic suites: 11 suites, 529 tests passed.
+
+54. HISTORICAL_LEGACY_REGRESSION_RESULT
+correction-router, judge-integrity (+CLI), trace, context-readiness (+historical matrix), RunIntegrityGate (+frozen replay, +CLI), context judge/correction/replay, legacy-run and v1.2.1/v1.2.3 frozen prompt/regression suites, leakage, proof-only, greenfield, prompt-generation, run-management: 58 suites passed, 1 skipped (pre-existing); 1389 tests passed, 9 skipped. No frozen fixture or legacy assertion modified.
+
+55. FULL_TEST_RESULT
+npm test -- --runInBand: 142 suites passed, 3 skipped (pre-existing); 3533 tests passed, 11 skipped, 0 failed (3423 before this batch).
+
+56. VERIFY_RESULT
+npm run verify: exit 0 (typecheck, build, smoke:context, eslint, markdownlint, docs:check, test:security, smoke:cli normal/lifecycle/extraction/check/trace/correction/export/greenfield).
+
+57. SMOKE_CONTEXT_RESULT
+CONTEXT_CLI_SMOKE_PASS (inside verify; source fixtures unchanged).
+
+58. PACKAGE_DRY_RUN_RESULT
+npm pack --dry-run passed; inspected programmatically: 448 files, version 1.4.1; 0 entries for tests/, docs/reports/, .my-dev-kit-context, .my-dev-kit-workflow, coverage/, or tarballs; no stray .tgz in the working tree. git diff --check clean.
+
+59. COMMAND_COUNT
+8
+
+60. MODE_COUNT
+7
+
+61. NATIVE_STAGE_COUNT
+79
+
+62. MY_DEV_KIT_REPOSITORY_STATE
+C:\Users\daile\Projects\my-dev-kit at fcf58329820ddae781ceb75d3936024ed87d5f72 (the expected 1.12.4 baseline), working tree clean (0 changes). Not modified. Only the published @dailephd/my-dev-kit@1.12.4 CLI was used, read-only, for indexing/retrieval into an uncommitted directory.
+
+63. OUT_OF_SCOPE_CONFIRMATION
+No new feature, command, flag, mode, stage, artifact family, or dependency. No version bump, release, PR, or merge. No full v1.5 documentation reconciliation (Batch 7). No my-dev-kit change. No semantic state persistence.
+
+64. COMMIT
+test: add semantic continuity adversarial matrix
+(SHA recorded in the final response; a report cannot contain its own commit id.)
+
+65. PUSH_RESULT
+Recorded in the final response (origin/feature/v1.5.0-semantic-continuity; no pull request opened).
+
+66. NEXT_ACTION
+READY_FOR_V1_5_BATCH_7_PACKAGE_CROSS_PLATFORM_AND_DOCUMENTATION_HARDENING
