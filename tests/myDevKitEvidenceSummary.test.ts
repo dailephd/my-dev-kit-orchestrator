@@ -446,3 +446,83 @@ describe('findCapsuleAuditInconsistencies', () => {
     }
   });
 });
+
+describe('productionSymbols projection (v1.5 Batch 1)', () => {
+  function project(mappings: unknown[], truncated = false) {
+    const tmp = makeTempDir();
+    try {
+      const p = path.join(tmp, 'capsule.json');
+      fs.writeFileSync(p, minimalCapsule({ responsibilityMappings: { mappings, truncated } }), 'utf8');
+      return readRawContextCapsule(p, tmp);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  it('keeps supported schema major 1', () => {
+    expect(RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR).toBe(1);
+  });
+
+  it('projects consumed identity fields of current-style productionSymbols and ignores richer fields', () => {
+    const result = project([
+      {
+        responsibilityId: 'RSP-001',
+        mappingStatus: 'partially-mapped',
+        productionSymbols: [
+          {
+            id: 'symbol:src/a.ts#run',
+            itemKind: 'symbol',
+            path: 'src/a.ts',
+            symbolId: 'symbol:src/a.ts#run',
+            nodeId: 'n1',
+            sourceLocation: { filePath: 'src/a.ts', line: 3 },
+            relationship: 'changed',
+            basis: 'b',
+            provenance: 'p',
+          },
+        ],
+        contracts: [{ id: 'c' }],
+        testCommands: ['npm test'],
+        oracleEvidence: [{ id: 'o' }],
+      },
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.projection.responsibilityMappings).toEqual([
+        {
+          responsibilityId: 'RSP-001',
+          mappingStatus: 'partially-mapped',
+          productionSymbols: [
+            { id: 'symbol:src/a.ts#run', itemKind: 'symbol', path: 'src/a.ts', symbolId: 'symbol:src/a.ts#run', nodeId: 'n1' },
+          ],
+        },
+      ]);
+    }
+  });
+
+  it('treats absent productionSymbols (legacy producer) as []', () => {
+    const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped' }]);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.projection.responsibilityMappings[0].productionSymbols).toEqual([]);
+  });
+
+  it('accepts empty productionSymbols', () => {
+    const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped', productionSymbols: [] }]);
+    expect(result.ok).toBe(true);
+  });
+
+  it.each([
+    ['not an array', 'nope'],
+    ['item not an object', ['x']],
+    ['item without id', [{ path: 'src/a.ts' }]],
+    ['item with empty id', [{ id: '' }]],
+    ['non-string path', [{ id: 'a', path: 3 }]],
+    ['non-string symbolId', [{ id: 'a', symbolId: {} }]],
+    ['non-string itemKind', [{ id: 'a', itemKind: 1 }]],
+    ['non-string nodeId', [{ id: 'a', nodeId: false }]],
+  ])('fails closed on malformed present productionSymbols: %s', (_n, value) => {
+    const result = project([{ responsibilityId: 'TST-001', mappingStatus: 'mapped', productionSymbols: value }]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('malformed');
+  });
+});

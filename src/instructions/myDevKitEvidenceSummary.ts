@@ -17,9 +17,25 @@ import { identityPathsEqual } from './contextIdentity';
 export const RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR = 1;
 export const RAW_RETRIEVAL_AUDIT_SUPPORTED_MAJOR = 1;
 
+// Bounded projection of a producer EvidenceItemRef (v1.5 Batch 1): only the
+// identity fields the implementation-evidence bridge matches exactly.
+export interface RawEvidenceItemRef {
+  id: string;
+  itemKind?: string;
+  path?: string;
+  symbolId?: string;
+  nodeId?: string;
+}
+
 export interface RawResponsibilityMappingEntry {
   responsibilityId: string;
   mappingStatus: string;
+  // Producer responsibilityMappings.mappings[].productionSymbols. Optional in
+  // the type so pre-existing literals stay valid; the parser always populates
+  // it ([] when the producer omitted it, as older schema-major-1 producers do).
+  // Request-scoped in my-dev-kit 1.12.4: may be shared across mappings, so it
+  // corroborates repository identity only, never per-responsibility causality.
+  productionSymbols?: RawEvidenceItemRef[];
 }
 
 // Bounded projection of my-dev-kit v1.10.4's additive `roleConditionCoverage`
@@ -128,6 +144,33 @@ function validateRoleConditionCoverage(value: unknown): RawRoleConditionCoverage
   return entries;
 }
 
+// Validates the additive per-mapping `productionSymbols` field. Absent is
+// legacy-compatible ([]); present-but-malformed is a malformed document.
+function validateProductionSymbols(value: unknown): RawEvidenceItemRef[] | 'malformed' {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return 'malformed';
+  const items: RawEvidenceItemRef[] = [];
+  for (const item of value) {
+    if (!isPlainObject(item)) return 'malformed';
+    if (typeof item.id !== 'string' || item.id.length === 0) return 'malformed';
+    const ref: RawEvidenceItemRef = { id: item.id };
+    for (const key of ['itemKind', 'path', 'symbolId', 'nodeId'] as const) {
+      const v = item[key];
+      if (v === undefined) continue;
+      if (typeof v !== 'string') return 'malformed';
+      ref[key] = v;
+    }
+    items.push(ref);
+  }
+  return items;
+}
+
+function hasMalformedProductionSymbols(data: Record<string, unknown>): boolean {
+  const rm = data.responsibilityMappings;
+  if (!isPlainObject(rm) || !Array.isArray(rm.mappings)) return false;
+  return rm.mappings.some((m) => isPlainObject(m) && validateProductionSymbols(m.productionSymbols) === 'malformed');
+}
+
 function projectRawEvidence(
   data: Record<string, unknown>,
   schemaMajor: number,
@@ -171,6 +214,7 @@ function projectRawEvidence(
     .map((m) => ({
       responsibilityId: asString(m.responsibilityId) ?? '',
       mappingStatus: asString(m.mappingStatus) ?? 'unmapped',
+      productionSymbols: validateProductionSymbols(m.productionSymbols) as RawEvidenceItemRef[],
     }))
     .filter((m) => m.responsibilityId.length > 0);
 
@@ -241,6 +285,13 @@ function parseRawEvidenceText(text: string, supportedMajor: number): RawEvidence
   const roleConditionCoverage = validateRoleConditionCoverage(data.roleConditionCoverage);
   if (roleConditionCoverage === 'malformed') {
     return { ok: false, status: 'malformed', message: 'Raw evidence JSON declares a malformed "roleConditionCoverage" field.' };
+  }
+  if (hasMalformedProductionSymbols(data)) {
+    return {
+      ok: false,
+      status: 'malformed',
+      message: 'Raw evidence JSON declares a malformed "productionSymbols" field in a responsibility mapping.',
+    };
   }
   return { ok: true, projection: projectRawEvidence(data, major, roleConditionCoverage) };
 }

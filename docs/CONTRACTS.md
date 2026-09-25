@@ -58,6 +58,22 @@ Responsibilities are declared in the existing mode-specific test-strategy artifa
 
 Legacy responsibility IDs (any previously accepted safe ID) remain valid for the legacy parser and context-readiness path. Batch 0 does not change generated prompts, `RunIntegrityGate`, judge integrity, `status`, `check`, `export`, or final-report eligibility.
 
+## Implementation evidence bridge foundation (v1.5.0 Batch 1)
+
+The future carrier for semantic implementation mapping is the existing `ImplementationReport`; Batch 1 adds no artifact, stage, mode, or command, and does not change generated prompts or artifact-section requirements. A canonical implementation responsibility block is:
+
+```text
+implementation responsibility ID: RSP-001
+production file: src/config/schema.ts
+production symbol: symbol:src/config/validate.ts#validateConfig
+```
+
+A block runs to the next `implementation responsibility ID:` line or end of input. The ID must be a canonical `RSP-NNN` (the Batch 0 pattern). `production file:` and `production symbol:` may each repeat as list entries, and a block needs at least one of them. A file is a project-relative path: separators are normalized to `/`, case is preserved, and absolute, drive-letter, UNC, URL, NUL, `..`, empty, and `.` values are rejected. A symbol is `symbol:<project-relative-path>#<name>` with a non-empty path and name and exactly one `#`. Parsing is purely lexical and never reads the filesystem.
+
+`src/instructions/implementationResponsibilityEvidence.ts` also evaluates the bridge from the strategy-side responsibilities, the declarations, and the projected implementation-role my-dev-kit evidence. The evaluator selects the producer mapping with exactly the same responsibility ID and matches declared files and symbols exactly, with no basename, suffix, substring, or case-insensitive matching. A file is matched by a producer `productionSymbols` item whose `path` or `id` equals it, and a symbol by an item whose `id` or `symbolId` equals it. Per-responsibility states are `corroborated`, `partially-corroborated`, `uncorroborated`, `missing-declaration`, and `producer-mapping-unavailable`. Orphan declarations, missing declarations, missing or truncated producer mappings, and unmatched references are reported with stable `IMPLEMENTATION_RESPONSIBILITY_*` codes. Criticality is carried but not enforced, and the producer's whole `mappingStatus` is kept for context only.
+
+Corroboration means only that a declared repository identity appears exactly in the bounded my-dev-kit production evidence for that responsibility ID. In my-dev-kit 1.12.4 the production-symbol set is request-scoped and may be shared across mappings, so it neither proves that a file or symbol implements a responsibility nor proves that the file changed. The relation between a responsibility and its implementation remains the coding agent's declaration. `productionSymbols` is projected additively; producers that omit it remain valid (treated as empty), while a malformed present value is rejected as malformed raw evidence. Production implementation evidence applies only to modes whose native workflow has an `implementation` stage; `test` and `greenfield` do not. `RunIntegrityGate`, judge integrity, status, check, export, and final-report eligibility are not affected by Batch 1.
+
 ## Compatibility expectations
 
 Schema versions, fixed paths, stage order, command families, issue codes, legacy-run treatment, and documented non-execution boundaries are compatibility-sensitive. Additive evolution must preserve old-run readability or emit explicit legacy/not-evaluated evidence. See [ARCHITECTURE.md](ARCHITECTURE.md) for owners and [DOCUMENTATION_PRESERVATION_POLICY.md](DOCUMENTATION_PRESERVATION_POLICY.md) for anti-drift rules.

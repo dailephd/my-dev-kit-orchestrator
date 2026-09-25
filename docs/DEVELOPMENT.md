@@ -161,6 +161,9 @@ Important implementation files:
   parsing
 - `src/instructions/semanticResponsibility.ts`: canonical `RSP-NNN` structural contract
   validation (v1.5 Batch 0; tests in `tests/semanticResponsibility.test.ts`)
+- `src/instructions/implementationResponsibilityEvidence.ts`: implementation responsibility block
+  parsing and Kit-evidence corroboration bridge (v1.5 Batch 1; tests in
+  `tests/implementationResponsibilityEvidence.test.ts`)
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation
