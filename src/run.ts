@@ -66,8 +66,10 @@ export function createRun(options: {
   targetRepoRoot?: string;
   proofOnly?: boolean;
   verificationResponsibility?: string;
-  // Persisted only when explicitly supplied; ordinary run creation does not
-  // activate semantic continuity (automatic activation is deferred).
+  // Persisted only when explicitly supplied. createRun() never activates
+  // semantic continuity on its own: the `start` command supplies it for
+  // semantic-capable staged runs, and programmatic callers that omit it create
+  // legacy (absent-version) runs.
   semanticContinuityVersion?: string;
 }): RunMetadata {
   const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;

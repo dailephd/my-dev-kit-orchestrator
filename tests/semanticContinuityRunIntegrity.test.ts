@@ -575,3 +575,97 @@ describe('run reconciliation (loadRun)', () => {
     expect(legacy.currentStage).not.toBe('verification');
   });
 });
+
+// ─── Batch 5: mode-owned strategy routing and canonical NEED_CONTEXT routing ─
+
+describe('semantic strategy correction routing (Batch 5)', () => {
+  it.each([
+    ['repair', 'regression-test-strategy'],
+    ['refactor', 'compatibility-test-strategy'],
+    ['harden', 'resilience-test-strategy'],
+  ] as const)('%s: an authored PASS against a strategy blocker routes to %s', (mode, strategyStage) => {
+    withRun({ mode, upstream: 'REQ-001: only one\n' }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      const { gate, judgeIntegrity, eligibility } = judge(meta, 'final-report');
+      expect(gate.recommendedCorrectionStage).toBe(strategyStage);
+      expect(judgeIntegrity.judgeVerdictAccepted).toBe(false);
+      expect(judgeIntegrity.blockingCodes).toEqual(['JUDGE_VERDICT_CONTRADICTS_RUN_INTEGRITY']);
+      expect(judgeIntegrity.correctionRequired).toBe(true);
+      expect(judgeIntegrity.acceptedCorrectionStage).toBe(strategyStage);
+      expect(judgeIntegrity.acceptedCorrectionRoute?.routedStage).toBe(strategyStage);
+      expect(eligibility.eligible).toBe(false);
+    });
+  });
+
+  it('the contradiction wording names canonical run integrity, not only repository context', () => {
+    withRun({ ver: null }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      const { judgeIntegrity } = judge(meta, 'final-report');
+      const warning = (judgeIntegrity.acceptedCorrectionRoute?.warnings ?? []).join('\n');
+      expect(warning).toContain('canonical run integrity still requires NEED_CONTEXT');
+      expect(warning).not.toContain('repository-context readiness');
+    });
+  });
+
+  function writeJudge(meta: RunMetadata, text: string): void {
+    fs.writeFileSync(path.join(meta.runFolder, 'artifacts', 'judge-report.txt'), text, 'utf8');
+  }
+  function judgeOf(meta: RunMetadata, stage: string) {
+    const gate = gateAt(meta, stage);
+    return { gate, integrity: evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode }) };
+  }
+
+  it('authored NEED_CONTEXT with a null canonical recommendation does not fall back to architecture-context', () => {
+    withRun({ version: '9.9.9' }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      writeJudge(meta, 'Verdict: NEED_CONTEXT\nRecommended next stage: architecture-context');
+      const { gate, integrity } = judgeOf(meta, 'final-report');
+      expect(gate.expectedJudgeVerdict).toBe('NEED_CONTEXT');
+      expect(gate.recommendedCorrectionStage).toBeNull();
+      expect(integrity.judgeVerdictAccepted).toBe(true);
+      expect(integrity.acceptedCorrectionStage).toBeNull();
+      expect(integrity.correctionRequired).toBe(false);
+      expect(integrity.acceptedCorrectionRoute).toBeNull();
+      expect(integrity.finalReportEligible).toBe(false);
+    });
+    withRun({ version: '9.9.9' }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      writeJudge(meta, 'Verdict: NEED_CONTEXT');
+      const { integrity } = judgeOf(meta, 'final-report');
+      expect(integrity.acceptedCorrectionStage).toBeNull();
+      expect(integrity.correctionRequired).toBe(false);
+    });
+  });
+
+  it('the canonical semantic correction stage wins over a conflicting authored recommendation', () => {
+    withRun({ impl: 'done' }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      writeJudge(meta, 'Verdict: NEED_CONTEXT\nRecommended next stage: architecture-context');
+      const { gate, integrity } = judgeOf(meta, 'final-report');
+      expect(gate.recommendedCorrectionStage).toBe('implementation');
+      expect(integrity.correctionRequired).toBe(true);
+      expect(integrity.acceptedCorrectionStage).toBe('implementation');
+      expect(integrity.acceptedCorrectionRoute?.routedStage).toBe('implementation');
+      expect(integrity.acceptedCorrectionRoute?.warnings.join('\n')).toContain('canonical run integrity recommends "implementation"');
+    });
+  });
+
+  it('a mode-owned strategy stage is the canonical NEED_CONTEXT route for repair', () => {
+    withRun({ mode: 'repair', upstream: 'REQ-001: only one\n' }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      writeJudge(meta, 'Verdict: NEED_CONTEXT\nRecommended next stage: architecture-context');
+      expect(judgeOf(meta, 'final-report').integrity.acceptedCorrectionStage).toBe('regression-test-strategy');
+    });
+  });
+
+  it('authored NEED_CONTEXT while the gate expects PASS keeps the ordinary authored routing', () => {
+    withRun({ strategy: NONCRITICAL, ver: null }, (meta) => {
+      writePriorArtifacts(meta, 'final-report');
+      writeJudge(meta, 'Verdict: NEED_CONTEXT\nRecommended next stage: behavior-model');
+      const { gate, integrity } = judgeOf(meta, 'final-report');
+      expect(gate.expectedJudgeVerdict).toBe('PASS');
+      expect(integrity.acceptedCorrectionStage).toBe('behavior-model');
+      expect(integrity.correctionRequired).toBe(true);
+    });
+  });
+});

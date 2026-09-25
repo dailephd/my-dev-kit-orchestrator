@@ -1,5 +1,6 @@
 import { JudgeVerdict, ParsedJudgeReport, parseJudgeReport } from './judgeParser';
 import type { WorkflowMode } from './types';
+import { TEST_STRATEGY_SOURCE_REQUIREMENTS } from './instructions/testResponsibilityCriticality';
 
 // The set of stage names that correction routing can target.
 // These are the canonical stage names as used in workflow stage definitions.
@@ -15,9 +16,27 @@ export const CORRECTABLE_STAGES = [
 
 const MODE_SPECIFIC_CORRECTABLE_STAGES = ['target-architecture'] as const;
 
+// Mode-owned strategy stages (v1.5.0 Batch 5). Correctable ONLY for the one
+// workflow mode that owns each stage (see isCorrectableStage); "test-strategy"
+// (feature/test/extraction) stays in CORRECTABLE_STAGES above.
+const MODE_OWNED_STRATEGY_CORRECTABLE_STAGES = [
+  'regression-test-strategy',
+  'compatibility-test-strategy',
+  'resilience-test-strategy',
+] as const;
+
 export type CorrectableStage =
   | (typeof CORRECTABLE_STAGES)[number]
-  | (typeof MODE_SPECIFIC_CORRECTABLE_STAGES)[number];
+  | (typeof MODE_SPECIFIC_CORRECTABLE_STAGES)[number]
+  | (typeof MODE_OWNED_STRATEGY_CORRECTABLE_STAGES)[number];
+
+// Ownership is derived from the existing test-strategy source registry rather
+// than a second stage-to-mode mapping.
+function isOwnedStrategyStageForMode(stage: string, mode: WorkflowMode | undefined): boolean {
+  if (mode === undefined) return false;
+  const requirement = TEST_STRATEGY_SOURCE_REQUIREMENTS.find((r) => r.mode === mode);
+  return requirement !== undefined && requirement.strategyStageId === `stage.${mode}.${stage}`;
+}
 
 export interface CorrectionRouteOptions {
   strict?: boolean;
@@ -59,10 +78,14 @@ const VERDICT_ROUTE_TABLE: Partial<Record<JudgeVerdict, CorrectableStage>> = {
 
 const BLOCKED_VERDICTS = new Set<JudgeVerdict>(['SCOPE_VIOLATION', 'BLOCKED']);
 
-export function isCorrectableStage(s: string): s is CorrectableStage {
+// Mode-aware: the three mode-owned strategy stages are correctable only for
+// their owning mode; without a mode they are not correctable.
+export function isCorrectableStage(s: string, workflowMode?: WorkflowMode): s is CorrectableStage {
   return (
     (CORRECTABLE_STAGES as readonly string[]).includes(s) ||
-    (MODE_SPECIFIC_CORRECTABLE_STAGES as readonly string[]).includes(s)
+    (MODE_SPECIFIC_CORRECTABLE_STAGES as readonly string[]).includes(s) ||
+    ((MODE_OWNED_STRATEGY_CORRECTABLE_STAGES as readonly string[]).includes(s) &&
+      isOwnedStrategyStageForMode(s, workflowMode))
   );
 }
 
@@ -155,7 +178,7 @@ export function routeJudgeVerdict(
   // Honour recommended stage when it's a valid correctable stage
   let routedStage: CorrectableStage | null = tableStage;
   if (parsed.recommendedNextStage) {
-    if (isCorrectableStage(parsed.recommendedNextStage)) {
+    if (isCorrectableStage(parsed.recommendedNextStage, options.workflowMode)) {
       if (parsed.recommendedNextStage !== tableStage) {
         // Conflict between table and recommendation
         const msg =

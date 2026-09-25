@@ -73,6 +73,10 @@ Supported options and inputs:
 
 Start initializes the workspace if needed, creates the run folder, writes request/run metadata, and generates the chosen workflow's prompts and applicable sidecars. The agent executes stage work externally.
 
+### Semantic Continuity activation
+
+A new staged run automatically persists `semanticContinuityVersion: "1.0.0"` in `run.json` for `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction`, and `start` prints `Semantic continuity: active (1.0.0)`. `greenfield` and `--proof-only` runs are not activated and print no such line. There is no activation flag: the staged CLI workflow is the full-stage-context surface, and a lightweight direct implementation that bypasses staged runs stays outside Semantic Continuity. The set of activated modes is derived from the existing test-strategy registry, not a separate list. Runs created without the version (older runs, or programmatic `createRun()` callers that omit it) remain legacy and keep their prior prompts and output.
+
 ### Resumable run placement
 
 The reviewed follow-up commands do not rediscover custom `start --output-dir` runs. `prompt`, `status`, `list`, `mark`, `check`, and `export` use the default run store and do not accept `--output-dir`. Supplying `--run` does not override this limitation. Omit custom output for runs that must resume through the CLI.
@@ -118,6 +122,8 @@ Without a stage, select the first stage whose effective state is not complete. I
 
 Prompt display reevaluates readiness but does not create sidecars/templates or mutate `run.json`, lifecycle state, or supplemental evidence. A blocked implementation/test stage renders refresh-only instructions rather than authorizing normal work. Correction state can select a bounded correction prompt. An ineligible explicit final-report request produces blocked guidance.
 
+For an activated run, the prompt for each participating stage also carries the Semantic Continuity authoring contract (see [WORKFLOWS.md](WORKFLOWS.md#semantic-continuity-prompt-contract)). The saved prompt files written at `start` contain that authoring contract as templates and never reflect live gate state. The live `prompt` command additionally honors the current `RunIntegrityGate`: when the current stage is blocked by Semantic Continuity it prints the current blocked stage, the semantic blocker, the affected responsibility, the broken leg, and the recommended correction stage, plus bounded repair guidance for that earlier stage only, and never the blocked stage's normal work. When no correction stage exists (for example an unsupported contract version) it states that external run-contract resolution is required and guesses no stage. A refresh-required repository context for the correction target still takes precedence with refresh-only instructions. The live judge prompt includes the canonical semantic summary rather than asking the judge to re-derive it.
+
 A coding agent can advance through successive authorized prompts in one session, saving actual stage evidence. It cannot collapse native stages or use a manual completion mark to skip tests.
 
 ## status
@@ -130,6 +136,8 @@ my-dev-kit-orchestrator status --run <run-id> --root <project-root>
 ```
 
 Status reports identity, request, folder, current stage, prompts, artifact lifecycle, supporting reports, implementation/test context, freshness/adequacy, blockers, and next command. Judge/final-report integrity includes expected and authored verdicts, acceptance, correction state, and eligibility.
+
+For an activated run, `status` adds one compact `Semantic continuity:` section projected from the same `RunIntegrityGate` result it already computes: contract version, semantic classification, continuity state, run integrity readiness, critical and noncritical responsibility totals with unsatisfied counts, and, when present, blocking and warning responsibility IDs, blocking and warning codes, and the recommended correction stage. Legacy, greenfield, and proof-only runs show no such section.
 
 `status` is human-readable. There is no JSON option. Do not invent a JSON-output flag for `status`.
 
@@ -195,6 +203,8 @@ Read individual results. Default warning-only findings may exit 0. Failures exit
 
 Checks may persist their result reports but do not advance stages or change lifecycle state. Context blockers and rejected/malformed/unknown judge verdicts remain failures even when artifact sections are structurally valid. An accepted correction-required verdict is not itself a malformed judge result.
 
+For an activated run, the default `check`, `check --artifacts`, and `check --all` include a `=== Semantic continuity ===` section from the same gate; narrowly scoped checks such as `--trace`, `--artifact`, and `--prompts` do not. There is no `check --semantic` flag. A blocked classification is a failure (exit 1) and names the primary blocking code, primary reason, affected responsibility, broken leg, and recommended correction stage. A warning classification (noncritical gaps only) is a warning: it exits 0 normally and exits 1 under `--strict`, like other warnings. A ready gate, including pending continuity before the strategy stage has passed, is a pass. `check --artifacts` does not parse responsibilities itself; it surfaces the canonical gate result.
+
 ### Artifact contracts
 
 Registered JSON artifacts use strict JSON/structured-field checks. Text artifacts use required sections. Shared validation does not impose text headers on JSON.
@@ -203,7 +213,7 @@ The contract vocabulary includes `CONTRACT_MISSING_FILE`, `CONTRACT_EMPTY_FILE`,
 
 ### Trace checks
 
-IDs use `PREFIX-NNN`, with prefixes `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `IMP`, `VER`, and `RISK`, plus at least three digits. A link is `FROM_ID -> TO_ID`. Trace checks distinguish `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, and `TRACE_MISSING_LINK_TARGET`. Artifacts without trace IDs do not acquire fabricated trace obligations.
+IDs use `PREFIX-NNN`, with prefixes `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `IMP`, `VER`, and `RISK`, plus at least three digits. A declaration is a line beginning `ID: text`, and it stays a declaration even when its text contains `->` (for example `TRN-001: invalid-input -> validation-error`). A link is `FROM_ID -> TO_ID`. Trace checks distinguish `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, and `TRACE_MISSING_LINK_TARGET`. Artifacts without trace IDs do not acquire fabricated trace obligations.
 
 Results are persisted to `trace-check-results.json` and summarized by status. A deterministic suggested stage is guidance, not automatic source editing or a new native stage.
 
@@ -221,6 +231,8 @@ my-dev-kit-orchestrator export --out handoff.txt --overwrite
 Default output is stdout. `--out <file>` writes a file. Existing files are refused unless `--overwrite` is supplied. Raw parent traversal, symbolic-link targets, directory targets, and nonexistent parent directories are rejected.
 
 The handoff includes identity, original request, artifact checklist/missing items, accepted judge/correction state, verification excerpt, content/trace summaries, context readiness, and the next command. It does not embed raw context dumps or copy referenced external evidence. It preserves blocked status rather than promote an authored but rejected PASS.
+
+For an activated run the handoff names the semantic contract version in the run identity and adds one compact `=== Semantic continuity ===` section from the same gate: `contractVersion`, `semanticClassification`, `continuityState`, `runIntegrityReady`, critical and noncritical counts and unsatisfied IDs, `blockingCodes`, `warningCodes`, `expectedJudgeVerdict`, and `recommendedCorrectionStage`. It never copies raw context capsules, retrieval audits, or parser output. A legacy run is never labeled activated.
 
 ## Manual context integration
 

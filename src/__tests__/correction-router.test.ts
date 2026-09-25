@@ -205,3 +205,41 @@ describe('routeJudgeVerdict - no autonomous execution', () => {
   });
 });
 
+
+// v1.5.0 Batch 5: mode-owned strategy stages are correctable only for their
+// owning workflow mode (feature/test/extraction keep "test-strategy").
+describe('mode-aware strategy correction stages', () => {
+  const recommend = (mode: 'feature' | 'repair' | 'test' | 'refactor' | 'harden' | 'extraction', stage: string) =>
+    parseAndRoute(`Verdict: TEST_COVERAGE_INCOMPLETE\nRecommended next stage: ${stage}`, { workflowMode: mode });
+
+  it('accepts each mode-owned strategy stage for its owning mode', () => {
+    expect(isCorrectableStage('regression-test-strategy', 'repair')).toBe(true);
+    expect(isCorrectableStage('compatibility-test-strategy', 'refactor')).toBe(true);
+    expect(isCorrectableStage('resilience-test-strategy', 'harden')).toBe(true);
+    expect(recommend('repair', 'regression-test-strategy').routedStage).toBe('regression-test-strategy');
+    expect(recommend('refactor', 'compatibility-test-strategy').routedStage).toBe('compatibility-test-strategy');
+    expect(recommend('harden', 'resilience-test-strategy').routedStage).toBe('resilience-test-strategy');
+    expect(recommend('repair', 'regression-test-strategy').warnings.some((w) => w.includes('not a known correctable'))).toBe(false);
+  });
+
+  it('rejects a mode-owned strategy stage outside its owning mode', () => {
+    expect(isCorrectableStage('resilience-test-strategy', 'feature')).toBe(false);
+    expect(isCorrectableStage('regression-test-strategy', 'test')).toBe(false);
+    expect(isCorrectableStage('compatibility-test-strategy', 'repair')).toBe(false);
+    expect(isCorrectableStage('regression-test-strategy')).toBe(false);
+    // Rejected recommendation falls back to the unchanged table default with a warning.
+    const feature = recommend('feature', 'resilience-test-strategy');
+    expect(feature.routedStage).toBe('test-strategy');
+    expect(feature.warnings.some((w) => w.includes('not a known correctable'))).toBe(true);
+    expect(recommend('test', 'regression-test-strategy').routedStage).toBe('test-strategy');
+    expect(recommend('repair', 'compatibility-test-strategy').routedStage).toBe('test-strategy');
+  });
+
+  it('preserves test-strategy for feature/test/extraction and target-architecture', () => {
+    for (const mode of ['feature', 'test', 'extraction'] as const) {
+      expect(isCorrectableStage('test-strategy', mode)).toBe(true);
+      expect(recommend(mode, 'test-strategy').routedStage).toBe('test-strategy');
+    }
+    expect(isCorrectableStage('target-architecture', 'extraction')).toBe(true);
+  });
+});

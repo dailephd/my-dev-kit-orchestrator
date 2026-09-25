@@ -20,7 +20,8 @@ import {
 } from '../contractChecker';
 import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
 import { ContextReadinessResult } from '../instructions/contextReadiness';
-import { evaluateRunIntegrityGate } from '../runIntegrityGate';
+import { evaluateRunIntegrityGate, RunIntegrityGateResult } from '../runIntegrityGate';
+import { renderSemanticContinuityCheckLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 import { resolveGateCurrentStage } from '../stageDetector';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult, FinalReportEligibilityResult } from '../judgeIntegrity';
 import { RunMetadata } from '../run';
@@ -176,7 +177,11 @@ function formatContextReadinessCheck(summary: RunContextReadinessSummary): { lin
 // v1.2.3 Batch 3: computes judge-integrity + final-report eligibility once
 // for a run (mirrors formatContextReadinessCheck's "evaluate once, format
 // deterministically for check and check --all" convention). Read-only.
-function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeIntegrityResult; eligibility: FinalReportEligibilityResult } {
+function evaluateJudgeCheckState(meta: RunMetadata): {
+  gate: RunIntegrityGateResult;
+  judgeIntegrity: JudgeIntegrityResult;
+  eligibility: FinalReportEligibilityResult;
+} {
   const stateFile = readArtifactStateFile(meta.runFolder);
   const gate = evaluateRunIntegrityGate({
     mode: meta.mode,
@@ -197,7 +202,18 @@ function evaluateJudgeCheckState(meta: RunMetadata): { judgeIntegrity: JudgeInte
     proofOnly: meta.proofOnly === true,
     verificationResponsibility: meta.verificationResponsibility,
   });
-  return { judgeIntegrity, eligibility };
+  return { gate, judgeIntegrity, eligibility };
+}
+
+// v1.5.0 Batch 5: Semantic Continuity section projected from the canonical
+// gate already evaluated for the judge check (no second evaluation, no
+// parsing here). null for legacy, greenfield, and proof-only runs. Blocked ->
+// fail; warning -> warn (fails only under --strict); ready/pending -> pass.
+function formatSemanticContinuityCheck(
+  gate: RunIntegrityGateResult,
+): { lines: string[]; hasFail: boolean; hasWarn: boolean } | null {
+  const summary = summarizeSemanticContinuityGate(gate);
+  return summary ? renderSemanticContinuityCheckLines(summary) : null;
 }
 
 // Formats the judge-integrity/final-report-eligibility state deterministically
@@ -414,16 +430,20 @@ export function makeCheckCommand(): Command {
           const contractJudgeCheck = formatJudgeIntegrityCheck(contractJudgeState.judgeIntegrity, contractJudgeState.eligibility);
           lines.push(...contractJudgeCheck.lines);
 
+          const contractSemanticCheck = formatSemanticContinuityCheck(contractJudgeState.gate);
+          if (contractSemanticCheck) lines.push(...contractSemanticCheck.lines);
+
           console.log(lines.join('\n'));
 
           const anyFail = !contractResult.modeValid ||
             contractResult.results.some((r) => !r.passed) ||
             contractResult.modeIssues.some((i) => i.severity === 'fail') ||
             contractContextCheck.hasFail ||
-            contractJudgeCheck.hasFail;
-          const anyWarn = contractResult.results.some((r) =>
-            r.issues.some((i) => i.severity === 'warn'),
-          );
+            contractJudgeCheck.hasFail ||
+            Boolean(contractSemanticCheck?.hasFail);
+          const anyWarn =
+            contractResult.results.some((r) => r.issues.some((i) => i.severity === 'warn')) ||
+            Boolean(contractSemanticCheck?.hasWarn);
           if (anyFail || (options.strict && anyWarn)) {
             process.exit(1);
           }
@@ -524,6 +544,10 @@ export function makeCheckCommand(): Command {
           // Repository context readiness
           lines.push(...contextCheck.lines);
 
+          // Semantic continuity (activated runs only), from the same gate.
+          const allSemanticCheck = formatSemanticContinuityCheck(allJudgeState.gate);
+          if (allSemanticCheck) lines.push(...allSemanticCheck.lines);
+
           // v1.3.0 Batch 4: greenfield readiness (no-op / null for
           // non-greenfield runs and runs with no profile selected yet).
           const allGreenfieldReadinessResult = checkGreenfieldRunReadiness(meta);
@@ -563,6 +587,9 @@ export function makeCheckCommand(): Command {
           lines.push(...summarizeTrace(traceResults));
           lines.push(`  Repository context: ${contextCheck.hasFail ? 'fail' : 'pass'}`);
           lines.push(`  Judge and final-report integrity: ${allJudgeCheck.hasFail ? 'fail' : 'pass'}`);
+          if (allSemanticCheck) {
+            lines.push(`  Semantic continuity: ${allSemanticCheck.hasFail ? 'fail' : allSemanticCheck.hasWarn ? 'warn' : 'pass'}`);
+          }
           if (allGreenfieldReadinessCheck) {
             lines.push(`  Greenfield readiness: ${allGreenfieldReadinessCheck.hasFail ? 'fail' : 'pass'}`);
           }
@@ -588,8 +615,9 @@ export function makeCheckCommand(): Command {
             hasGateViolations ||
             contextCheck.hasFail ||
             allJudgeCheck.hasFail ||
+            Boolean(allSemanticCheck?.hasFail) ||
             Boolean(allGreenfieldReadinessCheck?.hasFail);
-          const hasWarn = anyContractWarn || anyTraceWarn;
+          const hasWarn = anyContractWarn || anyTraceWarn || Boolean(allSemanticCheck?.hasWarn);
 
           if (hasFail || (options.strict && hasWarn)) {
             process.exit(1);
@@ -770,6 +798,11 @@ export function makeCheckCommand(): Command {
           lines.push(...runJudgeCheck.lines);
         }
 
+        const runSemanticCheck = runJudgeState ? formatSemanticContinuityCheck(runJudgeState.gate) : null;
+        if (runSemanticCheck) {
+          lines.push(...runSemanticCheck.lines);
+        }
+
         if (greenfieldReadinessCheck) {
           lines.push(...greenfieldReadinessCheck.lines);
         }
@@ -807,8 +840,9 @@ export function makeCheckCommand(): Command {
           anyPromptFail ||
           Boolean(runContextCheck?.hasFail) ||
           Boolean(runJudgeCheck?.hasFail) ||
+          Boolean(runSemanticCheck?.hasFail) ||
           Boolean(greenfieldReadinessCheck?.hasFail);
-        const hasWarn = anyArtifactWarn || anyPromptWarn;
+        const hasWarn = anyArtifactWarn || anyPromptWarn || Boolean(runSemanticCheck?.hasWarn);
 
         if (hasFail || (options.strict && hasWarn)) {
           process.exit(1);

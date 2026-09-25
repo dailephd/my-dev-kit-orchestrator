@@ -41,17 +41,19 @@ const MALFORMED_TOKEN_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
 
 /**
  * Finds trace IDs declared in content, excluding IDs that only appear in link
- * expressions (lines containing "->"). This separates declared IDs from
- * link-line references, fixing the "missing link target" detection problem:
- * a link target like BEH-999 that appears only in "REQ-001 -> BEH-999" is
- * NOT counted as a declared ID, so it can be flagged as missing.
+ * expressions. This separates declared IDs from link-line references, fixing
+ * the "missing link target" detection problem: a link target like BEH-999
+ * that appears only in "REQ-001 -> BEH-999" is NOT counted as a declared ID,
+ * so it can be flagged as missing. A link line never starts with the
+ * "ID:" declaration label, so the declaration pattern alone separates them;
+ * a declaration whose description contains "->" (for example the canonical
+ * "TRN-001: invalid-input -> validation-error") is still a declaration.
  */
 export function parseDeclaredTraceIds(content: string): TraceId[] {
   const results: TraceId[] = [];
   const lines = content.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.includes('->')) continue; // skip link lines
     const match = TRACE_DECLARATION_RE.exec(line);
     if (match) results.push({ id: `${match[1]}-${match[2]}`, prefix: match[1], num: match[2], line: i + 1 });
   }

@@ -198,6 +198,29 @@ Important implementation files:
   resolution and stage detection, with gate-aware variants consumed by
   `prompt.ts`, `mark.ts`, and `status.ts`
 
+### Semantic Continuity prompt and command surface (v1.5.0 Batch 5)
+
+- `src/commands/start.ts`: supplies `SEMANTIC_CONTINUITY_CONTRACT_VERSION` to
+  `createRun()` when `shouldActivateSemanticContinuity()` allows it. Do not make
+  bare `createRun()` activate, so legacy fixtures stay creatable.
+- `src/instructions/semanticContinuityPrompt.ts`: the one owner of activated-run
+  authoring guidance, stage roles (derived from workflow order and the strategy
+  registry), and the `RSP` request guidance for context refresh.
+- `src/promptGenerator.ts`: `generateStagePrompt()` is the saved-template render
+  (authoring contract, no live gate); `generateLiveStagePrompt()` adds the
+  current `RunIntegrityGate` (semantic-blocked stages, judge summary).
+- `src/semanticContinuitySurface.ts`: pure projection of the gate shared by
+  `status`, `check`, `export`, and the judge prompt. Add new semantic output
+  there, never a second evaluation.
+- `src/correctionRouter.ts`: mode-aware `isCorrectableStage()`; ownership of
+  the mode-owned strategy stages comes from `TEST_STRATEGY_SOURCE_REQUIREMENTS`.
+- Tests: `tests/semanticContinuityPromptActivation.test.ts`,
+  `tests/semanticContinuityCommandSurface.test.ts` (which stubs the ordinary
+  content checkers so only semantic effects drive exit codes), the semantic
+  routing cases in `tests/semanticContinuityRunIntegrity.test.ts`, and the
+  mode-aware cases in `src/__tests__/correction-router.test.ts`. Legacy
+  absent-version prompt expectations must stay separate from activated ones.
+
 ## Validation and compatibility fixtures
 
 Run the release-facing validation set from a clean dependency installation:

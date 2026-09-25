@@ -11,6 +11,7 @@ import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityR
 import { readArtifactStateFile } from '../artifactLifecycle';
 import { StageDefinition } from '../workflows';
 import type { WorkflowMode } from '../types';
+import { renderSemanticContinuityExportLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
@@ -273,6 +274,12 @@ export function buildExportText(meta: {
     parts.push(`  Proof evidence: ${finalEligibility.proofEvidence?.state ?? 'invalid'}`);
   }
 
+  // v1.5.0 Batch 5: activated runs only; projected from the same gate above.
+  const semanticSummary = summarizeSemanticContinuityGate(gate);
+  if (semanticSummary) {
+    parts.push(`  Semantic continuity: active (${semanticSummary.contractVersion})`);
+  }
+
   parts.push(sectionHeader('Request'));
   parts.push(`  ${meta.request}`);
 
@@ -297,6 +304,11 @@ export function buildExportText(meta: {
 
   parts.push(sectionHeader('Repository context readiness'));
   parts.push(formatContextReadinessSummary(meta));
+
+  if (semanticSummary) {
+    parts.push(sectionHeader('Semantic continuity'));
+    parts.push(renderSemanticContinuityExportLines(semanticSummary).join('\n'));
+  }
 
   parts.push(sectionHeader('Next command'));
   parts.push(formatNextCommand(meta, judgeIntegrity));

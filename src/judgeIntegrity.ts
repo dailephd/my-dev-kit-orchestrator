@@ -68,8 +68,8 @@ export interface JudgeIntegrityResult {
   acceptedCorrectionRoute: CorrectionRouteResult | null;
 }
 
-function acceptedCorrectableStage(candidate: string | null): CorrectableStage | null {
-  return candidate && isCorrectableStage(candidate) ? candidate : null;
+function acceptedCorrectableStage(candidate: string | null, mode: WorkflowMode): CorrectableStage | null {
+  return candidate && isCorrectableStage(candidate, mode) ? candidate : null;
 }
 
 export function evaluateJudgeIntegrity(input: {
@@ -138,7 +138,7 @@ export function evaluateJudgeIntegrity(input: {
   // canonical recommended context-repair stage instead of clearing
   // correction state.
   if (authored === 'PASS' && expected === 'NEED_CONTEXT') {
-    const acceptedStage = acceptedCorrectableStage(gate.recommendedCorrectionStage);
+    const acceptedStage = acceptedCorrectableStage(gate.recommendedCorrectionStage, mode);
     const acceptedRoute: CorrectionRouteResult | null = acceptedStage
       ? {
           verdict: 'PASS',
@@ -146,7 +146,7 @@ export function evaluateJudgeIntegrity(input: {
           routedStage: acceptedStage,
           routeStatus: 'correction_required',
           warnings: [
-            `Judge report authored "Verdict: PASS" but canonical repository-context readiness still requires NEED_CONTEXT. The authored PASS was rejected; routing to the canonical recommended stage "${acceptedStage}" instead.`,
+            `Judge report authored "Verdict: PASS" but canonical run integrity still requires NEED_CONTEXT. The authored PASS was rejected; routing to the canonical recommended stage "${acceptedStage}" instead.`,
             ...raw.warnings,
           ],
           errors: raw.errors,
@@ -213,18 +213,21 @@ export function evaluateJudgeIntegrity(input: {
   if (authored === 'NEED_CONTEXT') {
     // Canonical recommendation wins over the routing table's generic
     // default and over any conflicting authored "Recommended next stage"
-    // prose (section 7). Falls back to the existing table/authored routing
-    // only when the gate has no recommendation of its own (e.g. context
-    // became ready between judge authoring and this evaluation).
-    const canonicalStage = acceptedCorrectableStage(gate.recommendedCorrectionStage);
-    const acceptedStage = canonicalStage ?? raw.routedStage;
+    // prose (section 7). When the gate itself requires NEED_CONTEXT its
+    // recommendation is authoritative INCLUDING null (for example an
+    // unsupported Semantic Continuity contract version): there is no fallback
+    // to the generic table default. Existing table/authored routing is kept
+    // only when the gate expects PASS (e.g. context became ready between
+    // judge authoring and this evaluation).
+    const canonicalStage = acceptedCorrectableStage(gate.recommendedCorrectionStage, mode);
+    const acceptedStage = expected === 'NEED_CONTEXT' ? canonicalStage : (canonicalStage ?? raw.routedStage);
     const usedCanonicalOverride = canonicalStage !== null && canonicalStage !== raw.routedStage;
     const acceptedRoute: CorrectionRouteResult = {
       ...raw,
       routedStage: acceptedStage,
       warnings: usedCanonicalOverride
         ? [
-            `Judge/authored routing suggested "${raw.routedStage}"; canonical repository-context readiness recommends "${canonicalStage}". Using the canonical recommendation.`,
+            `Judge/authored routing suggested "${raw.routedStage}"; canonical run integrity recommends "${canonicalStage}". Using the canonical recommendation.`,
             ...raw.warnings,
           ]
         : raw.warnings,
