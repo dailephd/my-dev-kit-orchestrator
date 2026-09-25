@@ -1,0 +1,184 @@
+1. FINAL_STATUS
+
+PASS_V1_5_LOCAL_VALIDATION_CORRECTED
+
+2. REPOSITORY
+
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. BRANCH
+
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+
+a7d1187bc04ce4f798cb9809c602d89d93876886
+
+5. PACKAGE_VERSION
+
+1.4.1 (unchanged; intended future release is 1.5.0)
+
+6. ORIGINAL_FAILURE_SUMMARY
+
+The previous sandboxed readiness attempt reported two independent failure families: nine documentation-check test failures caused by a missing source file in a secondary temporary fixture, and seven package-regression failures caused by npm cache EPERM errors in child npm invocations. A fresh unrestricted baseline reproduced only the documentation family. Its raw captured output is at:
+C:\Users\daile\AppData\Local\Temp\orchestrator-v1.5-local-validation-diagnosis-20260925-074554\full-suite-baseline.txt
+
+7. EXACT_FAILING_SUITES
+
+src/__tests__/docs-consistency.test.ts
+tests/v121PackageRegression.test.ts (reported by the original sandboxed attempt; did not reproduce in the fresh unrestricted baseline)
+
+8. EXACT_FAILING_TESTS
+
+Original attempt: 16 failures total, inferred from its reported 9 docs failures plus the 7 tests whose shared beforeAll package command failed. The prior attempt did not preserve a complete raw log, so its complete per-test transcript is unavailable.
+
+Documentation suite (9):
+- passes a complete fixture derived from current canonical inputs
+- fails when README contains a stale current-published version claim
+- fails when current docs omit a source-defined greenfield profile
+- fails when docs state the old two-profile count
+- allows the accurate Android Compose support claim
+- fails on an unnegated generic mobile support claim
+- allows accurate negated Gradle, Android SDK, and Play Store boundaries
+- fails when a preservation-manifest term disappears
+- fails when README drops a common canonical document link
+
+Package suite (7):
+- package identity matches the current release
+- every included file is under dist/ or is an explicitly allowed root package file
+- includes no test files, fixtures, or generated worktrees
+- includes no packet sidecars, supplemental context files, or raw my-dev-kit evidence
+- includes no generated runs
+- includes no secret or environment files
+- reports a nonzero, bounded file count and size
+
+9. RAW_FAILURE_EVIDENCE_PATHS
+
+Fresh full-suite baseline: C:\Users\daile\AppData\Local\Temp\orchestrator-v1.5-local-validation-diagnosis-20260925-074554\full-suite-baseline.txt
+Post-correction full suite 1: C:\Users\daile\AppData\Local\Temp\orchestrator-v1.5-local-validation-diagnosis-20260925-074554\full-suite-postfix-pass-1.txt
+Post-correction full suite 2: C:\Users\daile\AppData\Local\Temp\orchestrator-v1.5-local-validation-diagnosis-20260925-074554\full-suite-postfix-pass-2.txt
+
+10. DOCUMENTATION_FAILURE_REPRODUCTION
+
+npx jest src/__tests__/docs-consistency.test.ts --runInBand reproduced 9 failures alone. Each generated mdko-docs-check-* fixture raised ENOENT while opening <fixture>\src\runIntegrityGate.ts. Serial and parallel full-suite diagnostics failed identically. The independent tests/documentationConsistency.test.ts fixture passed all 61 tests and already copied src/runIntegrityGate.ts.
+
+11. DOCUMENTATION_FIXTURE_DEPENDENCY_AUDIT
+
+The checker reads package.json; docs/documentation-preservation-manifest.json; tests/fixtures/v121-compatibility/compatibility-manifest.json; README.md, CHANGELOG.md, and manifest-listed canonical docs; src/types.ts; src/workflows.ts; src/program.ts; command files start.ts, prompt.ts, status.ts, list.ts, mark.ts, check.ts, and export.ts; src/greenfield/modes/greenfieldStages.ts; src/greenfield/modes/greenfieldMode.ts; src/greenfield/profiles/resolveGreenfieldProfile.ts; src/instructions/stageRepositoryEvidenceRequirements.ts; src/instructions/catalogTypes.ts; src/instructions/workflowInstructionPacket.ts; src/instructions/taskState.ts; src/instructions/stageContextBundle.ts; src/instructions/supplementalContextTypes.ts; src/instructions/contextReadiness.ts; src/instructions/runSemanticContinuity.ts; src/instructions/testResponsibilityCriticality.ts; and src/runIntegrityGate.ts. The fixture copies package/docs/commands and the compatibility manifest, and individually copies the listed source files. The failing secondary fixture omitted the final three source owners: runSemanticContinuity.ts, testResponsibilityCriticality.ts, and runIntegrityGate.ts. The primary fixture already included all three.
+
+12. DOCUMENTATION_FAILURE_ROOT_CAUSE
+
+The checker correctly requires the RunIntegrityGate schema owner, added as an input to the docs checker during v1.5 documentation reconciliation. The secondary fixture inventory in src/__tests__/docs-consistency.test.ts had not been updated to include the new source inputs. After adding the missing owners, one additional ineffective negative test became visible: replacing only the first README link to docs/CONTRACTS.md left a second link intact. The test now removes every matching link, and its existing expected issue assertion passes.
+
+13. PACKAGE_FAILURE_REPRODUCTION
+
+The package regression did not fail in the fresh unrestricted baseline. It passed five consecutive normal-cache isolated runs and three consecutive runs with a disposable npm cache, as well as the post-correction focused run and combined parallel run. It invokes a real npm pack --dry-run --json; its assertions were not weakened.
+
+14. NPM_EPERM_EXACT_PATH_AND_OPERATION
+
+The earlier sandboxed run reported EPERM on npm cache access, including stat of C:\Users\daile\AppData\Local\npm-cache\_cacache\content-v2\sha512\ad\59\2cbec9cd09d27fa2119ceb180fc3237c7a1782c6c88b33b1b84fedfe6395a897b03ee3b59a22e94c74224604ca08b7b12f831e00555a82db3b1e6359d9 and mkdir of C:\Users\daile\AppData\Local\npm-cache\_cacache\tmp. This matched the sandboxed process lacking access to the user's npm cache. No cache was deleted or changed globally.
+
+15. NPM_CACHE_ISOLATION_EXPERIMENT
+
+Five package-regression runs passed with the ordinary cache. Three passed with a unique cache under the external diagnostic directory. Isolation made no observable difference; the failure was not reproduced outside the sandbox restrictions.
+
+16. PARALLEL_VS_SERIAL_EXPERIMENT
+
+Before correction, the three-suite group (both docs fixtures and package regression) failed only in src/__tests__/docs-consistency.test.ts in serial and parallel modes; the other two suites passed. The full serial suite also failed only the same nine docs tests. This establishes a deterministic fixture defect, not a cross-suite race. After correction, the three-suite parallel group passed all 77 tests.
+
+17. CROSS_SUITE_RESOURCE_ANALYSIS
+
+No shared output/cache collision was demonstrated. The docs fixtures use unique mkdtemp roots. The package test runs one read-only npm pack dry-run against the repository; its package-content tests and cache behavior passed repeatedly. The prior npm EPERM belonged to the sandbox's global cache access boundary, not to suite concurrency.
+
+18. ROOT_CAUSE_CLASSIFICATION
+
+Documentation failure: TEST_FIXTURE_DEFECT and DOCUMENTATION_TOOLING_TEST_DEFECT (deterministic secondary fixture inventory omission, plus an ineffective link-removal mutation exposed after the inventory fix).
+Package failure: NPM_CACHE_ENVIRONMENT_DEFECT (sandbox permission boundary); no repository package-test defect reproduced.
+Production regression: NONE FOUND.
+Concurrency defect: NONE FOUND.
+
+19. CORRECTION_APPLIED
+
+Updated src/__tests__/docs-consistency.test.ts to copy the three missing checker inputs and remove all duplicate canonical-contract links in the intended negative test. No production or documentation content changed.
+
+20. PRODUCTION_BEHAVIOR_CHANGED
+
+NO
+
+21. DOCUMENTATION_FACTS_CHANGED
+
+NO
+
+22. FILES_CHANGED
+
+src/__tests__/docs-consistency.test.ts
+docs/reports/v1.5.0-pre-release-local-validation-correction.txt
+
+23. FOCUSED_TEST_RESULT
+
+PASS: src/__tests__/docs-consistency.test.ts — 9/9; tests/v121PackageRegression.test.ts — 7/7.
+
+24. REPEATED_FOCUSED_TEST_RESULT
+
+PASS: src/__tests__/docs-consistency.test.ts passed five consecutive --runInBand repetitions. Package regression passed five consecutive normal-cache runs and three isolated-cache runs.
+
+25. COMBINED_PARALLEL_TEST_RESULT
+
+PASS: src/__tests__/docs-consistency.test.ts, tests/documentationConsistency.test.ts, and tests/v121PackageRegression.test.ts — 3 suites, 77/77 tests.
+
+26. SERIAL_FULL_SUITE_DIAGNOSTIC_RESULT
+
+Before correction: FAIL, 1 suite failed (9 docs fixture tests), 141 passed, 3 skipped; 3,529 passed, 9 failed, 11 skipped. This is diagnostic evidence only.
+
+27. ORDINARY_FULL_SUITE_PASS_1
+
+PASS: npm test — 142 suites passed, 3 skipped; 3,538 tests passed, 11 skipped, 0 failed.
+
+28. ORDINARY_FULL_SUITE_PASS_2
+
+PASS: npm test — 142 suites passed, 3 skipped; 3,538 tests passed, 11 skipped, 0 failed.
+
+29. VERIFY_RESULT
+
+PASS: npm run verify (typecheck, build, context smoke, ESLint, docs lint/check, built-in security tests, and CLI smoke scenarios).
+
+30. LINT_DOCS_RESULT
+
+PASS: npm run lint:docs; 23 files, 0 issues.
+
+31. DOCS_CHECK_RESULT
+
+PASS: npm run docs:check; 8 commands, 7 modes, 79 native stages.
+
+32. EXTERNAL_NPM_PACK_JSON_RESULT
+
+PASS: npm pack --dry-run --json; @dailephd/my-dev-kit-orchestrator@1.4.1, 448 files, 2,104,815 unpacked bytes. Package policy assertions passed; no test or fixture files were included.
+
+33. EXTERNAL_NPM_PACK_RESULT
+
+PASS: npm pack --dry-run; same package identity and 448-file package contents.
+
+34. GIT_DIFF_CHECK_RESULT
+
+PASS: git diff --check.
+
+35. FINAL_GIT_STATUS
+
+Clean after the correction commit; the report is committed separately as an evidence-only follow-up. Package metadata remains 1.4.1.
+
+36. COMMIT
+
+Correction commit: f515870a4ee31ab753829f6d47b2134a38dd381e (test: harden pre-release validation isolation).
+The report-only commit follows it; readiness must target the final feature-branch HEAD reported by git rev-parse after push.
+
+37. PUSH_RESULT
+
+Pending report commit and feature-branch push.
+
+38. NEW_CANDIDATE_SHA
+
+Correction code commit: f515870a4ee31ab753829f6d47b2134a38dd381e. The subsequent evidence-only report commit becomes the final branch HEAD and must be the SHA used by a fresh readiness workflow.
+
+39. NEXT_ACTION
+
+After the evidence report is committed and the feature branch is pushed, restart v1.5.0 pre-release readiness from the exact final feature-branch HEAD. The previous validation branch remains stale at the original candidate and must not be reused.
