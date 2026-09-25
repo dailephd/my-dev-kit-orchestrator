@@ -100,9 +100,14 @@ source-path guidance in shipped greenfield prompts with direct artifact,
 behavior, validation, and completion requirements while preserving the
 underlying instruction intent and installed package surface. The active next
 direction is: (1) `v1.6.0` Workflow Economics and Deterministic Run
-Telemetry is the next planned feature version; (2) Greenfield-to-Feature
-Workflow Handoff Hardening remains deferred; (3) optional mobile-profile
-candidates remain deferred.
+Telemetry is the next planned feature version; (2) `v1.7.0` is reserved for
+Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00
+reference contracts; (3) Greenfield-to-Feature Workflow Handoff Hardening
+remains deferred; (4) optional mobile-profile candidates remain deferred.
+
+ECO-00 does not change the current 1.5.0 runtime surface. It establishes a
+repository-level coordination contract that references the Orchestrator-owned
+`RSP-NNN` identity rather than redefining it.
 
 Before further implementation or release work, the planner must inspect the current
 repository and ecosystem evidence rather than treating roadmap prose as a

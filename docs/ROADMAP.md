@@ -5,7 +5,7 @@ Versions are listed in chronological order.
 `v1.5.0` is the current published release. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.6.0` remains planned after the current release; deferred scopes remain separate.
+`v1.6.0` remains the next planned feature release. `v1.7.0` is reserved for ORC-EVIDENCE-01 after v1.6.0; deferred scopes remain separate.
 
 ## Version summary
 
@@ -63,6 +63,7 @@ and the `v0.x.0` releases remain part of the published project history.
   through the existing run-integrity gate for staged runs. Released on
   2026-09-25.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
+- `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
 
@@ -1352,6 +1353,34 @@ Boundaries preserved:
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
 Planned deterministic workflow economics and run telemetry.
+
+This milestone remains the next Orchestrator feature release after v1.5.0. It may expose stable run/invocation identities and deterministic telemetry needed by later evidence integration, but it must not claim target-application observability.
+
+### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
+
+Status: planned after v1.6.0.
+
+Goal:
+
+Consume the frozen ECO-00 reference layer without replacing native producer contracts. The Orchestrator should accept typed evidence requirements/references, adapt supported native artifacts, enforce freshness/compatibility through the existing integrity/judge owners, and preserve evidence state across prompt, mark, check, status, export, and correction paths.
+
+Dependencies:
+
+- published v1.5.0 Semantic Continuity and canonical `RSP-NNN` responsibility identity
+- v1.6.0 deterministic run/invocation telemetry
+- ECO-00 `EvidenceRequirementV1`, `EvidenceEnvelopeV1`, `NativeArtifactReferenceV1`, and compatibility-bundle semantics
+- exact producer-specific adapters rather than a universal copied evidence payload
+
+Boundaries:
+
+- no browser execution
+- no static retrieval engine inside Orchestrator
+- no Lab policy duplication
+- no reinterpretation of Observer or Kit native identities
+- no assumption that "latest" package versions are compatible or active
+- final eligibility still flows through the existing `RunIntegrityGate` and judge-integrity owners
+
+ECO-01 certification is separate from implementation of this consumer milestone and requires an exact compatible producer/consumer tuple.
 
 ### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
 
