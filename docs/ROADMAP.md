@@ -1366,7 +1366,7 @@ Consume the frozen ECO-00 reference layer without replacing native producer cont
 
 Dependencies:
 
-- published v1.5.0 Semantic Continuity and canonical `RSP-NNN` responsibility identity
+- v1.5.0 Semantic Continuity and canonical `RSP-NNN` responsibility identity
 - v1.6.0 deterministic run/invocation telemetry
 - ECO-00 `EvidenceRequirementV1`, `EvidenceEnvelopeV1`, `NativeArtifactReferenceV1`, and compatibility-bundle semantics
 - exact producer-specific adapters rather than a universal copied evidence payload
