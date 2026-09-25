@@ -691,7 +691,7 @@ Known limitations in the released `v1.1.0` line:
 - `--create-target` remains future behavior and is not implemented
 - `--mode extraction` requires both `--source` and `--target`; errors clearly if either is missing
 
-**Not published to npm.** Tag will be created on release preparation.
+**Not yet published to npm.** Tag `v0.2.1` exists.
 
 ## v0.2.1 - Documentation preparation
 
