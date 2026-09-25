@@ -528,6 +528,41 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   if (!new RegExp(`current release[\\s\\S]{0,100}${currentVersionEscaped}`, 'i').test(readme)) {
     addIssue(issues, 'V123_PUBLISHED_CLAIM_MISSING', 'README.md', `current release v${pkg.version}`, 'missing', 'Restore the release-state claim.');
   }
+  const currentChangelogHeading = new RegExp(`^## v${currentVersionEscaped}\\b`, 'm');
+  const currentChangelogSection = section(changelog, `## v${pkg.version}`);
+  if (!currentChangelogHeading.test(changelog)
+      || !currentChangelogSection.includes(`Release date: ${facts.currentReleaseDate}.`)) {
+    addIssue(
+      issues,
+      'CURRENT_RELEASE_CHANGELOG_NOT_FINAL',
+      'CHANGELOG.md',
+      `finalized v${pkg.version} section dated ${facts.currentReleaseDate}`,
+      'current release heading or date is missing',
+      'Finalize the current release heading and record its release date.',
+    );
+  }
+  const currentReleaseStatusDocs = [
+    ['README.md', readme],
+    ['CHANGELOG.md', changelog],
+    ['docs/CURRENT_STATE.md', byPath['docs/CURRENT_STATE.md'] ?? ''],
+    ['docs/ROADMAP.md', roadmap],
+  ];
+  const transitionalCurrentReleasePattern = new RegExp(
+    `(?:\\bv${currentVersionEscaped}\\b[^\\n]{0,120}\\b(?:unpublished|not published|not yet published|not released|pending publication|implemented but unpublished)\\b|\\b(?:unpublished|not published|not yet published|not released|pending publication|implemented but unpublished)\\b[^\\n]{0,120}\\bv${currentVersionEscaped}\\b)`,
+    'i',
+  );
+  for (const [documentPath, content] of currentReleaseStatusDocs) {
+    if (transitionalCurrentReleasePattern.test(content)) {
+      addIssue(
+        issues,
+        'CURRENT_RELEASE_STATUS_CONTRADICTION',
+        documentPath,
+        `v${pkg.version} described as the published current release`,
+        'transitional or unpublished status found',
+        'Remove current-release preparation wording while preserving accurate historical release facts.',
+      );
+    }
+  }
   if (containsUnnegatedClaim(readme, new RegExp(`v(?!${currentVersionEscaped}\\b)\\d+\\.\\d+\\.\\d+[^\\n]{0,45}current (?:published )?(?:stable )?release`, 'i'))) {
     addIssue(issues, 'STALE_PUBLISHED_VERSION_CLAIM', 'README.md', `v${pkg.version} is the current release`, 'older current-release claim found', 'Historically scope or remove the stale publication claim.');
   }

@@ -23,16 +23,14 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.4.1`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.5.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
 
-The source in this repository also contains implemented but unpublished
-`v1.5.0` work, Semantic Continuity. It is not part of the published package
-yet, and package metadata remains `1.4.1`. New staged runs in `feature`,
-`repair`, `test`, `refactor`, `harden`, and `extraction` activate it
-automatically (there is no flag); `greenfield`, proof-only, and older runs are
-unaffected. Stage prompts then ask the coding agent to carry each stable
+`v1.5.0` ships Semantic Continuity. New staged runs in `feature`, `repair`,
+`test`, `refactor`, `harden`, and `extraction` activate it automatically
+(there is no flag); `greenfield`, proof-only, and older runs are unaffected.
+Stage prompts ask the coding agent to carry each stable
 responsibility ID (`RSP-NNN`) from the test strategy through the implementation,
 test, and verification reports. A critical responsibility that is not carried
 through blocks the run; a noncritical gap is a visible warning. `status`,

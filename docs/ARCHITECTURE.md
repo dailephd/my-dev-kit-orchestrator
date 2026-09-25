@@ -6,14 +6,11 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.4.1`, correcting the installed greenfield
-instruction surface while retaining the prior greenfield, integrity, and
-instruction-bootstrap contracts, `v1.4.0`'s maintained-line trace/lifecycle
-reconciliation, phase-aware readiness, explicit proof-only verification, and
-the bounded Observer v0.6 consumer. The current source additionally contains
-the implemented but unpublished `v1.5.0` Semantic Continuity work described
-under "RunIntegrityGate and judge integrity"; package metadata remains
-`1.4.1`. Architecture is organized by current responsibility rather than by
+The current release is `v1.5.0`, which ships Semantic Continuity alongside
+the prior greenfield, integrity, and instruction-bootstrap contracts,
+`v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
+readiness, explicit proof-only verification, and the bounded Observer v0.6
+consumer. Architecture is organized by current responsibility rather than by
 release version.
 
 ## System boundaries

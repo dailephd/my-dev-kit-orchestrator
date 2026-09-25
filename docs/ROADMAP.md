@@ -2,11 +2,10 @@
 
 Versions are listed in chronological order.
 
-`v1.4.1` is the current published release. `v1.4.0`, `v1.3.3`, `v1.3.2`,
+`v1.5.0` is the current published release. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.5.0` is implemented and its documentation reconciled, but it is not yet
-published; `v1.6.0` remains planned after it; deferred scopes remain separate.
+`v1.6.0` remains planned after the current release; deferred scopes remain separate.
 
 ## Version summary
 
@@ -58,11 +57,11 @@ published; `v1.6.0` remains planned after it; deferred scopes remain separate.
   `starter-profile`, `bootstrap-bundle`, `project-docs`, and `scaffold-plan`)
   with direct artifact, behavior, validation, and completion requirements.
   Released on 2026-09-05.
-- `v1.5.0` provides the Semantic Continuity and Evidence-to-Implementation
+- `v1.5.0` ships the Semantic Continuity and Evidence-to-Implementation
   Bridge: stable `RSP-NNN` responsibility identity carried from the test
   strategy through implementation, test, and verification evidence and enforced
-  through the existing run-integrity gate for staged runs. It is implemented but
-  unpublished.
+  through the existing run-integrity gate for staged runs. Released on
+  2026-09-25.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
 
 ## Published releases through v1.0.0
@@ -1194,9 +1193,9 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.4.1` is the current published release. `v1.5.0` is implemented but not yet
-published, and `v1.6.0` follows it. Greenfield-to-Feature Workflow Handoff
-Hardening and optional mobile-profile candidates remain deferred scopes.
+`v1.5.0` is the current published release, released on 2026-09-25. `v1.4.1`
+and earlier versions are historical; `v1.6.0` is planned. Greenfield-to-Feature
+Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
 
@@ -1316,9 +1315,7 @@ Continuity and Evidence-to-Implementation Bridge.
 
 ### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
-Status: implemented and documentation-reconciled; not yet published. Package
-metadata remains `1.4.1`, and pre-release readiness, cross-platform,
-security-validation, and release-preparation work remains separate.
+Status: Released as `1.5.0` on 2026-09-25.
 
 Preserve lightweight DIRECT_IMPLEMENTATION while richer semantic continuity,
 including deterministic WF-002 metadata direction, remains FULL_STAGE_CONTEXT

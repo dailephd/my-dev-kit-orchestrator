@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased - Semantic Continuity and Evidence-to-Implementation Bridge
+## v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
-This section describes implemented, unpublished changes. It has no release date, and package metadata remains `1.4.1`.
+Release date: 2026-09-25.
 
 ### Added
 

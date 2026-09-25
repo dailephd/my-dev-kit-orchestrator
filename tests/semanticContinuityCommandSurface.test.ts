@@ -466,8 +466,8 @@ describe('invariants', () => {
     expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).not.toContain('--json');
   });
 
-  it('the package version is unchanged', () => {
-    expect(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version).toBe('1.4.1');
+  it('the package version matches the current release', () => {
+    expect(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version).toBe('1.5.0');
   });
 
   it('artifactChecker does not duplicate Semantic Continuity parsing', () => {

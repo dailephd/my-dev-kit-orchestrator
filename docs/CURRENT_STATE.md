@@ -3,13 +3,14 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.4.1`
-- Current release: `v1.4.1`
+- Package metadata version: `1.5.0`
+- Current release: `v1.5.0`
+- Release date: `2026-09-25`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.4.1`
-- Latest Git tag and GitHub Release: `v1.4.1`
+- Latest npm version: `1.5.0`
+- Latest Git tag and GitHub Release: `v1.5.0`
 
-Package metadata, npm, the `v1.4.1` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.5.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -23,9 +24,9 @@ modes, 79 native stages, 13 greenfield stages, and four starter profiles
 remain unchanged; no package, dependency, export, or core retrieval-engine
 change was required.
 
-## Implemented but unpublished
+## Current release: Semantic Continuity
 
-`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, is implemented on the feature branch and is not published. Package metadata stays `1.4.1`, and no tag, GitHub Release, or npm version exists for it. It is documented here as current source behavior, not as a release.
+`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, is the current release. It ships the following behavior:
 
 Implemented behavior:
 
@@ -37,8 +38,6 @@ Implemented behavior:
 - mode-aware strategy correction routing for `repair`, `refactor`, and `harden`
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
-
-Remaining before any publication: the separately authorized pre-release readiness, cross-platform, security-validation, and release-preparation workflows. None of those is claimed as done here.
 
 ## Implemented operational surface
 
@@ -95,16 +94,14 @@ unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
 readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
 stage, readiness engine, or Python-specific index path.
 
-`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the current
-released version. It replaces inappropriate Orchestrator-maintainer
+`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the previous
+release. It replaces inappropriate Orchestrator-maintainer
 source-path guidance in shipped greenfield prompts with direct artifact,
 behavior, validation, and completion requirements while preserving the
 underlying instruction intent and installed package surface. The active next
-direction is: (1) `v1.5.0`, Semantic Continuity and Evidence-to-Implementation
-Bridge, is implemented but unpublished and awaits separate pre-release
-readiness work; (2) `v1.6.0` Workflow Economics and Deterministic Run
-Telemetry is the next planned feature version; (3) Greenfield-to-Feature
-Workflow Handoff Hardening remains deferred; (4) optional mobile-profile
+direction is: (1) `v1.6.0` Workflow Economics and Deterministic Run
+Telemetry is the next planned feature version; (2) Greenfield-to-Feature
+Workflow Handoff Hardening remains deferred; (3) optional mobile-profile
 candidates remain deferred.
 
 Before further implementation or release work, the planner must inspect the current
