@@ -1,0 +1,248 @@
+1. FINAL_STATUS
+PASS_V1_5_PRE_RELEASE_READINESS
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator
+
+3. SOURCE_BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. VALIDATION_BRANCH
+validation/v1.5.0-pre-release-r4
+
+5. SUPERSEDED_VALIDATION_BRANCHES
+validation/v1.5.0-pre-release; validation/v1.5.0-pre-release-r2; validation/v1.5.0-pre-release-r3 (left untouched).
+
+6. VALIDATED_CANDIDATE_SHA
+aa6f6745b0d7a630ee78ab10d1eb872c5c85c684
+
+7. PACKAGE_NAME
+@dailephd/my-dev-kit-orchestrator
+
+8. PACKAGE_VERSION
+1.4.1
+
+9. INTENDED_RELEASE_VERSION
+1.5.0
+
+10. CANDIDATE_PROVENANCE
+Validation restarted from the pushed feature candidate aa6f6745b0d7a630ee78ab10d1eb872c5c85c684. The r4 branch was created at that exact SHA and pushed before validation. The readiness report commit is subsequent evidence only and is not the validated candidate.
+
+11. LOCAL_NODE_VERSION
+v24.20.0; npm 11.19.0.
+
+12. INITIAL_GIT_STATUS
+PASS — initial source branch feature/v1.5.0-semantic-continuity at exact candidate SHA; clean tracked and untracked worktree; no staged changes. package.json, package-lock root, and package-lock packages[''] all identify version 1.4.1. r4 branch did not previously exist locally or remotely and was created exactly at the candidate.
+
+13. NPM_CI_RESULT
+PASS — 463 packages installed; npm reported zero vulnerabilities. Deprecation notices and an unapproved optional install-script notice for unrs-resolver were emitted; install completed successfully.
+
+14. NPM_AUDIT_FULL_RESULT
+PASS — zero critical, high, moderate, or low vulnerabilities; command exit 0.
+
+15. NPM_AUDIT_RUNTIME_RESULT
+PASS — npm audit --omit=dev; zero critical, high, moderate, or low vulnerabilities; command exit 0.
+
+16. NPM_LS_RESULT
+PASS — npm ls --all valid; exit 0.
+
+17. BUILD_RESULT
+PASS — npm run build.
+
+18. CORRECTED_FAILURE_REGRESSION_RESULT
+PASS — npx jest src/__tests__/docs-consistency.test.ts tests/v121PackageRegression.test.ts --runInBand; 2 suites, 16 tests passed.
+
+19. GREENFIELD_REGRESSION_RESULT
+PASS — npx jest tests/greenfield --silent; 33 suites, 756 tests passed.
+
+20. FULL_TEST_RESULT
+PASS — npm test; 142 suites passed, 3 skipped (145 total); 3,538 tests passed, 11 skipped (3,549 total); 0 failed.
+
+21. VERIFY_RESULT
+PASS — npm run verify, including typecheck, build, context smoke, lint, docs validation, security contract and all CLI smoke modes.
+
+22. LINT_DOCS_RESULT
+PASS — 23 files, zero issues.
+
+23. DOCS_CHECK_RESULT
+PASS — package/version and documentation consistency; 8 commands, 7 modes, 79 native stages, 13 greenfield stages, 4 greenfield profiles, 11 context-sensitive stages.
+
+24. TEST_SECURITY_RESULT
+PASS — SECURITY_CONTRACT_PASS; package metadata and tarball contents are safe.
+
+25. SOURCE_CLI_RESULT
+PASS — node dist/cli.js --version reported 1.4.1; help succeeded for root and start/status/prompt/check/mark/export. Public command count 8, workflow modes 7, native stages 79. No semantic activation flag; status help has no --json option.
+
+26. PACKAGE_REGRESSION_RESULT
+PASS — npx jest tests/v121PackageRegression.test.ts --runInBand; 1 suite, 7 tests passed.
+
+27. PACK_DRY_RUN_JSON_RESULT
+PASS — npm pack --dry-run --json; package @dailephd/my-dev-kit-orchestrator@1.4.1, 448 entries, 2,104,795 unpacked bytes. Forbidden-entry inspection found zero matches.
+
+28. PACK_DRY_RUN_RESULT
+PASS — npm pack --dry-run; 448 files, package size 437.5 kB, unpacked size 2.1 MB.
+
+29. PACKED_TARBALL_PATH
+C:\Users\daile\AppData\Local\Temp\orchestrator-pack-r4-20260925-134134\dailephd-my-dev-kit-orchestrator-1.4.1.tgz
+
+30. PACKED_TARBALL_SHA256
+B38B2329F1A46AF178C9A2C15605387337323C536635E6605FE5F80051E6294D
+
+31. ISOLATED_INSTALL_RESULT
+PASS — exact tarball installed in a fresh external consumer; installed CLI reported version 1.4.1 and root/help/start-help succeeded.
+
+32. PACKED_SEMANTIC_CONTINUITY_RESULT
+PASS — installed CLI init and start --mode feature created run.json with semanticContinuityVersion 1.0.0; generated prompt contained the Semantic Continuity upstream trace authoring contract and canonical ID guidance.
+
+33. PACKED_EXCLUDED_RUN_RESULT
+PASS — installed greenfield run had no semanticContinuityVersion field; installed feature proof-only run had proofOnly=true and no semanticContinuityVersion field.
+
+34. VALIDATION_BRANCH_PUSH_RESULT
+PASS — origin/validation/v1.5.0-pre-release-r4 points to aa6f6745b0d7a630ee78ab10d1eb872c5c85c684 before readiness-report commit.
+
+35. PRE_RELEASE_MATRIX_RUN_ID
+36175222572
+
+36. PRE_RELEASE_MATRIX_URL
+https://github.com/dailephd/my-dev-kit-orchestrator/actions/runs/36175222572
+
+37. PRE_RELEASE_MATRIX_HEAD_SHA
+aa6f6745b0d7a630ee78ab10d1eb872c5c85c684
+
+38. WINDOWS_NODE_24
+PASS — job 108204077272.
+
+39. WINDOWS_NODE_26
+PASS — job 108204077114.
+
+40. MACOS_NODE_24
+PASS — job 108204077308.
+
+41. MACOS_NODE_26
+PASS — job 108204077071.
+
+42. UBUNTU_NODE_24
+PASS — job 108204077068.
+
+43. UBUNTU_NODE_26
+PASS — job 108204077121.
+
+44. CROSS_PLATFORM_VERDICT
+PASS — all six configured jobs succeeded; run conclusion success and head SHA exactly matches the candidate.
+
+45. MY_DEV_KIT_LAB_VERSION
+0.6.0
+
+46. SECURITY_APPLICABILITY_MATRIX
+deps: PASS — full and runtime npm audit each zero vulnerabilities; npm ls valid.
+package: PASS via target-owned acceptance — package regression, test:security, both pack dry-runs, exact tarball install, installed CLI, installed Semantic Continuity and excluded-run smokes passed. Lab package-required-file identity check not used because its external-target policy is inapplicable to this target.
+static: PASS — Semgrep; CodeQL unavailable optional skip.
+cli-adversarial: PASS — Lab suite.
+fuzz: PASS — 9 targets, 450 iterations.
+boundary: PASS — target immutability, package boundary, output boundary, path traversal, config injection and report poisoning scenarios.
+subprocess: PASS via target evidence — source scan found no production child-process API surface (hits were regex .exec methods and test-only child-process uses); security regression passed.
+secrets: PASS via target evidence — bounded source review and credential-pattern scan found no real credential; reviewed judgeParser/traceChecker matches are parser/trace message interpolation.
+network: PASS — bounded static network-source scan found no unexpected matches; this is static evidence, not runtime network instrumentation.
+
+47. DEPENDENCY_SECURITY_RESULT
+PASS — full/runtime npm audit zero vulnerabilities; npm ls valid. Lab repeated those checks successfully. npm outdated produced 9 informational newer-version notices, no advisory findings.
+
+48. PACKAGE_SECURITY_RESULT
+PASS — target-owned package gates listed in section 46 passed; no forbidden package entries.
+
+49. LAB_APPLICABLE_SECURITY_RESULT
+PASS — selected checks deps, static, cli-adversarial, fuzz, boundary, network; 13 passed, 1 warning, 0 failed, 3 skipped; 0 release blockers, target-project blockers, or tool-framework blockers. Required-evidence-missing count 1 is the deliberately deselected npm-pack-dry-run/package family, covered by target-owned pack and install acceptance. Lab verdict label: READY EXCEPT OPTIONAL MANUAL CHECKS.
+
+50. SUBPROCESS_SECURITY_RESULT
+PASS — no production child-process API usage found; tests/v121SecurityRegression.test.ts passed (1 suite, 13 tests); known Lab installed-subprocess static-source limitation not treated as target defect.
+
+51. SECRET_SECURITY_RESULT
+PASS — no real credential found in bounded source review/pattern scan; known scanner template-literal false positive locations remain message interpolation, not credential literals.
+
+52. SECURITY_OPTIONAL_SKIPS
+OSV-Scanner not installed; CodeQL CLI not installed. Lab also identified environment-dependent symlink/junction scenario as skipped (requires OS support). These are recorded as optional/environment limitations; no security blockers or failed scenarios. Lab npm pack check was deselected and replaced with target-owned package evidence.
+
+53. COMPOSITE_SECURITY_VERDICT
+PASS — all nine applicable security families have evidence via Lab checks or the specified target-owned evidence.
+
+54. CODE_ROT_COMMAND
+npx -y @dailephd/my-dev-kit-lab@0.6.0 --workspace "<fresh external workspace>" audit --target "C:\Users\daile\Projects\my-dev-kit-orchestrator" --types code-rot
+
+55. CODE_ROT_REPORT_PATHS
+C:\Users\daile\AppData\Local\Temp\orchestrator-r4-code-rot-20260925-134827\reports\audits\code-rot\code-rot-audit.json
+C:\Users\daile\AppData\Local\Temp\orchestrator-r4-code-rot-20260925-134827\reports\audits\code-rot\code-rot-audit.txt
+
+56. CODE_ROT_RAW_EXIT_RESULT
+FAIL — exit 1 because the Lab blocker threshold counted two raw release-blocking historical claims; no implementation blockers.
+
+57. CODE_ROT_RAW_FINDING_COUNTS
+Total 212; blocker 2; high 6; medium 68; low 118; informational 18; raw releaseBlocking 2; raw implementationBlocking 0.
+
+58. CODE_ROT_RAW_RELEASE_BLOCKERS
+package-release-rot:CHANGELOG.md:unsupported-publish-claim:746 — CHANGELOG.md:746, “**Note:** Tagged as `v0.2.0` in git. Not published to npm.”
+package-release-rot:docs/ROADMAP.md:unsupported-publish-claim:85 — docs/ROADMAP.md:85, “- not published to npm”.
+
+59. CODE_ROT_ADJUDICATION_MATRIX
+FINDING_ID: package-release-rot:CHANGELOG.md:unsupported-publish-claim:746
+FILE: CHANGELOG.md
+LINE: 746
+RAW_RELEASE_BLOCKING: true
+CLAIM: v0.2.0 tagged in git and not published to npm
+CURRENT_EVIDENCE: Local annotated tag object 8f1fae9159a51c198c91bbde351c90dc046bac68; remote tag same object, peeled commit 3cdb19e7e9aad973b88f8587b2e76740dc5c4012; current npm published versions exclude 0.2.0.
+CLASSIFICATION: FALSE_POSITIVE_ACCURATE_HISTORICAL_FACT
+UNRESOLVED_RELEASE_BLOCKER: NO
+
+FINDING_ID: package-release-rot:docs/ROADMAP.md:unsupported-publish-claim:85
+FILE: docs/ROADMAP.md
+LINE: 85
+RAW_RELEASE_BLOCKING: true
+CLAIM: v0.2.0 not published to npm
+CURRENT_EVIDENCE: Same local/remote v0.2.0 tag evidence; npm published versions exclude 0.2.0.
+CLASSIFICATION: FALSE_POSITIVE_ACCURATE_HISTORICAL_FACT
+UNRESOLVED_RELEASE_BLOCKER: NO
+
+60. CODE_ROT_REPAIRED_FINDINGS
+The prior v0.2.1 stale-tag-status finding is repaired and absent. Current wording is “**Not yet published to npm.** Tag `v0.2.1` exists.” The old “Tag will be created on release preparation.” statement is absent from CHANGELOG.md, docs, and README.md. v0.2.1 local and remote tag object d2162f9ffb6ec3c51f667d82df2696c105adcfcb; peeled commit c2654e32f937eb1d8aa044c123c7a71daa6499f2.
+
+61. CODE_ROT_FALSE_POSITIVE_HISTORICAL_FINDINGS
+Two accurate v0.2.0 historical facts above; both directly reverified against local and remote Git tag and current npm publication history; statements left unchanged.
+
+62. CODE_ROT_UNRESOLVED_REAL_RELEASE_BLOCKERS
+0
+
+63. CODE_ROT_IMPLEMENTATION_BLOCKERS
+0
+
+64. CODE_ROT_NONBLOCKING_FINDINGS
+210: high 6, medium 68, low 118, informational 18. None independently demonstrated a new real release-safety blocker.
+
+65. CODE_ROT_ADJUDICATED_VERDICT
+PASS — raw exit was 1, but each raw release blocker is an accurate verified historical fact; unresolved real release blockers 0; implementation blockers 0.
+
+66. TARGET_IMMUTABILITY_RESULT
+PASS — Lab workspaces/reports and package install/tarball/smoke targets were external. Before and after validation, repository HEAD remained aa6f6745b0d7a630ee78ab10d1eb872c5c85c684; tracked worktree, index, and untracked status clean. No candidate files changed.
+
+67. REQUIRED_GATE_SUMMARY
+LOCAL_VALIDATION: PASS
+DEPENDENCY_SECURITY: PASS
+PACKED_PACKAGE_ACCEPTANCE: PASS
+CROSS_PLATFORM_MATRIX: PASS
+COMPOSITE_SECURITY: PASS
+CODE_ROT_RAW_AUDIT: FAIL
+CODE_ROT_ADJUDICATED: PASS
+TARGET_IMMUTABILITY: PASS
+
+68. REMAINING_RISKS
+Optional security tools unavailable: OSV-Scanner and CodeQL. Lab’s symlink/junction scenario is environment-dependent. Lab raw code-rot audit retains two verified historical v0.2.0 false positives. Nonblocking code-rot findings remain: 6 high, 68 medium, 118 low, 18 informational. Lab reported 9 informational npm-outdated notices. npm ci emitted dependency deprecation and unapproved unrs-resolver install-script notices. The bounded network check is static, not runtime instrumentation. None is an unresolved release blocker.
+
+69. READINESS_VERDICT
+PASS_V1_5_PRE_RELEASE_READINESS
+
+70. READINESS_REPORT_COMMIT
+Created with required subject “chore: record v1.5 pre-release readiness”; commit SHA is the report commit immediately after the validated candidate in r4 history.
+
+71. PUSH_RESULT
+Pushed to origin/validation/v1.5.0-pre-release-r4; remote branch HEAD verified at the readiness report commit.
+
+72. NEXT_ACTION
+READY_FOR_V1_5_RELEASE_PREPARATION_AFTER_USER_APPROVAL
