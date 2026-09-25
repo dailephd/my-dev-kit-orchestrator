@@ -358,15 +358,7 @@
       "stage.greenfield.scaffold-plan",
       "stage.greenfield.scaffold-implementation"
     ],
-    "contextReadinessBlockerFields": [
-      "contextKind",
-      "primaryCode",
-      "primaryReason",
-      "correctiveAction",
-      "evidenceTarget",
-      "blockingIssueCodes",
-      "supportingIssueCodes"
-    ]
+    "contextReadinessBlockerFields": ["contextKind", "primaryCode", "primaryReason", "correctiveAction", "evidenceTarget", "blockingIssueCodes", "supportingIssueCodes"]
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
