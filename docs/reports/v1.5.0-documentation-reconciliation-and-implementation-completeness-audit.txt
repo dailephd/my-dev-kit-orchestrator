@@ -1,0 +1,245 @@
+v1.5.0 DOCUMENTATION RECONCILIATION AND IMPLEMENTATION-COMPLETENESS AUDIT
+
+1. FINAL_STATUS
+PASS_V1_5_DOCUMENTATION_RECONCILED_IMPLEMENTATION_COMPLETE
+
+2. REPOSITORY
+C:\Users\daile\Projects\my-dev-kit-orchestrator (origin dailephd/my-dev-kit-orchestrator)
+
+3. BRANCH
+feature/v1.5.0-semantic-continuity
+
+4. STARTING_HEAD
+43ef307feeea1368882d4f51bdca6927deef0b42 (clean tree, verified)
+
+5. PACKAGE_NAME
+@dailephd/my-dev-kit-orchestrator
+
+6. PACKAGE_VERSION
+1.4.1 (unchanged; package-lock unchanged; no dependency change since the upstream baseline)
+
+7. LATEST_PUBLISHED_VERSION
+1.4.1 (tag v1.4.1 exists locally; documentation does not claim 1.5.0 exists in any tag, release, or registry)
+
+8. INITIAL_GIT_STATUS
+Clean tracked tree; only ignored/untracked evidence under .my-dev-kit-context/ and .my-dev-kit-workflow/.
+
+9. MY_DEV_KIT_RETRIEVAL_LOG
+@dailephd/my-dev-kit@1.12.4; evidence under .my-dev-kit-context/v1.5.0/documentation-reconciliation/ (uncommitted). Producer repo C:\Users\daile\Projects\my-dev-kit at fcf58329820ddae781ceb75d3936024ed87d5f72, clean, unmodified.
+- index: --src src --language typescript --call-graph -> 140 files, 1360 symbols.
+- search (all twelve required topics, results in retrieval-log.txt): semantic responsibility RSP; implementation responsibility evidence; test implementation responsibility evidence; verification responsibility evidence; semantic continuity evaluator; run semantic continuity; RunIntegrityGate semantic continuity; semantic continuity prompt; semantic continuity status check export; correction routing semantic strategy; start semantic continuity activation; documentation consistency manifest.
+- lookup: validateSemanticResponsibilities, evaluateSemanticContinuity, deriveRunIntegrityGateResult, generateLiveStagePrompt, isCorrectableStage. slice: deriveRunIntegrityGateResult (depth 1). source: makeStartCommand.
+- Search recall was weak for the topical queries (test files dominate), so facts were established by exact-node lookup plus direct reads of the owners, and by executing the built modules (dist) to print constants, registries, and CLI flags. Full-file fallback was used for the bridge/evaluator/adapter/gate/judge/prompt owners and for scripts/check-docs-consistency.mjs and the manifest, where exact text was required.
+
+10. SOURCE_OF_TRUTH_INVENTORY
+Executed against a fresh build of HEAD: package.json (name, version 1.4.1, engines node >=24, single dependency commander ^11.1.0, bin, scripts); createProgram() (8 commands, exact option lists, no semantic/JSON flag); VALID_MODES (7); getWorkflow stage totals (79; greenfield 13); SUPPORTED_PROFILES (4: typescript-cli, nextjs-app, android-compose, python-cli); TRACE_PREFIXES (REQ,CTX,BEH,INV,TRN,PSE,TST,RSP,IMP,VER,RISK); SEMANTIC_RESPONSIBILITY_ID_RE (/^RSP-\d{3,}$/); SEMANTIC_RESPONSIBILITY_UPSTREAM_PREFIXES (REQ,CTX,BEH,INV,TRN,PSE); TEST_STRATEGY_SOURCE_REQUIREMENTS (feature:test-strategy, repair:regression-test-strategy, test:test-strategy, refactor:compatibility-test-strategy, harden:resilience-test-strategy, extraction:test-strategy); RUN_INTEGRITY_GATE_SCHEMA_VERSION 1.1.0; SEMANTIC_CONTINUITY_CONTRACT_VERSION 1.0.0. Baseline diff (46e923e..HEAD): package.json changed one line (smoke:context added to verify); package-lock unchanged; no src/commands set change beyond semantic wiring; .github/workflows unchanged. grep: no child_process in src (no automatic execution); no semantic-continuity.json / rsp-state.json anywhere in src; DIRECT_IMPLEMENTATION / FULL_STAGE_CONTEXT appear only in a code comment.
+
+11. IMPLEMENTATION_COMPLETENESS_VERDICT
+COMPLETE. Every audited requirement is IMPLEMENTED_AND_VERIFIED, OUT_OF_SCOPE_BY_PLAN, or SUPERSEDED_BY_EXPLICIT_DECISION. None is PARTIALLY_IMPLEMENTED, NOT_IMPLEMENTED, or IMPLEMENTED_BUT_UNVERIFIED. Phase A passed before any documentation was edited.
+
+12. IMPLEMENTATION_COMPLETENESS_MATRIX
+Requirements audited: 56 (54 IMPLEMENTED_AND_VERIFIED, 1 OUT_OF_SCOPE_BY_PLAN group, 1 SUPERSEDED_BY_EXPLICIT_DECISION; see the status column). The per-requirement matrix follows, then the area narratives in sections 13-29 in REQUIREMENT / ADOPTED_SOURCE / SOURCE_OWNER / TEST_OWNER / EXPECTED / OBSERVED / STATUS / EVIDENCE form. "Adopted source" is the v1.5 implementation plan carried by the committed Batch 0-6 reports and the roadmap entry (Semantic Continuity and Evidence-to-Implementation Bridge; preserve DIRECT_IMPLEMENTATION; FULL_STAGE_CONTEXT). Test files below are under tests/ unless noted.
+
+Column key: ID | REQUIREMENT | ADOPTED_SOURCE | SOURCE_OWNER | TEST_OWNER | EXPECTED -> OBSERVED | STATUS | EVIDENCE
+All rows: STATUS = IMPLEMENTED_AND_VERIFIED unless a different status is shown. Test owners are tests/*.test.ts unless a path is given; "ADV" = tests/semanticContinuityAdversarialMatrix.test.ts category code.
+
+R01 | canonical identity RSP-NNN, >=3 digits | Batch 0 | src/instructions/semanticResponsibility.ts | semanticResponsibility, ADV R1 | RSP-001/RSP-0001 valid; RSP-01, RSP001, RESP-001, rsp-001 invalid -> regex /^RSP-\d{3,}$/, all four rejected | IMPLEMENTED_AND_VERIFIED | executed regex; ADV R1 x4
+R02 | RSP in the canonical trace vocabulary | Batch 0 | src/traceModel.ts | src/__tests__/trace-model.test.ts | RSP in TRACE_PREFIXES -> printed prefix list contains RSP | IMPLEMENTED_AND_VERIFIED | executed TRACE_PREFIXES
+R03 | strategy artifacts remain declaration owners | Batch 0 | testResponsibilityCriticality.ts TEST_STRATEGY_SOURCE_REQUIREMENTS | testResponsibilityCriticality | six mode entries -> registry printed (feature/test/extraction test-strategy; repair regression; refactor compatibility; harden resilience) | IMPLEMENTED_AND_VERIFIED | executed registry
+R04 | Batch 0 required fields enforced | Batch 0 | semanticResponsibility.ts (8 fields, criticality vocabulary) | semanticResponsibility, ADV AS1 | missing/invalid criticality and fields flagged -> SEMANTIC_RESPONSIBILITY_* codes; unclassified blocks | IMPLEMENTED_AND_VERIFIED | ADV AS1
+R05 | upstream origins limited to REQ, CTX, BEH, INV, TRN, PSE | Batch 0 | semanticResponsibility.ts | semanticResponsibility, ADV X3 | TST/RSP/IMP/VER/RISK rejected -> upstream list printed; TRACE_PREFIX_INVALID observed | IMPLEMENTED_AND_VERIFIED | executed list; ADV X3
+R06 | legacy arbitrary IDs remain valid outside the canonical validator | Batch 0 | testResponsibilityCriticality.ts legacy parser | testResponsibilityCriticality, contextReadiness suites, ADV A3/A4 | legacy IDs usable; RSP text does not activate -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV A3, A4
+R07 | malformed and duplicate canonical IDs fail deterministically; first duplicate authoritative | Batch 0-2 | semanticResponsibility.ts + bridges | semanticResponsibility, ADV R1/S1 | reported, not merged -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV S1
+R08 | ImplementationReport is the carrier; no new artifact | Batch 1 | implementationResponsibilityEvidence.ts; workflows.ts unchanged | implementationResponsibilityEvidence | no new stage/artifact -> 79 stages; artifact map unchanged | IMPLEMENTED_AND_VERIFIED | stage total; git diff workflows.ts empty
+R09 | RSP -> production file/symbol declarations | Batch 1 | implementationResponsibilityEvidence.ts | implementationResponsibilityEvidence, ADV F/G | block syntax parsed, one or more evidence lines required -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV F1, G1
+R10 | project-relative path safety | Batch 1 | responsibilityEvidenceShared.ts | implementationResponsibilityEvidence, ADV BJ1/BK1/BL1 | traversal/absolute/drive/URL rejected; separators normalized; case kept -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV BJ1
+R11 | canonical symbol identity symbol:<path>#<name> | Batch 1 | implementationResponsibilityEvidence.ts normalizeProductionSymbolId | implementationResponsibilityEvidence, ADV AA1 | exactly one #, non-empty name; same name in another file does not match -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV AA1
+R12 | exact matching only (no fuzzy, basename, suffix, or case-insensitive matching) | Batch 1-2 | bridges (fileMatches/symbolMatches) | ADV Z1/Z2/AA1/BL1 | equality on path/id and id/symbolId -> temporary case-fold mutation failed BL1 | IMPLEMENTED_AND_VERIFIED | mutation run
+R13 | same-ID producer mapping required; missing vs truncated distinct | Batch 1-2 | bridges | ADV I2/J1/J2 | PRODUCER_MAPPING_MISSING vs _TRUNCATED codes (both bridges) -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV I2, J1
+R14 | schema-major-1 producer evidence without additive fields accepted | Batch 1-2 | myDevKitEvidenceSummary.ts | myDevKitEvidenceSummary, ADV AY1 | absent fields project as [] -> 1.10.2 fixture parses; uncorroborated, no crash | IMPLEMENTED_AND_VERIFIED | ADV AY1
+R15 | corroboration is identity presence, not causality | Batch 1-2 | bridge comments and docs | ADV BA1 | shared request-scoped evidence keeps RSPs independent -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV BA1
+R16 | TestImplementationReport carrier, file-level only | Batch 2 | testImplementationResponsibilityEvidence.ts | testImplementationResponsibilityEvidence | no test-symbol contract -> grep finds none in src | IMPLEMENTED_AND_VERIFIED | grep
+R17 | proposedOrExistingTestFiles projected additively | Batch 2 | myDevKitEvidenceSummary.ts | myDevKitEvidenceSummary, ADV AZ1 | absent -> []; malformed present value rejected -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV AZ1
+R18 | VerificationReport carrier; statuses pass/fail/skipped/blocked | Batch 2 | verificationResponsibilityEvidence.ts | verificationResponsibilityEvidence | VERIFICATION_STATUSES exact -> confirmed | IMPLEMENTED_AND_VERIFIED | source
+R19 | pass/fail need command evidence; skipped/blocked need reason | Batch 2 | verificationResponsibilityEvidence.ts | ADV M-P | EVIDENCE_MISSING / REASON_MISSING codes -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV O1, P1
+R20 | actual command, working directory, signed integer exit code | Batch 2 | verificationResponsibilityEvidence.ts EXIT_CODE_RE | verificationResponsibilityEvidence, ADV BI | /^[+-]?\d+$/ -> confirmed | IMPLEMENTED_AND_VERIFIED | source
+R21 | parser never executes commands; status never inferred | Batch 2 | verificationResponsibilityEvidence.ts | ADV N1/BW1 | no child_process in src -> grep clean; fail with exit 0 stays failed | IMPLEMENTED_AND_VERIFIED | grep; ADV N1
+R22 | status/evidence inconsistency is diagnostic-only | Batch 2-3 | semanticContinuity.ts diagnostics | ADV Q1/BH1 | warning, verification satisfied, PASS expected -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV Q1
+R23 | one canonical whole-chain evaluator | Batch 3 | src/instructions/semanticContinuity.ts | semanticContinuity | single evaluateSemanticContinuity consumed by the adapter -> confirmed | IMPLEMENTED_AND_VERIFIED | source
+R24 | strict phase awareness (owner-stage activation) | Batch 3 | semanticContinuity.ts isActive | ADV BF1 | current > owner -> [F,F,F]/[T,F,F]/[T,T,F]/[T,T,T] observed | IMPLEMENTED_AND_VERIFIED | ADV BF1
+R25 | correction to an earlier stage ignores future downstream defects | Batch 3-4 | semanticContinuity.ts + stageDetector.resolveGateCurrentStage | semanticContinuityRunIntegrity, ADV AF1/AG1 | inactive legs pending -> no deadlock | IMPLEMENTED_AND_VERIFIED | ADV AF1, AG1
+R26 | upstream trace existence exact and case-sensitive | Batch 3-4 | semanticContinuity.ts; runSemanticContinuity.ts | ADV W1/Y1 | missing or mis-cased -> UPSTREAM_TRACE_MISSING | IMPLEMENTED_AND_VERIFIED | ADV W1, Y1
+R27 | test mode implementation leg not-applicable | Batch 3 | semanticContinuity.ts | ADV AU1 | not-applicable, chain still passes -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV AU1
+R28 | proof-only and greenfield not-applicable | Batch 3-4 | semanticContinuity.ts; runSemanticContinuity.ts | ADV AV1/AW1 | not-required even with a version -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV AV1, AW1
+R29 | distinct states and documented precedence; no scoring or LLM inference | Batch 3 | semanticContinuity.ts | semanticContinuity | invalid > failed > blocked > incomplete > indeterminate > complete -> source; no scoring code | IMPLEMENTED_AND_VERIFIED | source
+R30 | RunIntegrityGate sole enforcement owner; no parallel gate | Batch 4 | src/runIntegrityGate.ts | semanticContinuityRunIntegrity | one gate result consumed everywhere -> confirmed | IMPLEMENTED_AND_VERIFIED | source
+R31 | activation via semanticContinuityVersion; supported 1.0.0; absent = legacy; unsupported fails closed | Batch 4 | runSemanticContinuity.ts | runSemanticContinuity, ADV A1/B1 | constant 1.0.0; unsupported blocks with null stage -> confirmed | IMPLEMENTED_AND_VERIFIED | executed constant; ADV B1
+R32 | gate schema 1.1.0 | Batch 4 | runIntegrityGate.ts | semanticContinuityRunIntegrity | additive fields only -> 1.1.0 printed | IMPLEMENTED_AND_VERIFIED | executed constant
+R33 | critical blocks; noncritical warns; unclassified blocks; global defects block | Batch 4 | runIntegrityGate.ts projectSemanticContinuity | ADV C/D/E/AS/T-V | confirmed | IMPLEMENTED_AND_VERIFIED | ADV E1, AS1, T1
+R34 | context blocker keeps primary precedence | Batch 4 | runIntegrityGate.ts | ADV AJ1 | confirmed | IMPLEMENTED_AND_VERIFIED | ADV AJ1
+R35 | deterministic correction-stage selection | Batch 4 | runIntegrityGate.ts (owner stage, then declaration order) | ADV BC/BD/BE | confirmed | IMPLEMENTED_AND_VERIFIED | ADV BC1, BD1, BE1
+R36 | lifecycle, mark, judge, final report share the gate | Batch 4 | stageDetector.ts, runLifecycle.ts, commands/mark.ts, judgeIntegrity.ts | ADV AM/AN/AO/BG | mark rejected with state unchanged; PASS rejected -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV AM1
+R37 | automatic activation for exactly the six modes | Batch 5 | commands/start.ts + shouldActivateSemanticContinuity | semanticContinuityPromptActivation | six persisted; derived from the registry -> built CLI printed the active line | IMPLEMENTED_AND_VERIFIED | built CLI run
+R38 | no activation for greenfield, proof-only, bare createRun | Batch 5 | start.ts; run.ts | semanticContinuityPromptActivation, ADV AV/AW | field absent -> confirmed (built CLI greenfield printed nothing) | IMPLEMENTED_AND_VERIFIED | built CLI run
+R39 | no activation flag; DIRECT_IMPLEMENTATION / FULL_STAGE_CONTEXT not modes | Batch 5 | program.ts, types.ts | ADV BU1 | flags listed for all commands -> none; VALID_MODES 7 | IMPLEMENTED_AND_VERIFIED | executed flag lists
+R40 | activated prompts teach trace declarations, ID stability, RSP blocks, criticality | Batch 5 | semanticContinuityPrompt.ts | semanticContinuityPromptActivation (80 tests) | confirmed for all six modes | IMPLEMENTED_AND_VERIFIED | test run
+R41 | implementation, test, verification, and judge guidance | Batch 5 | semanticContinuityPrompt.ts | semanticContinuityPromptActivation | confirmed | IMPLEMENTED_AND_VERIFIED | test run
+R42 | legacy, greenfield, and proof-only prompts outside the contract | Batch 5 | promptGenerator.ts withSemanticContinuity | semanticContinuityPromptActivation, ADV A1 | no SEMANTIC CONTINUITY text -> confirmed | IMPLEMENTED_AND_VERIFIED | ADV A1
+R43 | RSP IDs into testResponsibilityRefs; responsibility-mappings merged, not replacing | Batch 5 | semanticContinuityPrompt.ts renderContextRequestRspGuidance | semanticContinuityPromptActivation | existing kinds not replaced -> confirmed | IMPLEMENTED_AND_VERIFIED | test run
+R44 | post-change and post-test evidence refresh; my-dev-kit not auto-executed | Batch 5 | semanticContinuityPrompt.ts evidenceRefreshSteps | ADV BO1 | confirmed; no child_process in src | IMPLEMENTED_AND_VERIFIED | ADV BO1; grep
+R45 | mode-aware strategy correction routing; wrong-mode rejection | Batch 5 | correctionRouter.ts isCorrectableStage | src/__tests__/correction-router.test.ts, ADV AH/AI | confirmed | IMPLEMENTED_AND_VERIFIED | test run
+R46 | canonical (including null) recommendation authoritative for NEED_CONTEXT | Batch 5 | judgeIntegrity.ts | semanticContinuityRunIntegrity, ADV AP/AQ | confirmed | IMPLEMENTED_AND_VERIFIED | ADV AP1
+R47 | semantic-blocked stage never gets normal work; saved templates and live prompts distinct | Batch 5 | promptGenerator.ts generateLiveStagePrompt | semanticContinuityPromptActivation, ADV BP1 | confirmed | IMPLEMENTED_AND_VERIFIED | ADV BP1
+R48 | one coherent projection in status/check/export/judge prompt; strict/warn/fail semantics | Batch 5 | semanticContinuitySurface.ts, commands | semanticContinuityCommandSurface, ADV BQ/BR | confirmed in-process and against the built CLI | IMPLEMENTED_AND_VERIFIED | ADV BQ built variant
+R49 | export copies no raw capsule/audit; legacy runs quiet | Batch 5 | commands/export.ts | semanticContinuityCommandSurface | confirmed | IMPLEMENTED_AND_VERIFIED | test run
+R50 | no persisted semantic state | Batch 4-5 | (absence) | ADV BS1 | no semantic file; grep of src clean | IMPLEMENTED_AND_VERIFIED | grep; ADV BS1
+R51 | historical schema-major-1 evidence; 1.12.4-shaped evidence; extraction source/target separation | Batch 6 | bridges | ADV AY/AZ/AX | confirmed | IMPLEMENTED_AND_VERIFIED | ADV
+R52 | Batch 6 matrix exists: 110 tests, 75 categories, 0 production defects | Batch 6 | tests/semanticContinuityAdversarialMatrix.test.ts | itself | jest --json: 110/110 passed; all 75 codes present; Batch 6 commit touched no src | IMPLEMENTED_AND_VERIFIED | matrix.json
+R53 | TRN arrow declaration valid; link-only lines not declarations | Batch 5 repair | src/traceChecker.ts | src/__tests__/trace-checker.test.ts, ADV X1-X3, semanticContinuityPromptActivation | confirmed; a mutation reverting it failed X1 and X2 | IMPLEMENTED_AND_VERIFIED | mutation run
+R54 | public surface: 8 commands, 7 modes, 79 stages, 4 profiles; no new command/mode/stage/artifact/dependency/flag/JSON | all | program.ts, workflows.ts | ADV BU1, documentationConsistency | executed counts; deps unchanged (package-lock identical to baseline) | IMPLEMENTED_AND_VERIFIED | executed counts; git diff
+R55 | v1.6 / v1.7 / Lab / Observer redesign / greenfield handoff / mobile / status JSON / automatic execution / scoring not absorbed | plan exclusions | (absence in src) | - | no such code found | OUT_OF_SCOPE_BY_PLAN | grep and diff review
+R56 | superseded assignment: optional mobile profiles were once assigned to v1.5 | later planning decision | ROADMAP (deferred) | - | not implemented; kept deferred | SUPERSEDED_BY_EXPLICIT_DECISION | roadmap text
+
+13. SEMANTIC_RESPONSIBILITY_COMPLETENESS
+REQUIREMENT: canonical RSP-NNN identity, >=3 digits. ADOPTED_SOURCE: Batch 0. SOURCE_OWNER: src/instructions/semanticResponsibility.ts. TEST_OWNER: semanticResponsibility.test.ts, adversarial R1/S1. EXPECTED: RSP-001/RSP-0001 valid; RSP-01, RSP001, RESP-001, rsp-001 invalid. OBSERVED: regex /^RSP-\d{3,}$/; adversarial R1 fails all four deterministically. STATUS: IMPLEMENTED_AND_VERIFIED. EVIDENCE: executed regex; 110-test matrix.
+REQUIREMENT: RSP in trace vocabulary; upstream origins restricted. SOURCE_OWNER: src/traceModel.ts (TRACE_PREFIXES incl. RSP), semanticResponsibility.ts (REQ,CTX,BEH,INV,TRN,PSE). TEST_OWNER: src/__tests__/trace-model.test.ts, semanticResponsibility.test.ts. STATUS: IMPLEMENTED_AND_VERIFIED.
+REQUIREMENT: strategy artifacts remain declaration owners; Batch 0 fields enforced. SOURCE_OWNER: testResponsibilityCriticality.ts (registry/parser), semanticResponsibility.ts (8 fields, criticality vocabulary, traces syntax). STATUS: IMPLEMENTED_AND_VERIFIED. EVIDENCE: registry printed for six modes.
+REQUIREMENT: legacy arbitrary IDs still compatible; malformed/duplicate canonical IDs fail. OBSERVED: legacy parser unchanged (A3/A4 adversarial pass); duplicates keep first declaration, reported (S1). STATUS: IMPLEMENTED_AND_VERIFIED.
+
+14. IMPLEMENTATION_BRIDGE_COMPLETENESS
+REQUIREMENT: ImplementationReport carrier, no new artifact; RSP->production file/symbol; path safety; exact match; same-ID mapping; missing vs truncated distinct; schema-major-1 accepted; identity-only corroboration. SOURCE_OWNER: implementationResponsibilityEvidence.ts, responsibilityEvidenceShared.ts, myDevKitEvidenceSummary.ts. TEST_OWNER: implementationResponsibilityEvidence.test.ts, myDevKitEvidenceSummary.test.ts, adversarial F-J, Z, AA, BJ-BL, AY. OBSERVED: block syntax and lexical path policy read from source; exact equality on path/id and id/symbolId; codes PRODUCER_MAPPING_MISSING vs _TRUNCATED; historical 1.10.2 fixture parses with additive fields []. STATUS: IMPLEMENTED_AND_VERIFIED. EVIDENCE: mutation check (case-folding matcher) made BL1 fail.
+
+15. TEST_BRIDGE_COMPLETENESS
+REQUIREMENT: TestImplementationReport carrier; file-level only; no test-symbol contract; exact path; proposedOrExistingTestFiles additive; missing/truncated distinct; legacy compatible. SOURCE_OWNER: testImplementationResponsibilityEvidence.ts. TEST_OWNER: testImplementationResponsibilityEvidence.test.ts, adversarial K/L/J1/AY. OBSERVED: grep finds no "test symbol" in src; states/codes mirror the implementation bridge. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+16. VERIFICATION_ATTRIBUTION_COMPLETENESS
+REQUIREMENT: VerificationReport carrier; statuses pass|fail|skipped|blocked; evidence rules; signed integer exit code; no execution; no inference; diagnostic-only inconsistency. SOURCE_OWNER: verificationResponsibilityEvidence.ts (EXIT_CODE_RE /^[+-]?\d+$/). TEST_OWNER: verificationResponsibilityEvidence.test.ts, adversarial M-Q/BH/BI. OBSERVED: as required; BW1 asserts no fs/child_process in the semantic modules. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+17. SEMANTIC_CONTINUITY_EVALUATOR_COMPLETENESS
+REQUIREMENT: one phase-aware evaluator over strategy->implementation->test->verification; strict owner-stage activation; correction ignores future defects; exact case-sensitive upstream trace check; test mode implementation leg not-applicable; proof-only/greenfield not-applicable; distinct structural/absent/indeterminate/failed/blocked/incomplete states; precedence; no scoring/LLM. SOURCE_OWNER: semanticContinuity.ts. TEST_OWNER: semanticContinuity.test.ts, adversarial BF/AF/AG/Y/W/AU. OBSERVED: isActive(currentIndex > ownerIndex); precedence invalid>failed>blocked>incomplete>indeterminate>complete; no scoring code. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+18. RUN_INTEGRITY_INTEGRATION_COMPLETENESS
+REQUIREMENT: RunIntegrityGate sole enforcement owner; no parallel gate; activation via semanticContinuityVersion; supported 1.0.0; absent legacy; unsupported fails closed; schema 1.1.0; critical blocks; noncritical warns; unclassified blocks; global defects block; context precedence; deterministic correction stage; lifecycle/mark/judge/final-report share the gate. SOURCE_OWNER: runIntegrityGate.ts, runSemanticContinuity.ts, judgeIntegrity.ts, stageDetector.ts, runLifecycle.ts, commands/mark.ts. TEST_OWNER: semanticContinuityRunIntegrity.test.ts, runSemanticContinuity.test.ts, adversarial B/AJ/AM-AR/AS/AT/BC-BE/BG. OBSERVED: gate fields and projection read from source; executed constants. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+19. AUTOMATIC_ACTIVATION_COMPLETENESS
+REQUIREMENT: start activates exactly feature, repair, test, refactor, harden, extraction; not greenfield, proof-only, or bare createRun(); no flag; DIRECT_IMPLEMENTATION/FULL_STAGE_CONTEXT not modes. SOURCE_OWNER: commands/start.ts + shouldActivateSemanticContinuity() (derived from TEST_STRATEGY_SOURCE_REQUIREMENTS). TEST_OWNER: semanticContinuityPromptActivation.test.ts, adversarial AV/AW/BU. OBSERVED: built CLI start printed "Semantic continuity: active (1.0.0)" for feature and nothing for greenfield; flag lists contain no activation option. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+20. PROMPT_CONTRACT_COMPLETENESS
+REQUIREMENT: activated prompts teach upstream trace declaration and ID stability, strategy RSP blocks, criticality semantics, RSP stability on correction, implementation/test mappings, verification attribution, judge use of the gate; legacy/greenfield/proof-only untouched. SOURCE_OWNER: semanticContinuityPrompt.ts, promptGenerator.ts. TEST_OWNER: semanticContinuityPromptActivation.test.ts (80 tests), adversarial A1/AH/BO/BP/BV. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+21. CONTEXT_REQUEST_RSP_PROPAGATION_COMPLETENESS
+REQUIREMENT: canonical RSP IDs into testResponsibilityRefs; responsibility-mappings merged into (not replacing) evidence kinds; post-change and post-test refresh; exact ID listing in refresh-only prompts; no automatic my-dev-kit execution. SOURCE_OWNER: semanticContinuityPrompt.ts (renderContextRequestRspGuidance, evidenceRefreshSteps), promptGenerator.ts refresh-only paths. TEST_OWNER: semanticContinuityPromptActivation.test.ts, adversarial BO1. OBSERVED: no child_process in src. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+22. CORRECTION_ROUTING_COMPLETENESS
+REQUIREMENT: feature/test/extraction -> test-strategy; repair -> regression-test-strategy; refactor -> compatibility-test-strategy; harden -> resilience-test-strategy; wrong-mode rejection; canonical recommendation (including null) authoritative for NEED_CONTEXT; authored PASS rejected against critical blockers. SOURCE_OWNER: correctionRouter.ts (isCorrectableStage(stage, mode)), judgeIntegrity.ts, promptGenerator.ts correction tables. TEST_OWNER: src/__tests__/correction-router.test.ts, semanticContinuityRunIntegrity.test.ts, adversarial AH/AI/AO-AQ. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+23. COMMAND_SURFACE_COMPLETENESS
+REQUIREMENT: coherent projection through status, check (default/--artifacts/--all), export, judge prompt; blocked fails; warning passes and fails under --strict; export without raw capsule/audit; legacy runs quiet; prompt-level blocked guidance vs saved templates distinct. SOURCE_OWNER: semanticContinuitySurface.ts, commands/status.ts|check.ts|export.ts|prompt.ts. TEST_OWNER: semanticContinuityCommandSurface.test.ts (stubbed, isolating exit codes) and adversarial BQ/BR (unstubbed, in-process and built dist/cli.js). STATUS: IMPLEMENTED_AND_VERIFIED.
+
+24. LIFECYCLE_AND_BYPASS_COMPLETENESS
+REQUIREMENT: blocked artifact resolves blocked despite file/manual complete; mark rejected without mutating artifact-state.json; critical blocker denies final report; noncritical warning does not; no persisted semantic cache. SOURCE_OWNER: runIntegrityGate.ts resolveArtifactStateWithRunIntegrity, commands/mark.ts. TEST_OWNER: adversarial AM/AN/AO/AR/BG/BS. OBSERVED: byte-identical artifact-state.json after rejected mark. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+25. LEGACY_COMPATIBILITY_COMPLETENESS
+REQUIREMENT: v1.4.1-era runs (absent version) unchanged; RSP-looking text never activates; greenfield/proof-only separate. TEST_OWNER: adversarial A, AV, AW; frozen historical suites. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+26. PRODUCER_COMPATIBILITY_COMPLETENESS
+REQUIREMENT: schema-major-1 evidence accepted; 1.12.4-shaped evidence consumed; shared request-scoped evidence not collapsing RSPs; extraction target/source separation. TEST_OWNER: adversarial AY/AZ/BA/AX. STATUS: IMPLEMENTED_AND_VERIFIED.
+
+27. ADVERSARIAL_COVERAGE_COMPLETENESS
+Verified independently of the Batch 6 report: tests/semanticContinuityAdversarialMatrix.test.ts executed with --json: 110 tests, 110 passed, 0 failed; all 75 category codes A..BW (A-Z, AA-AZ, BA-BW) appear in test titles. The Batch 5 regression is executable: TRN-001 arrow declaration is a declaration and link-only lines are not (X1-X3); mutation checks show the suite fails if that repair or exact matching regresses. Zero production defects were found by Batch 6 (the Batch 6 commit changed no production file).
+
+28. PUBLIC_SURFACE_COMPLETENESS
+8 commands, 7 modes, 79 native stages, 13 greenfield stages, 4 profiles (all executed). Since the upstream baseline no new command, mode, stage, artifact family, or runtime dependency; no activation flag; no status --json; no semantic state file (grep and BS1). Node engine >=24.
+
+29. OUT_OF_SCOPE_CONFIRMATION
+Confirmed absent from v1.5 (OUT_OF_SCOPE_BY_PLAN): v1.6 economics/telemetry; v1.7 generic external evidence; Lab integration; Observer redesign; greenfield-to-feature handoff; new mobile profiles (SUPERSEDED assignment, not restored); status JSON; automatic coding-agent or my-dev-kit execution; semantic scoring; probabilistic matching. Source shows no such implementation.
+
+30. DOCUMENTS_REVIEWED
+Read in full: README.md; CHANGELOG.md; docs/ARCHITECTURE.md, ARTIFACTS.md, CI_CD.md, COMMANDS.md, CONTRACTS.md, CURRENT_STATE.md, DEVELOPMENT.md, DOCUMENTATION_PRESERVATION_POLICY.md, PROJECT_OVERVIEW.md, QUICKSTART.md, RELEASE.md, RELEASE_CHECKLIST.md, ROADMAP.md, SECURITY.md, USAGE.md, WORKFLOWS.md, documentation-preservation-manifest.json. (A first pass read parts of CHANGELOG, the historical ROADMAP sections, and the tail of RELEASE_CHECKLIST only by heading and search; those were then read in full before finalizing. That pass found one further stale-looking historical statement, the v1.3.1 exclusion "v1.5.0 optional mobile-profile work", which now carries the same superseded-assignment note as the v1.3.3 one.) Tooling read in full: scripts/check-docs-consistency.mjs, .markdownlint-cli2.jsonc, package.json, .github/workflows/validate.yml and pre-release-matrix.yml.
+
+31. DOCUMENT_ROLE_AUDIT
+Roles taken from the preservation manifest and policy; headings stay within allowed patterns (README, CHANGELOG, ARCHITECTURE, WORKFLOWS, ARTIFACTS, USAGE, DEVELOPMENT, ROADMAP, RELEASE_CHECKLIST). The v1.5 material lives inside existing sections (README "Current release"; ARCHITECTURE "RunIntegrityGate and judge integrity" H3; WORKFLOWS H3 under "Instruction packets and context-sensitive behavior"; ARTIFACTS H3 under "Instruction packets and supplemental context files"; DEVELOPMENT H3 under source ownership). Detail sits with its owner: contracts in CONTRACTS, procedures in COMMANDS/USAGE/WORKFLOWS, architecture in ARCHITECTURE; README/PROJECT_OVERVIEW/CURRENT_STATE/ROADMAP summarize and link.
+
+32. README_RECONCILIATION
+DOCUMENT: README.md. ROLE: public overview. SOURCE_OF_TRUTH: package.json, program.ts, start.ts. STALE_CLAIMS_FOUND: NONE. UNSUPPORTED_CLAIMS_FOUND: NONE. PLANNED/CURRENT_MISMATCHES: none; v1.5 absent (omission). MISSING_IMPLEMENTED_BEHAVIOR: Semantic Continuity. REPAIRS: added one concise paragraph in "Current release": implemented but unpublished, package metadata 1.4.1, activation modes/exclusions, no flag, critical vs noncritical, consistent surfaces, no new command/mode/stage/dependency/state, manual my-dev-kit, links. UNRESOLVED: NONE.
+
+33. CHANGELOG_RECONCILIATION
+DOCUMENT: CHANGELOG.md. ROLE: release history plus unreleased delta. STALE/UNSUPPORTED: NONE found in released sections. MISSING_IMPLEMENTED_BEHAVIOR: v1.5.0 delta. REPAIRS: added an undated "Unreleased" section (Added / Fixed / Compatibility) stating it is unpublished and package metadata remains 1.4.1; product delta only (no batch chronology, SHAs, or test counts); the docs checker now requires this section and rejects a finalized v1.5.0 heading. UNRESOLVED: NONE.
+
+34. CURRENT_STATE_RECONCILIATION
+DOCUMENT: docs/CURRENT_STATE.md. STALE_CLAIMS_FOUND: "The current release, v1.4.0, retains ..." (wrong release). UNSUPPORTED: NONE. PLANNED/CURRENT_MISMATCHES: "v1.5.0 is the next planned feature version" (now implemented, unpublished); "v1.6.0 follows". MISSING: v1.5.0 behavior and limitations. REPAIRS: new "Implemented but unpublished" section; corrected v1.4.0 -> v1.4.1; next-direction rewritten (v1.5.0 awaits separate pre-release readiness; v1.6.0 next planned; deferrals unchanged); limitation bullet added; states that pre-release, cross-platform, security-validation, and release preparation are not done. UNRESOLVED: NONE.
+
+35. ROADMAP_RECONCILIATION
+DOCUMENT: docs/ROADMAP.md. STALE_CLAIMS_FOUND: intro "v1.5.0 remains planned"; "v1.5.0 will provide"; "Roadmap sequence: v1.5.0 remains the next planned feature version"; v1.4.1 "next planned feature version remains". UNSUPPORTED: NONE. MISMATCHES: as listed. REPAIRS: intro, summary bullet, sequence, and v1.4.1 relationship sentence updated; v1.5.0 detail now records status (implemented, documentation-reconciled, not yet published), high-level implemented scope, and preserved boundaries; DIRECT_IMPLEMENTATION/FULL_STAGE_CONTEXT sentence retained; a parenthetical marks the v1.3.3 exclusion "v1.5.0 optional mobile-profile evaluation" as a historical, superseded assignment (mobile candidates stay deferred; not restored to v1.5). v1.6.0 and deferred sections untouched. Only 7 lines removed (all replaced stale sentences); no batch chronology added. UNRESOLVED: NONE.
+
+36. ARCHITECTURE_RECONCILIATION
+DOCUMENT: docs/ARCHITECTURE.md. STALE_CLAIMS_FOUND: contract table "RunIntegrityGate 1.0.0" (now 1.1.0); gate description covered context only. MISSING_IMPLEMENTED_BEHAVIOR: whole Semantic Continuity architecture. REPAIRS: purpose sentence (unpublished v1.5.0 on HEAD); core-components bullet; table (RunIntegrityGate 1.1.0, Semantic Continuity contract 1.0.0); prompt-assembly paragraph (saved template vs live render); lifecycle override includes semantic-blocked stages; new "### Semantic Continuity" subsection (identity, bridges, evaluator, adapter/activation, gate projection, surface projection); status/check/export and routing paragraphs; known limitations (no repurposing detection, identity-only corroboration); non-goals. One wrong-count phrase ("six modes") was caught by docs:check and rewritten. UNRESOLVED: NONE.
+
+37. CONTRACTS_RECONCILIATION
+DOCUMENT: docs/CONTRACTS.md. STALE_CLAIMS_FOUND: "future carrier" (x3); "not wired into prompts/gate" and "does not enforce continuity anywhere"; "ordinary run creation does not yet activate ... arrives later"; "router does not list mode-specific strategy stages"; "later batch/enforcement policy belongs to a later batch"; Batch 0-5 section titles and chronology. REPAIRS: replaced the whole block with six current-behavior sections (semantic responsibility; implementation bridge; test and verification bridges; evaluator; activation and enforcement; prompt and command surface), adding the trace-declaration rule and the gate-section cross-reference. Documents RSP identity, upstream origins, all three block syntaxes, bridge semantics and producer compatibility, phase-aware continuity, classifications and criticality policy, activation, legacy, prompt activation, mode-aware routing. UNRESOLVED: NONE.
+
+38. WORKFLOWS_RECONCILIATION
+DOCUMENT: docs/WORKFLOWS.md. STALE: NONE beyond omission. REPAIRS: activation notes with the mode-owned strategy stage in Feature, Repair, Test (no production mapping), Refactor, Harden, Extraction (target-repository identities); prompt-contract subsection reworded (enforcement summary, grammar fix, no maintainer source paths); shared gates bullet includes semantic blocking. Required top-level headings and order untouched. UNRESOLVED: NONE.
+
+39. COMMANDS_AND_USAGE_RECONCILIATION
+DOCUMENTS: docs/COMMANDS.md, docs/USAGE.md. STALE_CLAIMS_FOUND: USAGE trace-ID list omitted RSP; NEED_CONTEXT routing described only for repository context; "historical verified producer 1.10.4" without the 1.12.4 validation. REPAIRS: start activation (both docs), prompt semantic-blocked behavior, status/check/export summaries and strict semantics, mark cannot bypass (exit nonzero, no mutation), NEED_CONTEXT under canonical run integrity (including none and mode-owned strategy stages), RSP propagation into testResponsibilityRefs / responsibility-mappings, trace declaration rule and RSP prefix. Exactly eight commands preserved; no semantic flag; status still has no JSON option. UNRESOLVED: NONE.
+
+40. ARTIFACTS_RECONCILIATION
+DOCUMENT: docs/ARTIFACTS.md. STALE: judge-routing note lacked the null/mode-owned cases. REPAIRS: run.json semanticContinuityVersion; new "Semantic Continuity carriers and persistence" subsection (carrier table; no new artifact; no semantic-continuity.json / rsp-state.json); judge routing note updated. UNRESOLVED: NONE.
+
+41. DEVELOPMENT_RECONCILIATION
+DOCUMENT: docs/DEVELOPMENT.md. STALE_CLAIMS_FOUND: TRACE_PREFIXES/TRACE_ID_RE omitted RSP; parseDeclaredTraceIds "lines containing -> are skipped" (false since the declaration repair); "(v1.5 Batch N)" ownership annotations and a "(v1.5.0 Batch 5)" heading; producer authority only 1.10.4. REPAIRS: consolidated current ownership list, semantic surface/prompt section without batch labels, adversarial matrix and its unstubbed nature documented (command-surface suite stubs content checkers), trace facts corrected, producer statement (1.10.4 readiness contract; 1.12.4 for mapping fields). UNRESOLVED: NONE.
+
+42. QUICKSTART_AND_PROJECT_OVERVIEW_RECONCILIATION
+DOCUMENTS: docs/QUICKSTART.md, docs/PROJECT_OVERVIEW.md. STALE_CLAIMS_FOUND: QUICKSTART npx examples pinned to 1.3.3 with a matching sentence (latest published is 1.4.1). REPAIRS: pins updated to 1.4.1; one plain-language note that source builds activate responsibility tracking with no flag and nothing extra to start; PROJECT_OVERVIEW capability sentence. UNRESOLVED: NONE.
+
+43. CI_CD_RECONCILIATION
+DOCUMENT: docs/CI_CD.md. Checked against .github/workflows/validate.yml (Ubuntu/Windows/macOS-15, Node 24, npm ci, build, test, verify incl. smoke:context, help/version, pack dry-run) and pre-release-matrix.yml (Node 24/26, greenfield tests). STALE/UNSUPPORTED/MISMATCH: NONE. REPAIRS: NONE. UNRESOLVED: NONE.
+
+44. SECURITY_RECONCILIATION
+DOCUMENT: docs/SECURITY.md. STALE: NONE. REPAIRS: one sentence: Semantic Continuity is an integrity/traceability feature, not security validation; declarations and verification results are agent-authored and never executed or independently proven; security validation remains with my-dev-kit-lab. UNRESOLVED: NONE.
+
+45. RELEASE_DOCUMENT_RECONCILIATION
+DOCUMENTS: docs/RELEASE.md (audited; NONE), docs/RELEASE_CHECKLIST.md. STALE_CLAIMS_FOUND: v0.5.0 checklist items asserting the old "-> lines skipped" behavior and the 10-prefix TRACE_PREFIXES. REPAIRS: those two items corrected/scoped; new audit items for Semantic Continuity facts (contract/gate versions, activation policy, no new surface/state, gate behavior); producer bullet notes the 1.12.4 validation. No checklist item marked done; no release step executed. UNRESOLVED: NONE.
+
+46. DOCUMENTATION_PRESERVATION_MANIFEST_RECONCILIATION
+implementedUnpublishedVersions ["v1.5.0"]; plannedUnpublishedVersions ["v1.6.0"]; latestPublishedVersion and packageMetadataVersion remain 1.4.1. currentProducerVersion 1.12.4 with a separate readinessContractProducerVersion 1.10.4; new protected facts semanticContinuityActivatedModes and schemaVersions runIntegrityGate 1.1.0 / semanticContinuityContract 1.0.0; required terms and assertion/consistency lists extended; version-status policies updated. All new facts are derived by the checker from source, not hand-copied.
+
+47. STALE_CLAIM_AUDIT
+Searches for v1.5.0 will / planned v1.5 / future carrier / Batch N / automatic activation arrives / not yet enforced|activated / later batch / non-enforcing over README, CHANGELOG, docs/*.md: zero residue remains except the filename token "v123Batch4..." in a historical test-command list (a real test filename, not chronology). Historical reports retain batch terminology. Stale claims repaired: 15 (CURRENT_STATE v1.4.0 release claim; ROADMAP x4 plus the v1.3.1 superseded-assignment note; ARCHITECTURE gate schema row; CONTRACTS Batch-era transitional statements x5 clusters; DEVELOPMENT trace/prefix/"->" statements; QUICKSTART pins; USAGE prefix list; RELEASE_CHECKLIST x2; ARTIFACTS routing note).
+
+48. TEMPORAL_STATE_AUDIT
+Every statement now agrees: latest published 1.4.1; package metadata 1.4.1; v1.5.0 implemented and documentation-reconciled but unpublished (no date, no tag/release/npm claim); v1.6.0 planned; deferred scopes deferred. docs:check enforces this (implemented-unpublished version must not carry published/released-as wording, must have an undated Unreleased changelog section, must not have a finalized heading, and must differ from package metadata). No document claims pre-release readiness, cross-platform validation, security validation, or code-rot audit passed.
+
+49. DUPLICATION_AND_PLACEMENT_AUDIT
+Detailed syntax and policy only in CONTRACTS; procedures in COMMANDS/USAGE (short cross-links); WORKFLOWS carries the per-stage teaching summary; ARCHITECTURE owns component responsibilities; README/PROJECT_OVERVIEW/CURRENT_STATE/ROADMAP/CHANGELOG contain summaries only. No audit matrix, transcript, SHA, test-count history, or retrieval log appears in any canonical document.
+
+50. ECOSYSTEM_DOCUMENTATION_INSPECTION
+git ls-files finds no docs/ecosystem/, TOOL_ECOSYSTEM_REFERENCE, or WORKFLOW_PROMPT_ASSEMBLY_RULES files in this repository (the ecosystem guide is canonical in my-dev-kit and is linked, per the manifest's authorized relocation). A sibling ../docs directory exists outside this repository; it was not inspected or modified. No ecosystem document was created or edited. v1.5 changes no cross-repository responsibility: my-dev-kit remains manually executed, and security/pre-release validation remain with my-dev-kit-lab.
+
+51. DOCUMENTATION_TOOLING_CHANGES
+scripts/check-docs-consistency.mjs (strengthened, nothing removed or relaxed): extracts RUN_INTEGRITY_GATE_SCHEMA_VERSION and SEMANTIC_CONTINUITY_CONTRACT_VERSION into schemaVersions; extracts the activated-mode set from TEST_STRATEGY_SOURCE_REQUIREMENTS; checks ARCHITECTURE table rows for both; adds implemented-unpublished enforcement (codes UNPUBLISHED_VERSION_PUBLISHED_CLAIM, UNRELEASED_CHANGELOG_SECTION_MISSING, UNPUBLISHED_VERSION_RELEASE_HEADING, UNPUBLISHED_VERSION_MATCHES_PACKAGE). tests/documentationConsistency.test.ts: isolated-root fixture list gained the three extracted source files; the two v1.5.0-planned assertions were retargeted to v1.6.0 (still planned) and new negative cases added for the unpublished rules and version drift (61 tests pass).
+
+52. FILES_CHANGED
+CHANGELOG.md, README.md, docs/ARCHITECTURE.md, ARTIFACTS.md, COMMANDS.md, CONTRACTS.md, CURRENT_STATE.md, DEVELOPMENT.md, PROJECT_OVERVIEW.md, QUICKSTART.md, RELEASE_CHECKLIST.md, ROADMAP.md, SECURITY.md, USAGE.md, WORKFLOWS.md, docs/documentation-preservation-manifest.json, scripts/check-docs-consistency.mjs, tests/documentationConsistency.test.ts, plus this report. Unchanged after audit: CI_CD.md, RELEASE.md, DOCUMENTATION_PRESERVATION_POLICY.md. No src/ file changed (git diff -- src is empty).
+
+53. LINT_DOCS_RESULT
+npm run lint:docs: 23 files, 0 issues.
+
+54. DOCS_CHECK_RESULT
+npm run docs:check: DOCS_CHECK_PASS (1.4.1; published v1.4.1; 8 commands; 7 modes; 79 native stages; 13 greenfield stages; 4 profiles; 11 context-sensitive stages; schemas 1.0.0, 1.1.0).
+
+55. OTHER_FOCUSED_VALIDATION
+tests/documentationConsistency.test.ts: 61 passed. npm run build + built CLI checks (--version 1.4.1; 8 commands; per-command flag lists; start prints "Semantic continuity: active (1.0.0)" for feature and nothing for greenfield). git diff --check clean. Not run (out of scope by design): npm run verify, full Jest, cross-platform, Lab security validation, code-rot audit, release checks.
+
+56. FINAL_GIT_STATUS
+Only the files in section 52 modified plus this report (force-added); ignored evidence untouched; nothing under .my-dev-kit-context/, .my-dev-kit-workflow/, dist/, node_modules/, or tarballs staged.
+
+57. COMMIT
+docs: reconcile v1.5 implementation and documentation (SHA in the final response).
+
+58. PUSH_RESULT
+origin/feature/v1.5.0-semantic-continuity (result in the final response). No pull request, tag, release, or publication.
+
+59. NEXT_ACTION
+READY_FOR_V1_5_PRE_RELEASE_READINESS_CROSS_PLATFORM_SECURITY_AND_CODE_ROT

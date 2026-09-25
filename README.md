@@ -27,6 +27,21 @@ The current release is
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
 
+The source in this repository also contains implemented but unpublished
+`v1.5.0` work, Semantic Continuity. It is not part of the published package
+yet, and package metadata remains `1.4.1`. New staged runs in `feature`,
+`repair`, `test`, `refactor`, `harden`, and `extraction` activate it
+automatically (there is no flag); `greenfield`, proof-only, and older runs are
+unaffected. Stage prompts then ask the coding agent to carry each stable
+responsibility ID (`RSP-NNN`) from the test strategy through the implementation,
+test, and verification reports. A critical responsibility that is not carried
+through blocks the run; a noncritical gap is a visible warning. `status`,
+`check`, `export`, and the judge prompt show one consistent summary, and
+`mark` cannot bypass a blocker. No command, workflow mode, native stage,
+dependency, or persisted state was added, and `my-dev-kit` is still run
+manually. See [docs/WORKFLOWS.md](docs/WORKFLOWS.md#semantic-continuity-prompt-contract)
+and [docs/CONTRACTS.md](docs/CONTRACTS.md) for details.
+
 `v1.4.1` corrects the installed greenfield instruction surface for five stage
 prompts (`idea-brief`, `starter-profile`, `bootstrap-bundle`, `project-docs`,
 and `scaffold-plan`): installed coding-agent prompts no longer depend on

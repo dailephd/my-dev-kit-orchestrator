@@ -5,8 +5,8 @@ Versions are listed in chronological order.
 `v1.4.1` is the current published release. `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.5.0` and `v1.6.0` remain planned after `v1.4.1`; deferred scopes remain
-separate.
+`v1.5.0` is implemented and its documentation reconciled, but it is not yet
+published; `v1.6.0` remains planned after it; deferred scopes remain separate.
 
 ## Version summary
 
@@ -58,8 +58,11 @@ separate.
   `starter-profile`, `bootstrap-bundle`, `project-docs`, and `scaffold-plan`)
   with direct artifact, behavior, validation, and completion requirements.
   Released on 2026-09-05.
-- `v1.5.0` will provide the Semantic Continuity and Evidence-to-Implementation
-  Bridge; richer semantic chains remain opt-in for FULL_STAGE_CONTEXT.
+- `v1.5.0` provides the Semantic Continuity and Evidence-to-Implementation
+  Bridge: stable `RSP-NNN` responsibility identity carried from the test
+  strategy through implementation, test, and verification evidence and enforced
+  through the existing run-integrity gate for staged runs. It is implemented but
+  unpublished.
 - `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
 
 ## Published releases through v1.0.0
@@ -931,7 +934,9 @@ Explicit exclusions and boundaries:
 - no `my-dev-kit-lab` integration into ordinary greenfield bootstrap
 - no release, publication, or provider deployment behavior
 - no `v1.4.0` greenfield-to-feature handoff work
-- no `v1.5.0` optional mobile-profile work
+- no `v1.5.0` optional mobile-profile work (a historical assignment at that
+  release, since superseded; optional mobile-profile candidates are now a
+  deferred scope)
 
 Dependencies and evidence basis:
 
@@ -1183,12 +1188,14 @@ Explicit exclusions:
   execution
 - release or publication automation
 - `v1.4.0` greenfield-to-feature handoff hardening
-- `v1.5.0` optional mobile-profile evaluation
+- `v1.5.0` optional mobile-profile evaluation (a historical assignment at that
+  release, since superseded; optional mobile-profile candidates are now a
+  deferred scope)
 
 Roadmap sequence:
 
-`v1.4.1` is the current published release. `v1.5.0` remains the next planned
-feature version, followed by `v1.6.0`. Greenfield-to-Feature Workflow Handoff
+`v1.4.1` is the current published release. `v1.5.0` is implemented but not yet
+published, and `v1.6.0` follows it. Greenfield-to-Feature Workflow Handoff
 Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
@@ -1304,14 +1311,46 @@ Explicit exclusions:
 Relationship to later work:
 
 `v1.4.1` is a bounded corrective patch and does not replace or absorb
-`v1.5.0`. After this patch, the next planned feature version remains the
-Semantic Continuity and Evidence-to-Implementation Bridge.
+`v1.5.0`. After this patch, the next feature version was the Semantic
+Continuity and Evidence-to-Implementation Bridge.
 
 ### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
+
+Status: implemented and documentation-reconciled; not yet published. Package
+metadata remains `1.4.1`, and pre-release readiness, cross-platform,
+security-validation, and release-preparation work remains separate.
 
 Preserve lightweight DIRECT_IMPLEMENTATION while richer semantic continuity,
 including deterministic WF-002 metadata direction, remains FULL_STAGE_CONTEXT
 work.
+
+Implemented scope:
+
+- stable `RSP-NNN` semantic responsibility identity declared in the existing
+  mode-owned test-strategy artifacts and traced to upstream `REQ`, `CTX`, `BEH`,
+  `INV`, `TRN`, and `PSE` IDs
+- responsibility-to-implementation, test, and verification mappings carried in
+  the existing `ImplementationReport`, `TestImplementationReport`, and
+  `VerificationReport`, with exact-match my-dev-kit corroboration of identity
+  only
+- one phase-aware evaluator enforced through the existing `RunIntegrityGate`:
+  critical gaps block, noncritical gaps warn, and semantic-blocked stages render
+  bounded correction guidance
+- explicit versioned activation through `run.json`, applied automatically to new
+  staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and
+  `extraction`, with no activation flag and no effect on `greenfield`,
+  proof-only, or legacy runs
+- a consistent Semantic Continuity summary in `status`, `check`, `export`, and
+  the judge prompt, and mode-aware strategy correction routing
+
+Boundaries preserved:
+
+- no new command, workflow mode, native stage, artifact family, dependency, or
+  persisted semantic state
+- no automatic `my-dev-kit` or coding-agent execution, semantic scoring, or
+  probabilistic matching
+- no v1.6.0 telemetry, generic external-evidence integration, Observer
+  redesign, greenfield handoff work, or mobile-profile work
 
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 

@@ -156,7 +156,23 @@ function extractSchemaVersions(root) {
       'src/instructions/contextReadiness.ts',
       'CONTEXT_READINESS_SCHEMA_VERSION',
     ),
+    runIntegrityGate: extractConstant(root, 'src/runIntegrityGate.ts', 'RUN_INTEGRITY_GATE_SCHEMA_VERSION'),
+    semanticContinuityContract: extractConstant(
+      root,
+      'src/instructions/runSemanticContinuity.ts',
+      'SEMANTIC_CONTINUITY_CONTRACT_VERSION',
+    ),
   };
+}
+
+// Modes that automatically activate Semantic Continuity: exactly the modes
+// that own a test-strategy source requirement (start.ts derives activation
+// from the same registry).
+function extractSemanticContinuityActivatedModes(root) {
+  const source = readText(root, 'src/instructions/testResponsibilityCriticality.ts');
+  const registry = source.match(/TEST_STRATEGY_SOURCE_REQUIREMENTS:[^=]*=\s*\[([\s\S]*?)\n\];/);
+  if (!registry) throw new Error('Could not extract TEST_STRATEGY_SOURCE_REQUIREMENTS');
+  return [...registry[1].matchAll(/^\s*mode:\s*'([^']+)'/gm)].map((match) => match[1]);
 }
 
 function extractInterfaceFields(root, relPath, interfaceName) {
@@ -346,6 +362,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const customOutputRediscovery = customOutputRunRediscoverySupported(root);
   const contextFacts = extractContextFacts(root);
   const schemaVersions = extractSchemaVersions(root);
+  const semanticActivatedModes = extractSemanticContinuityActivatedModes(root);
   const contextReadinessBlockerFields = extractInterfaceFields(
     root,
     'src/instructions/contextReadiness.ts',
@@ -386,6 +403,12 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'implementationContextStageCount', contextFacts.implementationStages.length, facts.implementationContextStageCount);
   compareFact(issues, manifestPath, 'testContextStageCount', contextFacts.testStages.length, facts.testContextStageCount);
   compareFact(issues, manifestPath, 'schemaVersions', schemaVersions, facts.schemaVersions);
+  compareFact(issues, manifestPath, 'semanticContinuityActivatedModes', semanticActivatedModes, facts.semanticContinuityActivatedModes);
+  for (const mode of semanticActivatedModes) {
+    if (!modes.includes(mode)) {
+      addIssue(issues, 'MANIFEST_FACT_DRIFT', manifestPath, `activated mode ${mode} is a workflow mode`, 'unknown mode', 'Restore the strategy registry to valid workflow modes.');
+    }
+  }
   compareFact(issues, manifestPath, 'fixedContextPaths', contextFacts.fixedPaths, facts.fixedContextPaths);
   compareFact(issues, manifestPath, 'specializedRendererStages', compatibility.documentedLegacyExceptions, facts.specializedRendererStages);
   compareFact(
@@ -460,6 +483,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     supplementalContextPacket: 'Supplemental context packet',
     supplementalContextRetrievalReport: 'Supplemental context retrieval report',
     contextReadiness: '`ContextReadiness`',
+    runIntegrityGate: '`RunIntegrityGate`',
+    semanticContinuityContract: 'Semantic Continuity contract',
   };
   for (const [key, label] of Object.entries(architectureSchemaLabels)) {
     const expectedVersion = schemaVersions[key];
@@ -591,6 +616,25 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     }
     if (!implementedUnpublished && !isCurrentlyPublishedVersion && /\bimplemented\b/i.test(detail)) {
       addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'implemented wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
+    }
+  }
+
+  // Implemented-but-unpublished versions: documented as implemented, never as
+  // published or released, and carried by an unreleased changelog delta with no
+  // finalized release heading.
+  for (const version of manifest.protectedFacts.implementedUnpublishedVersions ?? []) {
+    const detail = section(roadmap, `### ${version}`, 3);
+    if (containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i)) {
+      addIssue(issues, 'UNPUBLISHED_VERSION_PUBLISHED_CLAIM', 'docs/ROADMAP.md', `${version} is implemented but not published`, 'published or released-as wording found', 'Keep implemented-but-unpublished work out of published-release wording.');
+    }
+    if (!/^## Unreleased\b/m.test(changelog)) {
+      addIssue(issues, 'UNRELEASED_CHANGELOG_SECTION_MISSING', 'CHANGELOG.md', `Unreleased section carrying ${version}`, 'missing', 'Add an undated Unreleased section for the implemented version.');
+    }
+    if (new RegExp(`^## ${version.replace(/\./g, '\\.')}\\b`, 'm').test(changelog)) {
+      addIssue(issues, 'UNPUBLISHED_VERSION_RELEASE_HEADING', 'CHANGELOG.md', `${version} carried by the Unreleased section only`, `finalized ${version} heading found`, 'Do not finalize a release heading before publication.');
+    }
+    if (version === `v${pkg.version}`) {
+      addIssue(issues, 'UNPUBLISHED_VERSION_MATCHES_PACKAGE', manifestPath, `${version} differs from package metadata`, 'package version equals an unpublished version', 'Move the version to the published state only when package metadata and publication agree.');
     }
   }
 

@@ -172,7 +172,7 @@ Settable states:
 - `blocked`: reason required.
 - `complete`: reason optional, current gate requirements still apply.
 
-`missing` and `stale` are computed. Do not mark sidecars, context capsules, audits, or supplemental packets as native artifacts. A complete record cannot override a blocked context or ineligible final report. Preserve the cause of a blocker instead of relabeling it.
+`missing` and `stale` are computed. Do not mark sidecars, context capsules, audits, or supplemental packets as native artifacts. A complete record cannot override a blocked context, a semantically blocked stage (`mark` exits nonzero and leaves `artifact-state.json` unchanged), or an ineligible final report. Preserve the cause of a blocker instead of relabeling it.
 
 ## check
 
@@ -247,7 +247,7 @@ artifacts/test-context-packet.txt
 reports/test-context-retrieval-report.txt
 ```
 
-The historical verified producer contract is `@dailephd/my-dev-kit@1.10.4`. Record actual compatible tool versions and use current schemas. Reference the raw capsule/audit/index rather than paste them into instruction packets. A refresh-only prompt requires regeneration of the relevant evidence, then status/check/prompt reevaluation.
+The verified producer contract for the readiness evidence is `@dailephd/my-dev-kit@1.10.4`; the Semantic Continuity evidence bridges were validated against `@dailephd/my-dev-kit@1.12.4`, and older schema-major-1 evidence without the additive fields remains accepted. Record actual compatible tool versions and use current schemas. In an activated run the request that populates these files carries the canonical strategy `RSP` IDs as `testResponsibilityRefs` and requests `responsibility-mappings` in addition to its existing evidence kinds. Reference the raw capsule/audit/index rather than paste them into instruction packets. A refresh-only prompt requires regeneration of the relevant evidence, then status/check/prompt reevaluation.
 
 The primary blocker, corrective action, evidence target, and ordered codes come from one shared decision. Optional truncation does not imply required loss. Manual reading or a supplemental prose claim cannot overwrite producer results or canonical readiness.
 
@@ -255,7 +255,7 @@ The primary blocker, corrective action, evidence target, and ordered codes come 
 
 Supported correction verdicts retain their native meanings. `DESIGN_INCOMPLETE`, `PSEUDOCODE_INCOMPLETE`, `IMPLEMENTATION_MISMATCH`, `TEST_COVERAGE_INCOMPLETE`, `ARCHITECTURE_MISMATCH`, and `NEED_VERIFICATION` route to their corresponding design/implementation/test/verification owners. `SCOPE_VIOLATION` and `BLOCKED` require external resolution.
 
-`NEED_CONTEXT` follows canonical readiness: implementation first when blocked, otherwise test-implementation. This overrides conflicting authored recommendations. An authored PASS is rejected while NEED_CONTEXT is required. Final-report eligibility requires accepted PASS, no active correction, complete current predecessors, and applicable readiness. File presence, explicit final-report selection, or a manual mark cannot bypass these rules.
+`NEED_CONTEXT` follows canonical run integrity: for repository context, implementation first when blocked, otherwise test-implementation; for Semantic Continuity, the canonical correction stage (a mode-owned strategy stage, `implementation`, `test-implementation`, or `verification`), or no stage at all when none exists. This overrides conflicting authored recommendations, and a canonical no-stage result is never replaced by a table default. An authored PASS is rejected while NEED_CONTEXT is required. Final-report eligibility requires accepted PASS, no active correction, complete current predecessors, and applicable readiness. File presence, explicit final-report selection, or a manual mark cannot bypass these rules.
 
 ## Cross-tool compatibility handoffs
 

@@ -33,6 +33,9 @@ function createIsolatedRoot(): string {
     'src/instructions/supplementalContextTypes.ts',
     'src/instructions/contextReadiness.ts',
     'src/instructions/stageRepositoryEvidenceRequirements.ts',
+    'src/instructions/runSemanticContinuity.ts',
+    'src/instructions/testResponsibilityCriticality.ts',
+    'src/runIntegrityGate.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;
@@ -115,9 +118,14 @@ describe('documentation consistency gate', () => {
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, 'first stage whose effective gate-aware state is not complete', 'first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'cannot rediscover custom-output runs', 'cannot select custom-output runs'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
     ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.4.0 is published; v1.5.0 remains planned.
-    ['planned v1.5.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    // v1.4.1 is published; v1.5.0 is implemented but unpublished; v1.6.0 remains planned.
+    ['planned v1.6.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry', '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['planned v1.6.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry', '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['unpublished v1.5.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge', '### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge\n\nPublished.'), 'UNPUBLISHED_VERSION_PUBLISHED_CLAIM'],
+    ['unpublished v1.5.0 without an Unreleased changelog section', 'CHANGELOG.md', (text: string) => replace(text, '## Unreleased - ', '## Pending - '), 'UNRELEASED_CHANGELOG_SECTION_MISSING'],
+    ['unpublished v1.5.0 with a finalized changelog heading', 'CHANGELOG.md', (text: string) => `${text}\n## v1.5.0 - Semantic Continuity\n`, 'UNPUBLISHED_VERSION_RELEASE_HEADING'],
+    ['semantic contract version drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| Semantic Continuity contract | `1.0.0` |', '| Semantic Continuity contract | `2.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
+    ['run-integrity gate schema drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| `RunIntegrityGate` | `1.1.0` |', '| `RunIntegrityGate` | `1.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
   ])('detects %s', (_name, relativePath, mutation, issueCode) => {
     expectIssue(relativePath as string, mutation as (content: string) => string, issueCode as string);

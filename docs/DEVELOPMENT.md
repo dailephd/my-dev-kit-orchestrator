@@ -160,23 +160,23 @@ Important implementation files:
 - `src/instructions/testResponsibilityCriticality.ts`: criticality and mapping
   parsing
 - `src/instructions/semanticResponsibility.ts`: canonical `RSP-NNN` structural contract
-  validation (v1.5 Batch 0; tests in `tests/semanticResponsibility.test.ts`)
+  validation (tests in `tests/semanticResponsibility.test.ts`)
 - `src/instructions/implementationResponsibilityEvidence.ts`: implementation responsibility block
-  parsing and Kit-evidence corroboration bridge (v1.5 Batch 1; tests in
+  parsing and my-dev-kit-evidence corroboration bridge (tests in
   `tests/implementationResponsibilityEvidence.test.ts`)
 - `src/instructions/responsibilityEvidenceShared.ts`: shared project-relative path policy and
   corroboration-state type for the evidence bridges
 - `src/instructions/testImplementationResponsibilityEvidence.ts`: test-file mapping parsing and
-  Kit test-file corroboration (v1.5 Batch 2; tests in
+  my-dev-kit test-file corroboration (tests in
   `tests/testImplementationResponsibilityEvidence.test.ts`)
-- `src/instructions/verificationResponsibilityEvidence.ts`: verification attribution parsing (v1.5
-  Batch 2; tests in `tests/verificationResponsibilityEvidence.test.ts`)
-- `src/instructions/semanticContinuity.ts`: the one phase-aware Semantic Continuity evaluator composing
-  Batch 0-2 results (v1.5 Batch 3; tests in `tests/semanticContinuity.test.ts`)
-- `src/instructions/runSemanticContinuity.ts`: run-folder adapter and versioned activation for Semantic
-  Continuity (v1.5 Batch 4; tests in `tests/runSemanticContinuity.test.ts`,
-  `tests/semanticContinuityRunIntegrity.test.ts`, fixtures in `tests/semanticRunTestHelpers.ts`);
-  enforcement lives in `src/runIntegrityGate.ts`
+- `src/instructions/verificationResponsibilityEvidence.ts`: verification attribution parsing (tests
+  in `tests/verificationResponsibilityEvidence.test.ts`)
+- `src/instructions/semanticContinuity.ts`: the one phase-aware Semantic Continuity evaluator
+  (tests in `tests/semanticContinuity.test.ts`)
+- `src/instructions/runSemanticContinuity.ts`: run-folder adapter and versioned activation for
+  Semantic Continuity (tests in `tests/runSemanticContinuity.test.ts` and
+  `tests/semanticContinuityRunIntegrity.test.ts`, fixtures in
+  `tests/semanticRunTestHelpers.ts`); enforcement lives in `src/runIntegrityGate.ts`
 - `src/instructions/contextReadiness.ts`: per-requirement readiness evaluation
 - `src/instructions/runContextReadiness.ts`: mode-level aggregation and
   deterministic recommendation
@@ -198,7 +198,7 @@ Important implementation files:
   resolution and stage detection, with gate-aware variants consumed by
   `prompt.ts`, `mark.ts`, and `status.ts`
 
-### Semantic Continuity prompt and command surface (v1.5.0 Batch 5)
+### Semantic Continuity prompt and command surface
 
 - `src/commands/start.ts`: supplies `SEMANTIC_CONTINUITY_CONTRACT_VERSION` to
   `createRun()` when `shouldActivateSemanticContinuity()` allows it. Do not make
@@ -214,12 +214,15 @@ Important implementation files:
   there, never a second evaluation.
 - `src/correctionRouter.ts`: mode-aware `isCorrectableStage()`; ownership of
   the mode-owned strategy stages comes from `TEST_STRATEGY_SOURCE_REQUIREMENTS`.
-- Tests: `tests/semanticContinuityPromptActivation.test.ts`,
-  `tests/semanticContinuityCommandSurface.test.ts` (which stubs the ordinary
-  content checkers so only semantic effects drive exit codes), the semantic
-  routing cases in `tests/semanticContinuityRunIntegrity.test.ts`, and the
-  mode-aware cases in `src/__tests__/correction-router.test.ts`. Legacy
-  absent-version prompt expectations must stay separate from activated ones.
+- Tests: `tests/semanticContinuityPromptActivation.test.ts`;
+  `tests/semanticContinuityCommandSurface.test.ts`, which stubs the ordinary
+  content checkers so only semantic effects drive exit codes;
+  `tests/semanticContinuityAdversarialMatrix.test.ts`, the unstubbed
+  compatibility and adversarial matrix (it also drives the built `dist/cli.js`
+  when present); the semantic routing cases in
+  `tests/semanticContinuityRunIntegrity.test.ts`; and the mode-aware cases in
+  `src/__tests__/correction-router.test.ts`. Legacy absent-version prompt
+  expectations must stay separate from activated ones.
 
 ## Validation and compatibility fixtures
 
@@ -315,10 +318,13 @@ documentation.
 
 The orchestrator does not execute `my-dev-kit`. A verified CLI must be selected
 and run manually. The released `@dailephd/my-dev-kit@1.10.4` package is the
-verified producer authority; no local worktree path is part of the public
-contract. `v1.2.3` consumes v1.10.4's additive, condition-aware evidence when
-a capsule/audit declares it; older schema-major-1 evidence remains fully
-compatible without it.
+verified producer authority for the readiness contract; no local worktree path
+is part of the public contract. `v1.2.3` consumes v1.10.4's additive,
+condition-aware evidence when a capsule/audit declares it. The Semantic
+Continuity bridges additionally read `productionSymbols` and
+`proposedOrExistingTestFiles` from responsibility mappings and were validated
+against `@dailephd/my-dev-kit@1.12.4`. Older schema-major-1 evidence without
+any of these additive fields remains fully compatible.
 
 ### Known instruction and context limitations
 
@@ -375,8 +381,8 @@ compatible without it.
 
 `src/traceModel.ts` defines the canonical trace ID format:
 
-- `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','IMP','VER','RISK']`
-- `TRACE_ID_RE`: `/^(REQ|CTX|BEH|INV|TRN|PSE|TST|IMP|VER|RISK)-(\d{3,})$/`
+- `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','RSP','IMP','VER','RISK']`
+- `TRACE_ID_RE`: derived from `TRACE_PREFIXES`; matches `PREFIX-NNN` with three or more digits
 - `isValidTraceId(id)`: returns true for canonical format (e.g., `BEH-001`)
 - `isMalformedTraceId(text)`: returns true for near-miss tokens (e.g., `BEH001`, `FOO-001`) that are not valid trace IDs
 
@@ -384,7 +390,7 @@ compatible without it.
 
 `src/traceChecker.ts` owns all trace check logic:
 
-- `parseDeclaredTraceIds(content)`: finds trace IDs on non-link lines only - lines containing `->` are skipped so that link target IDs are not counted as declared. This is critical for correct `TRACE_MISSING_LINK_TARGET` detection.
+- `parseDeclaredTraceIds(content)`: finds trace IDs declared with the `ID: text` label at the start of a line. A link line such as `REQ-001 -> BEH-999` never starts with that label, so link target IDs are not counted as declared; this is critical for correct `TRACE_MISSING_LINK_TARGET` detection. A declaration whose text contains `->` (for example `TRN-001: invalid-input -> validation-error`) is still a declaration.
 - `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact for malformed IDs, duplicate declared IDs, orphan IDs, and missing link targets. Missing files return `passed: true` with no issues (the artifact checker handles missing files separately).
 - `checkAllTraces(meta)`: runs `checkArtifactTrace` for all run artifact files
 - `checkDesignMapTrace(runFolder)`: shorthand for checking `artifacts/design-map.txt`
