@@ -224,6 +224,18 @@ Important implementation files:
   `src/__tests__/correction-router.test.ts`. Legacy absent-version prompt
   expectations must stay separate from activated ones.
 
+### Run telemetry and Workflow Economics ownership
+
+Contributors extending the `v1.6.0` source should preserve this ownership direction (policy owner -> observation projector -> telemetry contract/store; never the reverse):
+
+- `src/runTelemetry.ts`: contract, constants, identity, path ownership, the one record validator, and the bounded observation contract
+- `src/runTelemetryStore.ts`: exclusive-create persistence and the one reader (`readRunTelemetry`)
+- `src/runTelemetryObservation.ts`: the projector and invocation session used by `start`, `prompt`, and `mark`; it only copies results the command already computed
+- `src/runWorkflowEconomics.ts`: the one pure evaluator
+- `src/workflowEconomicsSurface.ts`: pure formatting for `status`, `export`, and `check`
+
+Tests protect the boundaries: canonical policy owners must not import telemetry, `status`/`check`/`export` must not import the recording API or the evaluator directly, no aggregate file may be persisted, and no telemetry CLI option may appear. Any new telemetry field needs a bounded typed entry in the observation contract; free-form metadata is rejected by design.
+
 ## Validation and compatibility fixtures
 
 Run the release-facing validation set from a clean dependency installation:

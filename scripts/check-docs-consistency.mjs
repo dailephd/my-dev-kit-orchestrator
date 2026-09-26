@@ -162,7 +162,19 @@ function extractSchemaVersions(root) {
       'src/instructions/runSemanticContinuity.ts',
       'SEMANTIC_CONTINUITY_CONTRACT_VERSION',
     ),
+    // v1.6.0 native telemetry contract and Workflow Economics contract.
+    runTelemetryContract: extractConstant(root, 'src/runTelemetry.ts', 'RUN_TELEMETRY_VERSION'),
+    workflowEconomics: extractConstant(root, 'src/runWorkflowEconomics.ts', 'WORKFLOW_ECONOMICS_VERSION'),
   };
+}
+
+// Commands whose interactions native run telemetry records (v1.6.0). Derived
+// from the telemetry contract; every other command is a non-recording
+// inspection/utility surface.
+function extractTelemetryRecordedCommands(root) {
+  const match = readText(root, 'src/runTelemetry.ts').match(/export const RUN_TELEMETRY_COMMANDS\s*=\s*\[([^\]]*)\]\s*as const/);
+  if (!match) throw new Error('Could not extract RUN_TELEMETRY_COMMANDS from src/runTelemetry.ts');
+  return [...match[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
 }
 
 // Modes that automatically activate Semantic Continuity: exactly the modes
@@ -404,6 +416,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'testContextStageCount', contextFacts.testStages.length, facts.testContextStageCount);
   compareFact(issues, manifestPath, 'schemaVersions', schemaVersions, facts.schemaVersions);
   compareFact(issues, manifestPath, 'semanticContinuityActivatedModes', semanticActivatedModes, facts.semanticContinuityActivatedModes);
+  compareFact(issues, manifestPath, 'telemetryRecordedCommands', extractTelemetryRecordedCommands(root), facts.telemetryRecordedCommands);
   for (const mode of semanticActivatedModes) {
     if (!modes.includes(mode)) {
       addIssue(issues, 'MANIFEST_FACT_DRIFT', manifestPath, `activated mode ${mode} is a workflow mode`, 'unknown mode', 'Restore the strategy registry to valid workflow modes.');
@@ -485,6 +498,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     contextReadiness: '`ContextReadiness`',
     runIntegrityGate: '`RunIntegrityGate`',
     semanticContinuityContract: 'Semantic Continuity contract',
+    runTelemetryContract: 'Run telemetry contract',
+    workflowEconomics: 'Workflow Economics',
   };
   for (const [key, label] of Object.entries(architectureSchemaLabels)) {
     const expectedVersion = schemaVersions[key];

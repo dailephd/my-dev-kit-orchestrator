@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.5.0`, which ships Semantic Continuity alongside
-the prior greenfield, integrity, and instruction-bootstrap contracts,
+The current release is `v1.6.0`, which ships native run telemetry and
+Workflow Economics alongside `v1.5.0`'s Semantic Continuity and the prior
+greenfield, integrity, and instruction-bootstrap contracts,
 `v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
 readiness, explicit proof-only verification, and the bounded Observer v0.6
 consumer. Architecture is organized by current responsibility rather than by
@@ -211,6 +212,52 @@ mode, stage, native artifact, or readiness subsystem:
   source can be indexed by published `my-dev-kit` through ordinary extension
   inference; the orchestrator neither invokes it nor owns a Python index path.
 
+### Native run telemetry and Workflow Economics
+
+Run telemetry is an Orchestrator-owned observational contract for the
+`start`, `prompt`, and `mark` interactions of a telemetry-activated run. It is
+descriptive: it never feeds `RunIntegrityGate`, judge integrity, artifact
+lifecycle, correction routing, stage detection, repository-context readiness,
+or Semantic Continuity. Ownership and data flow:
+
+```text
+run.json runTelemetryVersion            (explicit activation, never inferred)
+        |
+start / prompt / mark commands
+        |  copy bounded facts from results they already computed
+        v
+runTelemetryObservation.ts              (projector: canonical owner -> observation)
+        |
+        v
+runTelemetry.ts / runTelemetryStore.ts  (contract, validator, safe persistence)
+        |
+        v   telemetry/<run-id>/{pending,invocations}/  (outside runs/)
+runTelemetryStore.readRunTelemetry      (the one reader/validator)
+        |
+        +--> runWorkflowEconomics.ts    (the one pure evaluator, derived on demand)
+        |            |
+        |            v
+        |    workflowEconomicsSurface.ts (pure formatting)
+        |            +--> status   (compact section)
+        |            +--> export   (bounded section)
+        |
+        +--> check / check --all diagnostics (via the same surface)
+```
+
+- Canonical policy owners sit upstream of telemetry. The dependency direction
+  is policy owner -> observation projector -> telemetry contract/store, never
+  the reverse; a structural test protects it.
+- Telemetry is stored beside `runs/`, not inside a run directory, so recording
+  never changes run-folder contents, run-folder mtime, or lifecycle state.
+- There is exactly one Workflow Economics evaluator. It is pure (no writes, no
+  clock, no policy) and its result is never persisted; `status` and `export`
+  format it and `check` reads the same canonical reader for structure.
+- `init`, `list`, `status`, `check`, and `export` never record telemetry, so
+  repeated inspection cannot alter the economics being inspected.
+- Runs without `runTelemetryVersion` are legacy: no telemetry is read, shown,
+  or warned about. An explicit unsupported version is reported as unsupported
+  and is never read as `1.0.0`.
+
 ## Workflow definitions
 
 The Workflow mode layer is owned by `src/workflows.ts`. It defines the seven
@@ -268,6 +315,8 @@ The implemented deterministic contract versions are:
 | `RunIntegrityGate` | `1.1.0` |
 | `JudgeIntegrity` | `1.0.0` |
 | Semantic Continuity contract | `1.0.0` |
+| Run telemetry contract | `1.0.0` |
+| Workflow Economics | `1.0.0` |
 
 ## WorkflowInstructionPacket
 
@@ -504,6 +553,15 @@ For an activated run, `status`, `check`, `check --artifacts`, `check --all`, and
 same gate. Blocked semantic state fails `check`; a warning fails only under
 `--strict`.
 
+For a telemetry-activated run, `status` adds one compact Workflow Economics
+section, `export` adds one bounded fixed-size Workflow Economics section, and
+the default `check` and `check --all` add a `Run telemetry` section from the
+canonical telemetry reader. Telemetry findings in `check` are warnings only
+(existing `--strict` promotes them like any other warning), never failures,
+and never change the gate, judge, lifecycle, or correction decisions. Legacy
+runs show none of these sections, and unsupported or malformed telemetry never
+crashes a command.
+
 `export` preserves honest readiness, accepted judge state, correction, and
 final eligibility. It includes canonical primary-blocker fields when blocked,
 but does not embed raw capsule/audit JSON or copy external evidence merely
@@ -540,6 +598,9 @@ sidecar bytes, readiness issues, and recommended stages. Determinism relies on:
 - preservation of required content
 - explicit optional-content truncation records
 - deterministic issue and recommendation ordering
+- for telemetry, a fixed record order (`startedAt`, then `invocationId`) and a
+  Workflow Economics summary that is identical for the same accepted record
+  set regardless of read order
 
 Prompt filenames, native artifact filenames, workflow order, and old-run
 interpretation remain compatible with `v1.2.0`.
@@ -551,6 +612,15 @@ targets, does not call external services, and does not execute agents or
 repository tools. `npm run test:security` validates package identity, semver,
 CLI bin policy, package-file policy, and dry-run package contents. It does not
 replace broader evaluation owned by `my-dev-kit-lab`.
+
+Native run telemetry is written only to the workspace `telemetry/` directory
+through containment-checked paths that reject separators and traversal, refuse
+symbolic links and junctions, create each record exclusively without replacing
+an existing file, keep completed records immutable, and bound record size.
+Records hold bounded operational facts only; prompt bodies, source content,
+mark reasons, environment values, credentials, command output, stack traces,
+and target-application data are never stored, and diagnostics never expose
+absolute paths.
 
 Repository evidence is supplied data. Parsing is bounded, raw external files
 are referenced rather than embedded, and prompt rendering does not grant

@@ -36,6 +36,8 @@ function createIsolatedRoot(): string {
     'src/instructions/runSemanticContinuity.ts',
     'src/instructions/testResponsibilityCriticality.ts',
     'src/runIntegrityGate.ts',
+    'src/runTelemetry.ts',
+    'src/runWorkflowEconomics.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;
@@ -98,7 +100,7 @@ describe('documentation consistency gate', () => {
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
     ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
     ['contradictory v1.2.3 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.3 is unreleased.\n`, 'V123_RELEASE_STATUS_CONTRADICTION'],
-    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.5.0', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
+    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.6.0', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
     ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
@@ -118,12 +120,12 @@ describe('documentation consistency gate', () => {
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, 'first stage whose effective gate-aware state is not complete', 'first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'cannot rediscover custom-output runs', 'cannot select custom-output runs'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
     ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.5.0 is published; v1.6.0 remains planned.
-    ['planned v1.6.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry', '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['planned v1.6.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry', '### v1.6.0 - Workflow Economics and Deterministic Run Telemetry\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['current v1.5.0 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.5.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
-    ['current v1.5.0 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.5.0 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
-    ['current v1.5.0 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-09-25\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    // v1.6.0 is current; v1.7.0 remains planned.
+    ['planned v1.7.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['planned v1.7.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
+    ['current v1.6.0 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.6.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
+    ['current v1.6.0 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.6.0 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    ['current v1.6.0 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-09-26\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
     ['semantic contract version drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| Semantic Continuity contract | `1.0.0` |', '| Semantic Continuity contract | `2.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['run-integrity gate schema drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| `RunIntegrityGate` | `1.1.0` |', '| `RunIntegrityGate` | `1.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
@@ -256,5 +258,37 @@ describe('documentation consistency gate', () => {
       (text) => swapHeadingNames(text, first, second),
       'DOC_HEADING_ORDER_MISMATCH',
     );
+  });
+});
+
+describe('v1.6.0 telemetry facts (second isolated builder)', () => {
+  it('fails when the recorded-command set in source drifts from the manifest', () => {
+    const root = createIsolatedRoot();
+    mutate(root, 'src/runTelemetry.ts', (content) => content.replace("['start', 'prompt', 'mark']", "['start', 'prompt', 'mark', 'status']"));
+    const result = runCheck(root);
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('telemetryRecordedCommands');
+  });
+
+  it('fails when the telemetry contract or economics version in source drifts', () => {
+    for (const [file, from, to] of [
+      ['src/runTelemetry.ts', "RUN_TELEMETRY_VERSION = '1.0.0'", "RUN_TELEMETRY_VERSION = '1.1.0'"],
+      ['src/runWorkflowEconomics.ts', "WORKFLOW_ECONOMICS_VERSION = '1.0.0'", "WORKFLOW_ECONOMICS_VERSION = '1.1.0'"],
+    ]) {
+      const root = createIsolatedRoot();
+      mutate(root, file, (content) => content.replace(from, to));
+      expect(runCheck(root).status).toBe(1);
+    }
+  });
+
+  it('fails when ARCHITECTURE omits the telemetry or economics version row', () => {
+    expectIssue('docs/ARCHITECTURE.md', (content) => content.replace('| Run telemetry contract | `1.0.0` |', ''), 'SCHEMA_VERSION_CLAIM_MISMATCH');
+    expectIssue('docs/ARCHITECTURE.md', (content) => content.replace('| Workflow Economics | `1.0.0` |', ''), 'SCHEMA_VERSION_CLAIM_MISMATCH');
+  });
+
+  it('keeps v1.6.0 current and v1.7.0 planned', () => {
+    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
+    expectIssue('docs/ROADMAP.md', (content) => content.replace('### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT');
+    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
   });
 });

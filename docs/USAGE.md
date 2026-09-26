@@ -201,6 +201,8 @@ my-dev-kit-orchestrator status --run 20260621T120000-release-docs
 
 Status reports run ID/mode/request/folder, current stage, prompts and artifacts, supporting reports, context decisions/freshness/adequacy/blockers, and the next command. An activated run also shows a compact `Semantic continuity:` section (classification, blocking and warning responsibility IDs, and the recommended correction stage). Its judge/final-report integrity section shows expected and authored verdicts, acceptance, correction state, and eligibility from the shared canonical decision.
 
+In `v1.6.0`, a telemetry-activated run also shows a compact `Workflow Economics:` section (interaction counts, prompt characters, Orchestrator duration, stage movement, and observed span). It is descriptive and appears only for runs created by that source; see [COMMANDS.md](COMMANDS.md#status).
+
 `status` is human-readable and has no JSON option.
 
 ## List runs
@@ -372,6 +374,8 @@ my-dev-kit-orchestrator export --out handoff.txt --overwrite
 ```
 
 Export includes identity/status/current stage, original request, artifact checklist, missing artifacts, accepted judge result, correction state, verification excerpt, content/trace summaries, structured context readiness, a compact Semantic Continuity summary for activated runs, and the next command. It never presents an integrity-rejected authored PASS as accepted.
+
+In `v1.6.0`, a telemetry-activated run's handoff also carries one bounded Workflow Economics section (counts only, no raw telemetry); legacy runs omit it.
 
 Default output is stdout. `--out` writes a file and refuses an existing file unless `--overwrite` is supplied. It rejects raw parent traversal, symlink targets, directory targets, and nonexistent parent directories. It does not copy referenced external evidence or embed full raw capsules/audits. Preserve separately required project-level handoff facts through the canonical ecosystem guide.
 

@@ -3,14 +3,14 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.5.0`
-- Current release: `v1.5.0`
-- Release date: `2026-09-25`
+- Package metadata version: `1.6.0`
+- Current release: `v1.6.0`
+- Release date: `2026-09-26`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.5.0`
-- Latest Git tag and GitHub Release: `v1.5.0`
+- Latest npm version: `1.6.0`
+- Latest Git tag and GitHub Release: `v1.6.0`
 
-Package metadata, npm, the `v1.5.0` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.6.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -24,9 +24,9 @@ modes, 79 native stages, 13 greenfield stages, and four starter profiles
 remain unchanged; no package, dependency, export, or core retrieval-engine
 change was required.
 
-## Current release: Semantic Continuity
+## Previous release: Semantic Continuity
 
-`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, is the current release. It ships the following behavior:
+`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, shipped the following behavior:
 
 Implemented behavior:
 
@@ -39,6 +39,22 @@ Implemented behavior:
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
+## Current release: Workflow Economics and Deterministic Run Telemetry
+
+`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is the current release.
+
+Implemented behavior:
+
+- an optional versioned `runTelemetryVersion` field (`"1.0.0"`) in `run.json`, written for new CLI-created runs; older and programmatic runs without it stay legacy and are never inferred to be activated
+- the existing `runId` is unchanged and opaque; each recorded interaction receives a fresh collision-resistant invocation identity (`inv-` plus 32 hex characters), and no second logical run identity exists
+- `start`, `prompt`, and `mark` each record one bounded native record per invocation, first as a pending record and then as an immutable completed record with outcome (`succeeded` or `failed`), monotonic duration, and bounded observations copied from results the command already computed (stage facts, prompt character count, mark lifecycle facts, and bounded run-integrity, judge/final-eligibility, and Semantic Continuity snapshots)
+- telemetry lives under `.my-dev-kit-orchestrator/telemetry/<run-id>/`, outside the run directory, so recording changes neither run-folder contents nor lifecycle state
+- one pure, deterministic Workflow Economics evaluator (version `1.0.0`) derives interaction, prompt-character, duration, observed-span, stage-movement, mark, and snapshot counts on demand; nothing is persisted
+- `status` adds one compact Workflow Economics section, `export` adds one bounded fixed-size section, and the default `check` and `check --all` add a `Run telemetry` section whose findings are warnings only (existing `--strict` promotes them like any warning); legacy runs show none of these
+- `init`, `list`, `status`, `check`, and `export` never record telemetry
+
+Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
+
 ## Implemented operational surface
 
 The CLI has eight commands: `init`, `start`, `prompt`, `status`, `list`, `mark`, `check`, and `export`. It supports seven workflow modes and 79 native stages. Greenfield has 13 stages and four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
@@ -50,6 +66,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Repository retrieval is manual; the orchestrator does not run `my-dev-kit`.
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
 - `status` is human-readable and has no JSON option.
+- Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
@@ -58,59 +75,24 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The ecosystem documentation-standardization report records
-`ECOSYSTEM_DOCUMENTATION_STANDARDIZED`: the common canonical project-document
-structure and its responsibility model have been reconciled across
-`my-dev-kit`, `my-dev-kit-orchestrator`, and `my-dev-kit-lab`.
+The latest release is `v1.6.0`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+boundaries, and detailed execution sequencing is kept outside current-state
+documentation.
 
-`v1.3.1`, Standardized Greenfield Documentation and Full-Stack Next.js
-Environment Hardening, established the
-standardized 15-file canonical project-document baseline the generic
-documentation substrate for every newly bootstrapped greenfield project
-across the then-current `typescript-cli`, `nextjs-app`, and `android-compose`
-profile set, adds orthogonal `projectType`/
-`webFramework` brief dimensions, and adds the first supported full-stack
-combination (`fullstack-web`, `nextjs`, `nextjs-app`, PostgreSQL, Prisma,
-and Docker) composed additively into scaffold planning and canonical
-greenfield readiness, together with a judge/final-report lifecycle
-correction that gates final-report eligibility on canonical greenfield
-readiness for every greenfield run. It does not add a fourth starter
-profile, a new CLI flag, a new workflow mode, or a new native stage; the CLI
-remains eight commands, seven modes, and 79 native stages, with greenfield
-still 13 stages and the same `typescript-cli`, `nextjs-app`, and
-`android-compose` profile set. See the detailed [v1.3.1 roadmap
-section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
+`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the next
+planned feature version and remains a later consumer milestone. It will build on
+the `v1.6.0` native run/invocation telemetry substrate; `v1.6.0` does not
+implement generic evidence envelopes, requirements, subject/environment
+identity, assurance policy, or compatibility evaluation.
 
-`v1.4.1` retains `v1.3.2`'s shared artifact-validation
-correction so the three native greenfield JSON artifacts retain strict JSON and
-structured-field contracts without receiving incompatible text-header
-requirements. Python CLI Greenfield Profile and Coding-Agent Instruction
-Bootstrap adds
-the four common instruction outputs, common + profile + optional-capability
-target composition, and the bounded fourth `python-cli` profile. Explicit
-`python-cli`, the exact `python` alias, and clear Python-plus-CLI intent resolve
-to that profile; bare Python and Python web/API/server intent remain
-unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
-readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
-stage, readiness engine, or Python-specific index path.
+The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
+`contracts/ecosystem/` and `docs/ecosystem/`. They reserve `v1.6.0` as
+`ORC-TELEMETRY` and `v1.7.0` as `ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite
+of v1.7.0. Those assets are cross-repository coordination/reference contracts;
+v1.6.0 provides native telemetry
+and v1.7.0 remains the planned generic evidence consumer.
 
-`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the previous
-release. It replaces inappropriate Orchestrator-maintainer
-source-path guidance in shipped greenfield prompts with direct artifact,
-behavior, validation, and completion requirements while preserving the
-underlying instruction intent and installed package surface. The active next
-direction is: (1) `v1.6.0` Workflow Economics and Deterministic Run
-Telemetry is the next planned feature version; (2) `v1.7.0` is reserved for
-Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00
-reference contracts; (3) Greenfield-to-Feature Workflow Handoff Hardening
-remains deferred; (4) optional mobile-profile candidates remain deferred.
-
-ECO-00 does not change the current 1.5.0 runtime surface. It establishes a
-repository-level coordination contract that references the Orchestrator-owned
-`RSP-NNN` identity rather than redefining it.
-
-Before further implementation or release work, the planner must inspect the current
-repository and ecosystem evidence rather than treating roadmap prose as a
-prewritten execution plan.
+Greenfield-to-Feature Workflow Handoff Hardening and optional mobile profile
+candidates remain deferred scopes.
 
 See [COMMANDS.md](COMMANDS.md) for syntax, [WORKFLOWS.md](WORKFLOWS.md) for operational sequences, and [CONTRACTS.md](CONTRACTS.md) for stable compatibility boundaries.

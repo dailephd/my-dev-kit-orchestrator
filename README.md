@@ -23,9 +23,22 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.5.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.6.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
+
+`v1.6.0` ships versioned native run telemetry and deterministic Workflow
+Economics. New CLI-created runs record bounded observations for `start`,
+`prompt`, and `mark` outside the run directory. `status`, `check`, and `export`
+derive and display economics from those observations; no aggregate economics
+or Semantic Continuity state is persisted. The figures describe Orchestrator
+activity only, not coding-agent or human time, providers, tokens, cost, or
+target-application behavior. Telemetry never changes run-integrity, judge,
+lifecycle, or final-report decisions. The eight commands, seven modes, 79
+native stages, 13 greenfield stages, and four starter profiles are unchanged;
+`my-dev-kit` remains a manual operation. Generic ecosystem evidence intake
+remains planned for `v1.7.0`. See [docs/COMMANDS.md](docs/COMMANDS.md) and
+[docs/CONTRACTS.md](docs/CONTRACTS.md).
 
 `v1.5.0` ships Semantic Continuity. New staged runs in `feature`, `repair`,
 `test`, `refactor`, `harden`, and `extraction` activate it automatically

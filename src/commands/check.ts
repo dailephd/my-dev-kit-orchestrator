@@ -28,6 +28,8 @@ import { RunMetadata } from '../run';
 import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
 import { GreenfieldReadinessResult } from '../greenfield/readiness/greenfieldReadinessTypes';
 
+import { buildRunTelemetryCheckSection, readRunTelemetrySurface } from '../workflowEconomicsSurface';
+
 function resultLabel(passed: boolean, hasWarns: boolean): string {
   if (!passed) return 'fail';
   if (hasWarns) return 'warn';
@@ -578,6 +580,12 @@ export function makeCheckCommand(): Command {
             lines.push('');
           }
 
+          // v1.6.0: run telemetry structure (observational; warn-only).
+          const allTelemetryCheck = buildRunTelemetryCheckSection(readRunTelemetrySurface(meta));
+          if (allTelemetryCheck) {
+            lines.push(...allTelemetryCheck.lines);
+          }
+
           // Summary
           lines.push('=== Summary ===');
           lines.push(...summarizeContracts(contractResult.results));
@@ -592,6 +600,9 @@ export function makeCheckCommand(): Command {
           }
           if (allGreenfieldReadinessCheck) {
             lines.push(`  Greenfield readiness: ${allGreenfieldReadinessCheck.hasFail ? 'fail' : 'pass'}`);
+          }
+          if (allTelemetryCheck) {
+            lines.push(`  Run telemetry: ${allTelemetryCheck.hasWarn ? 'warn' : 'pass'}`);
           }
 
           console.log(lines.join('\n'));
@@ -617,7 +628,7 @@ export function makeCheckCommand(): Command {
             allJudgeCheck.hasFail ||
             Boolean(allSemanticCheck?.hasFail) ||
             Boolean(allGreenfieldReadinessCheck?.hasFail);
-          const hasWarn = anyContractWarn || anyTraceWarn || Boolean(allSemanticCheck?.hasWarn);
+          const hasWarn = anyContractWarn || anyTraceWarn || Boolean(allSemanticCheck?.hasWarn) || Boolean(allTelemetryCheck?.hasWarn);
 
           if (hasFail || (options.strict && hasWarn)) {
             process.exit(1);
@@ -807,6 +818,14 @@ export function makeCheckCommand(): Command {
           lines.push(...greenfieldReadinessCheck.lines);
         }
 
+        // v1.6.0: run telemetry structure, only where the other run-level
+        // sections apply (not for --artifact/--prompts). Observational; warn-only.
+        const runTelemetryCheck =
+          !options.artifact && !options.prompts ? buildRunTelemetryCheckSection(readRunTelemetrySurface(meta)) : null;
+        if (runTelemetryCheck) {
+          lines.push(...runTelemetryCheck.lines);
+        }
+
         lines.push(...summarize(artifactResults, promptResults));
 
         console.log(lines.join('\n'));
@@ -842,7 +861,7 @@ export function makeCheckCommand(): Command {
           Boolean(runJudgeCheck?.hasFail) ||
           Boolean(runSemanticCheck?.hasFail) ||
           Boolean(greenfieldReadinessCheck?.hasFail);
-        const hasWarn = anyArtifactWarn || anyPromptWarn || Boolean(runSemanticCheck?.hasWarn);
+        const hasWarn = anyArtifactWarn || anyPromptWarn || Boolean(runSemanticCheck?.hasWarn) || Boolean(runTelemetryCheck?.hasWarn);
 
         if (hasFail || (options.strict && hasWarn)) {
           process.exit(1);

@@ -19,7 +19,7 @@ The package is `@dailephd/my-dev-kit-orchestrator`; the executable is `my-dev-ki
 
 The current implementation supports seven modes: `feature`, `repair`, `test`, `refactor`, `harden`, `extraction`, and `greenfield`. Across them it owns run creation and discovery, prompt rendering, artifact/lifecycle checks, context-readiness evaluation, run-integrity enforcement, judge verdict acceptance, correction routing, status, and export.
 
-The current `v1.5.0` release carries one stable responsibility identity (`RSP-NNN`) from the test strategy through implementation, test, and verification evidence for new staged runs in every mode except `greenfield`, and enforces it through the same run-integrity gate. Critical gaps block, noncritical gaps warn, and no new command, mode, stage, or persisted state is involved. See [CURRENT_STATE.md](CURRENT_STATE.md) for the release state.
+The `v1.5.0` release introduced one stable responsibility identity (`RSP-NNN`) from the test strategy through implementation, test, and verification evidence for new staged runs in every mode except `greenfield`, and enforces it through the same run-integrity gate. Critical gaps block, noncritical gaps warn, and no new command, mode, stage, or persisted state is involved. See [CURRENT_STATE.md](CURRENT_STATE.md) for the release state.
 
 Greenfield supports the `typescript-cli`, `nextjs-app`, `android-compose`, and bounded `python-cli` starter profiles in the current release. Profiles shape planning, scaffold targets, documentation, and verification expectations; the orchestrator itself does not generate or execute the project. Every profile receives the common generated-project instructions `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` through the shared scaffold/readiness path. Those files are distinct from the standardized 15-file public project-document baseline. The single full-stack web environment contract remains limited to `nextjs-app` with PostgreSQL, Prisma, and Docker; see [CURRENT_STATE.md](CURRENT_STATE.md) for current release status.
 
@@ -33,7 +33,7 @@ The integrations are explicit. The orchestrator does not automatically execute e
 
 ## Evidence and output model
 
-A run lives beneath `.my-dev-kit-orchestrator/runs/` by default and contains request metadata, prompts, stage artifacts, lifecycle state, deterministic check output, and final/export material. Supplemental repository-context packets are inputs to readiness; they are not native lifecycle artifacts. See [ARTIFACTS.md](ARTIFACTS.md) for exact file and schema contracts.
+A run lives beneath `.my-dev-kit-orchestrator/runs/` by default and contains request metadata, prompts, stage artifacts, lifecycle state, deterministic check output, and final/export material. Supplemental repository-context packets are inputs to readiness; they are not native lifecycle artifacts. In `v1.6.0`, bounded native run telemetry is stored beside `runs/` (not inside a run) and feeds a descriptive Workflow Economics summary. See [ARTIFACTS.md](ARTIFACTS.md) for exact file and schema contracts.
 
 ## Non-goals and long-term boundary
 

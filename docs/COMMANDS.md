@@ -77,6 +77,10 @@ Start initializes the workspace if needed, creates the run folder, writes reques
 
 A new staged run automatically persists `semanticContinuityVersion: "1.0.0"` in `run.json` for `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction`, and `start` prints `Semantic continuity: active (1.0.0)`. `greenfield` and `--proof-only` runs are not activated and print no such line. There is no activation flag: the staged CLI workflow is the full-stage-context surface, and a lightweight direct implementation that bypasses staged runs stays outside Semantic Continuity. The set of activated modes is derived from the existing test-strategy registry, not a separate list. Runs created without the version (older runs, or programmatic `createRun()` callers that omit it) remain legacy and keep their prior prompts and output.
 
+### Run telemetry activation
+
+In `v1.6.0`, a new CLI-created run also persists `runTelemetryVersion: "1.0.0"` in `run.json`, and `start` records one completed `start` observation (outcome, mode, current stage, and run status) outside the run directory. `start` output is unchanged. A `start` that fails before a run exists records nothing. Runs created without the field remain legacy. There is no telemetry flag.
+
 ### Resumable run placement
 
 The reviewed follow-up commands do not rediscover custom `start --output-dir` runs. `prompt`, `status`, `list`, `mark`, `check`, and `export` use the default run store and do not accept `--output-dir`. Supplying `--run` does not override this limitation. Omit custom output for runs that must resume through the CLI.
@@ -124,6 +128,8 @@ Prompt display reevaluates readiness but does not create sidecars/templates or m
 
 For an activated run, the prompt for each participating stage also carries the Semantic Continuity authoring contract (see [WORKFLOWS.md](WORKFLOWS.md#semantic-continuity-prompt-contract)). The saved prompt files written at `start` contain that authoring contract as templates and never reflect live gate state. The live `prompt` command additionally honors the current `RunIntegrityGate`: when the current stage is blocked by Semantic Continuity it prints the current blocked stage, the semantic blocker, the affected responsibility, the broken leg, and the recommended correction stage, plus bounded repair guidance for that earlier stage only, and never the blocked stage's normal work. When no correction stage exists (for example an unsupported contract version) it states that external run-contract resolution is required and guesses no stage. A refresh-required repository context for the correction target still takes precedence with refresh-only instructions. The live judge prompt includes the canonical semantic summary rather than asking the judge to re-derive it.
 
+For a telemetry-activated run, `prompt` records one native observation per invocation outside the run directory: the stage actually rendered, whether it was a normal or correction prompt, the emitted prompt's length in characters (not tokens), and bounded snapshots of the gate, judge, and Semantic Continuity results the command already computed. The prompt body is never stored, output is unchanged, and a handled failure is recorded as failed before the command's usual exit. Legacy runs record nothing.
+
 A coding agent can advance through successive authorized prompts in one session, saving actual stage evidence. It cannot collapse native stages or use a manual completion mark to skip tests.
 
 ## status
@@ -138,6 +144,8 @@ my-dev-kit-orchestrator status --run <run-id> --root <project-root>
 Status reports identity, request, folder, current stage, prompts, artifact lifecycle, supporting reports, implementation/test context, freshness/adequacy, blockers, and next command. Judge/final-report integrity includes expected and authored verdicts, acceptance, correction state, and eligibility.
 
 For an activated run, `status` adds one compact `Semantic continuity:` section projected from the same `RunIntegrityGate` result it already computes: contract version, semantic classification, continuity state, run integrity readiness, critical and noncritical responsibility totals with unsatisfied counts, and, when present, blocking and warning responsibility IDs, blocking and warning codes, and the recommended correction stage. Legacy, greenfield, and proof-only runs show no such section.
+
+For a telemetry-activated run in `v1.6.0`, `status` also adds one compact `Workflow Economics:` section derived on demand from the run's native telemetry: availability (`available`, `partial`, or `unsupported`), interaction counts, per-command counts, prompt render count and characters, Orchestrator invocation duration, stage movement (forward, backward/revisits, unchanged), correction-prompt renders, integrity blocked-entry/recovery and final-eligibility reached/lost observations, the observed workflow span (wall clock, not active work time), and a coverage line (diagnostics, wall-clock anomalies, numeric limit, concurrency). Unavailable values print `unavailable`. `status` never records telemetry, shows no raw records, invocation IDs, timestamps, or paths, and a legacy run shows no such section; malformed telemetry shows `partial` rather than failing, and an unsupported version shows only `Availability: unsupported`.
 
 `status` is human-readable. There is no JSON option. Do not invent a JSON-output flag for `status`.
 
@@ -172,6 +180,8 @@ Settable states:
 - `blocked`: reason required.
 - `complete`: reason optional, current gate requirements still apply.
 
+For a telemetry-activated run, `mark` records one native observation (the artifact, the requested state, the resulting state when computed, and whether a reason was supplied, never the reason text) and the bounded gate and judge snapshots when the command computed them. Legacy runs record nothing.
+
 `missing` and `stale` are computed. Do not mark sidecars, context capsules, audits, or supplemental packets as native artifacts. A complete record cannot override a blocked context, a semantically blocked stage (`mark` exits nonzero and leaves `artifact-state.json` unchanged), or an ineligible final report. Preserve the cause of a blocker instead of relabeling it.
 
 ## check
@@ -205,6 +215,8 @@ Checks may persist their result reports but do not advance stages or change life
 
 For an activated run, the default `check`, `check --artifacts`, and `check --all` include a `=== Semantic continuity ===` section from the same gate; narrowly scoped checks such as `--trace`, `--artifact`, and `--prompts` do not. There is no `check --semantic` flag. A blocked classification is a failure (exit 1) and names the primary blocking code, primary reason, affected responsibility, broken leg, and recommended correction stage. A warning classification (noncritical gaps only) is a warning: it exits 0 normally and exits 1 under `--strict`, like other warnings. A ready gate, including pending continuity before the strategy stage has passed, is a pass. `check --artifacts` does not parse responsibilities itself; it surfaces the canonical gate result.
 
+For a telemetry-activated run, the default `check` and `check --all` also include a `=== Run telemetry ===` section built from the canonical telemetry reader: `[pass] telemetry records valid` when the structure is clean (a run with no records yet is valid), otherwise bounded `[warn]` lines that reuse the reader's diagnostic codes (for example `DUPLICATE_INVOCATION_ID` or `UNSUPPORTED_RUN_TELEMETRY_VERSION`) plus `INCOMPLETE_TELEMETRY_INVOCATION`, `TELEMETRY_WALL_CLOCK_ANOMALY`, `TELEMETRY_NUMERIC_LIMIT_EXCEEDED`, and `TELEMETRY_UNRECOGNIZED_VALUE` for valid-but-partial coverage. At most 20 lines are shown, followed by a `TELEMETRY_DIAGNOSTICS_TRUNCATED` line with the total. Every telemetry finding is a warning, never a failure: a run's exit code is unchanged unless `--strict` promotes warnings, exactly as for any other warning, and no telemetry finding changes the gate, judge, lifecycle, or correction decisions. `check --all` adds a `Run telemetry` summary line. Narrow checks (`--artifact`, `--prompts`, `--artifacts`, `--trace`, `--design-map`) and legacy runs show no telemetry section, and there is no telemetry flag. `check` never records telemetry.
+
 ### Artifact contracts
 
 Registered JSON artifacts use strict JSON/structured-field checks. Text artifacts use required sections. Shared validation does not impose text headers on JSON.
@@ -233,6 +245,8 @@ Default output is stdout. `--out <file>` writes a file. Existing files are refus
 The handoff includes identity, original request, artifact checklist/missing items, accepted judge/correction state, verification excerpt, content/trace summaries, context readiness, and the next command. It does not embed raw context dumps or copy referenced external evidence. It preserves blocked status rather than promote an authored but rejected PASS.
 
 For an activated run the handoff names the semantic contract version in the run identity and adds one compact `=== Semantic continuity ===` section from the same gate: `contractVersion`, `semanticClassification`, `continuityState`, `runIntegrityReady`, critical and noncritical counts and unsatisfied IDs, `blockingCodes`, `warningCodes`, `expectedJudgeVerdict`, and `recommendedCorrectionStage`. It never copies raw context capsules, retrieval audits, or parser output. A legacy run is never labeled activated.
+
+For a telemetry-activated run in `v1.6.0`, the handoff also adds one bounded, fixed-size `=== Workflow Economics ===` section from the same on-demand evaluator: economics version, availability, interaction and per-command counts, prompt render and character statistics, Orchestrator invocation duration statistics, the observed workflow span (labelled wall clock, not active work time), stage movement, mark counts, integrity, judge, and final-eligibility observation counts, continuity snapshot counts (recorded observations of the existing Semantic Continuity projection, not a second continuity concept), and coverage (diagnostics, wall-clock anomalies, numeric limit, concurrency, unrecognized values). It shows counts only, never raw telemetry, invocation history, prompt text, or paths, is identical across repeated exports (except the existing `Generated:` line), and never records telemetry. Legacy runs omit it, and an unsupported version shows only `Availability: unsupported`.
 
 ## Manual context integration
 

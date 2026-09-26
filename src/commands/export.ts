@@ -12,6 +12,7 @@ import { readArtifactStateFile } from '../artifactLifecycle';
 import { StageDefinition } from '../workflows';
 import type { WorkflowMode } from '../types';
 import { renderSemanticContinuityExportLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
+import { buildWorkflowEconomicsExportLines, readRunTelemetrySurface } from '../workflowEconomicsSurface';
 
 // ─── Path safety ──────────────────────────────────────────────────────────────
 
@@ -235,6 +236,7 @@ export function buildExportText(meta: {
   proofOnly?: boolean;
   verificationResponsibility?: string;
   semanticContinuityVersion?: string;
+  runTelemetryVersion?: string;
 }): string {
   const parts: string[] = [];
 
@@ -308,6 +310,19 @@ export function buildExportText(meta: {
   if (semanticSummary) {
     parts.push(sectionHeader('Semantic continuity'));
     parts.push(renderSemanticContinuityExportLines(semanticSummary).join('\n'));
+  }
+
+  // v1.6.0: bounded aggregate from the canonical telemetry reader + evaluator.
+  // Omitted for legacy runs (no runTelemetryVersion); never records.
+  const economicsLines =
+    meta.projectRoot !== undefined
+      ? buildWorkflowEconomicsExportLines(
+          readRunTelemetrySurface({ projectRoot: meta.projectRoot, runId: meta.runId, runTelemetryVersion: meta.runTelemetryVersion }).summary,
+        )
+      : [];
+  if (economicsLines.length > 0) {
+    parts.push(sectionHeader('Workflow Economics'));
+    parts.push(economicsLines.join('\n'));
   }
 
   parts.push(sectionHeader('Next command'));

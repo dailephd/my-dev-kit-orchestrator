@@ -36,6 +36,8 @@ function makeFixture(): string {
     'src/instructions/runSemanticContinuity.ts',
     'src/instructions/testResponsibilityCriticality.ts',
     'src/runIntegrityGate.ts',
+    'src/runTelemetry.ts',
+    'src/runWorkflowEconomics.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;
@@ -128,5 +130,50 @@ describe('docs consistency check script', () => {
     const result = run(root);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('[README_CANONICAL_LINK_MISSING]');
+  });
+});
+
+describe('v1.6.0 telemetry facts (isolated fixture)', () => {
+  it('fails when the recorded-command set in source drifts from the manifest', () => {
+    const root = makeFixture();
+    mutate(root, 'src/runTelemetry.ts', (content) => content.replace("['start', 'prompt', 'mark']", "['start', 'prompt', 'mark', 'status']"));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('telemetryRecordedCommands');
+  });
+
+  it('fails when the telemetry contract or economics version in source drifts from the manifest', () => {
+    for (const [file, from, to] of [
+      ['src/runTelemetry.ts', "RUN_TELEMETRY_VERSION = '1.0.0'", "RUN_TELEMETRY_VERSION = '1.1.0'"],
+      ['src/runWorkflowEconomics.ts', "WORKFLOW_ECONOMICS_VERSION = '1.0.0'", "WORKFLOW_ECONOMICS_VERSION = '1.1.0'"],
+    ]) {
+      const root = makeFixture();
+      mutate(root, file, (content) => content.replace(from, to));
+      expect(run(root).status).toBe(1);
+    }
+  });
+
+  it('fails when ARCHITECTURE omits the telemetry or economics version row', () => {
+    for (const row of ['| Run telemetry contract | `1.0.0` |', '| Workflow Economics | `1.0.0` |']) {
+      const root = makeFixture();
+      mutate(root, 'docs/ARCHITECTURE.md', (content) => content.replace(row, ''));
+      const result = run(root);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('[SCHEMA_VERSION_CLAIM_MISMATCH]');
+    }
+  });
+
+  it('requires v1.6.0 current-release wording and a dated finalized changelog section', () => {
+    const transitional = makeFixture();
+    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.6.0 is not yet published.\n`);
+    expect(run(transitional).stderr).toContain('[CURRENT_RELEASE_STATUS_CONTRADICTION]');
+
+    const missingHeading = makeFixture();
+    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## Draft - '));
+    expect(run(missingHeading).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
+
+    const missingDate = makeFixture();
+    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-09-26\.\r?\n/, ''));
+    expect(run(missingDate).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
   });
 });

@@ -2,10 +2,11 @@
 
 Versions are listed in chronological order.
 
-`v1.5.0` is the current published release. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
+`v1.6.0` is the current release. `v1.5.0` and earlier versions remain part of
+published project history. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.6.0` remains the next planned feature release. `v1.7.0` is reserved for ORC-EVIDENCE-01 after v1.6.0; deferred scopes remain separate.
+`v1.7.0` is the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
 
 ## Version summary
 
@@ -62,7 +63,7 @@ and the `v0.x.0` releases remain part of the published project history.
   strategy through implementation, test, and verification evidence and enforced
   through the existing run-integrity gate for staged runs. Released on
   2026-09-25.
-- `v1.6.0` will provide Workflow Economics and Deterministic Run Telemetry.
+- `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. It is the current release.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1194,8 +1195,8 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.5.0` is the current published release, released on 2026-09-25. `v1.4.1`
-and earlier versions are historical; `v1.6.0` is planned. Greenfield-to-Feature
+`v1.6.0` is the current release, released on 2026-09-26. `v1.5.0` and earlier
+versions are historical. Greenfield-to-Feature
 Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
@@ -1352,9 +1353,88 @@ Boundaries preserved:
 
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
-Planned deterministic workflow economics and run telemetry.
+Status: Released as `1.6.0` on 2026-09-26.
 
-This milestone remains the next Orchestrator feature release after v1.5.0. It may expose stable run/invocation identities and deterministic telemetry needed by later evidence integration, but it must not claim target-application observability.
+Milestone: `ORC-TELEMETRY`.
+
+Goal:
+
+Add bounded native Orchestrator run telemetry and deterministic Workflow
+Economics while establishing the native run/invocation identity substrate
+needed by later ORC-EVIDENCE-01 work.
+
+Implemented scope:
+
+- versioned, additive native run-invocation telemetry for CLI-created runs
+- one bounded telemetry record per recorded workflow interaction, stored outside
+  run directories so telemetry never changes run-folder mtime or native
+  lifecycle state
+- explicit incomplete/pending observations; completed observations are not
+  rewritten as workflow history changes
+- deterministic Workflow Economics derived from accepted telemetry records
+- telemetry persistence failure does not become workflow-integrity policy
+
+Identity and compatibility boundary:
+
+- the existing `runId` remains unchanged and opaque; no second deterministic
+  logical run identity is added
+- each recorded interaction receives a fresh collision-resistant invocation
+  identity
+- new CLI-created runs carry an additive telemetry contract version; historical
+  and programmatic runs without it remain valid
+- `start`, `prompt`, and `mark` are the workflow interactions intended to
+  produce native observations; `init`, `list`, `status`, `check`, and `export`
+  remain non-recording inspection/utility surfaces, because repeated
+  inspection must not alter the economics being inspected
+- `RunIntegrityGate`, judge integrity, artifact lifecycle, correction routing,
+  and repository-context readiness remain canonical; Semantic Continuity
+  remains derived and non-persisted; telemetry may observe canonical results
+  but is never a second evaluator
+- the eight commands, seven workflow modes, 79 native stages, 13 greenfield
+  stages, and four starter profiles are unchanged, and the current
+  human-readable status command surface remains unchanged (no machine-readable
+  status option is added)
+
+Workflow-economics scope:
+
+- limited to Orchestrator-owned observable facts: recorded interaction counts,
+  prompt character facts, Orchestrator invocation duration, stage
+  transitions and revisits, bounded correction/blocking observations,
+  final-eligibility observations, and observed workflow span
+- unavailable external facts remain unavailable: coding-agent work time, human
+  work time, provider/model identity, model token use without an authoritative
+  producer, API cost, external project build/test duration, target-process
+  CPU/memory/network measurements, browser performance, and other
+  target-application observability
+
+Relationship to v1.7.0:
+
+- `v1.7.0` remains `ORC-EVIDENCE-01`; `v1.6.0` supplies the native
+  run/invocation telemetry substrate it depends on
+- `v1.6.0` does not absorb generic evidence intake, ECO-00 evidence-envelope
+  consumption, or assurance policy; native producer contracts remain
+  authoritative
+
+Acceptance criteria:
+
+- CLI-created runs can opt into telemetry through the versioned run contract,
+  while historical runs behave as before
+- telemetry records are bounded, deterministic in ordering, and located outside
+  run directories
+- Workflow Economics is derived only from accepted native observations and
+  reports unavailable facts as unavailable
+- the full existing verification chain passes with the public surface unchanged
+
+Explicit exclusions:
+
+- no automatic `my-dev-kit` or coding-agent execution
+- no target-application observability
+- no persisted Semantic Continuity state
+- no new generic evidence ingestion
+- no redesign of `makeRunId()` or run-folder identity
+- no Greenfield-to-Feature Workflow Handoff Hardening (remains deferred)
+- no optional mobile-profile work (remains deferred)
+- no release or publication automation
 
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 
