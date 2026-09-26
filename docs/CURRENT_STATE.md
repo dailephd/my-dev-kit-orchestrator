@@ -81,7 +81,7 @@ still 13 stages and the same `typescript-cli`, `nextjs-app`, and
 `android-compose` profile set. See the detailed [v1.3.1 roadmap
 section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
 
-`v1.4.1` retains `v1.3.2`'s shared artifact-validation
+`v1.3.3` retains `v1.3.2`'s shared artifact-validation
 correction so the three native greenfield JSON artifacts retain strict JSON and
 structured-field contracts without receiving incompatible text-header
 requirements. Python CLI Greenfield Profile and Coding-Agent Instruction
