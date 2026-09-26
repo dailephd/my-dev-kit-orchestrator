@@ -570,7 +570,8 @@ describe('module boundary', () => {
     const srcDir = path.join(__dirname, '..', 'src');
     const walk = (dir: string): string[] =>
       fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
-    const importers = walk(srcDir).filter((f) => f.endsWith('.ts') && /runWorkflowEconomics/.test(fs.readFileSync(f, 'utf8')) && !f.endsWith('runWorkflowEconomics.ts'));
+    // Runtime modules only: colocated test fixtures under src/__tests__ may name the file (docs-check fixture builder).
+    const importers = walk(srcDir).filter((f) => f.endsWith('.ts') && !f.includes('__tests__') && /runWorkflowEconomics/.test(fs.readFileSync(f, 'utf8')) && !f.endsWith('runWorkflowEconomics.ts'));
     // Only the shared presentation surface may consume it; commands never import it directly.
     expect(importers.map((f) => path.basename(f))).toEqual(['workflowEconomicsSurface.ts']);
   });
