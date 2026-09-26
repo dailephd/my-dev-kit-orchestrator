@@ -63,8 +63,9 @@ baseline described above. No `v1.6.0` telemetry behavior is implemented by
 the current release.
 
 The next planned feature release is `v1.6.0`, Workflow Economics and
-Deterministic Run Telemetry (`ORC-TELEMETRY`). The detailed version contract
-is frozen in [ROADMAP.md](ROADMAP.md#v160---workflow-economics-and-deterministic-run-telemetry).
+Deterministic Run Telemetry (`ORC-TELEMETRY`). [ROADMAP.md](ROADMAP.md#v160---workflow-economics-and-deterministic-run-telemetry)
+owns the high-level version scope and boundaries; detailed execution
+sequencing is kept outside current-state documentation.
 
 The planned v1.6.0 boundary is:
 
@@ -105,9 +106,9 @@ policy, or compatibility evaluation.
 milestone. Greenfield-to-Feature Workflow Handoff Hardening and optional mobile
 profile candidates remain deferred and are not part of v1.6.0.
 
-Implementation should begin only from the detailed v1.6.0 roadmap contract and
-current repository evidence. After the implementation batches, documentation
-reconciliation, readiness/cross-platform/security/code-rot validation, release
-preparation, and publication remain separate post-implementation workflows.
+v1.6.0 work proceeds from the high-level roadmap scope and current repository
+evidence. Documentation reconciliation, readiness/cross-platform/security/
+code-rot validation, release preparation, and publication remain separate
+post-implementation workflows.
 
 See [COMMANDS.md](COMMANDS.md) for syntax, [WORKFLOWS.md](WORKFLOWS.md) for operational sequences, and [CONTRACTS.md](CONTRACTS.md) for stable compatibility boundaries.

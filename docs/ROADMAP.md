@@ -1352,392 +1352,88 @@ Boundaries preserved:
 
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
-Status: planned next feature release after `v1.5.0`.
+Status: planned next feature version after `v1.5.0`.
 
-Milestone identity: `ORC-TELEMETRY`.
+Milestone: `ORC-TELEMETRY`.
 
 Goal:
 
-Add a bounded, versioned native telemetry substrate for Orchestrator-owned
-workflow interactions and derive deterministic workflow-economics summaries
-from those observations. The milestone must establish a stable run/invocation
-identity boundary useful to later ecosystem evidence integration without
-turning the Orchestrator into an application-observability, provider-telemetry,
-or generic evidence-ingestion system.
+Add bounded native Orchestrator run telemetry and deterministic Workflow
+Economics while establishing the native run/invocation identity substrate
+needed by later ORC-EVIDENCE-01 work.
 
-Planning authority and dependency:
+Planned scope:
 
-- `v1.5.0` remains the published Semantic Continuity baseline and continues to
-  own canonical `RSP-NNN` responsibility identity.
-- The adopted ECO-00 milestone registry reserves `v1.6.0` as
-  `ORC-TELEMETRY` and makes it a prerequisite of `v1.7.0`
-  `ORC-EVIDENCE-01`.
-- ECO-00 reference schemas remain ecosystem coordination contracts. v1.6.0 does
-  not implement `EvidenceEnvelopeV1`, `EvidenceRequirementV1`,
-  `NativeArtifactReferenceV1` consumption, assurance policy, or generic
-  cross-tool compatibility evaluation.
-- Native producer artifacts remain authoritative in their own domains.
+- versioned, additive native run-invocation telemetry for CLI-created runs
+- one bounded telemetry record per recorded workflow interaction, stored outside
+  run directories so telemetry never changes run-folder mtime or native
+  lifecycle state
+- explicit incomplete/pending observations; completed observations are not
+  rewritten as workflow history changes
+- deterministic Workflow Economics derived from accepted telemetry records
+- telemetry persistence failure does not become workflow-integrity policy
 
-Identity model:
+Identity and compatibility boundary:
 
-- Preserve the existing `runId` contract and `makeRunId()` behavior. In
-  v1.6.0, `runId` remains the native Orchestrator run-instance identity, run
-  folder name, `--run` selector, and display identifier. Telemetry treats it
-  as opaque and does not parse time or semantics from it.
-- Do not add a second deterministic logical-run/request identity in v1.6.0.
-- Add a fresh, opaque, collision-resistant `invocationId` for each recorded
-  Orchestrator interaction. It is independent of timestamps, paths,
-  `RSP-NNN`, target-project identity, and runtime/application identity.
-- Add optional, versioned run activation through
-  `runTelemetryVersion: "1.0.0"` in `run.json` for CLI-created v1.6.0 runs.
-  Bare/programmatic `createRun()` callers that omit the field remain legacy,
-  matching the existing additive compatibility pattern used for Semantic
-  Continuity.
-- Telemetry activation is explicit from run metadata and is never inferred from
-  files that merely look like telemetry records.
+- the existing `runId` remains unchanged and opaque; no second deterministic
+  logical run identity is added
+- each recorded interaction receives a fresh collision-resistant invocation
+  identity
+- new CLI-created runs carry an additive telemetry contract version; historical
+  and programmatic runs without it remain valid
+- `start`, `prompt`, and `mark` are the workflow interactions intended to
+  produce native observations; `init`, `list`, `status`, `check`, and `export`
+  remain non-recording inspection/utility surfaces, because repeated
+  inspection must not alter the economics being inspected
+- `RunIntegrityGate`, judge integrity, artifact lifecycle, correction routing,
+  and repository-context readiness remain canonical; Semantic Continuity
+  remains derived and non-persisted; telemetry may observe canonical results
+  but is never a second evaluator
+- the eight commands, seven workflow modes, 79 native stages, 13 greenfield
+  stages, and four starter profiles are unchanged, and the current
+  human-readable status command surface remains unchanged (no machine-readable
+  status option is added)
 
-Telemetry ownership and persistence:
+Workflow-economics scope:
 
-- Introduce one bounded telemetry owner; do not scatter independent telemetry
-  policy across command implementations.
-- Store telemetry outside each run directory so telemetry writes do not mutate
-  the run tree or change the run-folder mtime used by current run selection.
-  The planned workspace shape is:
+- limited to Orchestrator-owned observable facts: recorded interaction counts,
+  prompt character facts, Orchestrator invocation duration, stage
+  transitions and revisits, bounded correction/blocking observations,
+  final-eligibility observations, and observed workflow span
+- unavailable external facts remain unavailable: coding-agent work time, human
+  work time, provider/model identity, model token use without an authoritative
+  producer, API cost, external project build/test duration, target-process
+  CPU/memory/network measurements, browser performance, and other
+  target-application observability
 
-  ```text
-  .my-dev-kit-orchestrator/
-    runs/
-      <run-id>/
-        ...
-    telemetry/
-      <run-id>/
-        pending/
-          <invocation-id>.json
-        invocations/
-          <invocation-id>.json
-  ```
+Relationship to v1.7.0:
 
-- Use one file per invocation instead of a shared append-only stream. The
-  repository currently has no append primitive or file locking, and current
-  mutable JSON writers use whole-file replacement.
-- Invocation files use a versioned native Orchestrator telemetry contract.
-  Operational timestamps and fresh invocation IDs are observations, not
-  deterministic logical identity inputs.
-- A pending invocation may remain after an interrupted process. Preserve that
-  condition as incomplete/unavailable evidence; do not fabricate a success or
-  failure.
-- Completed invocation records are immutable. Corrections or later observations
-  create new invocation records rather than rewriting history.
-- Telemetry persistence failure is non-blocking with respect to workflow
-  progression, `RunIntegrityGate`, judge integrity, and final-report
-  eligibility. Telemetry must never become a second workflow state authority.
-
-Recorded command boundary:
-
-v1.6.0 records run-oriented interactions that materially describe workflow
-progress:
-
-- `start` after a run has been created successfully;
-- `prompt` when the user requests the current or selected stage instruction;
-- `mark` when a lifecycle transition is requested.
-
-The following remain observational/non-recording in v1.6.0:
-
-- `init`, because no run exists yet;
-- `list`, because it inspects workspace inventory rather than one run;
-- `status`, because repeated status inspection must not change the economics
-  it displays;
-- `check` / `check --all`, because repeated deterministic validation must
-  not mutate the telemetry set being validated;
-- `export`, because producing a handoff must not change the run economics
-  included in that handoff.
-
-No new top-level CLI command is added.
-
-Invocation record semantics:
-
-A completed native telemetry record must contain only bounded
-Orchestrator-owned facts. The exact implementation schema is frozen by Batch 1,
-but the semantic contract includes:
-
-- telemetry schema/contract identity;
-- producer package name and package version;
-- `runId`;
-- fresh `invocationId`;
-- recorded command identity;
-- UTC wall-clock start/end observations;
-- Orchestrator-command duration measured with a monotonic clock;
-- bounded stage/run observations needed for deterministic economics;
-- bounded canonical integrity/judge/final-eligibility observations when those
-  objects already exist for the interaction;
-- explicit unavailable/unknown representation instead of invented defaults.
-
-Duration means only time spent inside the recorded Orchestrator CLI
-interaction. It must not be presented as coding-agent work time, human work
-time, stage implementation time, model inference time, or target-application
-runtime.
-
-Canonical observation boundary:
-
-Telemetry may observe existing canonical results but must not recompute their
-policy.
-
-- `RunIntegrityGate` remains the sole run-integrity authority.
-- `JudgeIntegrity` remains the authored-verdict acceptance and
-  final-report-eligibility owner.
-- artifact lifecycle and stage detection retain their existing owners.
-- Semantic Continuity remains derived and non-persisted. Telemetry may record a
-  point-in-time projection already produced by the gate/surface, but no later
-  command may read telemetry as the current Semantic Continuity state.
-- repository-context readiness remains producer/readiness-owned; telemetry may
-  copy the current result but may not infer freshness or adequacy.
-- telemetry failure, corruption, absence, or unsupported telemetry version
-  cannot change `expectedJudgeVerdict`, correction routing, stage progression,
-  or final-report eligibility.
-
-Determinism definition:
-
-"Deterministic run telemetry" does not mean two executions have byte-identical
-telemetry files. Fresh invocation IDs, timestamps, and measured durations are
-operational observations.
-
-Determinism means:
-
-- one schema interpretation for the same record bytes;
-- stable validation and sorting;
-- stable transition derivation;
-- stable workflow-economics calculation from the same accepted record set;
-- stable missing/unavailable semantics;
-- stable legacy and unsupported-version behavior;
-- no probabilistic scoring or inferred external facts.
-
-Workflow economics:
-
-Build one pure economics evaluator over accepted native telemetry records.
-Metrics are limited to facts that the Orchestrator owns or can derive
-deterministically from its own observations.
-
-Interaction economics may include:
-
-- completed recorded interaction count;
-- counts for `start`, `prompt`, and `mark`;
-- incomplete/pending invocation count;
-- total recorded Orchestrator command duration.
-
-Prompt/context economics may include:
-
-- rendered prompt character count when directly available;
-- total/minimum/maximum/average recorded prompt characters;
-- existing instruction-packet character-budget facts when already available.
-
-Do not convert character counts into claimed token usage.
-
-Workflow-rework economics may include deterministic transitions visible across
-successive accepted observations:
-
-- stage transitions;
-- backward-stage transitions / stage revisits;
-- lifecycle/correction transitions that are directly observable;
-- transitions into and out of canonical blocked integrity state;
-- Semantic Continuity warning/blocking observations when applicable;
-- transition to final-report eligibility;
-- observed workflow span between the first and last accepted observations.
-
-"Observed workflow span" is elapsed wall-clock span between recorded
-observations. It is not active work time.
-
-Explicitly unavailable / out-of-domain metrics:
-
-v1.6.0 must not estimate or claim:
-
-- coding-agent or human work duration;
-- model/provider identity;
-- actual model token usage when no provider supplies it;
-- API cost;
-- project build/test duration when Orchestrator did not execute the command;
-- target-process CPU, memory, network, or browser performance;
-- external stdout/stderr size;
-- truth of external project-command execution beyond the existing authored
-  evidence contracts;
-- external test totals when no supported producer reports them;
-- target-application observability.
-
-Unknown or unavailable values remain unavailable rather than becoming zero,
-estimated success, or heuristic telemetry.
-
-CLI projections:
-
-- `status` may add one compact read-only Workflow Economics section for an
-  activated run.
-- `check` and `check --all` may validate native telemetry structure,
-  version support, path containment, duplicate/collision conditions, and
-  deterministic record interpretation. Telemetry validation remains separate
-  from `RunIntegrityGate`; ordinary telemetry defects are visible validation
-  findings rather than workflow-readiness policy.
-- `export` may add one bounded deterministic Workflow Economics summary. It
-  does not embed every invocation record or unbounded operational history.
-- `status` remains human-readable and gains no JSON option.
-- Repeated `status`, `check`, and `export` inspection must not itself
-  create telemetry records, preserving their deterministic/read-only behavior.
-
-Legacy and compatibility rules:
-
-- A run with no `runTelemetryVersion` is a legacy run. Telemetry is not
-  required, no warning is emitted solely for absence, and existing behavior is
-  unchanged.
-- A supported telemetry version with no records is valid and represents no
-  recorded interactions yet.
-- An unsupported present telemetry version is reported by telemetry readers and
-  checks, but it does not replace or override run-integrity policy.
-- Existing run IDs, run-folder layout, native stage order, artifact filenames,
-  Semantic Continuity activation, proof-only behavior, extraction behavior,
-  and greenfield readiness remain compatible.
-- Hand-built test fixtures and programmatic `createRun()` callers remain valid
-  when they omit the additive telemetry activation field.
-
-Concurrency and write-safety boundary:
-
-- v1.6.0 does not attempt to solve every pre-existing repository persistence
-  race.
-- Telemetry itself must avoid a shared append target and shared fixed temporary
-  filename. Each invocation owns a unique path derived from its fresh
-  `invocationId`.
-- Telemetry writers must use bounded atomic create/finalize behavior appropriate
-  to the supported platforms.
-- Overlapping invocation intervals may be reported as concurrent observations.
-  Presentation may use a deterministic sort order, but it must not invent a
-  causal sequence that the records do not prove.
-- Telemetry paths must not affect current "most recent run" selection through
-  run-folder mtime changes.
-
-Public API boundary:
-
-- v1.6.0 does not require a new public library export from `src/index.ts`.
-- The persisted telemetry format is a versioned native Orchestrator contract
-  documented for compatibility, not yet the generic ecosystem evidence API.
-- v1.7.0 may later adapt/reference this native contract through the adopted
-  ECO-00 evidence interfaces without retroactively redefining v1.6.0.
-
-Planned implementation batches:
-
-Batch 1 — Native telemetry contract and safe persistence
-
-- add optional `runTelemetryVersion` activation for CLI-created v1.6.0 runs;
-- define native telemetry schema/types and validation;
-- define fresh invocation identity generation;
-- implement telemetry path ownership outside run directories;
-- implement unique pending/completed invocation persistence;
-- implement readers and deterministic record ordering;
-- preserve legacy and unsupported-version behavior;
-- add focused identity, serialization, persistence, path-safety, malformed-data,
-  and compatibility tests.
-
-Batch 2 — Recorded interactions and canonical run snapshots
-
-- instrument successful `start`, `prompt`, and `mark` interaction paths;
-- capture UTC start/end and monotonic Orchestrator duration;
-- capture prompt character facts where directly available;
-- capture bounded stage/lifecycle observations;
-- observe existing `RunIntegrityGate`, judge-integrity,
-  final-report-eligibility, and Semantic Continuity projections without
-  recomputing them;
-- preserve pending/incomplete records for interrupted invocations;
-- prove telemetry writes do not mutate run directories or alter run selection.
-
-Batch 3 — Deterministic Workflow Economics
-
-- add one pure evaluator over accepted telemetry records;
-- derive bounded interaction, prompt-character, transition/revisit,
-  correction/blocking, final-eligibility, duration, and observed-span facts;
-- represent incomplete/concurrent/unavailable conditions explicitly;
-- prove equivalent record sets produce equivalent summaries independent of
-  filesystem enumeration order;
-- exclude external/provider/application metrics and heuristic token estimates.
-
-Batch 4 — Existing-surface integration and compatibility hardening
-
-- add compact read-only Workflow Economics presentation to `status`;
-- add telemetry structural validation to appropriate `check` /
-  `check --all` paths without making it a run-integrity authority;
-- add bounded deterministic economics summary to `export`;
-- cover all seven modes, greenfield, proof-only, extraction, legacy runs,
-  Semantic Continuity activation, malformed/unsupported telemetry, abandoned
-  pending records, overlapping invocations, path safety, and cross-platform
-  behavior;
-- preserve repeated inspection determinism and the eight-command CLI surface;
-- update implementation-owned documentation only after the behavior exists.
-
-Compatibility invariants:
-
-- exactly eight CLI commands;
-- seven workflow modes;
-- 79 native stages;
-- 13 greenfield stages;
-- four starter profiles;
-- no `status --json`;
-- no automatic `my-dev-kit` execution;
-- no automatic coding-agent execution;
-- no persisted Semantic Continuity state;
-- no second lifecycle, readiness, judge, or correction authority;
-- no target-application observability;
-- no new runtime dependency required merely for telemetry identity or
-  persistence.
+- `v1.7.0` remains `ORC-EVIDENCE-01`; `v1.6.0` supplies the native
+  run/invocation telemetry substrate it depends on
+- `v1.6.0` does not absorb generic evidence intake, ECO-00 evidence-envelope
+  consumption, or assurance policy; native producer contracts remain
+  authoritative
 
 Acceptance criteria:
 
-- CLI-created v1.6.0 runs can opt into telemetry through the versioned run
-  metadata field while historical/programmatic runs remain valid without it.
-- Existing `runId` behavior remains unchanged; each recorded interaction has a
-  fresh collision-resistant invocation identity.
-- Telemetry records are bounded, versioned, path-safe, and stored outside the
-  run directory so they do not change run-folder mtime or native lifecycle
-  state.
-- `start`, `prompt`, and `mark` produce the intended native observations;
-  repeated `status`, `check`, `list`, and `export` do not create
-  telemetry records.
-- Workflow-economics derivation is pure and deterministic over the same accepted
-  record set.
-- Telemetry records canonical gate/judge/semantic projections only as
-  observations and never becomes a source of current readiness truth.
-- Missing/corrupt/unsupported telemetry cannot turn a blocked run into ready or
-  a ready run into blocked through `RunIntegrityGate`.
-- External/provider/application metrics remain explicitly unavailable unless a
-  future owner supplies them.
-- current compatibility suites for command count, run metadata, read-only run
-  inspection, deterministic output, legacy runs, Semantic Continuity, proof-only,
-  greenfield, extraction, and package behavior remain protected or are updated
-  only for intentional additive v1.6.0 behavior.
-- v1.7.0 can later reference/adapt the native run/invocation telemetry contract
-  without v1.6.0 having implemented generic evidence intake.
+- CLI-created runs can opt into telemetry through the versioned run contract,
+  while historical runs behave as before
+- telemetry records are bounded, deterministic in ordering, and located outside
+  run directories
+- Workflow Economics is derived only from accepted native observations and
+  reports unavailable facts as unavailable
+- the full existing verification chain passes with the public surface unchanged
 
 Explicit exclusions:
 
-- no `EvidenceEnvelopeV1` or `EvidenceRequirementV1` consumer implementation;
-- no `RunAssuranceSummaryV1`, verification-plan/record consumer, generic
-  artifact adapter, or compatibility-bundle evaluator;
-- no subject/environment identity subsystem in Orchestrator;
-- no Lab assurance policy or provider telemetry normalization;
-- no Observer/browser execution or performance capture;
-- no automatic project command execution;
-- no token-cost estimation from character counts;
-- no new top-level telemetry/economics command;
-- no status JSON;
-- no redesign of `makeRunId()` or run-folder identity;
-- no Greenfield-to-Feature Workflow Handoff Hardening;
-- no optional mobile-profile work;
-- no release or publication automation.
-
-Post-implementation sequence:
-
-After the four implementation batches, do not create another implementation
-batch for packaging/documentation/readiness. Use the established sequence:
-
-1. one combined implementation-completeness audit plus documentation
-   source-of-truth reconciliation;
-2. one combined pre-release readiness, cross-platform, security, and code-rot
-   workflow;
-3. release preparation;
-4. publication only after explicit user approval.
+- no automatic `my-dev-kit` or coding-agent execution
+- no target-application observability
+- no persisted Semantic Continuity state
+- no new generic evidence ingestion
+- no redesign of `makeRunId()` or run-folder identity
+- no Greenfield-to-Feature Workflow Handoff Hardening (remains deferred)
+- no optional mobile-profile work (remains deferred)
+- no release or publication automation
 
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 
