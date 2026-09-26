@@ -76,6 +76,21 @@ supports four starter profiles (`typescript-cli`, `nextjs-app`,
 never executes Docker, PostgreSQL, Prisma, or any other project command
 itself.
 
+The source in this repository also contains implemented but unpublished
+`v1.6.0` work, Workflow Economics and Deterministic Run Telemetry. It is not
+part of the published package yet, and package metadata remains `1.5.0`; a user
+of the published `1.5.0` package does not have it. In the source, new CLI-created
+runs record bounded Orchestrator-owned telemetry for `start`, `prompt`, and
+`mark` outside the run directory, and `status`, `check`, and `export` show a
+compact, deterministic Workflow Economics summary derived from those records
+(interaction counts, prompt character counts, Orchestrator invocation duration,
+stage movement, and observed workflow span). It describes Orchestrator activity
+only: it does not measure coding-agent time, human time, models, tokens, cost,
+or target-application behavior, and it never influences run-integrity, judge,
+lifecycle, or final-report decisions. No command, option, workflow mode, native
+stage, or dependency was added, and older runs are unaffected. See
+[docs/CONTRACTS.md](docs/CONTRACTS.md) and [docs/COMMANDS.md](docs/COMMANDS.md).
+
 ## Greenfield profile and scaffold verification
 
 `v1.3.0` added shared profile and registry validation, explicit command and

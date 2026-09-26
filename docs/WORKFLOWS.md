@@ -360,6 +360,10 @@ A stage blocked by Semantic Continuity renders correction guidance for the canon
 - A context-blocked stage, a semantically blocked stage, or an ineligible final report cannot advance through file presence or a manual completion mark.
 - External runtime/test/assurance results must describe the final candidate. The ecosystem guide's PASS labels do not expand the native judge vocabulary.
 
+### Run telemetry in the workflow
+
+In the unpublished `v1.6.0` source, telemetry is part of the existing workflow rather than a new one; there is no new command or sequence. New CLI-created runs record one bounded observation for each `start`, `prompt`, and `mark` interaction outside the run directory. `status` shows a compact Workflow Economics section, `check` and `check --all` validate telemetry structure as warnings, and `export` carries a bounded summary in the handoff. `init`, `list`, `status`, `check`, and `export` never record, so inspecting a run does not change what is being inspected. Older runs show none of this, and unsupported or corrupt telemetry is reported without failing the command. The figures are descriptive only: they never make a stage, final report, or run eligible or ineligible, and they cover Orchestrator activity, not coding-agent or human work time.
+
 ## Lifecycle-aware progression (v0.3.0)
 
 Effective states are `missing`, `incomplete`, `blocked`, `stale`, and `complete`. Missing means no artifact. Incomplete means unfinished. Blocked means an unmet gate. Stale means upstream evidence changed. Complete permits advancement only under current integrity rules.

@@ -25,6 +25,18 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
   reports/
 ```
 
+In the unpublished `v1.6.0` source, new CLI-created runs also persist `runTelemetryVersion: "1.0.0"`. Native run telemetry is workspace-level operational evidence and is stored beside `runs/`, never inside a run directory:
+
+```text
+.my-dev-kit-orchestrator/
+  runs/<run-id>/...
+  telemetry/<run-id>/
+    pending/<invocation-id>.json       <- incomplete invocation (no outcome inferred)
+    invocations/<invocation-id>.json   <- immutable completed invocation
+```
+
+There is one record per recorded invocation (`start`, `prompt`, or `mark`), never a shared append log. A record is at most 8 KiB, is created exclusively without replacing an existing file, and is never rewritten once completed. Readers order records by `startedAt` then `invocationId`. No Workflow Economics aggregate artifact exists: economics is derived on demand from these records. Telemetry is not a lifecycle artifact and not a Semantic Continuity state artifact.
+
 New ordinary runs persist `proofOnly: false`. New staged runs in `feature`, `repair`, `test`, `refactor`, `harden`, and `extraction` also persist `semanticContinuityVersion: "1.0.0"` in `run.json`; runs without the field are legacy, and greenfield and proof-only runs do not carry it. Explicit proof-only runs also
 persist their `verificationResponsibility`; the declared file is evidence owned
 by that responsibility, not a new Orchestrator artifact family. Observer

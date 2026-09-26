@@ -5,7 +5,7 @@ Versions are listed in chronological order.
 `v1.5.0` is the current published release. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.6.0` remains the next planned feature release. `v1.7.0` is reserved for ORC-EVIDENCE-01 after v1.6.0; deferred scopes remain separate.
+`v1.6.0` is implemented but not yet published. `v1.7.0` is reserved for ORC-EVIDENCE-01 after v1.6.0; deferred scopes remain separate.
 
 ## Version summary
 
@@ -62,7 +62,7 @@ and the `v0.x.0` releases remain part of the published project history.
   strategy through implementation, test, and verification evidence and enforced
   through the existing run-integrity gate for staged runs. Released on
   2026-09-25.
-- `v1.6.0` will add versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`.
+- `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. It is implemented but unpublished.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1195,7 +1195,7 @@ Explicit exclusions:
 Roadmap sequence:
 
 `v1.5.0` is the current published release, released on 2026-09-25. `v1.4.1`
-and earlier versions are historical; `v1.6.0` is planned. Greenfield-to-Feature
+and earlier versions are historical; `v1.6.0` is implemented but not yet published. Greenfield-to-Feature
 Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
 ## Planned milestones
@@ -1352,7 +1352,7 @@ Boundaries preserved:
 
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
-Status: planned next feature version after `v1.5.0`.
+Status: implementation complete; release pending. Package metadata remains `1.5.0`, and pre-release readiness, cross-platform, security-validation, and release-preparation work remains separate.
 
 Milestone: `ORC-TELEMETRY`.
 
@@ -1362,7 +1362,7 @@ Add bounded native Orchestrator run telemetry and deterministic Workflow
 Economics while establishing the native run/invocation identity substrate
 needed by later ORC-EVIDENCE-01 work.
 
-Planned scope:
+Implemented scope:
 
 - versioned, additive native run-invocation telemetry for CLI-created runs
 - one bounded telemetry record per recorded workflow interaction, stored outside

@@ -295,9 +295,10 @@
     "packageMetadataVersion": "1.5.0",
     "latestPublishedVersion": "1.5.0",
     "currentReleaseDate": "2026-09-25",
-    "implementedUnpublishedVersions": [],
+    "implementedUnpublishedVersions": [
+      "v1.6.0"
+    ],
     "plannedUnpublishedVersions": [
-      "v1.6.0",
       "v1.7.0"
     ],
     "cliCommands": [
@@ -329,7 +330,9 @@
       "supplementalContextRetrievalReport": "1.0.0",
       "contextReadiness": "1.0.0",
       "runIntegrityGate": "1.1.0",
-      "semanticContinuityContract": "1.0.0"
+      "semanticContinuityContract": "1.0.0",
+      "runTelemetryContract": "1.0.0",
+      "workflowEconomics": "1.0.0"
     },
     "fixedContextPaths": [
       "artifacts/implementation-context-packet.txt",
@@ -345,6 +348,11 @@
     "customOutputRunRediscoverySupported": false,
     "currentProducerVersion": "1.12.4",
     "readinessContractProducerVersion": "1.10.4",
+    "telemetryRecordedCommands": [
+      "start",
+      "prompt",
+      "mark"
+    ],
     "semanticContinuityActivatedModes": [
       "feature",
       "repair",
@@ -362,9 +370,10 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.5.0 with older releases historically scoped, v1.6.0 next planned, and v1.7.0 reserved for ORC-EVIDENCE-01",
+    "published v1.5.0 with older releases historically scoped, v1.6.0 implemented but unpublished, and v1.7.0 reserved for ORC-EVIDENCE-01",
     "v1.5.0 has a finalized changelog section with the current release date",
     "derived semantic continuity contract version, gate schema version, and activated-mode set",
+    "derived run telemetry contract version, Workflow Economics version, and recorded-command set",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",

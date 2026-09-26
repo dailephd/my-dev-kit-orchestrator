@@ -33,7 +33,7 @@ The integrations are explicit. The orchestrator does not automatically execute e
 
 ## Evidence and output model
 
-A run lives beneath `.my-dev-kit-orchestrator/runs/` by default and contains request metadata, prompts, stage artifacts, lifecycle state, deterministic check output, and final/export material. Supplemental repository-context packets are inputs to readiness; they are not native lifecycle artifacts. See [ARTIFACTS.md](ARTIFACTS.md) for exact file and schema contracts.
+A run lives beneath `.my-dev-kit-orchestrator/runs/` by default and contains request metadata, prompts, stage artifacts, lifecycle state, deterministic check output, and final/export material. Supplemental repository-context packets are inputs to readiness; they are not native lifecycle artifacts. In the unpublished `v1.6.0` source, bounded native run telemetry is stored beside `runs/` (not inside a run) and feeds a descriptive Workflow Economics summary. See [ARTIFACTS.md](ARTIFACTS.md) for exact file and schema contracts.
 
 ## Non-goals and long-term boundary
 

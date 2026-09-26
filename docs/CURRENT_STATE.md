@@ -39,6 +39,24 @@ Implemented behavior:
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
+## Implemented but unpublished
+
+`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is implemented on the feature branch and is not published. Package metadata stays `1.5.0`, and no tag, GitHub Release, or npm version exists for it. It is documented here as current source behavior, not as a release; users of the published `1.5.0` package do not have it.
+
+Implemented behavior:
+
+- an optional versioned `runTelemetryVersion` field (`"1.0.0"`) in `run.json`, written for new CLI-created runs; older and programmatic runs without it stay legacy and are never inferred to be activated
+- the existing `runId` is unchanged and opaque; each recorded interaction receives a fresh collision-resistant invocation identity (`inv-` plus 32 hex characters), and no second logical run identity exists
+- `start`, `prompt`, and `mark` each record one bounded native record per invocation, first as a pending record and then as an immutable completed record with outcome (`succeeded` or `failed`), monotonic duration, and bounded observations copied from results the command already computed (stage facts, prompt character count, mark lifecycle facts, and bounded run-integrity, judge/final-eligibility, and Semantic Continuity snapshots)
+- telemetry lives under `.my-dev-kit-orchestrator/telemetry/<run-id>/`, outside the run directory, so recording changes neither run-folder contents nor lifecycle state
+- one pure, deterministic Workflow Economics evaluator (version `1.0.0`) derives interaction, prompt-character, duration, observed-span, stage-movement, mark, and snapshot counts on demand; nothing is persisted
+- `status` adds one compact Workflow Economics section, `export` adds one bounded fixed-size section, and the default `check` and `check --all` add a `Run telemetry` section whose findings are warnings only (existing `--strict` promotes them like any warning); legacy runs show none of these
+- `init`, `list`, `status`, `check`, and `export` never record telemetry
+
+Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
+
+Remaining before any publication: the separately authorized pre-release readiness, cross-platform, security-validation, and release-preparation workflows. None of those is claimed as done here.
+
 ## Implemented operational surface
 
 The CLI has eight commands: `init`, `start`, `prompt`, `status`, `list`, `mark`, `check`, and `export`. It supports seven workflow modes and 79 native stages. Greenfield has 13 stages and four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
@@ -50,6 +68,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Repository retrieval is manual; the orchestrator does not run `my-dev-kit`.
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
 - `status` is human-readable and has no JSON option.
+- In the unpublished `v1.6.0` source, Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
@@ -58,57 +77,25 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The current runtime remains the published `v1.5.0` Semantic Continuity
-baseline described above. No `v1.6.0` telemetry behavior is implemented by
-the current release.
+The latest published release remains `v1.5.0`, the Semantic Continuity baseline
+described above. `v1.6.0` is implemented but not yet published (see "Implemented
+but unpublished"); [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+boundaries, and detailed execution sequencing is kept outside current-state
+documentation.
 
-The next planned feature release is `v1.6.0`, Workflow Economics and
-Deterministic Run Telemetry (`ORC-TELEMETRY`). [ROADMAP.md](ROADMAP.md#v160---workflow-economics-and-deterministic-run-telemetry)
-owns the high-level version scope and boundaries; detailed execution
-sequencing is kept outside current-state documentation.
-
-The planned v1.6.0 boundary is:
-
-- preserve the existing `runId` behavior as the native run-instance identity
-  and add a separate fresh invocation identity for recorded interactions;
-- activate the additive telemetry contract through an optional version field on
-  new CLI-created runs while leaving historical/programmatic runs valid without
-  it;
-- store bounded native telemetry outside run directories so telemetry does not
-  change native lifecycle state or run-folder mtime;
-- record only Orchestrator-owned workflow interactions in v1.6.0
-  (`start`, `prompt`, and `mark`), while `status`, `check`,
-  `export`, `list`, and `init` remain non-recording inspection/utility
-  surfaces;
-- derive Workflow Economics deterministically from accepted native telemetry
-  records, including bounded interaction, prompt-character, transition/revisit,
-  correction/blocking, duration, and observed-span facts;
-- treat `RunIntegrityGate`, judge integrity, lifecycle, correction routing,
-  repository-context readiness, and Semantic Continuity as canonical existing
-  owners that telemetry may observe but never replace or recompute;
-- keep coding-agent time, provider/model identity, token usage, API cost,
-  external build/test duration, browser performance, and target-application
-  resource telemetry unavailable unless a future domain owner supplies them;
-- preserve the eight-command, seven-mode, 79-native-stage, 13-greenfield-stage,
-  four-profile public surface and keep `status` human-readable with no JSON
-  option.
+`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the next
+planned feature version and remains a later consumer milestone. It will build on
+the `v1.6.0` native run/invocation telemetry substrate; `v1.6.0` does not
+implement generic evidence envelopes, requirements, subject/environment
+identity, assurance policy, or compatibility evaluation.
 
 The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
-`contracts/ecosystem/` and `docs/ecosystem/`. They reserve
-`v1.6.0` as `ORC-TELEMETRY` and `v1.7.0` as
-`ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite of v1.7.0. Those assets are
-cross-repository coordination/reference contracts; they do not change the
-current Orchestrator 1.5.0 runtime or require v1.6.0 to implement generic
-evidence envelopes, requirements, subject/environment identity, assurance
-policy, or compatibility evaluation.
+`contracts/ecosystem/` and `docs/ecosystem/`. They reserve `v1.6.0` as
+`ORC-TELEMETRY` and `v1.7.0` as `ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite
+of v1.7.0. Those assets are cross-repository coordination/reference contracts;
+they do not change the published Orchestrator 1.5.0 runtime.
 
-`v1.7.0`, Generic Ecosystem Evidence Intake, remains the later consumer
-milestone. Greenfield-to-Feature Workflow Handoff Hardening and optional mobile
-profile candidates remain deferred and are not part of v1.6.0.
-
-v1.6.0 work proceeds from the high-level roadmap scope and current repository
-evidence. Documentation reconciliation, readiness/cross-platform/security/
-code-rot validation, release preparation, and publication remain separate
-post-implementation workflows.
+Greenfield-to-Feature Workflow Handoff Hardening and optional mobile profile
+candidates remain deferred scopes.
 
 See [COMMANDS.md](COMMANDS.md) for syntax, [WORKFLOWS.md](WORKFLOWS.md) for operational sequences, and [CONTRACTS.md](CONTRACTS.md) for stable compatibility boundaries.

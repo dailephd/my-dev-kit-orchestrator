@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased - Workflow Economics and Deterministic Run Telemetry
+
+This section describes implemented, unpublished changes. It has no release date, and package metadata remains `1.5.0`.
+
+### Added
+
+- an optional versioned `runTelemetryVersion` field in `run.json` (`1.0.0`), written for new CLI-created runs; runs without it remain legacy and telemetry activation is never inferred from files
+- native run telemetry outside the run directory (`.my-dev-kit-orchestrator/telemetry/<run-id>/`): `start`, `prompt`, and `mark` each record one bounded record per invocation with a fresh collision-resistant invocation ID, a pending then immutable completed lifecycle, an explicit `succeeded`/`failed` outcome, monotonic invocation duration, and bounded observations (stage facts, prompt character count, mark lifecycle facts, and bounded run-integrity, judge/final-eligibility, and Semantic Continuity snapshots). Prompt bodies, mark reasons, source content, and error text are never stored
+- one pure, deterministic Workflow Economics evaluator (`1.0.0`) derived on demand and never persisted: interaction, prompt-character, Orchestrator-duration, observed-workflow-span, stage-movement, mark, correction-prompt, and snapshot counts, with explicit `not-activated`, `available`, `partial`, and `unsupported` states and honest reporting of pending records, reader diagnostics, concurrent intervals, wall-clock anomalies, and numeric limits
+- a compact Workflow Economics section in `status`, a bounded fixed-size Workflow Economics section in `export`, and a `Run telemetry` section in the default `check` and `check --all` whose findings are warnings (promoted only by the existing `--strict`)
+- source-derived documentation checks for the telemetry contract version, the Workflow Economics version, and the recorded-command set
+
+### Compatibility
+
+- no CLI command, option, workflow mode, native stage, artifact family, or package dependency was added, and `status` still has no JSON option
+- `init`, `list`, `status`, `check`, and `export` never record telemetry
+- runs without the activation field show no telemetry or economics output and no warning; an explicitly unsupported version is reported as unsupported and never read as `1.0.0`
+- telemetry never influences `RunIntegrityGate`, judge integrity, lifecycle, correction routing, or final-report eligibility, and a telemetry write failure never changes a command's output or exit code
+- coding-agent time, human time, provider or model identity, token use, API cost, external build/test duration, and target-application measurements are not collected
+
 ## v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
 Release date: 2026-09-25.
