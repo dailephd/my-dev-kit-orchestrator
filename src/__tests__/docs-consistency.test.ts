@@ -173,7 +173,7 @@ describe('v1.6.0 telemetry facts (isolated fixture)', () => {
     expect(run(missingHeading).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
 
     const missingDate = makeFixture();
-    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace('Release date: 2026-09-26.\n', ''));
+    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-09-26\.\r?\n/, ''));
     expect(run(missingDate).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
   });
 });
