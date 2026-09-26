@@ -565,12 +565,13 @@ describe('module boundary', () => {
     expect(source).not.toMatch(/Date\.now|new Date\(|hrtime|child_process|writeFile|unlink|mkdir|rename|fetch\(|https?:/);
   });
 
-  it('no economics or telemetry persistence artifact name exists and no command or canonical owner imports the evaluator', () => {
+  it('no economics or telemetry persistence artifact name exists and only the presentation surface imports the evaluator', () => {
     expect(source).not.toMatch(/workflow-economics\.json|economics\.json|metrics\.json/);
     const srcDir = path.join(__dirname, '..', 'src');
     const walk = (dir: string): string[] =>
       fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
     const importers = walk(srcDir).filter((f) => f.endsWith('.ts') && /runWorkflowEconomics/.test(fs.readFileSync(f, 'utf8')) && !f.endsWith('runWorkflowEconomics.ts'));
-    expect(importers).toEqual([]);
+    // Only the shared presentation surface may consume it; commands never import it directly.
+    expect(importers.map((f) => path.basename(f))).toEqual(['workflowEconomicsSurface.ts']);
   });
 });

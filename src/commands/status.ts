@@ -16,6 +16,7 @@ import { readTraceCheckResults } from '../traceChecker';
 import { evaluateRunContextReadiness } from '../instructions/runContextReadiness';
 import { evaluateRunIntegrityGateFromSummary } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
+import { buildWorkflowEconomicsStatusLines, readRunTelemetrySurface } from '../workflowEconomicsSurface';
 import { checkGreenfieldRunReadiness } from '../greenfield/readiness/checkGreenfieldRunReadiness';
 import { renderSemanticContinuityStatusLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 
@@ -268,6 +269,14 @@ export function makeStatusCommand(): Command {
         const errorCount = greenfieldReadiness.issues.filter((i) => i.severity === 'error').length;
         const warningCount = greenfieldReadiness.issues.filter((i) => i.severity === 'warning').length;
         lines.push(`  Issues: ${errorCount} error(s), ${warningCount} warning(s)  (run: my-dev-kit-orchestrator check)`);
+        lines.push(``);
+      }
+
+      // v1.6.0: read-only Workflow Economics from the canonical telemetry
+      // reader + evaluator. Absent for legacy runs; status never records.
+      const economicsLines = buildWorkflowEconomicsStatusLines(readRunTelemetrySurface(meta).summary);
+      if (economicsLines.length > 0) {
+        lines.push(...economicsLines);
         lines.push(``);
       }
 

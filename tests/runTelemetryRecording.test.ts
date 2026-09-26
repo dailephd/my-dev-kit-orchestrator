@@ -394,7 +394,8 @@ describe('dependency direction', () => {
   it('only start, prompt, and mark are instrumented', () => {
     for (const file of ['init.ts', 'list.ts', 'status.ts', 'check.ts', 'export.ts']) {
       const full = path.join(__dirname, '..', 'src', 'commands', file);
-      if (fs.existsSync(full)) expect(fs.readFileSync(full, 'utf8')).not.toMatch(/runTelemetry/);
+      // Inspection commands may READ telemetry through the surface, but never import the recording API.
+      if (fs.existsSync(full)) expect(fs.readFileSync(full, 'utf8')).not.toMatch(/beginTelemetryInvocation|createPendingInvocation|completeInvocation|runTelemetryObservation/);
     }
   });
 });
