@@ -58,59 +58,56 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The ecosystem documentation-standardization report records
-`ECOSYSTEM_DOCUMENTATION_STANDARDIZED`: the common canonical project-document
-structure and its responsibility model have been reconciled across
-`my-dev-kit`, `my-dev-kit-orchestrator`, and `my-dev-kit-lab`.
+The current runtime remains the published `v1.5.0` Semantic Continuity
+baseline described above. No `v1.6.0` telemetry behavior is implemented by
+the current release.
 
-`v1.3.1`, Standardized Greenfield Documentation and Full-Stack Next.js
-Environment Hardening, established the
-standardized 15-file canonical project-document baseline the generic
-documentation substrate for every newly bootstrapped greenfield project
-across the then-current `typescript-cli`, `nextjs-app`, and `android-compose`
-profile set, adds orthogonal `projectType`/
-`webFramework` brief dimensions, and adds the first supported full-stack
-combination (`fullstack-web`, `nextjs`, `nextjs-app`, PostgreSQL, Prisma,
-and Docker) composed additively into scaffold planning and canonical
-greenfield readiness, together with a judge/final-report lifecycle
-correction that gates final-report eligibility on canonical greenfield
-readiness for every greenfield run. It does not add a fourth starter
-profile, a new CLI flag, a new workflow mode, or a new native stage; the CLI
-remains eight commands, seven modes, and 79 native stages, with greenfield
-still 13 stages and the same `typescript-cli`, `nextjs-app`, and
-`android-compose` profile set. See the detailed [v1.3.1 roadmap
-section](ROADMAP.md#v131---standardized-greenfield-documentation-and-full-stack-nextjs-environment-hardening).
+The next planned feature release is `v1.6.0`, Workflow Economics and
+Deterministic Run Telemetry (`ORC-TELEMETRY`). The detailed version contract
+is frozen in [ROADMAP.md](ROADMAP.md#v160---workflow-economics-and-deterministic-run-telemetry).
 
-`v1.3.3` retains `v1.3.2`'s shared artifact-validation
-correction so the three native greenfield JSON artifacts retain strict JSON and
-structured-field contracts without receiving incompatible text-header
-requirements. Python CLI Greenfield Profile and Coding-Agent Instruction
-Bootstrap adds
-the four common instruction outputs, common + profile + optional-capability
-target composition, and the bounded fourth `python-cli` profile. Explicit
-`python-cli`, the exact `python` alias, and clear Python-plus-CLI intent resolve
-to that profile; bare Python and Python web/API/server intent remain
-unsupported. A real Python scaffold passed compile, pytest, CLI, canonical
-readiness, and generic `my-dev-kit` initial-index retrieval without a new mode,
-stage, readiness engine, or Python-specific index path.
+The planned v1.6.0 boundary is:
 
-`v1.4.1`, Installed Greenfield Instruction Surface Correction, is the previous
-release. It replaces inappropriate Orchestrator-maintainer
-source-path guidance in shipped greenfield prompts with direct artifact,
-behavior, validation, and completion requirements while preserving the
-underlying instruction intent and installed package surface. The active next
-direction is: (1) `v1.6.0` Workflow Economics and Deterministic Run
-Telemetry is the next planned feature version; (2) `v1.7.0` is reserved for
-Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00
-reference contracts; (3) Greenfield-to-Feature Workflow Handoff Hardening
-remains deferred; (4) optional mobile-profile candidates remain deferred.
+- preserve the existing `runId` behavior as the native run-instance identity
+  and add a separate fresh invocation identity for recorded interactions;
+- activate the additive telemetry contract through an optional version field on
+  new CLI-created runs while leaving historical/programmatic runs valid without
+  it;
+- store bounded native telemetry outside run directories so telemetry does not
+  change native lifecycle state or run-folder mtime;
+- record only Orchestrator-owned workflow interactions in v1.6.0
+  (`start`, `prompt`, and `mark`), while `status`, `check`,
+  `export`, `list`, and `init` remain non-recording inspection/utility
+  surfaces;
+- derive Workflow Economics deterministically from accepted native telemetry
+  records, including bounded interaction, prompt-character, transition/revisit,
+  correction/blocking, duration, and observed-span facts;
+- treat `RunIntegrityGate`, judge integrity, lifecycle, correction routing,
+  repository-context readiness, and Semantic Continuity as canonical existing
+  owners that telemetry may observe but never replace or recompute;
+- keep coding-agent time, provider/model identity, token usage, API cost,
+  external build/test duration, browser performance, and target-application
+  resource telemetry unavailable unless a future domain owner supplies them;
+- preserve the eight-command, seven-mode, 79-native-stage, 13-greenfield-stage,
+  four-profile public surface and keep `status` human-readable with no JSON
+  option.
 
-ECO-00 does not change the current 1.5.0 runtime surface. It establishes a
-repository-level coordination contract that references the Orchestrator-owned
-`RSP-NNN` identity rather than redefining it.
+The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
+`contracts/ecosystem/` and `docs/ecosystem/`. They reserve
+`v1.6.0` as `ORC-TELEMETRY` and `v1.7.0` as
+`ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite of v1.7.0. Those assets are
+cross-repository coordination/reference contracts; they do not change the
+current Orchestrator 1.5.0 runtime or require v1.6.0 to implement generic
+evidence envelopes, requirements, subject/environment identity, assurance
+policy, or compatibility evaluation.
 
-Before further implementation or release work, the planner must inspect the current
-repository and ecosystem evidence rather than treating roadmap prose as a
-prewritten execution plan.
+`v1.7.0`, Generic Ecosystem Evidence Intake, remains the later consumer
+milestone. Greenfield-to-Feature Workflow Handoff Hardening and optional mobile
+profile candidates remain deferred and are not part of v1.6.0.
+
+Implementation should begin only from the detailed v1.6.0 roadmap contract and
+current repository evidence. After the implementation batches, documentation
+reconciliation, readiness/cross-platform/security/code-rot validation, release
+preparation, and publication remain separate post-implementation workflows.
 
 See [COMMANDS.md](COMMANDS.md) for syntax, [WORKFLOWS.md](WORKFLOWS.md) for operational sequences, and [CONTRACTS.md](CONTRACTS.md) for stable compatibility boundaries.
