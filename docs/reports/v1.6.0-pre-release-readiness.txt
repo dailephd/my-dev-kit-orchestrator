@@ -1,0 +1,214 @@
+ORC-TELEMETRY v1.6.0 PRE-RELEASE READINESS EVIDENCE
+Validation cycle: combined pre-release readiness, cross-platform, security, and code-rot
+Generated: 2026-09-26
+
+1. VERDICT
+PASS_READY_FOR_RELEASE_PREPARATION
+
+2. REPOSITORY
+https://github.com/dailephd/my-dev-kit-orchestrator
+
+3. CANDIDATE BRANCH
+feature/v1.6.0-workflow-economics-telemetry
+
+4. VALIDATED_CANDIDATE_SHA
+7728375d4c720feac1a3add57e4877ada83fc9db
+
+5. CANDIDATE REMOTE SHA
+7728375d4c720feac1a3add57e4877ada83fc9db
+
+6. STARTING GIT STATUS
+Clean; no tracked changes and no untracked files.
+
+7. ENDING GIT STATUS (candidate validation)
+Clean; HEAD remained 7728375d4c720feac1a3add57e4877ada83fc9db. Readiness cache and logs were ignored under .my-dev-kit-context/readiness/v1.6.0. Temporary CLI consumers and tarball were removed.
+
+8. PACKAGE METADATA STATE
+Name: @dailephd/my-dev-kit-orchestrator
+package.json: 1.5.0
+package-lock.json: 1.5.0
+package-lock packages[''].version: 1.5.0
+Node engine: >=24
+
+9. NPM/GITHUB PUBLICATION PREFLIGHT
+npm latest: 1.5.0
+npm @1.6.0: E404, unpublished
+Local v1.6.0 tag: absent
+Remote v1.6.0 tag: absent
+GitHub v1.6.0 Release: absent
+GitHub CLI authenticated as dailephd; repository identity verified.
+
+10. ISOLATED NPM CACHE
+C:\Users\daile\Projects\my-dev-kit-orchestrator\.my-dev-kit-context\readiness\v1.6.0\npm-cache
+Confirmed ignored by .gitignore.
+
+11. CLEAN INSTALL
+npm ci: PASS, exit 0; 463 packages added, 464 audited, zero vulnerabilities. No tracked-file or lockfile drift.
+
+12. FOCUSED v1.6 TEST RESULTS
+All seven focused suites passed (exit 0):
+runTelemetryContract 77/77; runTelemetryStore 37/37; runTelemetryRecording 21/21; runWorkflowEconomics 37/37; runTelemetrySurfaces 32/32; runTelemetryStrictIsolation 8/8; runTelemetryCompletenessAudit 10/10.
+
+13. FULL TEST RESULT
+npm test -- --runInBand: exit 0; 149 suites passed, 3 skipped; 3,768 tests passed, 11 skipped, 0 failed (3,779 total tests).
+
+14. TYPECHECK
+npm run typecheck: PASS, exit 0.
+
+15. BUILD
+npm run build: PASS, exit 0.
+
+16. DOCS CHECK
+npm run docs:check: PASS, exit 0. DOCS_CHECK_PASS: package 1.5.0; published v1.5.0; 8 commands; 7 modes; 79 native stages; 13 greenfield stages; 4 greenfield profiles; 11 context-sensitive stages; schema versions 1.0.0 and 1.1.0.
+
+17. LINT
+npm run lint: PASS, exit 0.
+
+18. DOCS LINT
+npm run lint:docs: PASS, exit 0.
+
+19. TARGET SECURITY TEST
+npm run test:security: PASS, exit 0. SECURITY_CONTRACT_PASS: package metadata and tarball contents are safe.
+
+20. CONTEXT SMOKE
+npm run smoke:context: PASS, exit 0.
+
+21. CLI SMOKE RESULTS
+All passed, exit 0: normal; lifecycle; extraction; check; trace; correction; export; greenfield.
+
+22. VERIFY RESULT
+npm run verify: PASS, exit 0.
+
+23. CLI/PUBLIC-SURFACE CONFIRMATION
+Built CLI version remains 1.5.0. Exactly eight public commands: init, start, status, prompt, list, mark, check, export. No top-level telemetry/economics/metrics command and no telemetry/economics/machine-readable status option. Seven modes; 79 native stages; 13 greenfield stages; four profiles. Telemetry contract 1.0.0; Workflow Economics contract 1.0.0. Recorded command set is start, prompt, mark; inspection/utility commands remain non-recording. CLI help/version and docs checker agree.
+
+24. DISPOSABLE REAL CLI SMOKE
+Built CLI initialized a temporary project under C:\Users\daile\Projects, started a run, recorded start and prompt, rendered prompt, read status and derived Workflow Economics, listed the run, ran a passing trace check, and exported the handoff. Status showed two completed/succeeded interactions (start 1, prompt 1), and economics was derived on read. Exactly two invocation records existed, outside the run folder. Status, list, check, and export added no invocation records. No aggregate economics file or separate Semantic Continuity state file was created. `check --all` was also exercised and returned 1 because the intentionally incomplete disposable run has missing artifacts; the diagnostic was expected. The supported trace check passed. Temporary project removed.
+
+25. NPM LS --ALL
+PASS, exit 0.
+
+26. RESOLVED SECURITY-SENSITIVE DEPENDENCY VERSIONS
+markdownlint-cli2 0.23.3; markdown-it 15.0.1 (overridden); browserslist 4.29.1; smol-toml 1.8.0; js-yaml 5.4.1, 4.3.2, 3.15.2 (multiple resolved versions as shown by npm ls). Lockfile unchanged.
+
+27. FULL NPM AUDIT
+PASS, exit 0. 0 vulnerabilities: info 0, low 0, moderate 0, high 0, critical 0.
+
+28. PRODUCTION-ONLY NPM AUDIT
+PASS, exit 0. 0 vulnerabilities: info 0, low 0, moderate 0, high 0, critical 0.
+
+29. NPM PACK DRY-RUN
+PASS, exit 0; 468 files. package.json, README.md, CHANGELOG.md, dist runtime, telemetry modules, Workflow Economics modules, and presentation surfaces are present. No node_modules, .my-dev-kit work state, reports, .env files, logs, tarballs, credentials, or machine-specific files were included. Required runtime files include dist/runTelemetry.js, dist/runTelemetryStore.js, dist/runWorkflowEconomics.js, and dist/workflowEconomicsSurface.js. No excluded/sensitive paths found.
+
+30. PACKED-INSTALL ACCEPTANCE
+PASS. Created an actual 1.5.0 candidate tarball in ignored readiness temp storage and installed it in a fresh disposable project under C:\Users\daile\Projects. Installed binary resolved; --version returned 1.5.0; --help exposed the eight public commands; init/start/prompt/status succeeded. Status derived economics from two invocation records. Telemetry and economics runtime modules were present. Tarball and consumer removed after verification. No global install or publish.
+
+31. VALIDATE WORKFLOW
+Run ID 36242211472; head SHA 7728375d4c720feac1a3add57e4877ada83fc9db; event push; branch feature/v1.6.0-workflow-economics-telemetry; completed/success. Ubuntu Node 24 PASS; Windows Node 24 PASS; macOS 15 Node 24 PASS. All jobs succeeded.
+
+32. PRE-RELEASE MATRIX
+Run ID 36245990797; head SHA 7728375d4c720feac1a3add57e4877ada83fc9db; event workflow_dispatch; completed/success. Ubuntu Node 24 PASS; Ubuntu Node 26 PASS; Windows Node 24 PASS; Windows Node 26 PASS; macOS 15 Node 24 PASS; macOS 15 Node 26 PASS. All six jobs succeeded.
+
+33. MY-DEV-KIT-LAB IDENTITY
+Published version 0.6.0; tag v0.6.0; exact resolved commit 1d0bfe321706f776d667ad155b28bc9a92a6723f. Existing checkout was dirty on unrelated fix/v0.6.1-external-target-security-validation at d642e8ac0d1f14436b216c898b4f4bca6e30fb06 and was left untouched. A clean isolated checkout was used at C:\Users\daile\Projects\my-dev-kit-lab-readiness-v1.6.0.
+
+34. LAB SELF-VALIDATION
+PASS: npm ci, build, test, verify, test:security, and security:validate all exit 0. Tests: 392 files passed; 5,107 passed, 1 skipped. Security tests: 44 files passed; 519 tests passed. security:validate: READY EXCEPT OPTIONAL MANUAL CHECKS; no blocker. Optional OSV-Scanner and CodeQL static analysis skipped because tools were unavailable.
+
+35. LAB TARGET-SECURITY OVERALL RESULT
+Raw Lab security:validate against target reports NOT READY / exit 1 with 9 package-content BLOCKER findings, 9 informational outdated-dependency findings, and no dependency audit vulnerabilities. All nine package findings are an applicability defect; see section 42. Lab reports Required evidence missing: 0. After the explicitly justified package-policy substitution, all applicable target security responsibilities are closed and no release security blocker remains.
+
+36. LAB DEPENDENCY-SECURITY RESULT
+PASS; 3 checks passed, 1 warned, 0 failed, 1 optional skipped. Nine informational outdated package notices only; full and production npm audits both show zero vulnerabilities. OSV-Scanner unavailable/optional skip.
+
+37. LAB PACKAGE-SECURITY RESULT
+Lab package check FAILs on nine Lab-only allowlist expectations. Proven applicability defect and equivalent target-owned evidence documented in section 42. Orchestrator test:security, npm pack dry-run, and actual packed install all pass.
+
+38. SEMGREP RESULT
+PASS; zero findings, target source scanned by Lab Semgrep config.
+
+39. CODEQL RESULT
+SKIPPED; CodeQL CLI not installed/on PATH. Lab classifies it optional; its self-validation report says full analysis runs through GitHub Actions code scanning.
+
+40. HISTORICAL LAB LIMITATION REASSESSMENT
+Package-policy applicability: reproduced. Lab v0.6.0 hard-codes its own nine package paths in src/securityValidation/packageChecks/requiredPackageContents.ts. Those paths (Lab CLI, Lab build assets, benchmark/example files) do not belong to the Orchestrator. Equivalent target-owned npm package checks pass.
+Subprocess/static-source behavior: no current false positive observed; target static scan passed and target validation completed without an identified subprocess defect.
+Secret-scanner behavior: no current false positive observed; Semgrep passed with zero findings; target security test and package checks passed. OSV/CodeQL are distinct optional skips.
+Required-evidence accounting: no defect; report explicitly records Required evidence missing: 0.
+
+41. SECURITY FINDINGS BY SEVERITY
+Target-owned audits: zero vulnerabilities at every severity. Lab target report: 9 blocker-severity package-policy findings (all Lab-specific expected paths absent from Orchestrator tarball); 9 informational outdated-dependency findings; zero major/minor findings; zero Semgrep findings. No actual target security defect was identified.
+
+42. SECURITY SUBSTITUTIONS
+Failed Lab responsibility: target package-content policy check (9 required paths).
+Proven defect: Lab v0.6.0 hard-codes Lab package assets in src/securityValidation/packageChecks/requiredPackageContents.ts: benchmark-project-profiles.json; dist/scripts/cli.js; dist/scripts/run-final-demo.js; dist/src/cli/runLabCli.js; dist/src/index.js; dist/src/runtime/labExecutionContext.js; dist/src/runtime/packageResource.js; dist/src/runtime/packageRoot.js; examples/token-savings-cases.json. These are Lab product files, not Orchestrator package requirements.
+Target-owned substitute: Orchestrator test:security PASS; npm pack --dry-run --json PASS over all 468 files; actual tarball installed in fresh consumer and CLI init/start/prompt/status passed.
+Equivalence: these checks verify Orchestrator's own package contract, required telemetry/economics runtime modules, package exclusions, binary installation, and runtime behavior. They close the package-content responsibility for this target.
+Residual limitation: Lab's generic overall target verdict remains NOT READY because it applies its own package allowlist; no Orchestrator source/package change is justified. No other responsibility was substituted.
+
+43. RAW CODE-ROT RESULT
+Lab code-rot audit completed against exact target SHA. Exit 1 (configured blocker threshold); 217 issues: blocker 2, high 6, medium 68, low 123, info 18. Confidence: high 6, medium 70, low 141. Raw releaseBlocking 2; implementationBlocking 0; detector errors 0; skipped detectors 0. Raw detector verdict is fail-on threshold breached, not final adjudication.
+
+44. CODE-ROT FINDINGS (ALL HIGH AND RAW RELEASE-BLOCKING ISSUES)
+1) stale-command-reference, high, confidence high, releaseBlocking false: RELEASE_CHECKLIST.md:574 says `npm run security:validate` runs in my-dev-kit-lab. Lab 0.6.0 package.json defines the script. FALSE_POSITIVE: detector checked target package.json rather than the explicitly named Lab package.
+2) stale-command-reference, high, confidence high, releaseBlocking false: RELEASE_CHECKLIST.md:576 `security:deps -- --target`. Defined by Lab 0.6.0. FALSE_POSITIVE for same applicability reason.
+3) stale-command-reference, high, confidence high, releaseBlocking false: RELEASE_CHECKLIST.md:577 `security:package -- --target`. Defined by Lab 0.6.0. FALSE_POSITIVE for same applicability reason.
+4) stale-command-reference, high, confidence high, releaseBlocking false: RELEASE_CHECKLIST.md:578 `security:semgrep -- --target`. Defined by Lab 0.6.0. FALSE_POSITIVE for same applicability reason.
+5) stale-command-reference, high, confidence high, releaseBlocking false: RELEASE_CHECKLIST.md:579 `security:codeql -- --target`. Defined by Lab 0.6.0. FALSE_POSITIVE for same applicability reason.
+6) package-release-rot, high, confidence high, releaseBlocking false: detector expects heading `## [1.5.0]`; CHANGELOG.md has the actual current entry `## v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge`. FALSE_POSITIVE: current release is documented with repository's established heading convention.
+7) package-release-rot, blocker, confidence medium, releaseBlocking true: CHANGELOG.md:766 says v0.2.0 tagged in Git and not published to npm. ACCURATE_HISTORICAL_RECORD: local v0.2.0 Git tag resolves to commit 3cdb19e; npm view @dailephd/my-dev-kit-orchestrator@0.2.0 returns E404. Claim is true; detector missed the explicit negative publication statement.
+8) package-release-rot, blocker, confidence medium, releaseBlocking true: ROADMAP.md:85 says v0.2.0 was not published to npm. ACCURATE_HISTORICAL_RECORD: same Git/npm checks confirm. Detector matched negated wording as an unsupported positive claim.
+
+Manual review of all remaining findings: the 121 historical-version test titles describe version-specific compatibility/regression checks; the 66 commands are examples embedded in target tests, not claims that those scripts belong to this package. Docs-code-mismatch findings are Android/Gradle examples in generated-project guidance, not Orchestrator Gradle build requirements. Dead-code findings are low-confidence candidates, not confirmed release defects. Architecture path finding is illustrative/historical documentation. The single undocumented `test:security` script is a non-blocking documentation-maintenance item. No high or raw release-blocking item describes a current product defect.
+
+45. ADJUDICATED CODE-ROT TOTALS
+TRUE_RELEASE_BLOCKER: 0
+TRUE_NONBLOCKING_MAINTENANCE: 1
+ACCURATE_HISTORICAL_RECORD: 123 (2 historical publication/tag findings plus 121 version-specific test titles)
+FALSE_POSITIVE: 89
+INCONCLUSIVE: 4 low-confidence dead-code candidates; none affects release safety.
+Zero unresolved release blockers and zero release-relevant inconclusive findings.
+
+46. TARGET MUTATION AUDIT
+Starting SHA and ending SHA are both 7728375d4c720feac1a3add57e4877ada83fc9db. git status, git diff, git diff --cached, and git diff --check are clean. Validation tools made no target source, documentation, package, or lockfile changes.
+
+47. REMAINING SECURITY BLOCKERS
+NONE. Lab package-policy findings are documented as an applicability defect with equivalent target-owned evidence.
+
+48. REMAINING CODE-ROT BLOCKERS
+NONE after manual adjudication.
+
+49. REMAINING READINESS BLOCKERS
+NONE.
+
+50. READINESS_REPORT_BRANCH
+validation/v1.6.0-pre-release
+
+51. READINESS_REPORT_COMMIT
+Recorded in the final response after this evidence-only commit is created.
+
+52. READINESS-REPORT CHANGED FILES
+Only docs/reports/v1.6.0-pre-release-readiness.txt.
+
+53. CANDIDATE/REPORT SHA SEPARATION CONFIRMATION
+The validated product candidate is 7728375d4c720feac1a3add57e4877ada83fc9db. The readiness report commit is evidence only and is not a product candidate. Release preparation must branch from VALIDATED_CANDIDATE_SHA.
+
+54. FINAL WORKTREE STATUS
+Clean after evidence commit; evidence branch starts at the exact validated candidate SHA.
+
+55. SCOPE CONFIRMATION
+No source correction; no package bump; no release branch; no PR; no merge; no tag; no GitHub Release; no npm publish.
+
+56. EXACT NEXT ACTION
+PRE-RELEASE READINESS COMPLETE.
+
+VALIDATED_CANDIDATE_SHA:
+7728375d4c720feac1a3add57e4877ada83fc9db
+
+READINESS_REPORT_COMMIT:
+[filled after commit]
+
+NEXT REQUIRED WORKFLOW:
+STANDARDIZED RELEASE PREPARATION FOR v1.6.0.
+
+RELEASE PREPARATION MUST START FROM VALIDATED_CANDIDATE_SHA, NOT FROM THE READINESS REPORT COMMIT.
