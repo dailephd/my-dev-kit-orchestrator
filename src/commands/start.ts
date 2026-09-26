@@ -5,6 +5,7 @@ import { createRun } from '../run';
 import { initWorkspace } from '../workspace';
 import { validateVerificationResponsibility } from '../proofOnly';
 import { SEMANTIC_CONTINUITY_CONTRACT_VERSION } from '../instructions/runSemanticContinuity';
+import { RUN_TELEMETRY_VERSION } from '../runTelemetry';
 import { shouldActivateSemanticContinuity } from '../instructions/semanticContinuityPrompt';
 
 export function makeStartCommand(): Command {
@@ -70,6 +71,10 @@ export function makeStartCommand(): Command {
           targetRepoRoot,
           proofOnly: options.proofOnly,
           verificationResponsibility: options.verificationResponsibility,
+          // v1.6.0: every CLI-created run opts into native run telemetry
+          // through explicit versioned metadata. Batch 1 only establishes the
+          // activation field; no invocation records are written by commands yet.
+          runTelemetryVersion: RUN_TELEMETRY_VERSION,
           // Staged CLI runs are the FULL_STAGE_CONTEXT surface: activation is
           // automatic (no flag) for the semantic-capable modes, and never for
           // greenfield or proof-only. Programmatic createRun() callers that

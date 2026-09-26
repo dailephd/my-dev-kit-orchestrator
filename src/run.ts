@@ -23,6 +23,9 @@ export interface RunMetadata {
   // Explicit, versioned Semantic Continuity activation (v1.5.0 Batch 4).
   // Absent means legacy behavior; never inferred from artifact contents.
   semanticContinuityVersion?: string;
+  // Explicit, versioned run-telemetry activation (v1.6.0 ORC-TELEMETRY).
+  // Absent means legacy (telemetry not required); never inferred from files.
+  runTelemetryVersion?: string;
 }
 
 function sanitizeSlug(input: string): string {
@@ -71,6 +74,10 @@ export function createRun(options: {
   // semantic-capable staged runs, and programmatic callers that omit it create
   // legacy (absent-version) runs.
   semanticContinuityVersion?: string;
+  // Persisted only when explicitly supplied, like semanticContinuityVersion:
+  // createRun() never activates telemetry on its own, so bare/programmatic
+  // callers keep the historical run.json key set.
+  runTelemetryVersion?: string;
 }): RunMetadata {
   const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
   const runId = makeRunId(request, name);
@@ -107,6 +114,7 @@ export function createRun(options: {
     proofOnly: options.proofOnly === true,
     ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
     ...(options.semanticContinuityVersion !== undefined ? { semanticContinuityVersion: options.semanticContinuityVersion } : {}),
+    ...(options.runTelemetryVersion !== undefined ? { runTelemetryVersion: options.runTelemetryVersion } : {}),
   };
 
   fs.writeFileSync(
