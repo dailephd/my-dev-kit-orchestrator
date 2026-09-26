@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import * as path from 'path';
 import packageJson from '../package.json';
+import { VALID_MODES } from './types';
 import { getWorkspaceRoot } from './workspace';
 
 // Native Orchestrator run-telemetry contract (v1.6.0 ORC-TELEMETRY, Batch 1).
@@ -43,11 +44,83 @@ export interface RunTelemetryProducer {
 }
 
 /**
- * Bounded observation payload reserved for later batches. Batch 1 defines it as
- * an empty object; unknown keys are rejected, so later batches must add
- * explicit typed fields rather than free-form metadata.
+ * Terminal command result of a COMPLETED invocation. `state` describes record
+ * completeness only; `outcome` is the command result. A pending record carries
+ * no outcome and none may be inferred from it.
  */
-export type RunTelemetryObservations = Record<string, never>;
+export const RUN_TELEMETRY_OUTCOMES = ['succeeded', 'failed'] as const;
+export type RunTelemetryOutcome = (typeof RUN_TELEMETRY_OUTCOMES)[number];
+
+/** Whether a canonical domain was observed by the recorded command. Absence never means PASS. */
+export const RUN_TELEMETRY_AVAILABILITY = ['observed', 'not-applicable', 'unavailable'] as const;
+export type RunTelemetryAvailability = (typeof RUN_TELEMETRY_AVAILABILITY)[number];
+
+export const RUN_TELEMETRY_PROMPT_KINDS = ['stage', 'correction'] as const;
+export type RunTelemetryPromptKind = (typeof RUN_TELEMETRY_PROMPT_KINDS)[number];
+
+/** Bounded projection of an already-computed RunIntegrityGate result. */
+export interface RunTelemetryIntegrityObservation {
+  availability: RunTelemetryAvailability;
+  runIntegrityReady?: boolean;
+  expectedJudgeVerdict?: string;
+  primaryBlockingCode?: string;
+  recommendedCorrectionStage?: string;
+}
+
+/** Bounded projection of already-computed judge-integrity / final-eligibility results. */
+export interface RunTelemetryJudgeObservation {
+  availability: RunTelemetryAvailability;
+  judgeArtifactPresent?: boolean;
+  verdictParseStatus?: string;
+  authoredVerdict?: string;
+  verdictAccepted?: boolean;
+  correctionRequired?: boolean;
+  correctionBlocked?: boolean;
+  finalReportEligible?: boolean;
+}
+
+/** Point-in-time bounded projection of the existing Semantic Continuity summary. Never a state source. */
+export interface RunTelemetrySemanticContinuityObservation {
+  availability: RunTelemetryAvailability;
+  classification?: string;
+  continuityState?: string;
+  blockingCodeCount?: number;
+  warningCodeCount?: number;
+  criticalResponsibilityCount?: number;
+  noncriticalResponsibilityCount?: number;
+  primaryBlockingCode?: string;
+}
+
+/** Bounded lifecycle facts of a `mark` invocation. The reason text is never stored. */
+export interface RunTelemetryMarkObservation {
+  artifact: string;
+  requestedState: string;
+  resultingState?: string;
+  reasonProvided: boolean;
+}
+
+/**
+ * Bounded observation payload of a completed invocation. Only known typed
+ * fields are accepted; there is no free-form metadata. Prompt bodies, error
+ * text, stack traces, reasons, paths, and token/cost estimates are never stored.
+ */
+export interface RunTelemetryObservations {
+  outcome: RunTelemetryOutcome;
+  mode: string;
+  currentStage?: string;
+  stageIndex?: number;
+  stageCount: number;
+  runStatus?: string;
+  /** Stage actually rendered by `prompt`. */
+  selectedStage?: string;
+  promptKind?: RunTelemetryPromptKind;
+  /** Length in characters (JS string length, the repository's character-budget unit) of the emitted prompt. Not tokens. */
+  promptCharacterCount?: number;
+  mark?: RunTelemetryMarkObservation;
+  integrity?: RunTelemetryIntegrityObservation;
+  judge?: RunTelemetryJudgeObservation;
+  semanticContinuity?: RunTelemetrySemanticContinuityObservation;
+}
 
 export interface RunTelemetryRecord {
   kind: typeof RUN_TELEMETRY_RECORD_KIND;
@@ -63,7 +136,8 @@ export interface RunTelemetryRecord {
   completedAt?: string;
   /** Present only when state is `completed`. Finite, non-negative milliseconds from a monotonic measurement. */
   durationMs?: number;
-  observations: RunTelemetryObservations;
+  /** Empty for a pending record; bounded RunTelemetryObservations for a completed record. */
+  observations: RunTelemetryObservations | Record<string, never>;
 }
 
 // ─── Producer identity ────────────────────────────────────────────────────────
@@ -199,6 +273,7 @@ export type TelemetryDiagnosticCode =
   | 'UNSUPPORTED_TELEMETRY_VERSION'
   | 'UNSUPPORTED_RECORD_KIND'
   | 'UNKNOWN_PROPERTY'
+  | 'INVALID_OBSERVATION'
   | 'RUN_ID_MISMATCH'
   | 'INVOCATION_ID_MISMATCH'
   | 'INVALID_INVOCATION_ID'
@@ -301,11 +376,132 @@ export function parseTelemetryRecord(
     return fail('UNEXPECTED_COMPLETED_FIELD', 'pending record must not carry completedAt or durationMs');
   }
 
-  if (!isPlainObject(value.observations) || Object.keys(value.observations).length > 0) {
-    return fail('UNKNOWN_PROPERTY', 'observations must be an empty object in telemetry schema 1.0.0 (Batch 1)');
+  if (!isPlainObject(value.observations)) return fail('INVALID_OBSERVATION', 'observations must be an object');
+  if (value.state === 'pending') {
+    if (Object.keys(value.observations).length > 0) return fail('UNKNOWN_PROPERTY', 'a pending record must carry empty observations');
+  } else {
+    const problem = validateObservations(value.observations);
+    if (problem !== undefined) return fail(problem.code, problem.message);
   }
 
   return { ok: true, record: value as unknown as RunTelemetryRecord };
+}
+
+// ─── Observation validation ───────────────────────────────────────────────────
+
+// Stage names, artifact basenames, codes, and enums: short stable tokens only.
+const TOKEN_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const MAX_COUNT = 1_000_000_000;
+
+interface ObjectSpec {
+  fields: Record<string, FieldSpec>;
+  required: readonly string[];
+}
+type FieldSpec = 'token' | 'boolean' | 'count' | readonly string[] | ObjectSpec;
+interface ObservationProblem {
+  code: TelemetryDiagnosticCode;
+  message: string;
+}
+
+// Insertion order below is the canonical serialization order.
+const OBSERVATION_SPEC: ObjectSpec = {
+  required: ['outcome', 'mode', 'stageCount'],
+  fields: {
+    outcome: RUN_TELEMETRY_OUTCOMES,
+    mode: VALID_MODES as readonly string[],
+    currentStage: 'token',
+    stageIndex: 'count',
+    stageCount: 'count',
+    runStatus: 'token',
+    selectedStage: 'token',
+    promptKind: RUN_TELEMETRY_PROMPT_KINDS,
+    promptCharacterCount: 'count',
+    mark: {
+      required: ['artifact', 'requestedState', 'reasonProvided'],
+      fields: { artifact: 'token', requestedState: 'token', resultingState: 'token', reasonProvided: 'boolean' },
+    },
+    integrity: {
+      required: ['availability'],
+      fields: {
+        availability: RUN_TELEMETRY_AVAILABILITY,
+        runIntegrityReady: 'boolean',
+        expectedJudgeVerdict: 'token',
+        primaryBlockingCode: 'token',
+        recommendedCorrectionStage: 'token',
+      },
+    },
+    judge: {
+      required: ['availability'],
+      fields: {
+        availability: RUN_TELEMETRY_AVAILABILITY,
+        judgeArtifactPresent: 'boolean',
+        verdictParseStatus: 'token',
+        authoredVerdict: 'token',
+        verdictAccepted: 'boolean',
+        correctionRequired: 'boolean',
+        correctionBlocked: 'boolean',
+        finalReportEligible: 'boolean',
+      },
+    },
+    semanticContinuity: {
+      required: ['availability'],
+      fields: {
+        availability: RUN_TELEMETRY_AVAILABILITY,
+        classification: 'token',
+        continuityState: 'token',
+        blockingCodeCount: 'count',
+        warningCodeCount: 'count',
+        criticalResponsibilityCount: 'count',
+        noncriticalResponsibilityCount: 'count',
+        primaryBlockingCode: 'token',
+      },
+    },
+  },
+};
+
+export function isTelemetryToken(value: unknown): value is string {
+  return typeof value === 'string' && TOKEN_PATTERN.test(value);
+}
+
+function checkField(spec: FieldSpec, value: unknown, name: string): ObservationProblem | undefined {
+  const bad = (message: string): ObservationProblem => ({ code: 'INVALID_OBSERVATION', message });
+  if (spec === 'token') return typeof value === 'string' && TOKEN_PATTERN.test(value) ? undefined : bad(`${name} must be a bounded token`);
+  if (spec === 'boolean') return typeof value === 'boolean' ? undefined : bad(`${name} must be a boolean`);
+  if (spec === 'count') {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_COUNT
+      ? undefined
+      : bad(`${name} must be a bounded non-negative integer`);
+  }
+  if (Array.isArray(spec)) return (spec as readonly unknown[]).includes(value) ? undefined : bad(`${name} is not an allowed value`);
+  return checkObject(spec as ObjectSpec, value, name);
+}
+
+function checkObject(spec: ObjectSpec, value: unknown, name: string): ObservationProblem | undefined {
+  if (!isPlainObject(value)) return { code: 'INVALID_OBSERVATION', message: `${name} must be an object` };
+  const unknown = Object.keys(value).filter((key) => !(key in spec.fields)).sort();
+  if (unknown.length > 0) return { code: 'UNKNOWN_PROPERTY', message: `Unknown observation property: ${name}.${unknown[0]}` };
+  for (const key of spec.required) {
+    if (value[key] === undefined) return { code: 'INVALID_OBSERVATION', message: `${name}.${key} is required` };
+  }
+  for (const key of Object.keys(value)) {
+    const problem = checkField(spec.fields[key], value[key], `${name}.${key}`);
+    if (problem) return problem;
+  }
+  return undefined;
+}
+
+function validateObservations(value: Record<string, unknown>): ObservationProblem | undefined {
+  return checkObject(OBSERVATION_SPEC, value, 'observations');
+}
+
+function orderBySpec(value: unknown, spec: FieldSpec): unknown {
+  if (typeof spec === 'string' || Array.isArray(spec) || !isPlainObject(value)) return value;
+  const fields = (spec as ObjectSpec).fields;
+  const ordered: Record<string, unknown> = {};
+  for (const key of Object.keys(fields)) {
+    if (value[key] !== undefined) ordered[key] = orderBySpec(value[key], fields[key]);
+  }
+  return ordered;
 }
 
 /** Deterministic ordering: startedAt ascending, then invocationId (code-point order). Not a causal order. */
@@ -329,6 +525,6 @@ export function serializeTelemetryRecord(record: RunTelemetryRecord): string {
   };
   if (record.completedAt !== undefined) ordered.completedAt = record.completedAt;
   if (record.durationMs !== undefined) ordered.durationMs = record.durationMs;
-  ordered.observations = {};
+  ordered.observations = orderBySpec(record.observations, OBSERVATION_SPEC);
   return `${JSON.stringify(ordered, null, 2)}\n`;
 }

@@ -12,6 +12,11 @@ import {
 import { resolveArtifactState } from '../artifactLifecycle';
 import { evaluateRunIntegrityGate, isRunIntegrityBlockedArtifactFile } from '../runIntegrityGate';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
+import {
+  TelemetryCanonicalResults,
+  beginTelemetryInvocation,
+  projectCanonicalObservations,
+} from '../runTelemetryObservation';
 
 function resolveArtifactKey(
   artifactName: string,
@@ -113,6 +118,19 @@ export function makeMarkCommand(): Command {
           process.exit(1);
         }
 
+        // v1.6.0 telemetry: pending record before the gate/lifecycle work.
+        // Legacy runs are unaffected. Only bounded facts are recorded; the
+        // --reason text is never persisted.
+        const telemetry = beginTelemetryInvocation(meta, 'mark');
+        const markObservation = {
+          artifact: path.basename(artifactKey),
+          requestedState: state,
+          reasonProvided: options.reason !== undefined && options.reason !== '',
+        };
+        // Canonical results this command actually computes; unset domains are
+        // reported as unavailable rather than evaluated for telemetry.
+        const canonicalResults: TelemetryCanonicalResults = {};
+
         // Canonical run-integrity gate (v1.2.3 Batch 2 / invariant 6.3) and
         // final-report eligibility (v1.2.3 Batch 3 / invariant 10.2):
         // manual completion must never override machine readiness or an
@@ -149,6 +167,9 @@ export function makeMarkCommand(): Command {
             proofOnly: meta.proofOnly === true,
             verificationResponsibility: meta.verificationResponsibility,
           });
+          canonicalResults.gate = gate;
+          canonicalResults.judge = judgeIntegrity;
+          canonicalResults.finalReportEligible = finalReportEligibility.eligible;
           if (isRunIntegrityBlockedArtifactFile(gate, meta.stages, artifactKey, finalReportEligibility.eligible)) {
             const isFinalReport = path.basename(artifactKey) === 'final-report.txt';
             if (isFinalReport) {
@@ -192,6 +213,8 @@ export function makeMarkCommand(): Command {
                 `before marking this artifact complete.`,
               );
             }
+            // Handled rejection: finalize telemetry first, preserve exit code.
+            telemetry.fail({ ...projectCanonicalObservations(canonicalResults), mark: markObservation });
             process.exit(1);
           }
         }
@@ -200,6 +223,7 @@ export function makeMarkCommand(): Command {
           reason: options.reason,
         });
 
+        let resultingState: string | undefined;
         // Warn if marking complete but file is missing
         if (state === 'complete') {
           const stateFile = readArtifactStateFile(meta.runFolder);
@@ -209,6 +233,7 @@ export function makeMarkCommand(): Command {
             meta.stages,
             stateFile,
           );
+          resultingState = effectiveState;
           if (effectiveState === 'missing') {
             console.warn(
               `Warning: "${path.basename(artifactKey)}" was marked complete but the artifact file does not exist.\n` +
@@ -223,6 +248,10 @@ export function makeMarkCommand(): Command {
           `Marked ${path.basename(artifactKey)} as ${state}${reasonMsg}\n` +
           `Run: ${meta.runId}`,
         );
+        telemetry.succeed({
+          ...projectCanonicalObservations(canonicalResults),
+          mark: { ...markObservation, ...(resultingState !== undefined ? { resultingState } : {}) },
+        });
       },
     );
   return cmd;

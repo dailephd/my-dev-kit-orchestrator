@@ -17,6 +17,7 @@ import { evaluateRunIntegrityGate, evaluateStageRunIntegrity, RunIntegrityGateRe
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility } from '../judgeIntegrity';
 import { StageDefinition } from '../workflows';
 import { generateCorrectionPrompt } from '../promptGenerator';
+import { beginTelemetryInvocation, projectCanonicalObservations } from '../runTelemetryObservation';
 
 // A stage blocked by Semantic Continuity renders semantic correction guidance
 // (or an external-resolution notice), never the generic "document the blocker
@@ -101,6 +102,15 @@ export function makePromptCommand(): Command {
         }
       }
 
+      // v1.6.0 telemetry: pending record is created before the rendering work
+      // whose interruption should be observable. Legacy runs are unaffected.
+      const telemetry = beginTelemetryInvocation(meta, 'prompt');
+      // Handled failure: finalize telemetry first, then preserve the exit code.
+      const exitFailed = (): never => {
+        telemetry.fail();
+        return process.exit(1);
+      };
+
       const stateFile = readArtifactStateFile(meta.runFolder);
       // Canonical run-integrity gate (v1.2.3 Batch 2): computed once per
       // invocation from Batch 1's corrected readiness evidence, and used for
@@ -131,13 +141,19 @@ export function makePromptCommand(): Command {
         proofOnly: meta.proofOnly === true,
         verificationResponsibility: meta.verificationResponsibility,
       });
+      // Bounded copies of the results above; no evaluator is run for telemetry.
+      const canonical = projectCanonicalObservations({
+        gate,
+        judge: judgeIntegrity,
+        finalReportEligible: finalReportEligibility.eligible,
+      });
 
       if (stage) {
         const stageExists = meta.stages.some((s) => s.name === stage);
         if (!stageExists) {
           const available = meta.stages.map((s) => s.name).join(', ');
           console.error(`Error: stage "${stage}" does not exist in ${meta.mode} workflow.\nAvailable stages: ${available}`);
-          process.exit(1);
+          exitFailed();
         }
 
         const missingPrior = getMissingPriorArtifacts(meta, stage);
@@ -148,7 +164,7 @@ export function makePromptCommand(): Command {
             `\n\nReturn to the stage that produces the missing artifact before continuing.\n` +
             `Next missing stage: ${getNextStage(meta)?.name ?? 'none'}`
           );
-          process.exit(1);
+          exitFailed();
         }
 
         const stageObj = meta.stages.find((s) => s.name === stage)!;
@@ -157,10 +173,12 @@ export function makePromptCommand(): Command {
 
         try {
           const promptText = generateLiveStagePrompt(meta, stage, gate);
-          process.stdout.write(lifecycleBlock + promptText);
+          const emitted = lifecycleBlock + promptText;
+          process.stdout.write(emitted);
+          telemetry.succeed({ ...canonical, selectedStage: stage, promptKind: 'stage', promptCharacterCount: emitted.length });
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);
-          process.exit(1);
+          exitFailed();
         }
       } else {
         if (isRunCompleteWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible)) {
@@ -177,6 +195,7 @@ export function makePromptCommand(): Command {
               `To inspect run status:\n  my-dev-kit-orchestrator status`
             );
           }
+          telemetry.succeed(canonical);
           return;
         }
 
@@ -190,9 +209,15 @@ export function makePromptCommand(): Command {
           try {
             const correctionPrompt = generateCorrectionPrompt(meta, judgeIntegrity.acceptedCorrectionRoute);
             process.stdout.write(correctionPrompt);
+            telemetry.succeed({
+              ...canonical,
+              selectedStage: judgeIntegrity.acceptedCorrectionRoute.routedStage ?? undefined,
+              promptKind: 'correction',
+              promptCharacterCount: correctionPrompt.length,
+            });
           } catch (err) {
             console.error(`Error generating correction prompt: ${(err as Error).message}`);
-            process.exit(1);
+            exitFailed();
           }
           return;
         }
@@ -205,12 +230,14 @@ export function makePromptCommand(): Command {
             `Inspect the judge report:\n  ${meta.runFolder}/artifacts/judge-report.txt\n\n` +
             `To inspect run status:\n  my-dev-kit-orchestrator status`
           );
+          telemetry.succeed(canonical);
           return;
         }
 
         const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
         if (!nextStage) {
           console.log('No missing stage artifact remains.');
+          telemetry.succeed(canonical);
           return;
         }
 
@@ -219,10 +246,12 @@ export function makePromptCommand(): Command {
 
         try {
           const promptText = generateLiveStagePrompt(meta, nextStage.name, gate);
-          process.stdout.write(lifecycleBlock + promptText);
+          const emitted = lifecycleBlock + promptText;
+          process.stdout.write(emitted);
+          telemetry.succeed({ ...canonical, selectedStage: nextStage.name, promptKind: 'stage', promptCharacterCount: emitted.length });
         } catch (err) {
           console.error(`Error generating prompt: ${(err as Error).message}`);
-          process.exit(1);
+          exitFailed();
         }
       }
     });

@@ -7,6 +7,7 @@ import {
   RUN_TELEMETRY_VERSION,
   RunTelemetryActivation,
   RunTelemetryCommand,
+  RunTelemetryObservations,
   RunTelemetryRecord,
   TelemetryDiagnostic,
   compareTelemetryRecords,
@@ -208,6 +209,8 @@ export interface CompleteInvocationInput {
   completedAt?: string;
   /** Finite non-negative milliseconds from a monotonic measurement. */
   durationMs: number;
+  /** Bounded terminal observations (must include outcome, mode, stageCount). */
+  observations: RunTelemetryObservations;
 }
 
 export interface CompletedInvocationResult extends WrittenTelemetryRecord {
@@ -242,7 +245,7 @@ export function completeInvocation(
       startedAt: pending.startedAt,
       completedAt,
       durationMs: completion.durationMs,
-      observations: {},
+      observations: completion.observations,
     };
     const parsed = parseTelemetryRecord(record);
     if (!parsed.ok) return failure('INVALID_INPUT', parsed.diagnostics[0].message);

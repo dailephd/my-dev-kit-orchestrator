@@ -22,6 +22,8 @@ import {
   readRunTelemetryRecords,
 } from '../src/runTelemetryStore';
 
+const OBS = { outcome: 'succeeded', mode: 'feature', stageCount: 5 } as const;
+
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-telemetry-store-'));
 }
@@ -142,7 +144,7 @@ describe('completion', () => {
       const other = ok(createPendingInvocation(tmp, { runId: RUN, command: 'mark', startedAt: '2026-01-01T00:00:01.000Z' }));
       const otherBytes = fs.readFileSync(other.path, 'utf8');
 
-      const done = ok(completeInvocation(tmp, a.record, { completedAt: '2026-01-01T00:00:02.000Z', durationMs: 42.5 }));
+      const done = ok(completeInvocation(tmp, a.record, { observations: OBS, completedAt: '2026-01-01T00:00:02.000Z', durationMs: 42.5 }));
       expect(done.pendingRemoved).toBe(true);
       expect(done.path).toBe(getCompletedRecordPath(tmp, RUN, a.record.invocationId));
       expect(fs.existsSync(a.path)).toBe(false);
@@ -161,9 +163,9 @@ describe('completion', () => {
   it('never overwrites a completed record and keeps its bytes; the same invocation cannot complete twice', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt' }));
-      const first = ok(completeInvocation(tmp, p.record, { durationMs: 1 }));
+      const first = ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1 }));
       const bytes = fs.readFileSync(first.path, 'utf8');
-      const second = completeInvocation(tmp, p.record, { durationMs: 999 });
+      const second = completeInvocation(tmp, p.record, { observations: OBS, durationMs: 999 });
       expect(second.ok).toBe(false);
       if (!second.ok) expect(second.error.code).toBe('INVOCATION_COLLISION');
       expect(fs.readFileSync(first.path, 'utf8')).toBe(bytes);
@@ -174,10 +176,10 @@ describe('completion', () => {
   it('a failed completion leaves the pending record in place', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt' }));
-      ok(completeInvocation(tmp, p.record, { durationMs: 1 }));
+      ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1 }));
       // Recreate a stale pending copy, then fail completion by collision.
       fs.writeFileSync(p.path, serializeTelemetryRecord(p.record), 'utf8');
-      const again = completeInvocation(tmp, p.record, { durationMs: 2 });
+      const again = completeInvocation(tmp, p.record, { observations: OBS, durationMs: 2 });
       expect(again.ok).toBe(false);
       expect(fs.existsSync(p.path)).toBe(true);
     });
@@ -187,12 +189,12 @@ describe('completion', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt' }));
       for (const durationMs of [-1, NaN, Infinity]) {
-        const r = completeInvocation(tmp, p.record, { durationMs });
+        const r = completeInvocation(tmp, p.record, { observations: OBS, durationMs });
         expect(r.ok).toBe(false);
       }
-      expect(completeInvocation(tmp, p.record, { durationMs: 1, completedAt: 'later' }).ok).toBe(false);
-      const done = ok(completeInvocation(tmp, p.record, { durationMs: 1 }));
-      const notPending = completeInvocation(tmp, done.record, { durationMs: 1 });
+      expect(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1, completedAt: 'later' }).ok).toBe(false);
+      const done = ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1 }));
+      const notPending = completeInvocation(tmp, done.record, { observations: OBS, durationMs: 1 });
       expect(notPending.ok).toBe(false);
       if (!notPending.ok) expect(notPending.error.code).toBe('INVALID_INPUT');
       expect(fs.existsSync(getCompletedDir(tmp, RUN))).toBe(true);
@@ -203,7 +205,7 @@ describe('completion', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'start' }));
       fs.unlinkSync(p.path);
-      const done = ok(completeInvocation(tmp, p.record, { durationMs: 3 }));
+      const done = ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 3 }));
       expect(done.pendingRemoved).toBe(false);
     });
   });
@@ -248,7 +250,7 @@ describe('reader', () => {
       startedAt: '2026-01-01T00:00:00.000Z',
       completedAt: '2026-01-01T00:00:01.000Z',
       durationMs: 5,
-      observations: {},
+      observations: OBS,
       ...overrides,
     };
     writeRaw(getCompletedDir(tmp, RUN), `${id}.json`, JSON.stringify(body));
@@ -296,12 +298,12 @@ describe('reader', () => {
     ['negative duration', (tmp) => { validCompleted(tmp, { durationMs: -5 }); }, 'INVALID_DURATION'],
     ['completed missing completedAt', (tmp) => {
       const id = generateInvocationId();
-      const body = { kind: 'my-dev-kit-orchestrator/run-telemetry-invocation', schemaVersion: '1.0.0', producer: { name: 'p', version: '1' }, runId: RUN, invocationId: id, command: 'prompt', state: 'completed', startedAt: '2026-01-01T00:00:00.000Z', durationMs: 1, observations: {} };
+      const body = { kind: 'my-dev-kit-orchestrator/run-telemetry-invocation', schemaVersion: '1.0.0', producer: { name: 'p', version: '1' }, runId: RUN, invocationId: id, command: 'prompt', state: 'completed', startedAt: '2026-01-01T00:00:00.000Z', durationMs: 1, observations: OBS };
       writeRaw(getCompletedDir(tmp, RUN), `${id}.json`, JSON.stringify(body));
     }, 'MISSING_COMPLETED_FIELD'],
     ['pending record claiming completed state', (tmp) => {
       const id = generateInvocationId();
-      const body = { kind: 'my-dev-kit-orchestrator/run-telemetry-invocation', schemaVersion: '1.0.0', producer: { name: 'p', version: '1' }, runId: RUN, invocationId: id, command: 'prompt', state: 'completed', startedAt: '2026-01-01T00:00:00.000Z', completedAt: '2026-01-01T00:00:01.000Z', durationMs: 1, observations: {} };
+      const body = { kind: 'my-dev-kit-orchestrator/run-telemetry-invocation', schemaVersion: '1.0.0', producer: { name: 'p', version: '1' }, runId: RUN, invocationId: id, command: 'prompt', state: 'completed', startedAt: '2026-01-01T00:00:00.000Z', completedAt: '2026-01-01T00:00:01.000Z', durationMs: 1, observations: OBS };
       writeRaw(getPendingDir(tmp, RUN), `${id}.json`, JSON.stringify(body));
     }, 'STATE_LOCATION_MISMATCH'],
     ['completed record claiming pending state', (tmp) => {
@@ -340,7 +342,7 @@ describe('reader', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt' }));
       const pendingBytes = fs.readFileSync(p.path, 'utf8');
-      ok(completeInvocation(tmp, p.record, { durationMs: 7 }));
+      ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 7 }));
       fs.writeFileSync(p.path, pendingBytes, 'utf8'); // simulate crash before pending removal
       const view = readRunTelemetry(activeRun(tmp));
       expect(view.records).toHaveLength(1);
@@ -377,7 +379,7 @@ describe('reader', () => {
       try {
         for (const item of order) {
           const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt', invocationId: item.id, startedAt: item.at }));
-          if (item.id.startsWith('inv-a') || item.id.startsWith('inv-0')) ok(completeInvocation(tmp, p.record, { durationMs: 1, completedAt: '2026-01-01T00:01:00.000Z' }));
+          if (item.id.startsWith('inv-a') || item.id.startsWith('inv-0')) ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1, completedAt: '2026-01-01T00:01:00.000Z' }));
         }
         return readRunTelemetry(activeRun(tmp)).records.map((r) => `${r.invocationId}:${r.state}`);
       } finally {
@@ -397,7 +399,7 @@ describe('reader', () => {
   it('reading never modifies telemetry files', () => {
     withTmp((tmp) => {
       const p = ok(createPendingInvocation(tmp, { runId: RUN, command: 'prompt' }));
-      ok(completeInvocation(tmp, p.record, { durationMs: 1 }));
+      ok(completeInvocation(tmp, p.record, { observations: OBS, durationMs: 1 }));
       ok(createPendingInvocation(tmp, { runId: RUN, command: 'mark' }));
       const before = hashTree(getTelemetryRoot(tmp));
       readRunTelemetry(activeRun(tmp));

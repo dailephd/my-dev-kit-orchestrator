@@ -5,7 +5,8 @@ import { createRun } from '../run';
 import { initWorkspace } from '../workspace';
 import { validateVerificationResponsibility } from '../proofOnly';
 import { SEMANTIC_CONTINUITY_CONTRACT_VERSION } from '../instructions/runSemanticContinuity';
-import { RUN_TELEMETRY_VERSION } from '../runTelemetry';
+import { RUN_TELEMETRY_VERSION, nowUtcIso, startMonotonicTimer } from '../runTelemetry';
+import { beginTelemetryInvocation } from '../runTelemetryObservation';
 import { shouldActivateSemanticContinuity } from '../instructions/semanticContinuityPrompt';
 
 export function makeStartCommand(): Command {
@@ -22,6 +23,10 @@ export function makeStartCommand(): Command {
     .option('--proof-only', 'declare this run as verification-only with no implementation changed surface')
     .option('--verification-responsibility <path>', 'run-relative proof evidence file (required with --proof-only)')
     .action((request: string, options: { mode: string; root?: string; name?: string; outputDir?: string; source?: string; target?: string; proofOnly?: boolean; verificationResponsibility?: string }) => {
+      // Anchors for the recorded interaction, captured at command entry.
+      const telemetryTimer = startMonotonicTimer();
+      const telemetryStartedAt = nowUtcIso();
+
       if (!isValidMode(options.mode)) {
         console.error(`Error: invalid mode "${options.mode}". Allowed values: ${VALID_MODES.join(', ')}`);
         process.exit(1);
@@ -72,8 +77,8 @@ export function makeStartCommand(): Command {
           proofOnly: options.proofOnly,
           verificationResponsibility: options.verificationResponsibility,
           // v1.6.0: every CLI-created run opts into native run telemetry
-          // through explicit versioned metadata. Batch 1 only establishes the
-          // activation field; no invocation records are written by commands yet.
+          // through explicit versioned metadata; the start interaction itself
+          // is recorded below once a run (and so a run identity) exists.
           runTelemetryVersion: RUN_TELEMETRY_VERSION,
           // Staged CLI runs are the FULL_STAGE_CONTEXT surface: activation is
           // automatic (no flag) for the semantic-capable modes, and never for
@@ -97,6 +102,9 @@ export function makeStartCommand(): Command {
         }
         lines.push(`\nNext:\n  my-dev-kit-orchestrator prompt`);
         console.log(lines.join(''));
+        // Telemetry is recorded only after a run exists, from the entry anchors.
+        // It is non-blocking and never changes start output or exit behavior.
+        beginTelemetryInvocation(meta, 'start', { timer: telemetryTimer, startedAt: telemetryStartedAt }).succeed();
       } catch (err) {
         console.error(`Error: ${(err as Error).message}`);
         process.exit(1);

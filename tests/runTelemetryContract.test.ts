@@ -23,6 +23,7 @@ import {
   serializeTelemetryRecord,
   startMonotonicTimer,
 } from '../src/runTelemetry';
+import { readRunTelemetryRecords } from '../src/runTelemetryStore';
 import { runCli } from './cliTestHelpers';
 
 function tmpDir(): string {
@@ -47,7 +48,7 @@ function pending(overrides: Record<string, unknown> = {}): Record<string, unknow
 }
 
 function completed(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return pending({ state: 'completed', completedAt: '2026-01-02T03:04:06.000Z', durationMs: 12.5, ...overrides });
+  return pending({ state: 'completed', completedAt: '2026-01-02T03:04:06.000Z', durationMs: 12.5, observations: { outcome: 'succeeded', mode: 'feature', stageCount: 5 }, ...overrides });
 }
 
 describe('run metadata activation compatibility (runTelemetryVersion)', () => {
@@ -75,7 +76,7 @@ describe('run metadata activation compatibility (runTelemetryVersion)', () => {
     }
   });
 
-  it('the start command activates telemetry, but writes no telemetry records yet', () => {
+  it('the start command activates telemetry and records exactly one completed start invocation', () => {
     const tmp = tmpDir();
     try {
       runCli(['start', 'a request', '--root', tmp]);
@@ -83,7 +84,8 @@ describe('run metadata activation compatibility (runTelemetryVersion)', () => {
       const [runId] = fs.readdirSync(runsDir);
       const persisted = JSON.parse(fs.readFileSync(path.join(runsDir, runId, 'run.json'), 'utf8'));
       expect(persisted.runTelemetryVersion).toBe('1.0.0');
-      expect(fs.existsSync(getTelemetryRoot(tmp))).toBe(false);
+      const view = readRunTelemetryRecords(tmp, runId);
+      expect(view.ok && view.value.records.map((r) => [r.command, r.state])).toEqual([['start', 'completed']]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -257,5 +259,56 @@ describe('record validator', () => {
     for (const permutation of [[a, b, c], [c, b, a], [b, c, a], [a, c, b]]) {
       expect([...permutation].sort(compareTelemetryRecords).map((r) => r.invocationId)).toEqual(expected);
     }
+  });
+});
+
+describe('completed observation contract', () => {
+  const OBS = { outcome: 'succeeded', mode: 'feature', stageCount: 5 };
+  const code = (observations: unknown): string | undefined => {
+    const result = parseTelemetryRecord(completed({ observations }));
+    return result.ok ? undefined : result.diagnostics[0].code;
+  };
+
+  it('requires outcome, mode, and stageCount on a completed record', () => {
+    expect(code(OBS)).toBeUndefined();
+    expect(code({})).toBe('INVALID_OBSERVATION');
+    expect(code({ outcome: 'succeeded', mode: 'feature' })).toBe('INVALID_OBSERVATION');
+  });
+
+  it('accepts every bounded domain', () => {
+    expect(code({
+      ...OBS, currentStage: 'request-brief', stageIndex: 0, runStatus: 'created', selectedStage: 'request-brief', promptKind: 'stage', promptCharacterCount: 1234,
+      mark: { artifact: 'request-brief.txt', requestedState: 'complete', resultingState: 'complete', reasonProvided: false },
+      integrity: { availability: 'observed', runIntegrityReady: true, expectedJudgeVerdict: 'PASS', primaryBlockingCode: 'SOME_CODE', recommendedCorrectionStage: 'implementation' },
+      judge: { availability: 'observed', judgeArtifactPresent: false, verdictParseStatus: 'missing-artifact', verdictAccepted: true, correctionRequired: false, correctionBlocked: false, finalReportEligible: false },
+      semanticContinuity: { availability: 'observed', classification: 'ready', continuityState: 'satisfied', blockingCodeCount: 0, warningCodeCount: 1, criticalResponsibilityCount: 2, noncriticalResponsibilityCount: 0 },
+    })).toBeUndefined();
+  });
+
+  it.each([
+    ['unknown key (free-form metadata)', { ...OBS, note: 'x' }, 'UNKNOWN_PROPERTY'],
+    ['unknown nested key', { ...OBS, mark: { artifact: 'a', requestedState: 'complete', reasonProvided: true, reason: 'text' } }, 'UNKNOWN_PROPERTY'],
+    ['token/cost estimate keys', { ...OBS, estimatedTokens: 5 }, 'UNKNOWN_PROPERTY'],
+    ['bad outcome', { ...OBS, outcome: 'ok' }, 'INVALID_OBSERVATION'],
+    ['bad mode', { ...OBS, mode: 'other' }, 'INVALID_OBSERVATION'],
+    ['bad availability', { ...OBS, integrity: { availability: 'maybe' } }, 'INVALID_OBSERVATION'],
+    ['negative count', { ...OBS, promptCharacterCount: -1 }, 'INVALID_OBSERVATION'],
+    ['fractional count', { ...OBS, stageCount: 1.5 }, 'INVALID_OBSERVATION'],
+    ['path-like token', { ...OBS, currentStage: '../etc/passwd' }, 'INVALID_OBSERVATION'],
+    ['oversized token', { ...OBS, currentStage: 'a'.repeat(200) }, 'INVALID_OBSERVATION'],
+    ['multiline token', { ...OBS, selectedStage: 'a\nb' }, 'INVALID_OBSERVATION'],
+    ['non-object', 5, 'INVALID_OBSERVATION'],
+  ])('rejects %s', (_name, observations, expected) => {
+    expect(code(observations)).toBe(expected);
+  });
+
+  it('a pending record cannot carry an outcome', () => {
+    const result = parseTelemetryRecord(pending({ observations: OBS }));
+    expect(result.ok).toBe(false);
+  });
+
+  it('serializes observations in canonical key order', () => {
+    const parsed = parseTelemetryRecord(completed({ observations: { stageCount: 5, mode: 'feature', outcome: 'failed' } })) as { ok: true; record: RunTelemetryRecord };
+    expect(Object.keys(JSON.parse(serializeTelemetryRecord(parsed.record)).observations)).toEqual(['outcome', 'mode', 'stageCount']);
   });
 });
