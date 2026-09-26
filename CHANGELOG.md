@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased - Workflow Economics and Deterministic Run Telemetry
+## Unreleased
 
-This section describes implemented, unpublished changes. It has no release date, and package metadata remains `1.5.0`.
+## v1.6.0 - Workflow Economics and Deterministic Run Telemetry
+
+Release date: 2026-09-26.
 
 ### Added
 

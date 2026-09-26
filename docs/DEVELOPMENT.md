@@ -226,7 +226,7 @@ Important implementation files:
 
 ### Run telemetry and Workflow Economics ownership
 
-Contributors extending the unpublished `v1.6.0` source should preserve this ownership direction (policy owner -> observation projector -> telemetry contract/store; never the reverse):
+Contributors extending the `v1.6.0` source should preserve this ownership direction (policy owner -> observation projector -> telemetry contract/store; never the reverse):
 
 - `src/runTelemetry.ts`: contract, constants, identity, path ownership, the one record validator, and the bounded observation contract
 - `src/runTelemetryStore.ts`: exclusive-create persistence and the one reader (`readRunTelemetry`)

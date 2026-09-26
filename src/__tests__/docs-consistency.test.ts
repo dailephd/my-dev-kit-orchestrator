@@ -163,15 +163,17 @@ describe('v1.6.0 telemetry facts (isolated fixture)', () => {
     }
   });
 
-  it('keeps v1.6.0 implemented-but-unpublished: no published wording and an Unreleased changelog section', () => {
-    const published = makeFixture();
-    mutate(published, 'docs/ROADMAP.md', (content) => content.replace('Status: implementation complete; release pending.', 'Status: Released as `1.6.0`.'));
-    const result = run(published);
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain('[UNPUBLISHED_VERSION_PUBLISHED_CLAIM]');
+  it('requires v1.6.0 current-release wording and a dated finalized changelog section', () => {
+    const transitional = makeFixture();
+    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.6.0 is not yet published.\n`);
+    expect(run(transitional).stderr).toContain('[CURRENT_RELEASE_STATUS_CONTRADICTION]');
 
-    const noChangelog = makeFixture();
-    mutate(noChangelog, 'CHANGELOG.md', (content) => content.replace('## Unreleased - ', '## Draft - '));
-    expect(run(noChangelog).stderr).toContain('[UNRELEASED_CHANGELOG_SECTION_MISSING]');
+    const missingHeading = makeFixture();
+    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## Draft - '));
+    expect(run(missingHeading).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
+
+    const missingDate = makeFixture();
+    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace('Release date: 2026-09-26.\n', ''));
+    expect(run(missingDate).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
   });
 });

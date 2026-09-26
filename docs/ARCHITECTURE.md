@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.5.0`, which ships Semantic Continuity alongside
-the prior greenfield, integrity, and instruction-bootstrap contracts,
+The current release is `v1.6.0`, which ships native run telemetry and
+Workflow Economics alongside `v1.5.0`'s Semantic Continuity and the prior
+greenfield, integrity, and instruction-bootstrap contracts,
 `v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
 readiness, explicit proof-only verification, and the bounded Observer v0.6
 consumer. Architecture is organized by current responsibility rather than by

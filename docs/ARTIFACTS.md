@@ -25,7 +25,7 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
   reports/
 ```
 
-In the unpublished `v1.6.0` source, new CLI-created runs also persist `runTelemetryVersion: "1.0.0"`. Native run telemetry is workspace-level operational evidence and is stored beside `runs/`, never inside a run directory:
+In `v1.6.0`, new CLI-created runs also persist `runTelemetryVersion: "1.0.0"`. Native run telemetry is workspace-level operational evidence and is stored beside `runs/`, never inside a run directory:
 
 ```text
 .my-dev-kit-orchestrator/

@@ -3,14 +3,14 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.5.0`
-- Current release: `v1.5.0`
-- Release date: `2026-09-25`
+- Package metadata version: `1.6.0`
+- Current release: `v1.6.0`
+- Release date: `2026-09-26`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.5.0`
-- Latest Git tag and GitHub Release: `v1.5.0`
+- Latest npm version: `1.6.0`
+- Latest Git tag and GitHub Release: `v1.6.0`
 
-Package metadata, npm, the `v1.5.0` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.6.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -24,9 +24,9 @@ modes, 79 native stages, 13 greenfield stages, and four starter profiles
 remain unchanged; no package, dependency, export, or core retrieval-engine
 change was required.
 
-## Current release: Semantic Continuity
+## Previous release: Semantic Continuity
 
-`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, is the current release. It ships the following behavior:
+`v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, shipped the following behavior:
 
 Implemented behavior:
 
@@ -39,9 +39,9 @@ Implemented behavior:
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
-## Implemented but unpublished
+## Current release: Workflow Economics and Deterministic Run Telemetry
 
-`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is implemented on the feature branch and is not published. Package metadata stays `1.5.0`, and no tag, GitHub Release, or npm version exists for it. It is documented here as current source behavior, not as a release; users of the published `1.5.0` package do not have it.
+`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is the current release.
 
 Implemented behavior:
 
@@ -55,8 +55,6 @@ Implemented behavior:
 
 Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
-Remaining before any publication: the separately authorized pre-release readiness, cross-platform, security-validation, and release-preparation workflows. None of those is claimed as done here.
-
 ## Implemented operational surface
 
 The CLI has eight commands: `init`, `start`, `prompt`, `status`, `list`, `mark`, `check`, and `export`. It supports seven workflow modes and 79 native stages. Greenfield has 13 stages and four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
@@ -68,7 +66,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Repository retrieval is manual; the orchestrator does not run `my-dev-kit`.
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
 - `status` is human-readable and has no JSON option.
-- In the unpublished `v1.6.0` source, Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
+- Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
@@ -77,9 +75,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The latest published release remains `v1.5.0`, the Semantic Continuity baseline
-described above. `v1.6.0` is implemented but not yet published (see "Implemented
-but unpublished"); [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+The latest release is `v1.6.0`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
 
@@ -93,7 +89,8 @@ The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
 `contracts/ecosystem/` and `docs/ecosystem/`. They reserve `v1.6.0` as
 `ORC-TELEMETRY` and `v1.7.0` as `ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite
 of v1.7.0. Those assets are cross-repository coordination/reference contracts;
-they do not change the published Orchestrator 1.5.0 runtime.
+v1.6.0 provides native telemetry
+and v1.7.0 remains the planned generic evidence consumer.
 
 Greenfield-to-Feature Workflow Handoff Hardening and optional mobile profile
 candidates remain deferred scopes.

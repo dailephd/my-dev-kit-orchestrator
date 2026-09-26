@@ -143,7 +143,7 @@ A stage the gate blocks on Semantic Continuity renders bounded correction guidan
 
 ## Native run telemetry contract
 
-`src/runTelemetry.ts` owns an Orchestrator-native observational contract; it is not the ECO-00 `EvidenceEnvelopeV1` or any ecosystem evidence schema (generic ecosystem evidence intake belongs to `v1.7.0`, `ORC-EVIDENCE-01`). It is unpublished `v1.6.0` source behavior.
+`src/runTelemetry.ts` owns an Orchestrator-native observational contract; it is not the ECO-00 `EvidenceEnvelopeV1` or any ecosystem evidence schema (generic ecosystem evidence intake belongs to `v1.7.0`, `ORC-EVIDENCE-01`). This is `v1.6.0` release behavior.
 
 - **Activation.** `run.json#runTelemetryVersion` is optional and explicit. `"1.0.0"` activates telemetry; absence means a legacy run (nothing is read, shown, or warned about); any other value is unsupported and is never downgraded to `1.0.0`. Activation is never inferred from files. New CLI-created runs write `"1.0.0"`; programmatic `createRun()` callers that omit it stay legacy.
 - **Identity.** `runId` is unchanged and opaque. Each recorded interaction has a fresh `invocationId` of the form `inv-` plus 32 lowercase hex characters (128 random bits) that depends on no timestamp, path, run ID, or responsibility ID. There is no second logical run identity and no CLI option for invocation IDs.
