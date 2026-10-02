@@ -40,6 +40,17 @@ export interface RawResponsibilityMappingEntry {
   // (v1.5 Batch 2). File-level test evidence only; same optional/[]-default
   // and fail-closed rules as productionSymbols.
   proposedOrExistingTestFiles?: RawEvidenceItemRef[];
+  // v1.6.1: typed, count/enum-level projections of producer mapping fields the
+  // phase-aware test-context policy classifies on (never prose). All optional
+  // and parser-populated; absent producer fields project to 0 / undefined so
+  // older schema-major-1 producers stay loadable and fail closed in the policy.
+  // contracts + validators + constants + errors evidence items (the producer's
+  // "contract, validator, or error evidence" category).
+  contractLikeEvidenceCount?: number;
+  testCommandCount?: number;
+  oracleEvidenceCount?: number;
+  // Producer mappings[].unresolvedReasons (fixed producer vocabulary).
+  unresolvedReasons?: string[];
 }
 
 // Bounded projection of my-dev-kit v1.10.4's additive `roleConditionCoverage`
@@ -227,6 +238,15 @@ function projectRawEvidence(
       mappingStatus: asString(m.mappingStatus) ?? 'unmapped',
       productionSymbols: validateEvidenceItems(m.productionSymbols) as RawEvidenceItemRef[],
       proposedOrExistingTestFiles: validateEvidenceItems(m.proposedOrExistingTestFiles) as RawEvidenceItemRef[],
+      contractLikeEvidenceCount: ['contracts', 'validators', 'constants', 'errors'].reduce(
+        (total, key) => total + (Array.isArray(m[key]) ? (m[key] as unknown[]).length : 0),
+        0,
+      ),
+      testCommandCount: Array.isArray(m.testCommands) ? m.testCommands.length : 0,
+      oracleEvidenceCount: Array.isArray(m.oracleEvidence) ? m.oracleEvidence.length : 0,
+      unresolvedReasons: Array.isArray(m.unresolvedReasons)
+        ? m.unresolvedReasons.filter((reason): reason is string => typeof reason === 'string')
+        : [],
     }))
     .filter((m) => m.responsibilityId.length > 0);
 
