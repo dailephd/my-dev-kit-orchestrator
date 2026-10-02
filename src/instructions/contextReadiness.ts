@@ -39,6 +39,7 @@ import {
   findTestStrategySourceRequirement,
   readTestResponsibilityBlocks,
 } from './testResponsibilityCriticality';
+import { CONTEXT_TEST_EVIDENCE_PENDING_PRETEST, assessPreTestDeferral } from './testContextBootstrap';
 
 export const CONTEXT_READINESS_SCHEMA_VERSION = '1.0.0';
 
@@ -135,6 +136,11 @@ export interface ContextReadinessResult {
   requiredEvidenceTruncated: DeclaredTruncation;
   responsibilityMappingsTruncated?: DeclaredTruncation;
   criticalResponsibilitySummary?: CriticalResponsibilitySummary;
+  // v1.6.1: present only when test-implementation ENTRY was accepted under the
+  // pre-test phase policy. The raw producer mappings stay partially-mapped
+  // (criticalResponsibilitySummary is unchanged); this records that only
+  // test-side evidence is pending and that the stage is not completion-eligible.
+  deferredTestEvidence?: { responsibilityIds: string[]; reasons: string[] };
   indexIdentity?: string;
   readyWithAssumptions: boolean;
   provenanceSummary: string;
@@ -660,6 +666,10 @@ export interface EvaluateContextReadinessInput {
   // enforcement below is simply not evaluated -- it never becomes a new
   // required field on existing callers or a new blocker for old runs.
   projectRoot?: string;
+  // v1.6.1 phase flag (see isTestImplementationPreTestEntry): true only while
+  // entering test-implementation before its report exists. Omitted/false keeps
+  // the strict post-test contract, so legacy and unaware callers fail closed.
+  preTestEntry?: boolean;
 }
 
 export function evaluateContextReadiness(input: EvaluateContextReadinessInput): ContextReadinessResult {
@@ -1114,6 +1124,7 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
   let responsibilityMappingsTruncated: DeclaredTruncation | undefined;
   let criticalResponsibilitySummary: CriticalResponsibilitySummary | undefined;
   let affectedResponsibilityIds: string[] = [];
+  let deferredTestEvidence: { responsibilityIds: string[]; reasons: string[] } | undefined;
 
   if (kind === 'test') {
     // Test-kind-only supplemental reconciliation (v1.2.2 Batch 3 / F-007):
@@ -1246,33 +1257,62 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
         const missingCriticalIds = affectedResponsibilityIds.filter(
           (responsibilityId) => !partiallyMappedCriticalIds.includes(responsibilityId),
         );
-        if (partiallyMappedCriticalIds.length > 0) {
-          issues.push(
-            issue(
-              'CONTEXT_CRITICAL_RESPONSIBILITY_PARTIALLY_MAPPED',
-              'error',
-              `${partiallyMappedCriticalIds.length} critical responsibilit${partiallyMappedCriticalIds.length === 1 ? 'y is' : 'ies are'} only partially mapped: ${partiallyMappedCriticalIds.join(', ')}`,
-              stageId,
-              kind,
-              { responsibilityId: partiallyMappedCriticalIds[0] },
-            ),
-          );
+        // v1.6.1 pre-test entry: accept ONLY when every non-mapped critical
+        // responsibility is a partial mapping whose sole gaps are test-side
+        // (no related test / no oracle) over fully grounded production
+        // evidence, nothing is unmapped, and mappings are not truncated.
+        // Everything else (and every non-entry phase) keeps blocking below.
+        const preTest =
+          input.preTestEntry === true && missingCriticalIds.length === 0 && !capsule.responsibilityMappingsTruncated
+            ? assessPreTestDeferral(parsed, capsule.responsibilityMappings)
+            : undefined;
+        if (preTest?.deferrable) {
+          deferredTestEvidence = {
+            responsibilityIds: preTest.deferredResponsibilityIds,
+            reasons: preTest.deferredReasons,
+          };
+        } else {
+          if (partiallyMappedCriticalIds.length > 0) {
+            issues.push(
+              issue(
+                'CONTEXT_CRITICAL_RESPONSIBILITY_PARTIALLY_MAPPED',
+                'error',
+                `${partiallyMappedCriticalIds.length} critical responsibilit${partiallyMappedCriticalIds.length === 1 ? 'y is' : 'ies are'} only partially mapped: ${partiallyMappedCriticalIds.join(', ')}`,
+                stageId,
+                kind,
+                { responsibilityId: partiallyMappedCriticalIds[0] },
+              ),
+            );
+          }
+          if (missingCriticalIds.length > 0) {
+            issues.push(
+              issue(
+                'CONTEXT_CRITICAL_RESPONSIBILITY_MISSING_MAPPING',
+                'error',
+                `${missingCriticalIds.length} critical responsibilit${missingCriticalIds.length === 1 ? 'y is' : 'ies are'} unmapped or missing: ${missingCriticalIds.join(', ')}`,
+                stageId,
+                kind,
+                { responsibilityId: missingCriticalIds[0] },
+              ),
+            );
+          }
+          setPrimary('critical-responsibilities-unmapped');
         }
-        if (missingCriticalIds.length > 0) {
-          issues.push(
-            issue(
-              'CONTEXT_CRITICAL_RESPONSIBILITY_MISSING_MAPPING',
-              'error',
-              `${missingCriticalIds.length} critical responsibilit${missingCriticalIds.length === 1 ? 'y is' : 'ies are'} unmapped or missing: ${missingCriticalIds.join(', ')}`,
-              stageId,
-              kind,
-              { responsibilityId: missingCriticalIds[0] },
-            ),
-          );
-        }
-        setPrimary('critical-responsibilities-unmapped');
       }
     }
+  }
+
+  // The pre-test deferral is only meaningful when entry is otherwise ready; any
+  // other blocker means the stage is refused for that reason alone.
+  if (deferredTestEvidence && primaryClassification) {
+    deferredTestEvidence = undefined;
+  } else if (deferredTestEvidence) {
+    // Nothing is blocked on these responsibilities at entry; they are reported
+    // through deferredTestEvidence and this warning, not as affected/blocking.
+    affectedResponsibilityIds = [];
+    warnings.push(
+      `${CONTEXT_TEST_EVIDENCE_PENDING_PRETEST}: critical production responsibility evidence is grounded for ${deferredTestEvidence.responsibilityIds.length} responsibilit${deferredTestEvidence.responsibilityIds.length === 1 ? 'y' : 'ies'}; test-side evidence (${deferredTestEvidence.reasons.join(', ')}) is pending and must be produced during test-implementation. Entry is allowed; the stage is not completion-eligible until post-test context is refreshed and every critical responsibility is fully mapped.`,
+    );
   }
 
   const decision: ContextReadinessDecision = primaryClassification ? 'refresh-required' : 'ready';
@@ -1288,9 +1328,10 @@ export function evaluateContextReadiness(input: EvaluateContextReadinessInput): 
     requiredEvidenceTruncated,
     responsibilityMappingsTruncated,
     criticalResponsibilitySummary,
+    ...(deferredTestEvidence ? { deferredTestEvidence } : {}),
     affectedResponsibilityIds,
     indexIdentity: capsule.indexPath,
-    readyWithAssumptions: evaluatedAdequacy === 'sufficient-with-assumptions',
+    readyWithAssumptions: evaluatedAdequacy === 'sufficient-with-assumptions' || deferredTestEvidence !== undefined,
     provenanceSummary: `${capsule.provenanceCount} provenance record(s)`,
   });
 }

@@ -759,6 +759,8 @@ The mode matrix is:
 | `extraction` | yes, with source-target scope | yes, with source-target scope |
 | `greenfield` | no | no |
 
+Pre-test entry adds no artifact, file, schema, or persisted state. Before any tests exist, the raw test-context capsule legitimately reports critical responsibilities as `partially-mapped` (no related test, no oracle evidence), and it stays that way: the orchestrator does not rewrite it. The existing `TestImplementationReport` is the native carrier for the stage's output; while it does not exist, readiness may accept that partial mapping for entry (warning `CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`), and once it exists readiness requires a refreshed test context in which every critical responsibility is fully mapped. The supplemental packet and report remain supplemental evidence and must be regenerated, not edited, after the tests are written.
+
 Supplemental context packets and retrieval reports each use schema `1.0.0`.
 Their required metadata identifies schema version, document kind, role,
 template/populated status, repository scope, freshness, adequacy, truncation,

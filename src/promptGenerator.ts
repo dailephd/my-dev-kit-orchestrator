@@ -97,6 +97,28 @@ function assembleStageContextBundleOrThrow(
   return result.bundle;
 }
 
+// v1.6.1: pre-test bootstrap state for test-implementation entry. States
+// honestly that production responsibility evidence is grounded while test-side
+// evidence is pending (raw mappings remain partially-mapped), and that entry is
+// not completion eligibility. The numbered steps are the required lifecycle.
+function renderPreTestBootstrapLines(deferred: { responsibilityIds: string[]; reasons: string[] }): string[] {
+  return [
+    '  Pre-test bootstrap: ENTRY ALLOWED, COMPLETION NOT YET ELIGIBLE.',
+    `    Critical production responsibility evidence is grounded for ${deferred.responsibilityIds.length} responsibilit${deferred.responsibilityIds.length === 1 ? 'y' : 'ies'}.`,
+    `    Test-side evidence is pending (${deferred.reasons.join(', ')}); the raw producer mappings remain partially-mapped.`,
+    '    Related tests and oracle/assertion evidence must be produced during this stage. Required lifecycle:',
+    '      1. Implement the tests required by the existing TestStrategyPacket.',
+    '      2. Use the changed production surface and the test responsibilities already approved.',
+    '      3. After the test files exist, rebuild/refresh test repository context against the final production + test state.',
+    '      4. Regenerate the test context capsule and audit, then the supplemental test-context packet and retrieval report.',
+    '      5. Require actual related-test and oracle mapping for every critical responsibility in the refreshed evidence.',
+    '      6. Re-run `my-dev-kit-orchestrator status` and `my-dev-kit-orchestrator check`.',
+    '      7. Create the TestImplementationReport and mark this stage complete only after post-test readiness is satisfied.',
+    '    Once the TestImplementationReport exists, the strict contract applies: every critical responsibility must be fully mapped.',
+    '    Do not hand-edit the capsule or audit, downgrade criticality, or mark responsibilities not-applicable to pass.',
+  ];
+}
+
 // Renders the "Repository evidence:" section for one of the 11 exact
 // context-sensitive stages. Structural status (Batch 4) plus, when a
 // readiness evaluation is available (Batch 5), the deterministic readiness
@@ -131,6 +153,7 @@ function renderRepositoryEvidenceSection(ref: RepositoryEvidenceReference, readi
         `  Critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} critical responsibilities fully mapped.`,
       );
     }
+    if (readiness.deferredTestEvidence) lines.push(...renderPreTestBootstrapLines(readiness.deferredTestEvidence));
   }
   lines.push(
     '  Notes: my-dev-kit is not run automatically by this orchestrator. These files are supplemental',

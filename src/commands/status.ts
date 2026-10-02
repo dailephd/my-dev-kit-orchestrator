@@ -226,6 +226,15 @@ export function makeStatusCommand(): Command {
             const s = readiness.testContext.criticalResponsibilitySummary;
             lines.push(`    Critical responsibility mapping: ${s.criticalMapped}/${s.criticalResponsibilities} fully mapped`);
           }
+          if (readiness.testContext.deferredTestEvidence) {
+            const deferred = readiness.testContext.deferredTestEvidence;
+            lines.push(
+              `    Pre-test bootstrap: production evidence grounded; test-side evidence pending (${deferred.reasons.join(', ')}) for ${deferred.responsibilityIds.length} critical responsibilit${deferred.responsibilityIds.length === 1 ? 'y' : 'ies'}.`,
+            );
+            lines.push(
+              `    Entry allowed; NOT completion-eligible until tests exist and post-test context is refreshed with every critical responsibility fully mapped.`,
+            );
+          }
           if (readiness.testContext.blockerSummary) {
             const blocker = readiness.testContext.blockerSummary;
             lines.push(`    Primary blocker: ${blocker.primaryCode}`);

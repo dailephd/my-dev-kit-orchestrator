@@ -497,6 +497,11 @@ describe('productionSymbols projection (v1.5 Batch 1)', () => {
           ],
           // Batch 2 additive field: absent on this mapping, so defaults to [].
           proposedOrExistingTestFiles: [],
+          // v1.6.1 additive typed counts (richer evidence items are counted, never copied).
+          contractLikeEvidenceCount: 1,
+          testCommandCount: 1,
+          oracleEvidenceCount: 1,
+          unresolvedReasons: [],
         },
       ]);
     }
@@ -562,8 +567,40 @@ describe('proposedOrExistingTestFiles projection (v1.5 Batch 2)', () => {
           mappingStatus: 'partially-mapped',
           productionSymbols: [],
           proposedOrExistingTestFiles: [{ id: 'tests/a.spec.ts', itemKind: 'test-file', path: 'tests/a.spec.ts' }],
+          contractLikeEvidenceCount: 0,
+          testCommandCount: 1,
+          oracleEvidenceCount: 1,
+          unresolvedReasons: [],
         },
       ]);
+    }
+  });
+
+  it('projects the typed v1.6.1 count/enum fields, defaulting absent producer fields to 0 / []', () => {
+    const result = project([
+      {
+        responsibilityId: 'TST-001',
+        mappingStatus: 'partially-mapped',
+        contracts: [{ id: 'c1' }, { id: 'c2' }],
+        validators: [{ id: 'v1' }],
+        constants: [],
+        errors: [{ id: 'e1' }],
+        testCommands: [{ id: 'cmd' }],
+        oracleEvidence: [],
+        unresolvedReasons: ['no related test', 42, 'no oracle evidence'],
+      },
+      { responsibilityId: 'TST-002', mappingStatus: 'mapped' },
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const [first, second] = result.projection.responsibilityMappings;
+      expect(first.contractLikeEvidenceCount).toBe(4);
+      expect(first.testCommandCount).toBe(1);
+      expect(first.oracleEvidenceCount).toBe(0);
+      expect(first.unresolvedReasons).toEqual(['no related test', 'no oracle evidence']);
+      expect(second.contractLikeEvidenceCount).toBe(0);
+      expect(second.testCommandCount).toBe(0);
+      expect(second.unresolvedReasons).toEqual([]);
     }
   });
 

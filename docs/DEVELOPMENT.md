@@ -153,12 +153,22 @@ Important implementation files:
   `supplementalContextContracts.ts`: supplemental schemas and contracts
 - `src/instructions/supplementalContextParser.ts`: bounded document parser
 - `src/instructions/stageRepositoryEvidenceRequirements.ts`: exact 11-stage
-  requirement registry and four fixed paths
+  requirement registry, four fixed paths, and the pre-test entry phase
+  predicate (`isTestImplementationPreTestEntry`)
 - `src/instructions/repositoryEvidenceReference.ts`: structural evidence
   reference assembly
-- `src/instructions/myDevKitEvidenceSummary.ts`: raw capsule/audit projection
+- `src/instructions/myDevKitEvidenceSummary.ts`: raw capsule/audit projection,
+  including the typed mapping fields the pre-test policy classifies on
 - `src/instructions/testResponsibilityCriticality.ts`: criticality and mapping
   parsing
+- `src/instructions/contextReadiness.ts`: the readiness policy owner, including
+  the phase-aware test-context decision; `RunIntegrityGate`
+  (`src/runIntegrityGate.ts`) remains the canonical consumer and enforcer
+- `src/instructions/testContextBootstrap.ts`: bounded pre-test deferral policy
+  helper (not a gate); `runContextReadiness.ts` and `stageContextBundle.ts` pass
+  it the phase, and `promptGenerator.ts`, `commands/status.ts`, and
+  `commands/check.ts` render the pending state (tests in
+  `tests/testContextBootstrap.test.ts`)
 - `src/instructions/semanticResponsibility.ts`: canonical `RSP-NNN` structural contract
   validation (tests in `tests/semanticResponsibility.test.ts`)
 - `src/instructions/implementationResponsibilityEvidence.ts`: implementation responsibility block

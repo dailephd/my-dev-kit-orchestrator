@@ -10,7 +10,11 @@ import {
   evaluateContextReadiness,
   notRequiredContextReadiness,
 } from './contextReadiness';
-import { requiredSupplementalContextKindsForMode, STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS } from './stageRepositoryEvidenceRequirements';
+import {
+  isTestImplementationPreTestEntry,
+  requiredSupplementalContextKindsForMode,
+  STAGE_REPOSITORY_EVIDENCE_REQUIREMENTS,
+} from './stageRepositoryEvidenceRequirements';
 
 export interface RunContextReadinessSummary {
   mode: string;
@@ -85,7 +89,17 @@ export function evaluateRunContextReadiness(input: {
   if (requiredKinds.includes('test')) {
     const req = requirementForKind(mode, 'test');
     testContext = req
-      ? evaluateContextReadiness({ requirement: req, stageId: req.stageId, runFolder, mode, projectRoot })
+      ? evaluateContextReadiness({
+          requirement: req,
+          stageId: req.stageId,
+          runFolder,
+          mode,
+          projectRoot,
+          // v1.6.1: relaxed only while ENTERING test-implementation (report not
+          // yet created). Verification, judge, final-report and a missing/unknown
+          // current stage always evaluate strictly.
+          preTestEntry: isTestImplementationPreTestEntry({ stageName: currentStage, runFolder }),
+        })
       : notRequiredContextReadiness(`stage.${mode}.test-implementation`, 'test', 'test-implementation');
   }
 

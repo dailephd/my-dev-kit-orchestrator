@@ -144,6 +144,14 @@ function formatContextReadinessResult(kind: string, result: ContextReadinessResu
     lines.push(`         Corrective action: ${blocker.correctiveAction}`);
     lines.push(`         Evidence target: ${blocker.evidenceTarget}`);
   }
+  if (result.deferredTestEvidence) {
+    lines.push(
+      `         Pre-test bootstrap: production evidence grounded; test-side evidence pending (${result.deferredTestEvidence.reasons.join(', ')}) for ${result.deferredTestEvidence.responsibilityIds.length} critical responsibilit${result.deferredTestEvidence.responsibilityIds.length === 1 ? 'y' : 'ies'}.`,
+    );
+    lines.push(
+      `         Entry allowed; not completion-eligible until post-test context is refreshed and every critical responsibility is fully mapped.`,
+    );
+  }
   return lines;
 }
 

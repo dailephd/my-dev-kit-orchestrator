@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.6.0`, which ships native run telemetry and
-Workflow Economics alongside `v1.5.0`'s Semantic Continuity and the prior
+The current release is `v1.6.1`, a test-context bootstrap correction that
+makes test-context readiness phase-aware. It follows `v1.6.0`, which shipped
+native run telemetry and Workflow Economics, alongside `v1.5.0`'s Semantic Continuity and the prior
 greenfield, integrity, and instruction-bootstrap contracts,
 `v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
 readiness, explicit proof-only verification, and the bounded Observer v0.6
@@ -432,6 +433,55 @@ Freshness is supplied by verified external evidence; the orchestrator does not
 independently compute repository freshness. Missing, stale, inadequate,
 truncated, or critically unmapped required evidence produces deterministically
 ordered issues and a blocked decision.
+
+Test-context readiness is phase-aware. `ContextReadiness` remains the single
+policy owner and `RunIntegrityGate` remains the canonical consumer and enforcer;
+there is no second readiness engine, gate, workflow stage, or persisted state.
+`test-implementation` creates the related-test and oracle evidence that a fully
+mapped critical responsibility needs, so requiring that evidence to enter the
+stage would be circular. The correction is split across existing owners:
+
+- `src/instructions/stageRepositoryEvidenceRequirements.ts` owns the phase
+  predicate. The relaxation applies only while the evaluated stage is
+  `test-implementation` and its `TestImplementationReport`
+  (`artifacts/test-implementation-report.txt`) does not exist. Any other stage
+  (including `verification`, `judge`, and `final-report`) and any omitted or
+  unknown stage evaluates strictly.
+- `src/instructions/runContextReadiness.ts` and
+  `src/instructions/stageContextBundle.ts` pass that predicate to
+  `evaluateContextReadiness`, so the run-level gate and the stage prompt agree.
+- `src/instructions/testContextBootstrap.ts` is a bounded policy helper, not a
+  gate. It classifies each critical responsibility from the typed projection in
+  `src/instructions/myDevKitEvidenceSummary.ts` (the producer's unresolved
+  reasons, production-symbol, contract/validator/constant/error, test-command,
+  and related-test-file evidence) and never from free-form prose.
+- `ContextReadiness` applies the helper's assessment only when every non-mapped
+  critical responsibility is `partially-mapped` solely for the reasons
+  `no related test` and `no oracle evidence`, has no related test file yet, and
+  still has grounded production symbols, contract-like evidence, and a
+  discovered test-runner command; mappings must also be non-truncated. A missing
+  test command, a production-side reason, an unmapped responsibility or one with no
+  raw mapping, or any other readiness issue keeps the stage blocked, and a
+  responsibility mixing test-side and production-side gaps stays blocked.
+
+The accepted state reuses ready-with-assumptions and carries the warning
+`CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`: entry is allowed, completion is not yet
+eligible. Raw producer evidence stays truthful: the critical-responsibility
+summary still counts those responsibilities as not fully mapped, and the
+orchestrator never rewrites a producer `mappingStatus`. `status`, `check`, and
+the `test-implementation` prompt render the pending state, and the prompt carries
+the ordered sequence of implementing the tests, refreshing test repository
+context once they exist, requiring real related-test and oracle mapping, and
+completing the report only after strict post-test readiness. Because the phase
+predicate turns false as soon as the report exists, the same canonical gate that
+blocks `mark`, lifecycle resolution, and downstream prompts then applies the
+strict contract again.
+
+Semantic Continuity is independent: it keeps its own phase-aware evaluation and
+only observes the readiness result. The phase decision needs only the run folder
+and the evaluated stage, so compatible legacy runs, including runs without
+`semanticContinuityVersion`, receive the correction without any `run.json`
+change or Semantic Continuity activation.
 
 `src/instructions/myDevKitEvidenceSummary.ts` parses the corrected
 `my-dev-kit` v1.10.4 producer contract's additive `roleConditionCoverage[]`

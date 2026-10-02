@@ -57,6 +57,7 @@
       "Current limitations",
       "Semantic Continuity",
       "v1.6.0",
+      "v1.6.1",
       "v1.7.0",
       "ORC-EVIDENCE-01"
     ],
@@ -192,7 +193,7 @@
       "Reconciliation and stop threshold"
     ],
     "docs/RELEASE_CHECKLIST.md": [
-      "current release is `v1.6.0`",
+      "current release is `v1.6.1`",
       "79 native stages",
       "eight CLI commands",
       "11 context-sensitive direct stages",
@@ -220,6 +221,7 @@
       "Ecosystem responsibility boundaries",
       "Non-goals",
       "Conceptual workflow model",
+      "v1.6.1",
       "v1.7.0",
       "ORC-EVIDENCE-01"
     ]
@@ -246,6 +248,7 @@
     "v1.4.1",
     "v1.5.0",
     "v1.6.0",
+    "v1.6.1",
     "v1.7.0"
   ],
   "greenfieldStageOrder": [
@@ -292,9 +295,9 @@
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.6.0",
-    "latestPublishedVersion": "1.6.0",
-    "currentReleaseDate": "2026-09-26",
+    "packageMetadataVersion": "1.6.1",
+    "latestPublishedVersion": "1.6.1",
+    "currentReleaseDate": "2026-10-02",
     "implementedUnpublishedVersions": [],
     "plannedUnpublishedVersions": [
       "v1.7.0"
@@ -344,12 +347,17 @@
     "stageContextBundlePersisted": false,
     "statusJsonSupported": false,
     "customOutputRunRediscoverySupported": false,
-    "currentProducerVersion": "1.12.4",
+    "currentProducerVersion": "1.12.5",
     "readinessContractProducerVersion": "1.10.4",
     "telemetryRecordedCommands": [
       "start",
       "prompt",
       "mark"
+    ],
+    "testContextBootstrapWarningCode": "CONTEXT_TEST_EVIDENCE_PENDING_PRETEST",
+    "pretestDeferrableReasons": [
+      "no related test",
+      "no oracle evidence"
     ],
     "semanticContinuityActivatedModes": [
       "feature",
@@ -368,10 +376,12 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.6.0 with older releases historically scoped and v1.7.0 reserved for ORC-EVIDENCE-01",
-    "v1.6.0 has a finalized changelog section with the current release date",
+    "published v1.6.1 with older releases historically scoped and v1.7.0 reserved for ORC-EVIDENCE-01",
+    "v1.6.1 has a finalized changelog section with the current release date",
     "derived semantic continuity contract version, gate schema version, and activated-mode set",
     "derived run telemetry contract version, Workflow Economics version, and recorded-command set",
+    "derived test-context bootstrap warning code and deferrable reasons guarded across ARCHITECTURE and CONTRACTS, and no bootstrap command, mode, stage, or option claim",
+    "v1.6.1 is the current release with package metadata and the latest published release at 1.6.1 and v1.7.0 remains planned",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -441,7 +451,7 @@
           "Documentation"
         ]
       ],
-      "versionStatusPolicy": "v1.5.0 is the latest published release; older releases remain historical and v1.6.0 remains planned.",
+      "versionStatusPolicy": "v1.6.1 is the current release; older releases remain historical, and v1.7.0 remains planned.",
       "sourceOfTruthOwners": [
         "package.json",
         "src/program.ts",
@@ -498,7 +508,7 @@
           "v1.2.0 - Android Compose Greenfield Profile"
         ]
       ],
-      "versionStatusPolicy": "v1.6.0 is the current release and its finalized section carries the release date; future changes use an Unreleased section.",
+      "versionStatusPolicy": "v1.6.1 is the current release and its finalized section carries the release date; future changes use an Unreleased section.",
       "sourceOfTruthOwners": [
         "package.json",
         "tests/fixtures/v121-compatibility/compatibility-manifest.json"
@@ -886,7 +896,7 @@
           "Non-goals"
         ]
       ],
-      "versionStatusPolicy": "Keep v1.5.0 as the current published milestone while older releases remain historical and later versions remain high level.",
+      "versionStatusPolicy": "Keep v1.6.1 as the current release while older releases remain historical and later versions remain high level.",
       "sourceOfTruthOwners": [
         "package.json",
         "tests/fixtures/v121-compatibility/compatibility-manifest.json"

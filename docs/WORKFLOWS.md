@@ -321,6 +321,17 @@ A refresh-required result identifies one deterministic primary blocker with prim
 
 `RunIntegrityGate` controls stage detection, explicit prompt selection, lifecycle resolution, mark/check/export, and final eligibility. A context-blocked implementation/test artifact is effectively blocked despite file presence or a manual complete record. A safe manual source read may inform a corrected request but cannot overwrite generated readiness.
 
+#### Test-context lifecycle around `test-implementation`
+
+Test context is phase-aware, so a new subsystem with no tests yet can enter `test-implementation`. The sequence is: test strategy, production implementation, pre-test test context, `test-implementation` allowed with pending test evidence, tests created, refreshed test context, strict completion, verification.
+
+1. Before the tests exist, the manual test-context request carries the changed production surface and the exact strategy responsibility IDs. If a critical responsibility is `partially-mapped` only because related-test and oracle evidence cannot exist yet, `test-implementation` may begin: readiness is ready-with-assumptions with the warning `CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`, and `status`, `check`, and the prompt state that entry is allowed and completion is not yet eligible. Any other gap still blocks, including missing production, contract, freshness, identity, provenance, or test-runner evidence.
+2. During the stage the coding agent writes the tests, then refreshes test repository context against the final production and test state, regenerates the capsule, audit, packet, and report, and re-runs `status` and `check`.
+3. Once the `TestImplementationReport` exists, the strict contract applies: every critical responsibility must be fully mapped by the refreshed evidence, so `mark` cannot complete the stage until it is.
+4. `verification`, `judge`, and `final-report` always require the strict contract; a run whose tests were written but whose context was not refreshed routes back to `test-implementation`.
+
+The orchestrator does not run `my-dev-kit`, and no flag, command, mode, or stage is involved.
+
 ### Verification, judge, and correction flow
 
 Verification/judge review implementation and test context in feature, repair, refactor, harden, and extraction. Test mode reviews test context only. Greenfield uses its own readiness rather than these supplemental repository-context pairs.

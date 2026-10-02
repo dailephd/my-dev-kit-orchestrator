@@ -146,6 +146,10 @@ The v1.2.1 evidence workflow remains manual. Feature, repair, refactor, harden, 
 
 The released `@dailephd/my-dev-kit@1.10.4` package is the verified producer authority for the readiness contract, and the Semantic Continuity mapping fields were validated against `@dailephd/my-dev-kit@1.12.4`. New runs must record the actual compatible producer version used. No source checkout path is part of the public interface.
 
+The pre-test classification described next relies on the producer's typed mapping fields (unresolved reasons and evidence counts), validated against `@dailephd/my-dev-kit@1.12.5`; evidence without them stays loadable but fails closed at pre-test entry.
+
+Before any tests exist, the test-context request still carries the changed production surface and the strategy responsibility IDs. If every non-mapped critical responsibility is `partially-mapped` only for the test-side reasons `no related test` and `no oracle evidence`, `status`, `check`, and `prompt test-implementation` report that entry is allowed with pending test evidence and that completion is not yet eligible; the prompt then lists the ordered steps. After the tests exist, refresh the test context (new index, capsule, audit, packet, and report), confirm every critical responsibility is fully mapped, re-run `status` and `check`, and only then create the `TestImplementationReport` and mark the stage complete. Once that report exists, readiness is strict again, and stale test context blocks `mark`, `verification`, and `judge`.
+
 In an activated run, populate the request with the canonical strategy `RSP-NNN` IDs as `testResponsibilityRefs` and request `responsibility-mappings` in addition to the evidence kinds the role already needs. Refresh the implementation evidence after production changes and the test evidence after test changes. A refresh-only prompt lists the exact IDs currently declared by a valid strategy artifact.
 
 Fixed supplemental paths:

@@ -16,6 +16,7 @@ import {
   implementationContextRetrievalReportPath,
   testContextPacketPath,
   testContextRetrievalReportPath,
+  isTestImplementationPreTestEntry,
 } from './stageRepositoryEvidenceRequirements';
 import { buildRepositoryEvidenceReference } from './repositoryEvidenceReference';
 import { ContextReadinessResult, evaluateContextReadiness } from './contextReadiness';
@@ -181,6 +182,7 @@ export function assembleStageContextBundle(
         runFolder: runMetadata.runFolder,
         mode: runMetadata.mode,
         projectRoot: runMetadata.projectRoot,
+        preTestEntry: isTestImplementationPreTestEntry({ stageName: selectedStage, runFolder: runMetadata.runFolder }),
       })
     : undefined;
 

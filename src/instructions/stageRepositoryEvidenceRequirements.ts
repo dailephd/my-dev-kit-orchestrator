@@ -7,6 +7,7 @@
 // would risk cross-mode collisions (e.g. a "test" stage in one mode
 // resembling "implementation" in another).
 
+import * as fs from 'fs';
 import * as path from 'path';
 import { StageInstructionId } from './catalogIds';
 import { InstructionCatalog } from './catalogTypes';
@@ -98,6 +99,24 @@ export function testContextPacketPath(runFolder: string): string {
 
 export function testContextRetrievalReportPath(runFolder: string): string {
   return safeJoin(runFolder, TEST_CONTEXT_RETRIEVAL_REPORT_RELATIVE_PATH);
+}
+
+// Relative path of the test-implementation stage's completion artifact (the
+// TestImplementationReport). Same value the workflow definitions assign to the
+// 'test-implementation' stage in every mode; a test guards that equality.
+export const TEST_IMPLEMENTATION_REPORT_ARTIFACT = 'artifacts/test-implementation-report.txt';
+
+// Phase decision for the test-context gate (v1.6.1): true only while the run is
+// ENTERING test-implementation, i.e. the stage is the one being evaluated and
+// its TestImplementationReport has not been created yet. The moment the report
+// exists (the stage output is being completed), and for every other stage
+// (including verification, judge and final-report), this is false and the
+// strict post-test contract applies. Mirrors the Semantic Continuity phase
+// principle: a stage's output is pending while that stage is entered and
+// required once it is being completed. Unknown/omitted stage is never entry.
+export function isTestImplementationPreTestEntry(input: { stageName: string | undefined; runFolder: string }): boolean {
+  if (input.stageName !== 'test-implementation') return false;
+  return !fs.existsSync(safeJoin(input.runFolder, TEST_IMPLEMENTATION_REPORT_ARTIFACT));
 }
 
 function safeJoin(runFolder: string, relativePath: string): string {
