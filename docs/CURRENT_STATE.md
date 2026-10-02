@@ -55,6 +55,25 @@ Implemented behavior:
 
 Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
+## Implemented but unpublished
+
+`v1.6.1`, a test-context bootstrap correction, is implemented on its patch branch and is not published. Package metadata stays `1.6.0`, and no tag, GitHub Release, or npm version exists for it. It is documented here as current source behavior, not as a release; the current release remains `v1.6.0`.
+
+Why it exists: repository-context readiness required every critical test responsibility to be fully mapped, including related-test and oracle evidence, before `test-implementation` could begin. That evidence can only be created during `test-implementation`, so a new subsystem with no tests yet could never enter the stage.
+
+Implemented behavior:
+
+- readiness is phase-aware over truthful raw evidence. While a run is entering `test-implementation` and its `TestImplementationReport` does not exist, a critical responsibility whose raw my-dev-kit mapping is `partially-mapped` only for the test-side reasons `no related test` and `no oracle evidence` is accepted for entry, provided production symbols, contract/validator/constant/error evidence, and a discovered test-runner command are present and freshness, repository/index identity, provenance, and mapping completeness hold
+- the accepted state is ready-with-assumptions with the warning `CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`; the raw mapping status is never rewritten, so critical responsibilities still count as not fully mapped
+- `status`, `check`, and the `test-implementation` prompt say that entry is allowed and completion is not yet eligible; the prompt carries a seven-step sequence that ends with refreshing test repository context after the tests exist
+- once the `TestImplementationReport` exists, and for `verification`, `judge`, and `final-report`, the strict contract returns: every critical responsibility must be fully mapped, `mark` cannot complete the stage, and an authored `PASS` cannot bypass the gate
+- every other blocker still blocks entry, and a responsibility that mixes a test-side gap with any production-side gap stays blocked
+- legacy schema-major-1 runs, including runs without `semanticContinuityVersion`, receive the correction without any `run.json` change; Semantic Continuity is not activated for them and its phase-aware behavior is unchanged
+
+Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or dependency. `RunIntegrityGate` remains the single enforcement consumer, and `my-dev-kit` is still run manually.
+
+Lifecycle state: implementation complete; documentation reconciliation complete; pre-release readiness not yet complete; unpublished. The next lifecycle stage is pre-release readiness. None of its results is claimed here.
+
 ## Implemented operational surface
 
 The CLI has eight commands: `init`, `start`, `prompt`, `status`, `list`, `mark`, `check`, and `export`. It supports seven workflow modes and 79 native stages. Greenfield has 13 stages and four starter profiles: `typescript-cli`, `nextjs-app`, `android-compose`, and `python-cli`.
@@ -78,6 +97,9 @@ Current implementation includes exact workflow-instruction packets, supplemental
 The latest release is `v1.6.0`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
+
+`v1.6.1`, described above, is implemented and unpublished; its next lifecycle
+stage is pre-release readiness.
 
 `v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the next
 planned feature version and remains a later consumer milestone. It will build on

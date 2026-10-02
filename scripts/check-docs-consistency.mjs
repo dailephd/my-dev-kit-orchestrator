@@ -177,6 +177,21 @@ function extractTelemetryRecordedCommands(root) {
   return [...match[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
 }
 
+// Test-context bootstrap facts (v1.6.1), derived from the pre-test policy owner:
+// the deterministic pending-test warning code and the only producer reasons
+// that may be deferred at test-implementation entry.
+function extractTestContextBootstrapFacts(root) {
+  const relPath = 'src/instructions/testContextBootstrap.ts';
+  return {
+    warningCode: extractConstant(root, relPath, 'CONTEXT_TEST_EVIDENCE_PENDING_PRETEST'),
+    deferrableReasons: extractArray(
+      readText(root, relPath),
+      /export const PRETEST_DEFERRABLE_UNRESOLVED_REASONS[^=]*=\s*\[([^\]]*)\]/,
+      'PRETEST_DEFERRABLE_UNRESOLVED_REASONS',
+    ),
+  };
+}
+
 // Modes that automatically activate Semantic Continuity: exactly the modes
 // that own a test-strategy source requirement (start.ts derives activation
 // from the same registry).
@@ -417,6 +432,9 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'schemaVersions', schemaVersions, facts.schemaVersions);
   compareFact(issues, manifestPath, 'semanticContinuityActivatedModes', semanticActivatedModes, facts.semanticContinuityActivatedModes);
   compareFact(issues, manifestPath, 'telemetryRecordedCommands', extractTelemetryRecordedCommands(root), facts.telemetryRecordedCommands);
+  const bootstrapFacts = extractTestContextBootstrapFacts(root);
+  compareFact(issues, manifestPath, 'testContextBootstrapWarningCode', bootstrapFacts.warningCode, facts.testContextBootstrapWarningCode);
+  compareFact(issues, manifestPath, 'pretestDeferrableReasons', bootstrapFacts.deferrableReasons, facts.pretestDeferrableReasons);
   for (const mode of semanticActivatedModes) {
     if (!modes.includes(mode)) {
       addIssue(issues, 'MANIFEST_FACT_DRIFT', manifestPath, `activated mode ${mode} is a workflow mode`, 'unknown mode', 'Restore the strategy registry to valid workflow modes.');
@@ -475,6 +493,11 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   requireTokens(issues, 'docs/ROADMAP.md', roadmap, ['Published v1.3.0', 'Published as `1.3.0`', '2026-08-04', 'Published v1.2.3', 'Released as `1.2.3`', '2026-08-01', 'Published v1.2.2', 'Published as `1.2.2`', '2026-07-28', 'Published v1.2.1', 'Published as `1.2.1`', '2026-07-21']);
   requireTokens(issues, 'docs/WORKFLOWS.md', workflowsText, ['79 native stages', 'Seventy-seven stages', '11-stage matrix', 'five implementation-context stages', 'six test-context stages', ...workflowFacts.extractionGateArtifacts]);
   requireTokens(issues, 'docs/ARCHITECTURE.md', architecture, ['WorkflowInstructionPacket', 'TaskState', 'StageContextBundle', 'never persisted', 'ContextReadiness']);
+  // v1.6.1: the pre-test policy's source-owned warning code and deferrable
+  // producer reasons must stay documented where ownership and contract live.
+  for (const documentPath of ['docs/ARCHITECTURE.md', 'docs/CONTRACTS.md']) {
+    requireTokens(issues, documentPath, byPath[documentPath] ?? '', [bootstrapFacts.warningCode, ...bootstrapFacts.deferrableReasons], 'BOOTSTRAP_FACT_DOCUMENTATION_MISSING');
+  }
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths, ...workflowFacts.extractionGateArtifacts, ...structuredGreenfieldArtifacts]);
   requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'no JSON option', 'refresh-only', ...contextFacts.fixedPaths]);
   requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'src/__tests__/', 'tests/greenfield/']);
@@ -617,6 +640,7 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     ['TASK_STATE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?TaskState`?/i, 'TaskState is in memory only'],
     ['STAGE_CONTEXT_BUNDLE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?StageContextBundle`?/i, 'StageContextBundle is in memory only'],
     ['NATIVE_CONTEXT_STAGE_FALSE_CLAIM', /(?:adds?|has|uses|creates?|provides?)\s+(?:a\s+)?native\s+(?:implementation-|test-)?context\s+stages?/i, 'no native context stage'],
+    ['BOOTSTRAP_SURFACE_FALSE_CLAIM', /(?:adds?|has|introduces?|provides?)\s+(?:a\s+|an\s+)?(?:new\s+)?(?:`?--bootstrap`?|`?bootstrap`?\s+(?:command|mode|stage|option|flag))/i, 'test-context bootstrap is a phase of existing readiness, not a command, mode, stage, or option'],
   ];
   for (const [code, regex, expected] of contradictionChecks) {
     for (const { relPath, content } of docs) {
@@ -692,6 +716,21 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     const detail = section(roadmap, `### ${version}`, 3);
     if (containsUnnegatedClaim(detail, /\b(?:published|released as)\b/i) || /\bimplemented\b/i.test(detail)) {
       addIssue(issues, 'PLANNED_VERSION_STATUS_DRIFT', 'docs/ROADMAP.md', `${version} remains planned`, 'published, released-as, or implemented wording found', 'Restore planned-state wording; do not present roadmap-only work as shipped.');
+    }
+  }
+
+  // Every roadmap version after the current published version must be explicitly
+  // classified as implemented-but-unpublished or planned, so no later version
+  // silently escapes the status guards above.
+  const publishedIndex = manifest.roadmapVersions.indexOf(`v${pkg.version}`);
+  if (publishedIndex !== -1) {
+    for (const version of manifest.roadmapVersions.slice(publishedIndex + 1)) {
+      const classified =
+        (manifest.protectedFacts.implementedUnpublishedVersions ?? []).includes(version) ||
+        (manifest.protectedFacts.plannedUnpublishedVersions ?? []).includes(version);
+      if (!classified) {
+        addIssue(issues, 'UNPUBLISHED_VERSION_UNCLASSIFIED', manifestPath, `${version} classified as implementedUnpublishedVersions or plannedUnpublishedVersions`, 'unclassified later version', 'Classify every roadmap version after the latest published version.');
+      }
     }
   }
 

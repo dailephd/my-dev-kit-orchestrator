@@ -38,6 +38,7 @@ function makeFixture(): string {
     'src/runIntegrityGate.ts',
     'src/runTelemetry.ts',
     'src/runWorkflowEconomics.ts',
+    'src/instructions/testContextBootstrap.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;

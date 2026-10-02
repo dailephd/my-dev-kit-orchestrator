@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+Targets patch `v1.6.1`, a test-context bootstrap correction. It is implemented and not published.
+
+### Fixed
+
+- a deadlock in repository-context readiness for `test-implementation`: the stage that creates related-test and oracle evidence required that evidence before it could begin, so a new subsystem with critical test responsibilities and no tests yet could never enter the stage
+- the test-context gate is now phase-aware over truthful raw evidence. While a run is entering `test-implementation` and its `TestImplementationReport` does not exist yet, a critical responsibility whose raw my-dev-kit mapping is `partially-mapped` only for the test-side reasons `no related test` and `no oracle evidence` is accepted for entry, provided its production symbols, contract/validator/constant/error evidence, and a discovered test-runner command are present and context freshness, repository/index identity, provenance, and mapping completeness all hold
+
+### Changed
+
+- the accepted pre-test entry state reuses the existing ready-with-assumptions mechanism and adds the warning `CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`: entry is allowed, completion is not yet eligible. The raw producer `mappingStatus` is never rewritten, so critical responsibilities still count as not fully mapped
+- `status`, `check`, and the `test-implementation` prompt state the pre-test condition; the prompt adds seven ordered steps (implement the tests from the existing strategy, use the approved changed surface, refresh test repository context after the tests exist, regenerate the capsule/audit and packet/report, require real related-test and oracle mapping, re-run `status` and `check`, complete the report only after post-test readiness)
+- once the `TestImplementationReport` exists, and for `verification`, `judge`, and `final-report`, the strict contract applies again: every critical responsibility must be fully mapped, so `mark` cannot complete the stage and an authored `PASS` cannot bypass missing post-test evidence
+- the my-dev-kit evidence projection additively carries typed mapping fields (evidence counts and the producer's unresolved reasons) that the policy classifies on; older schema-major-1 evidence without them remains loadable and fails closed
+
+### Compatibility
+
+- every blocker other than the two test-side gaps still blocks entry: missing production symbols, changed surface, or contract evidence; a missing test command; an unmapped critical responsibility; stale or unknown freshness; repository, index, or capsule/audit mismatch; required-evidence or mapping truncation; missing provenance; a missing or malformed strategy; unknown criticality; duplicate responsibility IDs; and malformed raw evidence. A responsibility that mixes a test-side gap with any production-side gap stays blocked
+- noncritical and not-applicable mapping policy, greenfield, `test` mode, `extraction`, and runs without repository-context requirements are unchanged
+- legacy schema-major-1 runs, including runs without `semanticContinuityVersion`, receive the correction without any `run.json` change and without activating Semantic Continuity, whose behavior is unchanged
+- `RunIntegrityGate` remains the single enforcement consumer; no CLI command, option, workflow mode, native stage, artifact family, persisted state, schema-major bump, or package dependency was added, and the orchestrator still never runs `my-dev-kit`
+
 ## v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
 Release date: 2026-09-26.

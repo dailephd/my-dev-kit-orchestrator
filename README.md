@@ -162,6 +162,17 @@ supporting issue codes, and carries the primary reason, corrective action, and
 evidence target through prompts, `status`, `check`, verification, judge,
 correction routing, and `export`.
 
+Current source, in an implemented but unpublished `v1.6.1` patch (package
+metadata remains `1.6.0`), also makes test-context readiness phase-aware so a new
+subsystem with no tests yet can enter `test-implementation`. While the stage is
+being entered and its `TestImplementationReport` does not exist, a critical
+responsibility that is only missing related-test and oracle evidence is accepted
+for entry with a pending-test warning (entry allowed, completion not yet
+eligible). The raw `my-dev-kit` mapping stays `partially-mapped`; once the report
+exists, and for verification and judge, every critical responsibility must be
+fully mapped by a refreshed test context. No command, option, mode, stage, or
+dependency was added.
+
 These additions preserve the eight-command CLI surface, all seven mode stage
 orders, prompt filenames, lifecycle behavior, and old runs. Supplemental
 context files and instruction-packet sidecars are not native lifecycle

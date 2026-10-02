@@ -265,6 +265,8 @@ The verified producer contract for the readiness evidence is `@dailephd/my-dev-k
 
 The primary blocker, corrective action, evidence target, and ordered codes come from one shared decision. Optional truncation does not imply required loss. Manual reading or a supplemental prose claim cannot overwrite producer results or canonical readiness.
 
+While a run is entering `test-implementation` and its `TestImplementationReport` does not exist, `status`, `check`, and `prompt test-implementation` can report a pre-test bootstrap state (warning `CONTEXT_TEST_EVIDENCE_PENDING_PRETEST`): critical production responsibility evidence is grounded, related-test and oracle evidence is pending, entry is allowed, and the stage is not completion-eligible. `status` and `check` print the same interpretation from the same gate, still showing the critical responsibilities as not fully mapped, and the prompt adds the ordered steps for implementing the tests and refreshing test context. Once the report exists, `mark` and every downstream stage evaluate strict readiness. This changes behavior only; no command, option, or flag was added.
+
 ## Judge and final-report integrity
 
 Supported correction verdicts retain their native meanings. `DESIGN_INCOMPLETE`, `PSEUDOCODE_INCOMPLETE`, `IMPLEMENTATION_MISMATCH`, `TEST_COVERAGE_INCOMPLETE`, `ARCHITECTURE_MISMATCH`, and `NEED_VERIFICATION` route to their corresponding design/implementation/test/verification owners. `SCOPE_VIOLATION` and `BLOCKED` require external resolution.

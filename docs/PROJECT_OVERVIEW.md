@@ -21,6 +21,8 @@ The current implementation supports seven modes: `feature`, `repair`, `test`, `r
 
 The `v1.5.0` release introduced one stable responsibility identity (`RSP-NNN`) from the test strategy through implementation, test, and verification evidence for new staged runs in every mode except `greenfield`, and enforces it through the same run-integrity gate. Critical gaps block, noncritical gaps warn, and no new command, mode, stage, or persisted state is involved. See [CURRENT_STATE.md](CURRENT_STATE.md) for the release state.
 
+Test-context readiness is phase-aware: a new subsystem with no tests yet can enter `test-implementation` with a pending-test warning, and strict full mapping of critical responsibilities is required once the stage's report exists and for later stages. This is an implemented but unpublished correction that adds no command, mode, stage, or persisted state; [CURRENT_STATE.md](CURRENT_STATE.md) owns its status.
+
 Greenfield supports the `typescript-cli`, `nextjs-app`, `android-compose`, and bounded `python-cli` starter profiles in the current release. Profiles shape planning, scaffold targets, documentation, and verification expectations; the orchestrator itself does not generate or execute the project. Every profile receives the common generated-project instructions `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` through the shared scaffold/readiness path. Those files are distinct from the standardized 15-file public project-document baseline. The single full-stack web environment contract remains limited to `nextjs-app` with PostgreSQL, Prisma, and Docker; see [CURRENT_STATE.md](CURRENT_STATE.md) for current release status.
 
 ## Ecosystem relationship

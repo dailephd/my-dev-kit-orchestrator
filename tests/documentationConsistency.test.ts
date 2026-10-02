@@ -38,6 +38,7 @@ function createIsolatedRoot(): string {
     'src/runIntegrityGate.ts',
     'src/runTelemetry.ts',
     'src/runWorkflowEconomics.ts',
+    'src/instructions/testContextBootstrap.ts',
     'tests/fixtures/v121-compatibility/compatibility-manifest.json',
   ]) copyFile(root, relativePath);
   return root;
@@ -290,5 +291,54 @@ describe('v1.6.0 telemetry facts (second isolated builder)', () => {
     expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
     expectIssue('docs/ROADMAP.md', (content) => content.replace('### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT');
     expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
+  });
+});
+
+describe('v1.6.1 test-context bootstrap facts (implemented but unpublished)', () => {
+  it('fails when the source warning code or the deferrable reasons drift from the manifest', () => {
+    for (const [from, to] of [
+      ["CONTEXT_TEST_EVIDENCE_PENDING_PRETEST = 'CONTEXT_TEST_EVIDENCE_PENDING_PRETEST'", "CONTEXT_TEST_EVIDENCE_PENDING_PRETEST = 'CONTEXT_TEST_EVIDENCE_PENDING_PRETEST_V2'"],
+      ["['no related test', 'no oracle evidence']", "['no related test', 'no oracle evidence', 'no test command']"],
+    ]) {
+      const root = createIsolatedRoot();
+      mutate(root, 'src/instructions/testContextBootstrap.ts', (content) => content.replace(from, to));
+      const result = runCheck(root);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('[MANIFEST_FACT_DRIFT]');
+    }
+  });
+
+  it.each([
+    ['ARCHITECTURE', 'docs/ARCHITECTURE.md'],
+    ['CONTRACTS', 'docs/CONTRACTS.md'],
+  ])('fails when %s omits the pending-test warning code or a deferrable reason', (_name, relativePath) => {
+    expectIssue(relativePath, (content) => content.split('CONTEXT_TEST_EVIDENCE_PENDING_PRETEST').join('PENDING_TEST_CODE'), 'BOOTSTRAP_FACT_DOCUMENTATION_MISSING');
+    expectIssue(relativePath, (content) => content.split('no oracle evidence').join('no assertions'), 'BOOTSTRAP_FACT_DOCUMENTATION_MISSING');
+  });
+
+  it.each([
+    'The bootstrap adds a new bootstrap command.',
+    'Readiness provides a bootstrap stage.',
+    'The orchestrator introduces a --bootstrap flag.',
+  ])('rejects a claim that bootstrap is a new command, mode, stage, or option: %s', (injected) => {
+    expectIssue('docs/USAGE.md', (content) => `${content}\n${injected}\n`, 'BOOTSTRAP_SURFACE_FALSE_CLAIM');
+  });
+
+  it('allows an explicit negation of a bootstrap command', () => {
+    const root = createIsolatedRoot();
+    mutate(root, 'docs/USAGE.md', (content) => `${content}\nThe pre-test phase does not add a bootstrap command.\n`);
+    const result = runCheck(root);
+    expect(result.status).toBe(0);
+    expect(result.output).not.toContain('[BOOTSTRAP_SURFACE_FALSE_CLAIM]');
+  });
+
+  it('keeps v1.6.1 implemented but unpublished while v1.6.0 stays published and current', () => {
+    expectIssue('docs/ROADMAP.md', (content) => content.replace('### v1.6.1 - Test-Context Bootstrap Correction', '### v1.6.1 - Test-Context Bootstrap Correction\n\nPublished as `1.6.1`.'), 'UNPUBLISHED_VERSION_PUBLISHED_CLAIM');
+    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## v1.6.1 - Test-Context Bootstrap Correction\n\nRelease date: 2026-10-01.\n\n## v1.6.0 - '), 'UNPUBLISHED_VERSION_RELEASE_HEADING');
+    expectIssue('CHANGELOG.md', (content) => content.replace('## Unreleased', '## Draft'), 'UNRELEASED_CHANGELOG_SECTION_MISSING');
+  });
+
+  it('rejects a manifest that no longer lists v1.6.1 as implemented but unpublished while the roadmap carries it', () => {
+    expectIssue('docs/documentation-preservation-manifest.json', (content) => content.replace(/"implementedUnpublishedVersions": \[\s*"v1\.6\.1"\s*\]/, '"implementedUnpublishedVersions": []'), 'UNPUBLISHED_VERSION_UNCLASSIFIED');
   });
 });

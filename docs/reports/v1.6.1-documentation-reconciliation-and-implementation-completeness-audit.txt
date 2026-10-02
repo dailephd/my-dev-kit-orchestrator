@@ -1,0 +1,223 @@
+v1.6.1 documentation reconciliation and implementation-completeness audit
+=========================================================================
+
+1. FINAL_STATUS
+PASS_V1_6_1_DOCUMENTATION_RECONCILED_IMPLEMENTATION_COMPLETE
+
+2. REPOSITORY
+my-dev-kit-orchestrator (local checkout of dailephd/my-dev-kit-orchestrator)
+
+3. BRANCH
+fix/v1.6.1-test-context-bootstrap
+
+4. STARTING_HEAD
+0a838f07b0e0d67fa6ee6d214180c4f40ba8d9ed (git rev-parse HEAD and git rev-parse 0a838f0 resolved to the same full commit)
+
+5. IMPLEMENTATION_COMPLETE_SHA
+0a838f07b0e0d67fa6ee6d214180c4f40ba8d9ed
+("fix: allow test-context bootstrap before test implementation"; parent cb9f8c02b2ce4e80231159f8d9d21e8509d8ab57, the v1.6.0 release merge)
+
+6. PACKAGE_NAME
+@dailephd/my-dev-kit-orchestrator
+
+7. PACKAGE_VERSION
+1.6.0 (unchanged by this workflow)
+
+8. LATEST_PUBLISHED_VERSION
+1.6.0 (npm view ...@1.6.0 version returned 1.6.0; npm view ...@1.6.1 version returned E404, so 1.6.1 is not published)
+
+9. TARGET_PATCH
+v1.6.1 - test-context bootstrap correction (implemented, documentation-reconciled, unpublished)
+
+10. INITIAL_GIT_STATUS
+clean on branch fix/v1.6.1-test-context-bootstrap; nothing pushed before this workflow; node engine ">=24"; sole runtime dependency commander ^11.1.0
+
+11. MY_DEV_KIT_RETRIEVAL_LOG
+Producer: @dailephd/my-dev-kit 1.12.5 (exact), orchestrator tooling 1.2.3.
+Index: .my-dev-kit-context/indexes/my-dev-kit-orchestrator-v1.6.1-20261002T061159-docs-audit (roots src, tests, scripts; built from the exact implementation commit).
+Searches: "assessPreTestDeferral pre-test deferral"; "isTestImplementationPreTestEntry"; "CONTEXT_TEST_EVIDENCE_PENDING_PRETEST"; "evaluateRunIntegrityGate stage may mark complete"; "testContextBootstrap tests pre-test entry".
+Lookup: symbol testContextBootstrap.ts#assessPreTestDeferral (found).
+Source: symbol testContextBootstrap.ts#assessPreTestDeferral (lines 52-71, capped).
+Exact source delta: git diff cb9f8c0..0a838f0 (11 files, 896 insertions, 27 deletions) was used as the authoritative changed-surface record; promptGenerator.ts numbered steps confirmed by a line-matched search (seven steps, lines 110-116).
+Evidence root: .my-dev-kit-context/v1.6.1/documentation-reconciliation (gitignored, not staged).
+Full source/test file reads: 0. The checker script and docs-tooling tests were read in bounded ranges; documents were read as needed (permitted separately).
+
+12. SOURCE_OF_TRUTH_INVENTORY
+src/instructions/contextReadiness.ts (policy owner; phase flag preTestEntry; deferredTestEvidence; warning emission)
+src/instructions/testContextBootstrap.ts (assessPreTestDeferral; PRETEST_DEFERRABLE_UNRESOLVED_REASONS; CONTEXT_TEST_EVIDENCE_PENDING_PRETEST)
+src/instructions/stageRepositoryEvidenceRequirements.ts (TEST_IMPLEMENTATION_REPORT_ARTIFACT; isTestImplementationPreTestEntry)
+src/instructions/runContextReadiness.ts and stageContextBundle.ts (phase wiring)
+src/instructions/myDevKitEvidenceSummary.ts (typed projection fields)
+src/promptGenerator.ts, src/commands/status.ts, src/commands/check.ts (rendering)
+src/runIntegrityGate.ts (unchanged canonical consumer)
+tests/testContextBootstrap.test.ts, tests/myDevKitEvidenceSummary.test.ts
+package.json, src/program.ts, src/types.ts, src/workflows.ts (public surface, unchanged)
+
+13. IMPLEMENTATION_COMPLETENESS_VERDICT
+COMPLETE
+
+14. IMPLEMENTATION_COMPLETENESS_MATRIX
+R01 existing owner: IMPLEMENTED_AND_VERIFIED (extends contextReadiness.ts; no second engine; runIntegrityGate.ts not in the diff)
+R02 pre-test entry phase: IMPLEMENTED_AND_VERIFIED (predicate requires stage test-implementation and absent report; tests: phase and run-level suites)
+R03 raw evidence truthful: IMPLEMENTED_AND_VERIFIED (critical summary still 0 mapped / 3 partial in entry state; test asserts)
+R04 allowed deferred gaps: IMPLEMENTED_AND_VERIFIED (only "no related test" and "no oracle evidence"; "no test command" non-deferrable; typed projection)
+R05 production-side evidence required: IMPLEMENTED_AND_VERIFIED (symbols, contract-like evidence, test command, identity, freshness, provenance, truncation each blocked in tests)
+R06 mixed gap: IMPLEMENTED_AND_VERIFIED (mixed-reason test and one-non-deferrable-blocks-all test)
+R07 warning/state: IMPLEMENTED_AND_VERIFIED (CONTEXT_TEST_EVIDENCE_PENDING_PRETEST, readyWithAssumptions reused, no schema bump)
+R08 prompt guidance: IMPLEMENTED_AND_VERIFIED (seven steps confirmed from promptGenerator.ts source; CLI replay asserts the sequence)
+R09 completion strictness: IMPLEMENTED_AND_VERIFIED (report presence restores strict; run-level and CLI tests)
+R10 mark completion: IMPLEMENTED_AND_VERIFIED (CLI replay: mark exits 1 until refreshed evidence)
+R11 downstream strictness: IMPLEMENTED_AND_VERIFIED (verification, judge, final-report, undefined, "(complete)", unknown stage all strict)
+R12 legacy run compatibility: IMPLEMENTED_AND_VERIFIED (run without semanticContinuityVersion; run.json contract fields unchanged)
+R13 Semantic Continuity compatibility: IMPLEMENTED_AND_VERIFIED (no source change to semantic modules; semantic suites pass)
+R14 canonical RunIntegrityGate: IMPLEMENTED_AND_VERIFIED (gate unmodified; no alternate gate)
+R15 status surface: IMPLEMENTED_AND_VERIFIED (CLI replay)
+R16 check surface: IMPLEMENTED_AND_VERIFIED (CLI replay; same decision source)
+R17 prompt surface: IMPLEMENTED_AND_VERIFIED (CLI replay)
+R18 verification/judge/final-report: IMPLEMENTED_AND_VERIFIED (run-level strictness for each stage plus unchanged judge-integrity suites that consume the same gate; judge integrity derives from the gate result)
+R19 negative matrix: IMPLEMENTED_AND_VERIFIED (all 19 listed cases present as executable tests)
+R20 noncritical / not-applicable: IMPLEMENTED_AND_VERIFIED (noncritical warning-only in both phases; not-applicable summary identical across phases)
+R21 other mode compatibility: IMPLEMENTED_AND_VERIFIED (greenfield, test mode, extraction, lifecycle and prompt suites pass in this audit run)
+R22 no new public workflow surface: IMPLEMENTED_AND_VERIFIED (no change to package.json, program.ts, workflows.ts, types.ts, scripts at the implementation commit; docs:check derives 8 commands, 7 modes, 79 stages)
+R23 v1.7 boundary: OUT_OF_SCOPE_BY_PLAN (ORC-EVIDENCE-01 not implemented; confirmed absent from the source delta)
+R24 test evidence: IMPLEMENTED_AND_VERIFIED (tests/testContextBootstrap.test.ts present; 54 of 54 pass in this audit; with myDevKitEvidenceSummary.test.ts 107 of 107)
+R25 regression state: IMPLEMENTED_AND_VERIFIED (typecheck passes; 900 focused compatibility tests across 30 suites pass; complete suite is the parent implementation evidence)
+
+REQUIREMENT_COUNT: 25
+IMPLEMENTED_AND_VERIFIED_COUNT: 24
+OUT_OF_SCOPE_BY_PLAN_COUNT: 1
+SUPERSEDED_BY_EXPLICIT_DECISION_COUNT: 0
+PARTIALLY_IMPLEMENTED_COUNT: 0
+NOT_IMPLEMENTED_COUNT: 0
+IMPLEMENTED_BUT_UNVERIFIED_COUNT: 0
+PUBLIC_SURFACE_CHANGED: NO (observable status/check/prompt text gains pending-state lines; no syntax added)
+PERSISTED_SCHEMA_CHANGED: NO
+DEPENDENCIES_CHANGED: NO
+PACKAGE_VERSION_CHANGED: NO
+
+15. TEST_CONTEXT_BOOTSTRAP_COMPLETENESS
+The policy lives in a bounded helper (testContextBootstrap.ts) consumed by ContextReadiness; the phase predicate lives beside the stage evidence requirements; both entry paths (run-level readiness and the stage bundle) pass it. It is not a gate, stage, or engine.
+
+16. PRE_TEST_ENTRY_COMPLETENESS
+Entry accepted only when every non-mapped critical responsibility is partially-mapped solely for the two test-side reasons, has no related test file, and has production symbols, contract-like evidence, and a test command; mappings are non-truncated; and no other readiness blocker exists. The pending note is emitted only when the result is otherwise ready.
+
+17. POST_TEST_COMPLETION_COMPLETENESS
+The predicate turns false when artifacts/test-implementation-report.txt exists; the same canonical gate then blocks mark, lifecycle resolution, and downstream prompts until a refreshed context fully maps every critical responsibility.
+
+18. LEGACY_RUN_COMPATIBILITY
+The phase decision needs only the run folder and the evaluated stage. A run without semanticContinuityVersion receives the correction; a test confirms no contract field is added to run.json (only the pre-existing currentStage and status bookkeeping changes).
+
+19. SEMANTIC_CONTINUITY_COMPATIBILITY
+No semantic module changed. Continuity only observes the readiness result; semanticContinuity suites pass.
+
+20. RUN_INTEGRITY_COMPATIBILITY
+runIntegrityGate.ts is untouched; contextBlocked still derives from the test-context decision, so blocked stages render refresh-only prompts and cannot be marked complete.
+
+21. STATUS_CHECK_PROMPT_SURFACE
+status prints "Pre-test bootstrap" lines and "Entry allowed; NOT completion-eligible"; check prints the equivalent pass-state lines; the test-implementation prompt prints "Pre-test bootstrap: ENTRY ALLOWED, COMPLETION NOT YET ELIGIBLE." with seven numbered steps. All three derive from the same ContextReadinessResult.
+
+22. NEGATIVE_MATRIX_COMPLETENESS
+Covered by executable tests: missing production symbols; missing changed surface; missing contract evidence; mixed production/test gap; missing test command; unmapped critical responsibility; missing raw mapping; stale freshness; unknown freshness; repository mismatch; declared index mismatch; capsule/audit mismatch; required-evidence truncation; mapping truncation; missing provenance; missing strategy; malformed strategy; unknown criticality; duplicate responsibility IDs; malformed raw evidence.
+
+23. PUBLIC_SURFACE_COMPLETENESS
+Derived from source by docs:check: 8 commands, 7 workflow modes, 79 native stages, 13 greenfield stages, 4 starter profiles, 11 context-sensitive stages, schemas 1.0.0 and 1.1.0. Node engine >=24. Runtime dependency unchanged. No v1.6.1 command, option, mode, stage, dependency, persisted state, or artifact family.
+
+24. OUT_OF_SCOPE_CONFIRMATION
+ORC-EVIDENCE-01 and generic ecosystem evidence intake not implemented; no release, tag, GitHub Release, npm publication, version bump, or pre-release readiness performed.
+
+25. DOCUMENTS_REVIEWED
+README.md; CHANGELOG.md; docs/ARCHITECTURE.md; ARTIFACTS.md; CI_CD.md; COMMANDS.md; CONTRACTS.md; CURRENT_STATE.md; DEVELOPMENT.md; DOCUMENTATION_PRESERVATION_POLICY.md; PROJECT_OVERVIEW.md; QUICKSTART.md; RELEASE.md; RELEASE_CHECKLIST.md; ROADMAP.md; SECURITY.md; USAGE.md; WORKFLOWS.md; documentation-preservation-manifest.json; package.json; scripts/check-docs-consistency.mjs; tests/documentationConsistency.test.ts; src/__tests__/docs-consistency.test.ts. Workflows under .github were not materially relevant. Historical reports were not edited.
+
+26. DOCUMENT_ROLE_AUDIT
+README: published overview (adds one concise unpublished-patch paragraph). CHANGELOG: release history plus undated Unreleased delta. CURRENT_STATE: operational state. ROADMAP: version scope. ARCHITECTURE: current ownership. CONTRACTS: stable behavior contract. WORKFLOWS: lifecycle. COMMANDS/USAGE: observable behavior and procedures (no syntax). ARTIFACTS: file/lifecycle boundary. DEVELOPMENT: maintainer ownership. PROJECT_OVERVIEW: capability summary.
+
+27. README_RECONCILIATION
+One paragraph in "Workflow instruction and context readiness" describes the implemented but unpublished patch; package metadata stated as 1.6.0.
+
+28. CHANGELOG_RECONCILIATION
+Undated Unreleased section (Fixed, Changed, Compatibility) in product-behavior language; no finalized v1.6.1 heading, no date, no SHAs or test counts.
+
+29. CURRENT_STATE_RECONCILIATION
+Current release stays v1.6.0. New "Implemented but unpublished" section; Active next direction names pre-release readiness as the next lifecycle stage and keeps v1.7.0 planned. Lifecycle wording is durable (implementation complete; documentation reconciliation complete; pre-release readiness not yet complete; unpublished).
+
+30. ROADMAP_RECONCILIATION
+v1.6.1 added to the version summary and as a planned-milestones detail entry between v1.6.0 and v1.7.0; v1.7.0 stays ORC-EVIDENCE-01 and now reads "planned after v1.6.1".
+
+31. ARCHITECTURE_RECONCILIATION
+New subsection text inside "Context readiness" (no new top-level heading): owners, phase predicate, helper role, entry conditions, warning, raw-evidence truthfulness, strict return, Semantic Continuity independence, legacy compatibility.
+
+32. CONTRACTS_RECONCILIATION
+One paragraph in the context-readiness contract stating the phase-aware rule, the single exception, additive warning, no schema change.
+
+33. WORKFLOWS_RECONCILIATION
+New "Test-context lifecycle around test-implementation" subsection with the seven-stage user sequence; no flag, command, mode, or stage.
+
+34. COMMANDS_RECONCILIATION
+One paragraph on status/check/prompt behavior; states no command, option, or flag was added.
+
+35. USAGE_RECONCILIATION
+Producer-field note (validated against 1.12.5) and a manual procedure paragraph for pre-test entry, refresh, and strict completion.
+
+36. ARTIFACTS_RECONCILIATION
+One paragraph: no new artifact/file/schema/state; raw partial mapping remains; TestImplementationReport stays the native carrier.
+
+37. DEVELOPMENT_RECONCILIATION
+Source ownership list updated for stageRepositoryEvidenceRequirements, myDevKitEvidenceSummary, contextReadiness, testContextBootstrap and the rendering surfaces.
+
+38. PROJECT_OVERVIEW_RECONCILIATION
+One sentence on phase-aware test-context readiness, linking CURRENT_STATE for status.
+
+39. QUICKSTART_RECONCILIATION
+Reviewed; no readiness lifecycle claims; no change required.
+
+40. SECURITY_RECONCILIATION
+Reviewed; v1.6.1 adds no input surface, persisted state, subprocess, or dependency; no change required.
+
+41. RELEASE_DOCUMENT_RECONCILIATION
+RELEASE.md and RELEASE_CHECKLIST.md reviewed; generic and consistent with v1.6.0 as the current release and v1.7.0 planned; no future readiness evidence inserted; no change required.
+
+42. DOCUMENTATION_PRESERVATION_RECONCILIATION
+Manifest: roadmapVersions gains v1.6.1; implementedUnpublishedVersions = [v1.6.1]; v1.7.0 stays in plannedUnpublishedVersions; new protected facts testContextBootstrapWarningCode and pretestDeferrableReasons; currentProducerVersion 1.12.5; two stale versionStatusPolicy strings made truthful; required-term and assertion lists extended. No protection removed or weakened.
+
+43. STALE_CLAIM_AUDIT
+Searches over README, CHANGELOG and maintained docs for: v1.6.1 planned/published/released/current; v1.7.0 is current; "must be fully mapped before"; "cannot begin without"; "no related test"; "partially mapped"; "future batch"; "later batch"; "not yet enforced". Hits: only CONTRACTS.md line about related-test projection (valid, document-specific). No stale current/future claim found; no historical wording changed.
+
+44. TEMPORAL_STATE_AUDIT
+Latest published: v1.6.0. Package metadata: 1.6.0. v1.6.1: implemented, documentation-reconciled, unpublished, readiness not yet complete. v1.7.0: planned ORC-EVIDENCE-01. No document calls v1.6.1 published, released, tagged, or on npm.
+
+45. DUPLICATION_AND_PLACEMENT_AUDIT
+Detail lives in ARCHITECTURE (ownership), CONTRACTS (rule), WORKFLOWS/USAGE (procedure), COMMANDS (surface); README, PROJECT_OVERVIEW, CURRENT_STATE and ROADMAP summarize and link. No planning detail or transcript placed in current-state documents.
+
+46. DOCUMENTATION_TOOLING_CHANGES
+scripts/check-docs-consistency.mjs: derives the warning code and deferrable reasons from the policy source and compares them to the manifest; requires both in ARCHITECTURE and CONTRACTS; adds BOOTSTRAP_SURFACE_FALSE_CLAIM; adds UNPUBLISHED_VERSION_UNCLASSIFIED (every roadmap version after the latest published one must be implemented-unpublished or planned), closing a gap found during this audit. Tests: tests/documentationConsistency.test.ts gains 12 behavior-derived cases (+ builder copy of the new source); src/__tests__/docs-consistency.test.ts builder copies the new source file. No existing case weakened.
+
+47. FILES_CHANGED
+CHANGELOG.md; README.md; docs/ARCHITECTURE.md; docs/ARTIFACTS.md; docs/COMMANDS.md; docs/CONTRACTS.md; docs/CURRENT_STATE.md; docs/DEVELOPMENT.md; docs/PROJECT_OVERVIEW.md; docs/ROADMAP.md; docs/USAGE.md; docs/WORKFLOWS.md; docs/documentation-preservation-manifest.json; docs/reports/v1.6.1-documentation-reconciliation-and-implementation-completeness-audit.txt (new); scripts/check-docs-consistency.mjs; tests/documentationConsistency.test.ts; src/__tests__/docs-consistency.test.ts (test-fixture builder only). Zero product-source changes: git diff 0a838f0 -- src ':!src/__tests__' is empty.
+
+48. LINT_DOCS_RESULT
+npm run lint:docs: 0 issues in 0 files (23 files)
+
+49. DOCS_CHECK_RESULT
+DOCS_CHECK_PASS: @dailephd/my-dev-kit-orchestrator@1.6.0; published v1.6.0; 8 commands; 7 modes; 79 native stages; 13 greenfield stages; 4 greenfield profiles; 11 context-sensitive stages; schemas 1.0.0, 1.1.0
+
+50. TYPECHECK_RESULT
+npm run typecheck: pass
+
+51. FOCUSED_DOC_TOOLING_TEST_RESULT
+tests/documentationConsistency.test.ts and src/__tests__/docs-consistency.test.ts: 87 of 87 pass. Together with tests/testContextBootstrap.test.ts and tests/myDevKitEvidenceSummary.test.ts: 4 suites, 194 of 194 pass.
+npm run verify: exit 0 (typecheck, build, smoke:context, lint, lint:docs, docs:check, test:security, all smoke:cli modes). verify reruns typecheck and docs checks already run above; that duplicate coverage is expected.
+
+52. GIT_DIFF_CHECK_RESULT
+git diff --check: clean
+
+53. FINAL_GIT_STATUS
+Recorded after commit and push in the final response.
+
+54. COMMIT
+Recorded in the final response (docs: reconcile v1.6.1 implementation).
+
+55. PUSH_RESULT
+Recorded in the final response.
+
+56. NEXT_ALLOWED_WORKFLOW
+v1.6.1 standardized pre-release readiness on the exact documentation-reconciled commit. Not started by this workflow.

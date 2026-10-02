@@ -64,6 +64,7 @@ and the `v0.x.0` releases remain part of the published project history.
   through the existing run-integrity gate for staged runs. Released on
   2026-09-25.
 - `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. It is the current release.
+- `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. It is implemented and documentation-reconciled but unpublished; package metadata remains `1.6.0`.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1436,9 +1437,49 @@ Explicit exclusions:
 - no optional mobile-profile work (remains deferred)
 - no release or publication automation
 
+### v1.6.1 - Test-Context Bootstrap Correction
+
+Status: implemented and documentation-reconciled; unpublished; pre-release readiness not yet complete. Package metadata remains `1.6.0`.
+
+Goal:
+
+Remove a deadlock in repository-context readiness: `test-implementation` is the
+stage that creates related-test and oracle evidence, yet the test-context gate
+required that evidence before the stage could begin, so a new subsystem with no
+tests yet could never enter it.
+
+Implemented scope:
+
+- a phase-aware test-context policy over truthful raw producer evidence: while a
+  run is entering `test-implementation` and its `TestImplementationReport` does
+  not exist, a critical responsibility that is `partially-mapped` only because
+  related-test and oracle evidence cannot exist yet is accepted for entry
+- the accepted state is ready-with-assumptions with an explicit pending-test
+  warning, surfaced by `status`, `check`, and the `test-implementation` prompt as
+  entry allowed and completion not yet eligible
+- strict readiness returns once the report exists and for `verification`,
+  `judge`, and `final-report`
+
+Compatibility boundary:
+
+- production-side evidence, freshness, identity, provenance, truncation, and
+  strategy requirements are unchanged and still block entry
+- compatible legacy runs receive the correction without an opt-in field;
+  Semantic Continuity and `RunIntegrityGate` ownership are unchanged
+- the eight commands, seven workflow modes, 79 native stages, 13 greenfield
+  stages, and four starter profiles are unchanged; no dependency or persisted
+  state is added
+
+Explicit exclusions:
+
+- no generic evidence intake; `v1.7.0` remains `ORC-EVIDENCE-01`
+- no new command, mode, stage, or artifact family
+- no automatic `my-dev-kit` execution
+- no release or publication automation
+
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 
-Status: planned after v1.6.0.
+Status: planned after v1.6.1.
 
 Goal:
 
