@@ -3,14 +3,15 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.6.0`
-- Current release: `v1.6.0`
-- Release date: `2026-09-26`
+- Package metadata version: `1.6.1`
+- Current release: `v1.6.1`
+- Release date: `2026-10-02`
+- Previous release: `v1.6.0`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.6.0`
-- Latest Git tag and GitHub Release: `v1.6.0`
+- Latest npm version: `1.6.1`
+- Latest Git tag and GitHub Release: `v1.6.1`
 
-Package metadata, npm, the `v1.6.0` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.6.1` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -24,7 +25,7 @@ modes, 79 native stages, 13 greenfield stages, and four starter profiles
 remain unchanged; no package, dependency, export, or core retrieval-engine
 change was required.
 
-## Previous release: Semantic Continuity
+## Earlier release: Semantic Continuity
 
 `v1.5.0`, the Semantic Continuity and Evidence-to-Implementation Bridge, shipped the following behavior:
 
@@ -39,9 +40,9 @@ Implemented behavior:
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
-## Current release: Workflow Economics and Deterministic Run Telemetry
+## Previous release: Workflow Economics and Deterministic Run Telemetry
 
-`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is the current release.
+`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is the previous release.
 
 Implemented behavior:
 
@@ -55,9 +56,9 @@ Implemented behavior:
 
 Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
-## Implemented but unpublished
+## Current release: Test-Context Bootstrap Correction
 
-`v1.6.1`, a test-context bootstrap correction, is implemented on its patch branch and is not published. Package metadata stays `1.6.0`, and no tag, GitHub Release, or npm version exists for it. It is documented here as current source behavior, not as a release; the current release remains `v1.6.0`.
+`v1.6.1`, a test-context bootstrap correction, is the current release; it is a patch between `v1.6.0` and `v1.7.0`.
 
 Why it exists: repository-context readiness required every critical test responsibility to be fully mapped, including related-test and oracle evidence, before `test-implementation` could begin. That evidence can only be created during `test-implementation`, so a new subsystem with no tests yet could never enter the stage.
 
@@ -71,8 +72,6 @@ Implemented behavior:
 - legacy schema-major-1 runs, including runs without `semanticContinuityVersion`, receive the correction without any `run.json` change; Semantic Continuity is not activated for them and its phase-aware behavior is unchanged
 
 Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or dependency. `RunIntegrityGate` remains the single enforcement consumer, and `my-dev-kit` is still run manually.
-
-Lifecycle state: implementation complete; documentation reconciliation complete; pre-release readiness not yet complete; unpublished. The next lifecycle stage is pre-release readiness. None of its results is claimed here.
 
 ## Implemented operational surface
 
@@ -94,12 +93,9 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The latest release is `v1.6.0`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+The current release is `v1.6.1`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
-
-`v1.6.1`, described above, is implemented and unpublished; its next lifecycle
-stage is pre-release readiness.
 
 `v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the next
 planned feature version and remains a later consumer milestone. It will build on

@@ -23,9 +23,20 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.6.0`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.6.1`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
+
+`v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
+yet can enter `test-implementation`: while the `TestImplementationReport` does
+not exist, a critical responsibility that is only missing related-test and
+oracle evidence is accepted for entry with a pending-test warning, and the raw
+`my-dev-kit` mapping stays truthfully `partially-mapped`. Completion,
+verification, and judge remain strict and require a refreshed post-test
+context. Legacy compatible runs need no Semantic Continuity activation, and
+`RunIntegrityGate` remains the canonical enforcement consumer. No command,
+mode, stage, or dependency was added. Generic ecosystem evidence intake
+remains planned for `v1.7.0` (ORC-EVIDENCE-01).
 
 `v1.6.0` ships versioned native run telemetry and deterministic Workflow
 Economics. New CLI-created runs record bounded observations for `start`,
@@ -162,8 +173,7 @@ supporting issue codes, and carries the primary reason, corrective action, and
 evidence target through prompts, `status`, `check`, verification, judge,
 correction routing, and `export`.
 
-Current source, in an implemented but unpublished `v1.6.1` patch (package
-metadata remains `1.6.0`), also makes test-context readiness phase-aware so a new
+Current source, as of the `v1.6.1` patch, also makes test-context readiness phase-aware so a new
 subsystem with no tests yet can enter `test-implementation`. While the stage is
 being entered and its `TestImplementationReport` does not exist, a critical
 responsibility that is only missing related-test and oracle evidence is accepted

@@ -2,7 +2,7 @@
 
 Versions are listed in chronological order.
 
-`v1.6.0` is the current release. `v1.5.0` and earlier versions remain part of
+`v1.6.1` is the current release. `v1.6.0` and earlier versions remain part of
 published project history. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
@@ -63,8 +63,8 @@ and the `v0.x.0` releases remain part of the published project history.
   strategy through implementation, test, and verification evidence and enforced
   through the existing run-integrity gate for staged runs. Released on
   2026-09-25.
-- `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. It is the current release.
-- `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. It is implemented and documentation-reconciled but unpublished; package metadata remains `1.6.0`.
+- `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. Released on 2026-09-26.
+- `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1196,7 +1196,7 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.6.0` is the current release, released on 2026-09-26. `v1.5.0` and earlier
+`v1.6.1` is the current release, released on 2026-10-02. `v1.6.0` and earlier
 versions are historical. Greenfield-to-Feature
 Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
@@ -1439,7 +1439,7 @@ Explicit exclusions:
 
 ### v1.6.1 - Test-Context Bootstrap Correction
 
-Status: implemented and documentation-reconciled; unpublished; pre-release readiness not yet complete. Package metadata remains `1.6.0`.
+Status: Released as `1.6.1` on 2026-10-02.
 
 Goal:
 

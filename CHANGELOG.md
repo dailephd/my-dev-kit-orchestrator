@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-Targets patch `v1.6.1`, a test-context bootstrap correction. It is implemented and not published.
+## v1.6.1 - Test-Context Bootstrap Correction
+
+Release date: 2026-10-02.
 
 ### Fixed
 

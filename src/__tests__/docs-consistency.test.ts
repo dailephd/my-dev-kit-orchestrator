@@ -164,17 +164,17 @@ describe('v1.6.0 telemetry facts (isolated fixture)', () => {
     }
   });
 
-  it('requires v1.6.0 current-release wording and a dated finalized changelog section', () => {
+  it('requires v1.6.1 current-release wording and a dated finalized changelog section', () => {
     const transitional = makeFixture();
-    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.6.0 is not yet published.\n`);
+    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.6.1 is not yet published.\n`);
     expect(run(transitional).stderr).toContain('[CURRENT_RELEASE_STATUS_CONTRADICTION]');
 
     const missingHeading = makeFixture();
-    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.6.0 - ', '## Draft - '));
+    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.6.1 - ', '## Draft - '));
     expect(run(missingHeading).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
 
     const missingDate = makeFixture();
-    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-09-26\.\r?\n/, ''));
+    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-10-02\.\r?\n/, ''));
     expect(run(missingDate).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
   });
 });

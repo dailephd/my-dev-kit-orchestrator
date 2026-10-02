@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.6.0`, which ships native run telemetry and
-Workflow Economics alongside `v1.5.0`'s Semantic Continuity and the prior
+The current release is `v1.6.1`, a test-context bootstrap correction that
+makes test-context readiness phase-aware. It follows `v1.6.0`, which shipped
+native run telemetry and Workflow Economics, alongside `v1.5.0`'s Semantic Continuity and the prior
 greenfield, integrity, and instruction-bootstrap contracts,
 `v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
 readiness, explicit proof-only verification, and the bounded Observer v0.6

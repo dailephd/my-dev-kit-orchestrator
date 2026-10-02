@@ -45,7 +45,7 @@ describe('v1.2.1 CLI command surface', () => {
   it('--version reports the current release', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('../package.json');
-    expect(pkg.version).toBe('1.6.0');
+    expect(pkg.version).toBe('1.6.1');
   });
 
   it('no context-specific command or automatic-retrieval option was added to any command', () => {
