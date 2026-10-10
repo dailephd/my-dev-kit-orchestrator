@@ -1200,7 +1200,7 @@ Roadmap sequence:
 versions are historical. Greenfield-to-Feature
 Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
-## Planned milestones
+## Published v1.4.0
 
 ### v1.4.0 - Maintained-Line Reconciliation and Proof-Only Workflow Support
 
@@ -1214,6 +1214,8 @@ Implemented scope:
 - bounded Observer v0.6 evidence consumption and public-contract hardening
 - reproducible Observer-to-Orchestrator compatibility using fresh pushed
   source; no current claim of a reproducible Lab leg
+
+## Published v1.4.1
 
 ### v1.4.1 - Installed Greenfield Instruction Surface Correction
 
@@ -1316,6 +1318,8 @@ Relationship to later work:
 `v1.5.0`. After this patch, the next feature version was the Semantic
 Continuity and Evidence-to-Implementation Bridge.
 
+## Published v1.5.0
+
 ### v1.5.0 - Semantic Continuity and Evidence-to-Implementation Bridge
 
 Status: Released as `1.5.0` on 2026-09-25.
@@ -1351,6 +1355,8 @@ Boundaries preserved:
   probabilistic matching
 - no v1.6.0 telemetry, generic external-evidence integration, Observer
   redesign, greenfield handoff work, or mobile-profile work
+
+## Published v1.6.0
 
 ### v1.6.0 - Workflow Economics and Deterministic Run Telemetry
 
@@ -1437,6 +1443,8 @@ Explicit exclusions:
 - no optional mobile-profile work (remains deferred)
 - no release or publication automation
 
+## Published v1.6.1
+
 ### v1.6.1 - Test-Context Bootstrap Correction
 
 Status: Released as `1.6.1` on 2026-10-02.
@@ -1476,6 +1484,8 @@ Explicit exclusions:
 - no new command, mode, stage, or artifact family
 - no automatic `my-dev-kit` execution
 - no release or publication automation
+
+## Planned milestones
 
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 
