@@ -151,13 +151,103 @@ describe('checkArtifactTrace - malformed IDs', () => {
     }
   });
 
-  it('reports unknown prefix as malformed', () => {
+  // v1.6.2: previously 'See FOO-001 for details.' in prose failed as malformed.
+  it('does not report an unknown prefix in ordinary prose as malformed', () => {
     const tmp = makeTempDir();
     try {
       writeFile(tmp, 'artifacts/behavior-model.txt', 'See FOO-001 for details.\n');
       const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.passed).toBe(true);
+      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports an unknown prefix in an explicit declaration as malformed', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'FOO-001: new behavior\n');
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
       expect(result.passed).toBe(false);
-      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(true);
+      const issue = result.issues.find((i) => i.code === 'TRACE_MALFORMED_ID');
+      expect(issue).toMatchObject({ severity: 'fail', context: 'FOO-001' });
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports an unknown prefix as an explicit link target as malformed', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'REQ-001: requirement\nREQ-001 -> FOO-001\n');
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.filter((i) => i.code === 'TRACE_MALFORMED_ID').map((i) => i.context)).toEqual(['FOO-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not report ECO-00, ECO-01 or UTF-8 technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'The ECO-00 contract and ECO-01 certification are external.',
+        'Output is encoded as UTF-8.',
+        '"UTF-8"',
+        'UTF-8:',
+        '(ECO-00)',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(false);
+      expect(result.passed).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports recognized-prefix near misses but not technical identifiers in mixed content', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'ECO-00 and UTF-8 are plain technical text.',
+        'REQ-001: valid requirement',
+        'RSP-01: malformed responsibility',
+        'RSP-01 again, and REQ001.',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.filter((i) => i.code === 'TRACE_MALFORMED_ID').map((i) => i.context)).toEqual(['RSP-01', 'REQ001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('keeps duplicate and missing-target diagnostics unchanged alongside technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'Uses UTF-8 and ECO-00.',
+        'REQ-001: first',
+        'REQ-001: second',
+        'REQ-001 -> BEH-999',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      const codes = result.issues.map((i) => i.code);
+      expect(codes).toContain('TRACE_DUPLICATE_ID');
+      expect(codes).toContain('TRACE_MISSING_LINK_TARGET');
+      expect(codes).not.toContain('TRACE_MALFORMED_ID');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not modify the checked artifact', () => {
+    const tmp = makeTempDir();
+    try {
+      const content = 'REQ-01\nFOO-001: x\nECO-00 UTF-8\n';
+      writeFile(tmp, 'artifacts/behavior-model.txt', content);
+      checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(fs.readFileSync(path.join(tmp, 'artifacts/behavior-model.txt'), 'utf8')).toBe(content);
     } finally {
       cleanup(tmp);
     }

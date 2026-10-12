@@ -1,4 +1,9 @@
-import { TRACE_PREFIXES, isValidTraceId, isMalformedTraceId } from './traceModel';
+import {
+  TRACE_PREFIXES,
+  isValidTraceId,
+  isMalformedTraceId,
+  isUnsupportedPrefixTraceId,
+} from './traceModel';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,8 +37,13 @@ const TRACE_ID_INLINE_RE = new RegExp(`(${TRACE_PREFIXES.join('|')})-(\\d{3,})`,
 // Matches link expressions: FROM -> TO (non-whitespace tokens around ->)
 const TRACE_LINK_RE = /(\S+)\s*->\s*(\S+)/g;
 
-// Matches tokens with the shape of a trace ID attempt: uppercase prefix + dash-digits or digits
-const MALFORMED_INLINE_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
+// Matches recognized-prefix tokens followed by dash-digits or digits; the
+// canonical-format check is left to isMalformedTraceId.
+const MALFORMED_INLINE_RE = new RegExp(`\\b((?:${TRACE_PREFIXES.join('|')})(?:-\\d+|\\d+))\\b`, 'g');
+
+// An explicit declaration label at the start of a line ("FOO-001: ..."),
+// mirroring traceChecker's TRACE_DECLARATION_RE but accepting any prefix.
+const UNSUPPORTED_DECLARATION_RE = /^\s*(?:[-*+]\s+)?([A-Z]{2,6}-\d{3,})\s*:/;
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
 
@@ -70,17 +80,55 @@ export function parseTraceLinks(content: string): TraceLink[] {
   return results;
 }
 
+// Single classification policy for malformed trace-ID attempts (used by
+// parseTrace and by traceChecker.checkArtifactTrace):
+//   1. A recognized prefix with a non-canonical suffix (REQ-01, BEH1, RSP001)
+//      is malformed wherever it appears.
+//   2. A canonical-shaped token with an unsupported prefix (FOO-001) is
+//      malformed only when used as a declaration label at the start of a line
+//      ("FOO-001: ...") or as an endpoint of an explicit trace link in which
+//      the other endpoint is a valid trace ID ("REQ-001 -> FOO-001").
+//   3. Everything else (ECO-00, UTF-8, FOO-001 in prose) is ordinary content.
+// Results are deduplicated and ordered by first occurrence.
 export function findMalformedTraceIds(content: string): string[] {
   const all = new Set<string>();
-  let match: RegExpExecArray | null;
-  const re = new RegExp(MALFORMED_INLINE_RE.source, 'g');
-  while ((match = re.exec(content)) !== null) {
-    const token = match[1];
-    if (isMalformedTraceId(token)) {
-      all.add(token);
+  const lines = content.split('\n');
+  for (const line of lines) {
+    const found: Array<{ index: number; token: string }> = [];
+
+    const inline = new RegExp(MALFORMED_INLINE_RE.source, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = inline.exec(line)) !== null) {
+      if (isMalformedTraceId(match[1])) found.push({ index: match.index, token: match[1] });
     }
+
+    const declaration = UNSUPPORTED_DECLARATION_RE.exec(line);
+    if (declaration && isUnsupportedPrefixTraceId(declaration[1])) {
+      found.push({ index: declaration.index + declaration[0].indexOf(declaration[1]), token: declaration[1] });
+    }
+
+    if (line.includes('->')) {
+      for (const link of parseTraceLinks(line)) {
+        const from = linkEndpointCore(link.from);
+        const to = linkEndpointCore(link.to);
+        if (isUnsupportedPrefixTraceId(to) && isValidTraceId(from)) {
+          found.push({ index: line.indexOf(to), token: to });
+        } else if (isUnsupportedPrefixTraceId(from) && isValidTraceId(to)) {
+          found.push({ index: line.indexOf(from), token: from });
+        }
+      }
+    }
+
+    found.sort((a, b) => a.index - b.index);
+    for (const item of found) all.add(item.token);
   }
   return [...all];
+}
+
+// Strips surrounding punctuation/markup (backticks, parentheses, commas, ...)
+// from a link endpoint so "`FOO-001`," is classified as FOO-001.
+function linkEndpointCore(token: string): string {
+  return token.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
 }
 
 export function findDuplicateIds(ids: TraceId[]): string[] {

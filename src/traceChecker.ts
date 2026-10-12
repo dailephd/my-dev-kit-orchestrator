@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { CheckSeverity } from './artifactChecker';
-import { TRACE_PREFIXES, isValidTraceId, isMalformedTraceId } from './traceModel';
-import { TraceId, TraceLink, parseTraceLinks } from './traceParser';
+import { TRACE_PREFIXES, isValidTraceId } from './traceModel';
+import { TraceId, TraceLink, parseTraceLinks, findMalformedTraceIds } from './traceParser';
 import { RunMetadata } from './run';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,9 +36,6 @@ const TRACE_DECLARATION_RE = new RegExp(
   `^\\s*(?:[-*+]\\s+)?(${TRACE_PREFIXES.join('|')})-(\\d{3,})\\s*:`,
 );
 
-// Malformed token pattern
-const MALFORMED_TOKEN_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
-
 /**
  * Finds trace IDs declared in content, excluding IDs that only appear in link
  * expressions. This separates declared IDs from link-line references, fixing
@@ -60,17 +57,6 @@ export function parseDeclaredTraceIds(content: string): TraceId[] {
   return results;
 }
 
-function findMalformedInContent(content: string): string[] {
-  const found = new Set<string>();
-  let match: RegExpExecArray | null;
-  const re = new RegExp(MALFORMED_TOKEN_RE.source, 'g');
-  while ((match = re.exec(content)) !== null) {
-    const token = match[1];
-    if (isMalformedTraceId(token)) found.add(token);
-  }
-  return [...found];
-}
-
 // ─── Single-artifact trace check ─────────────────────────────────────────────
 
 export function checkArtifactTrace(
@@ -88,8 +74,9 @@ export function checkArtifactTrace(
 
   const content = fs.readFileSync(fullPath, 'utf8');
 
-  // Malformed IDs (tokens that look like trace IDs but are invalid format)
-  const malformed = findMalformedInContent(content);
+  // Malformed IDs: recognized-prefix near misses, plus unsupported prefixes
+  // used as an explicit declaration or link endpoint (shared parser policy).
+  const malformed = findMalformedTraceIds(content);
   for (const token of malformed) {
     issues.push({
       code: 'TRACE_MALFORMED_ID',

@@ -30,11 +30,25 @@ export function isValidTraceId(id: string): boolean {
   return TRACE_ID_RE.test(id);
 }
 
-// Returns true if a token looks like a trace ID attempt but fails canonical validation.
-// Matches tokens of shape PREFIX-digits or PREFIXdigits (2-6 uppercase letters + digits).
-const MALFORMED_RE = /^[A-Z]{2,6}(-\d+|\d+)$/;
+// Lexical policy. Only a recognized prefix is trace vocabulary: a token is a
+// malformed trace ID when it uses a recognized prefix but fails the canonical
+// PREFIX-NNN format (PREFIX-N, PREFIX-NN, PREFIXNNN). Other uppercase
+// letter+digit tokens (ECO-00, UTF-8, SHA256) are ordinary technical
+// identifiers; whether an unrecognized prefix is a trace-ID attempt depends on
+// context (see isUnsupportedPrefixTraceId and traceParser.findMalformedTraceIds).
+const MALFORMED_RE = new RegExp(`^(?:${TRACE_PREFIXES.join('|')})(?:-\\d+|\\d+)$`);
 
 export function isMalformedTraceId(text: string): boolean {
   if (isValidTraceId(text)) return false;
   return MALFORMED_RE.test(text);
+}
+
+// Canonical shape (PREFIX-NNN, 3+ digits) with a prefix outside the trace
+// vocabulary. Context-free this is not an error; it is a trace-ID attempt only
+// where it is used as a declaration label or an explicit trace-link endpoint.
+const UNSUPPORTED_PREFIX_RE = /^([A-Z]{2,6})-\d{3,}$/;
+
+export function isUnsupportedPrefixTraceId(text: string): boolean {
+  const match = UNSUPPORTED_PREFIX_RE.exec(text);
+  return match !== null && !isValidTracePrefix(match[1]);
 }
