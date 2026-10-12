@@ -413,3 +413,7 @@ For a bounded architecture-context stage:
 For an unfamiliar existing project, first obtain `ARCHITECTURE_ASSIMILATION_PASS` under the canonical ecosystem guide. Establish the existing owner, extension point, analogous implementation, canonical contracts/state, dependencies, excluded layers, tests to extend, and architecture that must not be duplicated. One task query is not automatically a complete onboarding report.
 
 Carry only relevant conclusions into each subsequent bounded prompt and refresh current task evidence. Preserve existing owners, registries, state representations, persistence paths, analyzers, command paths, and service layers unless an explicit replacement is in scope. Re-assimilate only the domains invalidated by a material architecture change.
+
+## Node and release CI ownership
+
+Local validation uses the latest stable Node via `npm run validate:local`; hosted CI uses Node 24 across three operating systems. Run focused tests for iterative corrections. The `verify` script already builds, so CI must not run a separate build before it. The redundant `pre-release-matrix.yml` workflow has been retired; its greenfield cases remain in the full Jest suite. See [CI_NODE_POLICY.md](CI_NODE_POLICY.md).

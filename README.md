@@ -339,3 +339,7 @@ Project-specific and compatibility references:
 - [Roadmap](docs/ROADMAP.md)
 - [Documentation preservation policy](docs/DOCUMENTATION_PRESERVATION_POLICY.md)
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
+
+## Node validation and CI
+
+Use `npm run validate:local` under the latest stable Node.js version for local release validation. GitHub Actions validates Node 24 across Ubuntu, Windows, and macOS, without duplicating the full pre-release matrix. See [docs/CI_NODE_POLICY.md](docs/CI_NODE_POLICY.md).
