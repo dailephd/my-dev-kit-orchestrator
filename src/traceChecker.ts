@@ -59,20 +59,39 @@ export function parseDeclaredTraceIds(content: string): TraceId[] {
 
 // ─── Single-artifact trace check ─────────────────────────────────────────────
 
+/**
+ * File-local trace check: link targets resolve only against declarations in
+ * this one artifact. Run-aware resolution lives in checkAllTraces.
+ */
 export function checkArtifactTrace(
   runFolder: string,
   artifactFile: string,
 ): TraceCheckResult {
-  const fullPath = path.join(runFolder, artifactFile);
   const checkedAt = new Date().toISOString();
-  const issues: TraceCheckIssue[] = [];
-
-  if (!fs.existsSync(fullPath)) {
+  const content = readArtifactContent(runFolder, artifactFile);
+  if (content === null) {
     // Missing file is already reported by checkArtifact; skip trace check silently
     return { artifactFile, issues: [], passed: true, checkedAt };
   }
+  return evaluateTraceContent(artifactFile, content, checkedAt);
+}
 
-  const content = fs.readFileSync(fullPath, 'utf8');
+function readArtifactContent(runFolder: string, artifactFile: string): string | null {
+  const fullPath = path.join(runFolder, artifactFile);
+  if (!fs.existsSync(fullPath)) return null;
+  return fs.readFileSync(fullPath, 'utf8');
+}
+
+// Shared evaluation. `upstreamKnownIds` carries declarations visible from other
+// applicable artifacts (run-aware mode); it only widens link-target resolution.
+// Duplicate and orphan diagnostics remain strictly file-local.
+function evaluateTraceContent(
+  artifactFile: string,
+  content: string,
+  checkedAt: string,
+  upstreamKnownIds?: ReadonlySet<string>,
+): TraceCheckResult {
+  const issues: TraceCheckIssue[] = [];
 
   // Malformed IDs: recognized-prefix near misses, plus unsupported prefixes
   // used as an explicit declaration or link endpoint (shared parser policy).
@@ -131,6 +150,9 @@ export function checkArtifactTrace(
   // Missing link targets: link.to is a valid trace ID but not a declared ID
   if (links.length > 0) {
     const knownIds = new Set(declaredIds.map((id) => id.id));
+    if (upstreamKnownIds) {
+      for (const id of upstreamKnownIds) knownIds.add(id);
+    }
     const missing = new Set<string>();
     for (const link of links) {
       if (isValidTraceId(link.to) && !knownIds.has(link.to)) {
@@ -153,12 +175,58 @@ export function checkArtifactTrace(
 
 // ─── All-artifacts trace check ────────────────────────────────────────────────
 
+/**
+ * Run-aware trace check. Link targets resolve against declarations in the
+ * artifact itself, in other artifacts of the same native stage (primary plus
+ * declared additional artifacts), and in artifacts of earlier stages in
+ * RunMetadata order. Declarations in later stages are never visible, and a
+ * missing artifact contributes nothing. Only declaration labels count; prose
+ * mentions and link endpoints never make an ID known.
+ */
 export function checkAllTraces(meta: RunMetadata): TraceCheckResult[] {
+  const contentCache = new Map<string, string | null>();
+  const declaredCache = new Map<string, string[]>();
+
+  const contentOf = (file: string): string | null => {
+    if (!contentCache.has(file)) {
+      contentCache.set(file, readArtifactContent(meta.runFolder, file));
+    }
+    return contentCache.get(file) ?? null;
+  };
+  const declaredOf = (file: string): string[] => {
+    let ids = declaredCache.get(file);
+    if (!ids) {
+      const content = contentOf(file);
+      ids = content === null ? [] : parseDeclaredTraceIds(content).map((d) => d.id);
+      declaredCache.set(file, ids);
+    }
+    return ids;
+  };
+
   const results: TraceCheckResult[] = [];
+  const priorStageIds = new Set<string>();
+
   for (const stage of meta.stages) {
-    results.push(checkArtifactTrace(meta.runFolder, stage.artifactFile));
-    for (const additional of stage.additionalArtifactFiles ?? []) {
-      results.push(checkArtifactTrace(meta.runFolder, additional));
+    const stageFiles = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
+
+    const visible = new Set<string>(priorStageIds);
+    for (const file of stageFiles) {
+      for (const id of declaredOf(file)) visible.add(id);
+    }
+
+    for (const file of stageFiles) {
+      const checkedAt = new Date().toISOString();
+      const content = contentOf(file);
+      results.push(
+        content === null
+          ? { artifactFile: file, issues: [], passed: true, checkedAt }
+          : evaluateTraceContent(file, content, checkedAt, visible),
+      );
+    }
+
+    // Only after the stage is evaluated do its declarations become upstream.
+    for (const file of stageFiles) {
+      for (const id of declaredOf(file)) priorStageIds.add(id);
     }
   }
   return results;
