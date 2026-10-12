@@ -1,0 +1,31 @@
+MY-DEV-KIT-ORCHESTRATOR CODING-AGENT BOOTSTRAP
+===============================================
+
+MANDATORY INTAKE — READ BEFORE ANY REPOSITORY TASK
+--------------------------------------------------
+1. Locate the current Git repository root. Read the COMPLETE root manifest.txt before source discovery, planning an edit, implementation, test changes, documentation updates, refactoring, cleanup, or release-related work. Read this root agents.txt completely. Also read applicable local or nested AGENTS.md, CLAUDE.md, claude.txt, and other explicitly supplied agent instructions; do not assume any one filename is auto-loaded.
+2. If manifest.txt is absent, unreadable or contradicted by live Git/source structure, stop structural changes and report the exact discrepancy. Never invent an owner or silently substitute a remembered manifest.
+3. Consult docs/ARCHITECTURE.md for current subsystem ownership, docs/CURRENT_STATE.md for implemented behavior, docs/ROADMAP.md for fixed version scope, docs/CONTRACTS.md for compatibility, and docs/DOCUMENTATION_PRESERVATION_POLICY.md plus docs/documentation-preservation-manifest.json before documentation edits. Validate important claims against source/tests.
+4. Before any edit, record branch, HEAD and git status, current owner file/directory, affected callers/contracts, nearest tests, target output path, expected bounded edit set, and applicable task/release boundaries.
+5. Use the task-selected my-dev-kit bounded index/search/lookup/slice/source workflow before broad source/test reads or new behavior implementation. Reuse the existing current index for repairs when valid; generate fresh timestamped indexes for approved new feature work. Full-file reads are justified fallbacks, not routine orientation.
+6. Extend established modules. Do not create parallel CLI command routers, modes/stages, RunIntegrityGate, judge evaluator, lifecycle, correction router, instruction catalog, Kit/Observer adapter model, telemetry policy, greenfield registry, docs checker, or arbitrary root/subsystem folders.
+7. All workflow-owned tooling, temporary files, indexes, runs and reports remain inside this repository's authorized ignored roots. Preserve ignored/local files and existing historical records. No visible PowerShell/Terminal/Explorer/browser/editor/Node console windows or GUI popups during execution.
+8. No destructive Git commands, blanket git add, force push, unrelated cleanup, commit/push/merge/tag, package bump or publication without explicit task authorization. Stage only exact authorized paths; keep private data and generated reports out of Git and npm.
+9. Respect public/private boundaries: root manifest.txt and root agents.txt are explicitly tracked safe-instruction exceptions; other local agent files, credentials, environment values, internal reports and individual user data remain private/ignored. Do not append secrets or local absolute user-specific paths to tracked instructions.
+10. Before finishing, run the task-required focused tests and normal validation, check the diff and tracked/ignored paths, then report exact file changes, placement decisions, validation commands/exit codes, retrieval fallback accounting, unresolved risks and next authorized action.
+
+OWNERSHIP FAST PATH
+-------------------
+- CLI registration: src/program.ts; behavior: src/commands/.
+- Workflow modes/stages: src/workflows.ts; run storage: src/run.ts; lifecycle: src/runLifecycle.ts, src/artifactLifecycle.ts, src/stageDetector.ts.
+- Canonical readiness/integrity: src/instructions/ and src/runIntegrityGate.ts; judge/final eligibility: src/judgeIntegrity.ts; correction: src/correctionRouter.ts.
+- Instruction packets, Kit context and RSP evidence: src/instructions/.
+- Native Observer consumer: src/observerEvidence.ts. Telemetry/economics: src/runTelemetry*.ts and src/runWorkflowEconomics.ts; observational only.
+- Greenfield: src/greenfield/ existing brief, mode, profiles, bootstrap, scaffold, fullstack, readiness owners.
+- Closest verification: existing src/__tests__/, tests/, tests/greenfield/ and tests/fixtures/; repository validation: scripts/.
+- Public docs: docs/<existing owner>.md; preserved historical docs/reports/, artifacts/, reports/ are not new output destinations.
+See manifest.txt for the complete placement table, safeguards and required final report.
+
+REPORTING
+---------
+State explicitly that manifest.txt and agents.txt were read, which owner/tests were reused, whether any new directory was approved, all created/edited paths, source/index provenance, whole-file read justification or none, tested behaviors, commands and exit codes, Git status, private/generated exclusion, and exact next action. If an agent task conflicts with the manifest or frozen roadmap, report the conflict before changing scope.
