@@ -28,3 +28,7 @@ docs/RELEASE_CHECKLIST.md
 
 # Cross-tool workflows are canonical in dailephd/my-dev-kit.
 /docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md
+
+# Explicitly tracked owner-authorized agent governance; all other *.txt and local agent files stay ignored.
+!/manifest.txt
+!/agents.txt

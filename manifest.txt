@@ -1,0 +1,206 @@
+MY-DEV-KIT-ORCHESTRATOR REPOSITORY PLACEMENT AND AGENT SAFETY MANIFEST
+====================================================================
+Document role: tracked repository-structure governance and agent intake.
+Repository: https://github.com/dailephd/my-dev-kit-orchestrator
+Repository root: discover from the active Git checkout, never assume a machine-specific absolute path.
+Inspected branch: main
+Inspected commit: bdbba55cd05f68429f0dd043b1020db508c7eeb1
+Inspected package: @dailephd/my-dev-kit-orchestrator 1.6.1
+Inspection date: 2026-10-12
+Git tree inventory: 34 tracked directories and 390 tracked files before this manifest and agents.txt were added.
+Status: active agent-placement governance; not a file-migration plan or version implementation authorization.
+
+READ THIS FIRST — MANDATORY AGENT INTAKE
+----------------------------------------
+1. At the start of every repository task, read this complete root manifest.txt and root agents.txt. Also read any applicable local CLAUDE.md, AGENTS.md, claude.txt, nested instructions, or explicit task instruction; do not assume the execution platform automatically loads an ignored agent file.
+2. Verify git branch --show-current, git rev-parse HEAD, git status --short --untracked-files=all, remote identity, package.json, and relevant existing owners/tests before editing. This manifest's inspected commit is historical provenance, not an instruction to reset to that commit.
+3. Read docs/ARCHITECTURE.md for implemented owners, docs/CURRENT_STATE.md for current behavior and version, docs/ROADMAP.md for fixed future version scope, docs/CONTRACTS.md for public interfaces, and docs/DOCUMENTATION_PRESERVATION_POLICY.md plus docs/documentation-preservation-manifest.json for document retention. Read relevant sections, not the whole repository.
+4. Before adding or editing a file, name the CURRENT OWNER FILE/DIRECTORY, behavior/contract, relevant caller, CLOSEST TEST, desired output path, and minimal edit surface. Use my-dev-kit bounded index/search/lookup/slice/source before full source/test reads where the selected workflow requires it. Do not infer ownership from filenames alone.
+5. Extend current owners. Do not create a parallel CLI, workflow/stage registry, readiness gate, judge, correction router, context engine, telemetry authority, document checker, or greenfield profile registry.
+6. This manifest does not authorize moving/deleting old files, reorganizing public docs, creating arbitrary new top-level directories, implementing future roadmap items, changing publication state, or altering native producer contracts.
+7. Preserve ignored and local user work. Never run git clean/reset/restore/stash/rebase, force-push, broad staging, or destructive moves without separate explicit authorization. Do not commit, push, merge, tag, release, or publish unless the task explicitly authorizes that action.
+8. Silent Windows execution: do not open visible shell/PowerShell/Node console, Explorer, browser, editor, or GUI windows. Browser tests, if a separately authorized workflow needs them, run headlessly.
+9. Before completion report paths created/modified/moved/deleted, verified owner placement, tests/validation and exit codes, source and Git identities, diff and package inventory when applicable, and remaining gaps.
+10. If this file disagrees with current source, documented current state, a preserved compatibility contract, or an explicit task, do not silently improvise. Preserve scope, stop before destructive work, and report the exact conflict.
+
+DOCUMENT AUTHORITY AND PUBLIC/PRIVATE BOUNDARY
+----------------------------------------------
+- This file governs directory placement and agent safety, not whether future features have shipped.
+- Executable truth: implementation, tests, command parsers, package metadata and runtime behavior.
+- Published/current status: verified release/package evidence and docs/CURRENT_STATE.md.
+- Version scope and deferrals: docs/ROADMAP.md, subordinate to explicit owner decisions.
+- Architectural rationale: docs/ARCHITECTURE.md and docs/CONTRACTS.md, checked against code.
+- Docs preservation: docs/DOCUMENTATION_PRESERVATION_POLICY.md and docs/documentation-preservation-manifest.json. This manifest does not replace either.
+- Public reference documentation is tracked Markdown. Root manifest.txt and root agents.txt are TRACKED EXCEPTIONS explicitly requested by the owner for fresh-clone agent intake. Both must contain only repository-safe instructions, no credentials, customer details, private planning, or machine-specific secrets. Other agents.txt/claude.txt/AGENTS.md/CLAUDE.md files remain ignored unless separately authorized.
+- The existing package.json "files" allowlist ("dist", "CHANGELOG.md") governs npm packaging. Root manifest.txt and agents.txt are NOT intended for the npm tarball. Verify npm pack --dry-run whenever packaging policy or allowlist changes; never assume tracked means published.
+- Read-only external ecosystem reference repositories are not writable targets. ECO-00 contracts are owned by my-dev-kit; Orchestrator must not substitute a copied private producer implementation or invent Lab certification.
+
+REPOSITORY TREE AND DIRECTORY OWNERS
+------------------------------------
+Notation: /** covers descendants unless a more specific entry overrides it. Paths reflect the inspected Git tree; always verify current tracked paths before a structural change. Existing historical filenames are not permission to reproduce old layouts.
+
+ROOT /
+  package.json, package-lock.json: package identity, Node engine, commands, dependencies, exact lockfile; version bumps happen only in approved release preparation.
+  tsconfig.json, jest.config.js, .eslintrc.js: TypeScript/Jest/lint authority; extend established configuration instead of creating competing tools.
+  README.md: public introduction, usage and feature limits.
+  CHANGELOG.md: append-preserving release history and unreleased changes.
+  LICENSE: retained licensing.
+  .gitignore: ignored workspace/security rules; deliberate tracked exceptions for root manifest.txt and agents.txt only.
+  .markdownlint-cli2.jsonc: Markdown lint configuration.
+  manifest.txt: tracked structure and agent-safety contract; read before changes.
+  agents.txt: tracked small agent bootstrap that requires reading this manifest and other applicable local instructions.
+  NEW root files: require an approved distinct responsibility, an owner rationale, and package/ignore review.
+
+.github/ — repository automation, not application runtime.
+  .github/workflows/validate.yml: cross-platform Node verification.
+  .github/workflows/pre-release-matrix.yml: release-readiness matrix; never invoke publication as a normal feature batch.
+  .github/FUNDING.yml: repository funding metadata.
+
+src/ — production TypeScript code. Do not store plans, generated reports, fixtures or notes here.
+  src/cli.ts: installed executable entrypoint.
+  src/program.ts: SINGLE Commander registration of the existing eight commands.
+  src/commands/: one handler per existing CLI command (init, start, status, prompt, list, mark, check, export). Option, run selection, command output, and exit behavior belong here; shared policy does not.
+  src/types.ts and src/workflows.ts: workflow modes and 79 native stages, stage identity and artifact registry. No new mode/stage just for evidence intake.
+  src/workspace.ts and src/run.ts: workspace locations, run identity, run.json creation/loading/discovery, optional versioned run capabilities.
+  src/runLifecycle.ts, src/artifactLifecycle.ts, src/stageDetector.ts: one load reconciliation, effective native artifact states, stage progression and stale/manual state rules. Keep lifecycle state distinct from external evidence.
+  src/runIntegrityGate.ts: SINGLE canonical context/Semantic Continuity integrity decision, expected judge verdict and gate-aware lifecycle override. Future generic evidence policy must enter this owner, not establish another gate.
+  src/judgeIntegrity.ts, src/judgeParser.ts: accepted judge decisions and final-report eligibility, including greenfield/proof-only rules.
+  src/correctionRouter.ts, src/correctionState.ts: existing correctable stages and accepted judge-derived correction, not a separate durable correction engine.
+  src/proofOnly.ts: proof-only responsibility-path validation and literal proof evidence. A new evidence envelope cannot replace proof evidence.
+  src/observerEvidence.ts: pure bounded native Observer consumer; do not replace Observer's schema or runtime/reference identities.
+  src/runTelemetry.ts, src/runTelemetryStore.ts, src/runTelemetryObservation.ts, src/runWorkflowEconomics.ts, src/workflowEconomicsSurface.ts: native deterministic invocation observation and economics; TELEMETRY NEVER GOVERNS READINESS.
+  src/artifactChecker.ts, src/contractChecker.ts, src/promptChecker.ts: native artifact, contract and prompt checking, not substitute integrity authorities.
+  src/promptGenerator.ts: native stage prompt rendering; do not introduce an independent stage instruction runtime.
+  src/traceModel.ts, src/traceParser.ts, src/traceChecker.ts: native trace vocabulary and checker.
+  src/semanticContinuitySurface.ts: Semantic Continuity presentation on command surfaces.
+  src/index.ts: public package export surface; changes require an intentional compatibility decision.
+
+src/instructions/ — native instruction resolution, context evidence, and canonical responsibility continuity.
+  catalog.ts, catalogIds.ts, catalogTypes.ts, catalogResolver.ts, catalogValidation.ts, stageInstructionContent.ts: one instruction catalog and resolution authority.
+  workflowInstructionPacket.ts, workflowInstructionPacketRenderer.ts, workflowInstructionPacketSerialization.ts, instructionBudget.ts: bounded instruction packet and serialization.
+  stageContextBundle.ts, taskState.ts, supplementalContextTemplates.ts, supplementalContextTypes.ts, supplementalContextContracts.ts, supplementalContextParser.ts: native stage context and supplemental carrier structures.
+  repositoryEvidenceReference.ts, myDevKitEvidenceSummary.ts, stageRepositoryEvidenceRequirements.ts, contextIdentity.ts, contextReadiness.ts, runContextReadiness.ts, supplementalPairReconciliation.ts, testContextBootstrap.ts: Kit raw/supplemental parsing and reconciliation, evidence identity, deterministic phase-aware readiness.
+  semanticResponsibility.ts, runSemanticContinuity.ts, semanticContinuity.ts, semanticContinuityPrompt.ts, responsibilityEvidenceShared.ts: RSP-NNN identity, stage-aware semantic evaluator and presentation.
+  implementationResponsibilityEvidence.ts, testImplementationResponsibilityEvidence.ts, verificationResponsibilityEvidence.ts, testResponsibilityCriticality.ts: native responsibility bridge and strategy criticality ownership.
+  src/instructions/index.ts: established instruction module surface; do not add parallel registries.
+
+src/greenfield/ — existing greenfield mode, profiles, structured bootstrap and readiness; it is NOT another workflow engine.
+  brief/: project-brief schema, parsing and normalization.
+  modes/: greenfield stage names and structured artifact contracts, composed into src/workflows.ts.
+  profiles/: the four known starter profiles (typescript-cli, nextjs-app, android-compose, python-cli), registry, exact target safety, validation and resolution.
+  bootstrap/: bootstrap bundles and standardized project documents, including 15-file baseline.
+  bootstrap/projectInstructions/: one generated-project instruction model/bundle/validation for agents.txt, claude.txt, AGENTS.md, CLAUDE.md; these are GENERATED PROJECT files, not this repository's root tracked agents.txt.
+  scaffold/: scaffold plans, effective target expectations, prompt generation and validation. The Orchestrator instructs; it does not execute target setup.
+  fullstack/: constrained nextjs-app + PostgreSQL + Prisma + Docker capability; do not generalize beyond the published combination.
+  readiness/: single greenfield readiness decision and filesystem/generated-target corroboration.
+  Additional platforms and greenfield-to-feature workflow handoff remain deferred, not authorized by this manifest.
+
+src/__tests__/ — existing production-adjacent Jest regression tests for CLI foundation, lifecycle, workflows, traces, contract checking, historical integration and extraction; these are tests, not production modules.
+
+tests/ — broad regression and contract integration. Extend nearest existing tests rather than creating a second test infrastructure.
+  tests/*.test.ts: run integrity, Semantic Continuity, context readiness, judge/correction, telemetry, command propagation, legacy compatibilities and adversarial regression.
+  tests/greenfield/: greenfield mode, bootstrap, profiles, scaffold/readiness, fullstack and Android/Python profile tests.
+  tests/fixtures/: preserved frozen compatibility baselines, prompt hashes and historical raw evidence. Contents may intentionally resemble run folders or mini-repositories; never tidy or rewrite casually.
+    tests/fixtures/context-contracts/: pinned Kit capsule/audit, identity, role and strategy fixtures.
+    tests/fixtures/v120-baseline/, v121-batch5-prompts/, v121-compatibility/, v121-context-references/, v121-packet-prompts/, v123-batch4/: version-specific intentional compatibility records.
+  tests/cliTestHelpers.ts, tests/compatibilityManifestLib.ts: existing test utilities. Avoid moving test helpers into production.
+
+scripts/ — existing repository validation/smoke command entrypoints.
+  check-docs-consistency.mjs: SINGLE documentation consistency/preservation checker; extend it rather than adding another docs-check engine.
+  cli-smoke.mjs, context-readiness-cli-smoke.mjs: installed/local CLI behavior smoke.
+  test-security.mjs: repository security regression entrypoint.
+
+docs/ — tracked maintained Markdown documentation; use existing responsibility-specific files.
+  ARCHITECTURE.md: implemented architecture, owner boundaries, extension points.
+  CONTRACTS.md: compatibility/public interfaces and maintained native contracts.
+  CURRENT_STATE.md: released implementation and known limitations (do not document planned behavior as shipped).
+  ROADMAP.md: individual release milestones, including planned ORC-EVIDENCE-01 v1.7.0 and deferred work; do not reassign scope.
+  PROJECT_OVERVIEW.md, QUICKSTART.md, USAGE.md, COMMANDS.md, WORKFLOWS.md, ARTIFACTS.md: public overview, getting started, operational command syntax, workflows and native artifacts.
+  DEVELOPMENT.md, CI_CD.md, SECURITY.md, RELEASE.md: contributor development, CI, security and release procedures.
+  DOCUMENTATION_PRESERVATION_POLICY.md, documentation-preservation-manifest.json: preserved document inventory and exact docs consistency gate; never silently compress or delete historical sections.
+  RELEASE_CHECKLIST.md: historically tracked and currently ignored; do not remove/rename because a broad ignore pattern matches it.
+  docs/reports/: selected tracked historical implementation, readiness and release reports (Markdown and .txt), kept for provenance; do not regenerate or discard them as normal batch scratch output.
+  A new tracked docs/plans/ path requires explicit documentation-plan approval; do not create arbitrary per-batch public notes.
+
+artifacts/ — previously tracked v1.2.0 planning/evidence text records. Historical material, not a new write destination.
+reports/ — previously tracked v1.2.0 implementation/test/audit reports; preserved exactly. New local planning, retrieval, audit or run reports should be under ignored paths and must not be staged by default. Tracked historical files are not automatically deletable.
+
+IGNORED / GENERATED / PRIVATE OUTPUT POLICY
+-------------------------------------------
+- .my-dev-kit-context/: local my-dev-kit indexes, retrieval results, capsule/audit and planning evidence.
+- .my-dev-kit-workflow/: project-local exact-version tooling, npm cache, temp files and workflow-owned worktrees.
+- .my-dev-kit-orchestrator/: local orchestrator runs, stage outputs, prompts and exports.
+- .my-dev-kit, node_modules/, dist/, coverage/, *.log: generated, cached or build output, not product source.
+- reports/ and docs/*.txt ignore defaults apply to NEW untracked files; numerous historical reports are intentionally tracked. Do not stage ignored/generated reports.
+- .env, .env.*, local credentials, secrets, service tokens, private correspondence and local personal notes: never commit.
+- CLAUDE.md, AGENTS.md, claude.txt, nested agents.txt, .claude/: ignored private/local agent instructions unless separately and explicitly approved. Root agents.txt and root manifest.txt are the ONLY newly authorized tracked agent/governance exceptions.
+- Do not write workflow-owned tools/cache/temp, worktrees, or generated reports outside the active project root. Avoid visible GUI windows.
+- npm packaging: do not add manifest.txt, agents.txt, credentials or private instructions to package.json files list or other publication packaging.
+
+MANDATORY PLACEMENT DECISION
+----------------------------
+A. New CLI behavior? Extend the relevant src/commands/ handler and src/program.ts only for true command registration changes.
+B. Run or artifact lifecycle? src/run.ts, src/runLifecycle.ts, src/artifactLifecycle.ts, src/stageDetector.ts as applicable. Do not conflate a supplemental reference with a native artifact.
+C. Readiness or eligibility? RunIntegrityGate is the policy owner; JudgeIntegrity consumes its expected verdict; correctionRouter owns valid correction targets.
+D. Kit or Observer native evidence? Reuse their bounded owner/parser; ECO-00 cross-tool references must preserve native producer identities and exact supported schema versions. A separately approved new contract adapter may live in a distinct scoped src/ subdirectory with closest tests; no universal copied producer payload.
+E. Instruction/packet/context? Existing src/instructions/ modules and their matched tests, never another global instruction registry.
+F. Greenfield target/profile? Extend src/greenfield/<existing owner>/; no additional mode/stage/profile without roadmap authorization.
+G. Text or structured native checking? Extend existing artifact/prompt/contract checking owner before adding a new validator.
+H. Test? Put it next to closest established source owner in src/__tests__/, tests/, or tests/greenfield/ as current convention dictates; fixtures in tests/fixtures/ with provenance.
+I. Public documentation? Update existing docs/<responsibility>.md. Planning-only reports remain ignored unless owner explicitly requests tracked plan.
+J. Generated output? Approved ignored project-local roots, never src/, docs/, artifacts/, or historical tracked reports/.
+K. New directory? Demonstrate missing existing owner, state intended API/contracts, closest tests, compatibility impact and approved version scope, then update manifest during the same authorized change.
+
+NON-NEGOTIABLE STRUCTURAL INVARIANTS
+------------------------------------
+- Eight commands, seven modes, 79 native workflow stages and four current greenfield starter profiles remain existing compatibility surfaces until an approved version explicitly changes them.
+- One workflow/stage registry, one RunIntegrityGate, one JudgeIntegrity, one correction router, one native artifact lifecycle, one instruction catalog and one docs checker.
+- my-dev-kit is a manual external retrieval producer; no embedded retrieval engine in Orchestrator.
+- Observer's native visual/runtime identities remain Observer-owned; Kit's index/static identities remain Kit-owned; Lab retains audit/validation/certification ownership.
+- Native Semantic Continuity uses exact Orchestrator RSP-NNN identities; generic evidence references must not silently redefine them.
+- Run telemetry and Workflow Economics remain observational. They must not decide readiness, judge verdicts or final eligibility.
+- Historical releases, prompt hashes, compatibility fixture identities, document headings and stage order remain preserved.
+- Do not add miscellaneous utils/, common/, shared/, v2/, backup/, old/ or feature-batch folders without a proved distinct owner and explicit approval.
+- Do not conflate an implementation-complete batch with pre-release audit, release preparation or publication. Every task uses its explicitly selected workflow.
+- Future v1.7.0 ECO evidence intake must follow adopted ECO-00 reference contracts; ECO-01 exact tuple certification is separate.
+
+STRUCTURE / CLEANUP PROGRAM — NOT AUTOMATICALLY AUTHORIZED
+---------------------------------------------------------
+Phase 0 (read-only): inspect live tracked tree, Git identities/status, owner source/tests, current documentation, ignore/package boundaries and generated output roots. Record objective structural issues.
+Phase 1 (read-only): classify suspicious paths as KEEP, REVIEW, MOVE, MERGE or REMOVE, with verified source owner, closest test, exact risk and proposed destination. A suspicious name is not proof of misplaced code.
+Phase 2 (separate approved task): update narrow placement/agent bootstrap and optional docs check, without moving unrelated code or modifying release behavior.
+Phase 3 (separate approved batches): implement only explicitly authorized moves/refactors, preserving imports, public exports, tests, historical artifacts, compatibility and source identity.
+Phase 4: targeted validation, docs:check, typecheck/build, focused/full tests as appropriate, git diff --check and npm pack --dry-run when packaging changes.
+Phase 5: maintain this manifest's owner map when an approved new subsystem, test root, docs folder or output root is introduced.
+No phase authorizes publication, destructive cleanup, historical record deletion or arbitrary migration.
+
+PRE-EDIT CHECKLIST
+------------------
+[ ] Read complete root manifest.txt and agents.txt; read applicable local/nested agent instructions.
+[ ] Verify branch, HEAD, status and current repository release/roadmap scope.
+[ ] Name current production owner, nearest tests and exact approved edit/output paths.
+[ ] Use selected my-dev-kit bounded retrieval before whole source/test reads when required.
+[ ] Reuse existing owner; no second gate/runner/CLI/checker/evidence authority.
+[ ] Justify any new directory or new public API against the frozen task scope.
+[ ] Preserve historical docs, fixtures, stage identities and ignored/private contents.
+[ ] Confirm no unrelated cleanup, external workspaces, GUI popups or unauthorized Git/release actions.
+[ ] Select behavior-derived tests and exact validation commands.
+
+FINAL REPORT CONTRACT
+---------------------
+VERDICT: PASS | PASS_WITH_NOTES | NEEDS_CORRECTION | BLOCKED
+REPOSITORY / BRANCH / STARTING_SHA / FINAL_SHA:
+MANIFEST_AND_AGENT_INSTRUCTIONS_READ:
+OWNER_FILES_AND_TEST_PATHS:
+FILE_PLACEMENT_AND_NEW_DIRECTORIES_JUSTIFIED:
+FILES_CREATED / MODIFIED / MOVED / DELETED:
+PUBLIC_CONTRACTS_AND_HISTORY_PRESERVED:
+RETRIEVAL_INDEX_AND_SOURCE_READ_ACCOUNTING:
+TESTS_AND_VALIDATION_EXIT_CODES:
+GIT_DIFF_STATUS / PRIVATE_AND_GENERATED_EXCLUSIONS:
+PACKAGE_CONTENTS_CHECK (if relevant; otherwise NOT_APPLICABLE):
+UNCERTAINTY / DEVIATIONS / NEXT_ACTION:
+
+MANIFEST MAINTENANCE
+--------------------
+Reconfirm actual Git tree and owner files before structural updates. The inventory above is from the inspected commit and excludes untracked/ignored files. Preserve existing historical folders even when later conventional placement differs. Update the owner map together with any approved directory ownership change. Read-only reviews may flag drift but must not repair it without a bounded task authorization. This manifest is not a release/implementation prompt and never supersedes explicit product decisions.
