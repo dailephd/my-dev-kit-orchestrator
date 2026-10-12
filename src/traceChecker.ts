@@ -4,6 +4,7 @@ import { CheckSeverity } from './artifactChecker';
 import { TRACE_PREFIXES, isValidTraceId } from './traceModel';
 import { TraceId, TraceLink, parseTraceLinks, findMalformedTraceIds } from './traceParser';
 import { RunMetadata } from './run';
+import { StageDefinition } from './workflows';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,10 @@ function evaluateTraceContent(
   checkedAt: string,
   upstreamKnownIds?: ReadonlySet<string>,
 ): TraceCheckResult {
+  // Describes only the scope that was actually searched for declarations.
+  const scopeDescription = upstreamKnownIds
+    ? 'this artifact, its same-stage artifacts, or earlier native stage artifacts'
+    : 'this artifact';
   const issues: TraceCheckIssue[] = [];
 
   // Malformed IDs: recognized-prefix near misses, plus unsupported prefixes
@@ -163,7 +168,7 @@ function evaluateTraceContent(
       issues.push({
         code: 'TRACE_MISSING_LINK_TARGET',
         severity: 'fail',
-        message: `Link target "${target}" is a valid trace ID but is not declared in this artifact`,
+        message: `Link target "${target}" is a valid trace ID but has no declaration in ${scopeDescription}`,
         context: target,
       });
     }
@@ -240,7 +245,8 @@ export function checkDesignMapTrace(runFolder: string): TraceCheckResult {
 
 // ─── Trace-aware correction suggestions ──────────────────────────────────────
 
-// Maps trace ID prefix to the workflow stage that owns IDs with that prefix
+// Generic trace ID prefix -> conventional owner stage hint. Never authoritative:
+// consumers must validate a hint against the active mode's stage list.
 const PREFIX_TO_STAGE: Record<string, string> = {
   REQ: 'request-brief',
   CTX: 'architecture-context',
@@ -257,9 +263,11 @@ const PREFIX_TO_STAGE: Record<string, string> = {
 };
 
 /**
- * Suggests a correction stage for a trace check issue.
- * Returns null when no meaningful suggestion can be made.
- * These suggestions are deterministic and do not infer semantics with an LLM.
+ * Context-free owner hint for a trace check issue. Only a missing link target
+ * with a recognized prefix yields a hint, and the hint is NOT validated against
+ * any workflow: it may name a stage the active mode does not have. CLI
+ * presentation must use buildTraceCorrectionSuggestions with the run's stages.
+ * Returns null when no meaningful hint can be made.
  */
 export function suggestCorrectionStageFromTraceIssue(
   issue: TraceCheckIssue,
@@ -271,41 +279,72 @@ export function suggestCorrectionStageFromTraceIssue(
     if (prefix && PREFIX_TO_STAGE[prefix]) {
       return PREFIX_TO_STAGE[prefix];
     }
-    return 'design-map';
   }
-
-  if (issue.code === 'TRACE_MALFORMED_ID') {
-    return 'design-map';
-  }
-
-  if (issue.code === 'TRACE_ORPHAN_ID') {
-    return 'design-map';
-  }
-
   return null;
 }
 
+function stageIndexOwningArtifact(stages: StageDefinition[], artifactFile: string): number {
+  return stages.findIndex(
+    (s) => s.artifactFile === artifactFile || (s.additionalArtifactFiles ?? []).includes(artifactFile),
+  );
+}
+
 /**
- * Returns deduplicated correction suggestions from a list of trace check results.
- * Each entry is "suggested stage: reason".
+ * Returns deduplicated, advisory correction suggestions from trace results.
+ *
+ * With `stages` (the active run's native stage list) every named stage is
+ * verified to exist: an issue is attributed to the stage owning the artifact
+ * that reported it, a missing-target prefix hint is added only when that stage
+ * exists and precedes the reporting stage, and an artifact with no owning
+ * native stage (for example the optional design-map) gets artifact-level
+ * guidance instead of an invented stage. Without `stages`, only context-free
+ * owner hints are produced. Suggestions never change run state and are not an
+ * accepted judge correction route.
  */
 export function buildTraceCorrectionSuggestions(
   results: TraceCheckResult[],
+  stages?: StageDefinition[],
 ): string[] {
-  const suggestions = new Map<string, Set<string>>();
+  const suggestions = new Map<string, { label: string; target: string; codes: Set<string> }>();
+  const add = (label: string, target: string, code: string): void => {
+    const key = `${label}\u0000${target}`;
+    if (!suggestions.has(key)) suggestions.set(key, { label, target, codes: new Set() });
+    suggestions.get(key)!.codes.add(code);
+  };
 
   for (const result of results) {
+    const ownerIdx = stages ? stageIndexOwningArtifact(stages, result.artifactFile) : -1;
     for (const issue of result.issues) {
-      const stage = suggestCorrectionStageFromTraceIssue(issue);
-      if (stage) {
-        if (!suggestions.has(stage)) suggestions.set(stage, new Set());
-        suggestions.get(stage)!.add(issue.code);
+      if (!stages) {
+        const hint = suggestCorrectionStageFromTraceIssue(issue);
+        if (hint) add('stage', hint, issue.code);
+        continue;
+      }
+      const reviewsReportingArtifact =
+        issue.code === 'TRACE_MALFORMED_ID' ||
+        issue.code === 'TRACE_ORPHAN_ID' ||
+        issue.code === 'TRACE_MISSING_LINK_TARGET';
+      if (!reviewsReportingArtifact) continue;
+
+      if (ownerIdx >= 0) {
+        add('stage', stages[ownerIdx].name, issue.code);
+      } else {
+        add('artifact', result.artifactFile, issue.code);
+      }
+
+      if (issue.code === 'TRACE_MISSING_LINK_TARGET' && ownerIdx >= 0) {
+        const hint = suggestCorrectionStageFromTraceIssue(issue);
+        const hintIdx = hint ? stages.findIndex((s) => s.name === hint) : -1;
+        if (hintIdx >= 0 && hintIdx < ownerIdx) {
+          add('stage', stages[hintIdx].name, issue.code);
+        }
       }
     }
   }
 
-  return [...suggestions.entries()].map(
-    ([stage, codes]) => `Suggested correction stage: ${stage}  (${[...codes].join(', ')})`,
+  return [...suggestions.values()].map(
+    ({ label, target, codes }) =>
+      `Suggested correction ${label}: ${target}  (${[...codes].join(', ')})`,
   );
 }
 

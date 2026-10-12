@@ -519,3 +519,107 @@ describe('check --trace and --all - run-aware trace resolution', () => {
     }
   });
 });
+
+// ─── Mode-aware correction guidance through the CLI surfaces (v1.6.2) ────────
+
+function suggestionLines(output: string): string[] {
+  return output
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith('Suggested correction'));
+}
+
+describe('check correction guidance - active-mode validation', () => {
+  it('suggests the owning native stage and agrees across --trace and --all (T162-35, T162-52)', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'guidance malformed', mode: 'feature', projectRoot: tmp });
+      writeArtifact(meta.runFolder, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nREQ-01: bad id\n');
+      const trace = runCheckCli(['check', '--trace', '--root', tmp]);
+      const all = runCheckCli(['check', '--all', '--root', tmp]);
+      expect(suggestionLines(trace.output)).toEqual([
+        'Suggested correction stage: behavior-model  (TRACE_MALFORMED_ID)',
+      ]);
+      expect(suggestionLines(all.output)).toEqual(suggestionLines(trace.output));
+      expect(trace.output).not.toContain('correction stage: design-map');
+      expect(trace.exitCode).toBe(1);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('gives artifact guidance for the optional design-map and keeps its checks (T162-45)', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'guidance design map', mode: 'feature', projectRoot: tmp });
+      writeArtifact(meta.runFolder, 'artifacts/design-map.txt', 'REQ-001: requirement\nREQ-01: bad id\n');
+      const dm = runCheckCli(['check', '--design-map', '--root', tmp]);
+      expect(dm.output).toContain('TRACE_MALFORMED_ID');
+      expect(suggestionLines(dm.output)).toEqual([
+        'Suggested correction artifact: artifacts/design-map.txt  (TRACE_MALFORMED_ID)',
+      ]);
+      expect(dm.output).not.toMatch(/correction stage: design-map/);
+      expect(dm.output).not.toMatch(/[A-Za-z]:\\/);
+      expect(dm.exitCode).toBe(1);
+
+      const all = runCheckCli(['check', '--all', '--root', tmp]);
+      expect(suggestionLines(all.output)).toContain(
+        'Suggested correction artifact: artifacts/design-map.txt  (TRACE_MALFORMED_ID)',
+      );
+      expect(all.output).not.toMatch(/correction stage: design-map/);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('only suggests stages of a non-feature mode (T162-39)', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'guidance repair', mode: 'repair', projectRoot: tmp });
+      writeArtifact(meta.runFolder, 'artifacts/behavior-trace.txt', 'BEH-001: step\nBEH-001 -> REQ-009\n');
+      const { output } = runCheckCli(['check', '--trace', '--root', tmp]);
+      expect(suggestionLines(output)).toEqual([
+        'Suggested correction stage: behavior-trace  (TRACE_MISSING_LINK_TARGET)',
+      ]);
+      expect(output).not.toContain('request-brief');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('is advisory only and mutates no run or artifact state (T162-54)', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({ request: 'guidance noninterference', mode: 'feature', projectRoot: tmp });
+      writeArtifact(meta.runFolder, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nBEH-001 -> REQ-009\n');
+      const snapshot = (): Record<string, string> => {
+        const out: Record<string, string> = {};
+        const walk = (d: string): void => {
+          for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+            const full = path.join(d, e.name);
+            if (e.isDirectory()) walk(full);
+            else out[path.relative(meta.runFolder, full)] = fs.readFileSync(full, 'utf8');
+          }
+        };
+        walk(meta.runFolder);
+        return out;
+      };
+      // Load-time lifecycle reconciliation (existing behavior) happens on any
+      // command load; settle it first so only trace guidance is under test.
+      runCheckCli(['status', '--root', tmp]);
+      const before = snapshot();
+      const { output } = runCheckCli(['check', '--trace', '--root', tmp]);
+      expect(suggestionLines(output).length).toBeGreaterThan(0);
+      const after = snapshot();
+      const added = Object.keys(after).filter((k) => !(k in before));
+      expect(added).toEqual(['trace-check-results.json']);
+      for (const k of Object.keys(before)) expect(after[k]).toBe(before[k]);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+});

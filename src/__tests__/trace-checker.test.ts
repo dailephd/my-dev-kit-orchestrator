@@ -10,6 +10,9 @@ import {
   readTraceCheckResults,
   writeTraceCheckResults,
   TraceCheckResultsFile,
+  TraceCheckIssue,
+  TraceCheckResult,
+  buildTraceCorrectionSuggestions,
 } from '../traceChecker';
 import { RunMetadata } from '../run';
 import { getWorkflow, StageDefinition } from '../workflows';
@@ -818,6 +821,226 @@ describe('checkAllTraces - run-aware declaration scope', () => {
       } finally {
         cleanup(tmp);
       }
+    }
+  });
+});
+
+// ─── Mode-aware advisory correction guidance (v1.6.2 Prompt 3) ───────────────
+
+const ALL_ISSUE_CODES = [
+  'TRACE_MALFORMED_ID',
+  'TRACE_ORPHAN_ID',
+  'TRACE_MISSING_LINK_TARGET',
+  'TRACE_DUPLICATE_ID',
+];
+const ALL_PREFIXES = ['REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'RSP', 'IMP', 'VER', 'RISK'];
+
+function issueOf(code: string, context?: string): TraceCheckIssue {
+  return {
+    code,
+    severity: code === 'TRACE_MALFORMED_ID' || code === 'TRACE_MISSING_LINK_TARGET' ? 'fail' : 'warn',
+    message: `${code} fixture`,
+    ...(context ? { context } : {}),
+  };
+}
+
+function resultWith(artifactFile: string, issues: TraceCheckIssue[]): TraceCheckResult {
+  return { artifactFile, issues, passed: !issues.some((i) => i.severity === 'fail'), checkedAt: 'fixed' };
+}
+
+const FEATURE = getWorkflow('feature').stages;
+
+describe('buildTraceCorrectionSuggestions - mode-aware advisory guidance', () => {
+  it('attributes malformed and orphan issues to the owning native stage, never design-map (T162-35, T162-36)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/behavior-model.txt', [
+          issueOf('TRACE_MALFORMED_ID', 'REQ-01'),
+          issueOf('TRACE_ORPHAN_ID', 'BEH-002'),
+        ]),
+      ],
+      FEATURE,
+    );
+    expect(out).toEqual(['Suggested correction stage: behavior-model  (TRACE_MALFORMED_ID, TRACE_ORPHAN_ID)']);
+    expect(out.join('\n')).not.toContain('design-map');
+  });
+
+  it('adds a verified earlier owner hint for a missing target (T162-37)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      FEATURE,
+    );
+    expect(out).toEqual([
+      'Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)',
+      'Suggested correction stage: request-brief  (TRACE_MISSING_LINK_TARGET)',
+    ]);
+    expect(buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      FEATURE,
+    )).toEqual(out);
+  });
+
+  it('does not name a hint stage that is absent from the active mode or later than the reporter (T162-38)', () => {
+    const repair = getWorkflow('repair').stages;
+    expect(repair.some((s) => s.name === 'request-brief')).toBe(false);
+    const absent = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-trace.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      repair,
+    );
+    expect(absent).toEqual(['Suggested correction stage: behavior-trace  (TRACE_MISSING_LINK_TARGET)']);
+
+    // PSE hint exists in feature mode but comes after behavior-model.
+    const later = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'PSE-999')])],
+      FEATURE,
+    );
+    expect(later).toEqual(['Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)']);
+  });
+
+  it.each(VALID_MODES.map((m) => [m]))(
+    'only suggests stages of the %s workflow (T162-39..44, T162-47)',
+    (mode) => {
+      const stages = getWorkflow(mode).stages;
+      const names = new Set(stages.map((s) => s.name));
+      const results: TraceCheckResult[] = [];
+      for (const stage of stages) {
+        for (const file of [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])]) {
+          results.push(
+            resultWith(file, [
+              ...ALL_ISSUE_CODES.filter((c) => c !== 'TRACE_MISSING_LINK_TARGET').map((c) => issueOf(c, 'REQ-01')),
+              ...ALL_PREFIXES.map((p) => issueOf('TRACE_MISSING_LINK_TARGET', `${p}-900`)),
+            ]),
+          );
+        }
+      }
+      const out = buildTraceCorrectionSuggestions(results, stages);
+      expect(out.length).toBeGreaterThan(0);
+      for (const line of out) {
+        const m = /^Suggested correction stage: (\S+) {2}\(/.exec(line);
+        expect(m).not.toBeNull();
+        expect(names.has(m![1])).toBe(true);
+      }
+      // Every owning stage is reported once, deduplicated.
+      expect(new Set(out).size).toBe(out.length);
+      expect(out.join('\n')).not.toContain('design-map');
+    },
+  );
+
+  it('gives artifact guidance, not a stage, for an artifact no native stage owns (T162-45, T162-46)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/design-map.txt', [
+          issueOf('TRACE_MALFORMED_ID', 'REQ-01'),
+          issueOf('TRACE_MISSING_LINK_TARGET', 'BEH-009'),
+        ]),
+        resultWith('artifacts/stray.txt', [issueOf('TRACE_ORPHAN_ID', 'REQ-001')]),
+      ],
+      FEATURE,
+    );
+    expect(out).toEqual([
+      'Suggested correction artifact: artifacts/design-map.txt  (TRACE_MALFORMED_ID, TRACE_MISSING_LINK_TARGET)',
+      'Suggested correction artifact: artifacts/stray.txt  (TRACE_ORPHAN_ID)',
+    ]);
+    expect(out.join('\n')).not.toMatch(/correction stage: design-map/);
+  });
+
+  it('design-map is not a native stage in any registered mode (design-map duplication NOT_REPRODUCED)', () => {
+    for (const mode of VALID_MODES) {
+      for (const stage of getWorkflow(mode).stages) {
+        expect(stage.name).not.toBe('design-map');
+        expect(stage.artifactFile).not.toBe('artifacts/design-map.txt');
+        expect(stage.additionalArtifactFiles ?? []).not.toContain('artifacts/design-map.txt');
+      }
+    }
+  });
+
+  it('groups primary and additional artifacts of one stage into one deterministic line (T162-48)', () => {
+    const stages = [
+      { name: 'porting-map', artifactFile: 'artifacts/a.txt', promptFile: 'p', additionalArtifactFiles: ['artifacts/b.txt'] },
+    ];
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/a.txt', [issueOf('TRACE_MALFORMED_ID', 'REQ-01'), issueOf('TRACE_MALFORMED_ID', 'REQ-02')]),
+        resultWith('artifacts/b.txt', [issueOf('TRACE_ORPHAN_ID', 'REQ-001')]),
+      ],
+      stages,
+    );
+    expect(out).toEqual(['Suggested correction stage: porting-map  (TRACE_MALFORMED_ID, TRACE_ORPHAN_ID)']);
+  });
+
+  it('does not add guidance for duplicate declarations (existing warning behavior)', () => {
+    expect(
+      buildTraceCorrectionSuggestions([resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_DUPLICATE_ID', 'BEH-001')])], FEATURE),
+    ).toEqual([]);
+  });
+
+  it('keeps a context-free owner hint only for missing targets when no stages are supplied', () => {
+    const issues = [issueOf('TRACE_MALFORMED_ID', 'REQ-01'), issueOf('TRACE_ORPHAN_ID', 'BEH-002'), issueOf('TRACE_MISSING_LINK_TARGET', 'BEH-009')];
+    expect(buildTraceCorrectionSuggestions([resultWith('artifacts/x.txt', issues)])).toEqual([
+      'Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)',
+    ]);
+    expect(suggestCorrectionStageFromTraceIssue(issueOf('TRACE_MALFORMED_ID', 'REQ-01'))).toBeNull();
+    expect(suggestCorrectionStageFromTraceIssue(issueOf('TRACE_ORPHAN_ID', 'REQ-001'))).toBeNull();
+  });
+
+  it('does not mutate trace results (T162-51)', () => {
+    const results = [
+      resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009'), issueOf('TRACE_ORPHAN_ID', 'BEH-002')]),
+    ];
+    const before = JSON.stringify(results);
+    buildTraceCorrectionSuggestions(results, FEATURE);
+    expect(JSON.stringify(results)).toBe(before);
+  });
+});
+
+describe('missing-target message scope wording (v1.6.2 Prompt 3)', () => {
+  it('describes file-local scope for standalone checking (T162-49)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const issue = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt').issues.find(
+        (i) => i.code === 'TRACE_MISSING_LINK_TARGET',
+      )!;
+      expect(issue.message).toBe('Link target "REQ-001" is a valid trace ID but has no declaration in this artifact');
+      expect(issue.severity).toBe('fail');
+      expect(issue.context).toBe('REQ-001');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('describes run-aware scope without claiming the whole run was searched (T162-50)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      const issue = resultFor(results, 'artifacts/behavior-model.txt').issues.find(
+        (i) => i.code === 'TRACE_MISSING_LINK_TARGET',
+      )!;
+      expect(issue.message).toBe(
+        'Link target "REQ-001" is a valid trace ID but has no declaration in this artifact, its same-stage artifacts, or earlier native stage artifacts',
+      );
+      expect(issue.message).not.toMatch(/run|repository/i);
+      expect(issue.severity).toBe('fail');
+      expect(issue.context).toBe('REQ-001');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('persists the unchanged version-1 schema and issue fields (T162-53)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const traceResults = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      writeTraceCheckResults(tmp, { version: '1', checkedAt: 'now', traceResults });
+      const read = readTraceCheckResults(tmp)!;
+      expect(read.version).toBe('1');
+      expect(Object.keys(read).sort()).toEqual(['checkedAt', 'traceResults', 'version']);
+      const issue = read.traceResults.flatMap((r) => r.issues)[0];
+      expect(Object.keys(issue).sort()).toEqual(['code', 'context', 'message', 'severity']);
+    } finally {
+      cleanup(tmp);
     }
   });
 });

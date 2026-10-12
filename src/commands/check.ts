@@ -579,7 +579,7 @@ export function makeCheckCommand(): Command {
 
           // Trace-aware correction suggestions
           const allTraceResults = dmTraceResult ? [...traceResults, dmTraceResult] : traceResults;
-          const traceSuggestions = buildTraceCorrectionSuggestions(allTraceResults);
+          const traceSuggestions = buildTraceCorrectionSuggestions(allTraceResults, meta.stages);
           if (traceSuggestions.length > 0) {
             lines.push('=== Correction suggestions ===');
             for (const suggestion of traceSuggestions) {
@@ -664,7 +664,7 @@ export function makeCheckCommand(): Command {
           lines.push(...summarizeTrace(traceResults));
 
           // Trace-aware correction suggestions
-          const traceSuggestions = buildTraceCorrectionSuggestions(traceResults);
+          const traceSuggestions = buildTraceCorrectionSuggestions(traceResults, meta.stages);
           if (traceSuggestions.length > 0) {
             lines.push('');
             lines.push('Correction suggestions:');
@@ -724,7 +724,7 @@ export function makeCheckCommand(): Command {
             traceResult.issues.some((i) => i.severity === 'warn');
 
           // Trace-aware correction suggestions for design-map
-          const dmSuggestions = buildTraceCorrectionSuggestions([traceResult]);
+          const dmSuggestions = buildTraceCorrectionSuggestions([traceResult], meta.stages);
           if (dmSuggestions.length > 0) {
             lines.push('Correction suggestions:');
             for (const suggestion of dmSuggestions) {
