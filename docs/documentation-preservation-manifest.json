@@ -59,7 +59,8 @@
       "v1.6.0",
       "v1.6.1",
       "v1.7.0",
-      "ORC-EVIDENCE-01"
+      "ORC-EVIDENCE-01",
+      "v1.6.2"
     ],
     "docs/CONTRACTS.md": [
       "RunIntegrityGate",
@@ -223,7 +224,8 @@
       "Conceptual workflow model",
       "v1.6.1",
       "v1.7.0",
-      "ORC-EVIDENCE-01"
+      "ORC-EVIDENCE-01",
+      "v1.6.2"
     ]
   },
   "roadmapVersions": [
@@ -249,6 +251,7 @@
     "v1.5.0",
     "v1.6.0",
     "v1.6.1",
+    "v1.6.2",
     "v1.7.0"
   ],
   "greenfieldStageOrder": [
@@ -300,6 +303,7 @@
     "currentReleaseDate": "2026-10-02",
     "implementedUnpublishedVersions": [],
     "plannedUnpublishedVersions": [
+      "v1.6.2",
       "v1.7.0"
     ],
     "cliCommands": [
@@ -372,11 +376,19 @@
       "stage.greenfield.scaffold-plan",
       "stage.greenfield.scaffold-implementation"
     ],
-    "contextReadinessBlockerFields": ["contextKind", "primaryCode", "primaryReason", "correctiveAction", "evidenceTarget", "blockingIssueCodes", "supportingIssueCodes"]
+    "contextReadinessBlockerFields": [
+      "contextKind",
+      "primaryCode",
+      "primaryReason",
+      "correctiveAction",
+      "evidenceTarget",
+      "blockingIssueCodes",
+      "supportingIssueCodes"
+    ]
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.6.1 with older releases historically scoped and v1.7.0 reserved for ORC-EVIDENCE-01",
+    "published v1.6.1 with older releases historically scoped, v1.6.2 planned trace-diagnostic maintenance, and v1.7.0 reserved for ORC-EVIDENCE-01",
     "v1.6.1 has a finalized changelog section with the current release date",
     "derived semantic continuity contract version, gate schema version, and activated-mode set",
     "derived run telemetry contract version, Workflow Economics version, and recorded-command set",
@@ -896,7 +908,7 @@
           "Non-goals"
         ]
       ],
-      "versionStatusPolicy": "Keep v1.6.1 as the current release while older releases remain historical and later versions remain high level.",
+      "versionStatusPolicy": "Keep v1.6.1 as the current release, v1.6.2 as a planned maintenance patch, and v1.7.0 as the planned ORC-EVIDENCE-01 feature; historical versions remain published only when verified.",
       "sourceOfTruthOwners": [
         "package.json",
         "tests/fixtures/v121-compatibility/compatibility-manifest.json"

@@ -6,7 +6,7 @@ Versions are listed in chronological order.
 published project history. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.7.0` is the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
+`v1.6.2` is the planned next maintenance patch for trace diagnostics. `v1.7.0` remains the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
 
 ## Version summary
 
@@ -65,6 +65,7 @@ and the `v0.x.0` releases remain part of the published project history.
   2026-09-25.
 - `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. Released on 2026-09-26.
 - `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
+- `v1.6.2` is planned as a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1487,9 +1488,71 @@ Explicit exclusions:
 
 ## Planned milestones
 
+### v1.6.2 - Trace Diagnostic Accuracy and Correction Guidance
+
+Status: planned maintenance patch after v1.6.1, before v1.7.0.
+
+Goal:
+
+Correct trace-checker false positives and misleading run-level trace diagnostics
+observed during a versioned feature workflow, without weakening valid trace
+identity checks or changing canonical workflow-integrity decisions.
+
+Planned scope:
+
+- Classify malformed trace identifiers using trace-intent context rather than
+  treating every ordinary uppercase technical token followed by digits as an
+  attempted trace declaration. Preserve strict recognized-prefix validation
+  and recognize unknown prefixes in explicit trace declarations or links.
+- Preserve ordinary technical identifiers such as `ECO-00` and `UTF-8` in
+  verbatim request and design prose while still rejecting genuine malformed
+  declarations such as `REQ-01`, `RSP001`, and `FOO-001:`.
+- Make run-level `check --trace` and trace checks within `check --all`
+  resolve valid trace link targets declared in the same or an applicable
+  upstream native artifact. Genuine missing targets still fail; future-stage
+  declarations are not fabricated or silently deemed complete. Standalone
+  single-artifact checking retains its documented file-local contract.
+- Derive actionable correction guidance from the actual workflow stage list
+  and trace issue owner. Never present `design-map` as a native correction
+  stage when the active mode has no such stage; distinguish an optional
+  design-map artifact from the existing stage registry.
+- Preserve diagnostics, deterministic issue ordering, strict-mode behavior
+  and the existing trace-check-results versioned output. Do not silently
+  rewrite, deduplicate, or renumber authored trace declarations.
+- Extend the existing trace model/parser/checker and command integration
+  owners and focused regression tests; no competing trace engine.
+
+Acceptance criteria:
+
+- Valid prose identifiers do not produce `TRACE_MALFORMED_ID`; invalid
+  trace-formatted declarations and recognized-prefix mistakes still do.
+- A valid upstream `REQ` declaration satisfies a downstream link target in
+  a run-aware check; an actually missing target is still reported.
+- Existing duplicate and orphan diagnostics remain, but authorship and
+  semantic reuse of an `INV` or `PSE` identity are not automatically
+  adjudicated from prose.
+- Correction suggestions refer only to stages present in the active mode,
+  or provide explicit non-stage guidance. No nonexistent stage is invoked.
+- Historical single-artifact trace checks, `check --trace`, `check --all`,
+  warning/strict exit behavior, and cross-platform paths have focused
+  regression coverage; ordinary current-run validation still works.
+- `RunIntegrityGate`, judge acceptance, artifact lifecycle, stage order,
+  persisted run metadata, native instruction packets, and existing
+  producer-consumer contracts remain unchanged.
+
+Explicit exclusions:
+
+- no changes to the verbatim request or authored artifacts in existing runs
+- no automatic detection or rewriting of differently worded semantic
+  responsibilities or invariant meanings
+- no new CLI command, option, workflow mode, stage, native artifact family,
+  persisted schema, dependency, or release/publication automation
+- no Kit/Observer/Lab contract change and no generic ecosystem evidence
+  intake; ORC-EVIDENCE-01 remains v1.7.0
+
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 
-Status: planned after v1.6.1.
+Status: planned after the v1.6.2 trace-diagnostics patch; the ORC-EVIDENCE-01 scope is unchanged.
 
 Goal:
 

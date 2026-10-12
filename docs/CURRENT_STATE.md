@@ -89,6 +89,11 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
 - Semantic Continuity corroboration shows identity presence in bounded my-dev-kit evidence, not causality; verification results are agent-reported; and the reuse of an `RSP` ID for a different meaning cannot be detected.
+- In v1.6.1, run-level trace checks can mistake ordinary technical identifiers
+  such as `ECO-00` and `UTF-8` for malformed trace IDs, fail to resolve valid
+  upstream declarations across separate native artifacts, and suggest a
+  `design-map` correction stage that does not exist in the active workflow.
+  Trace diagnostics remain separate from the canonical RunIntegrityGate.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
 
 ## Active next direction
@@ -97,8 +102,13 @@ The current release is `v1.6.1`, described above; [ROADMAP.md](ROADMAP.md) owns 
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
 
-`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the next
-planned feature version and remains a later consumer milestone. It will build on
+`v1.6.2` is the planned next maintenance patch to correct trace-diagnostic
+accuracy, upstream-reference handling, and workflow-valid correction guidance.
+It has not shipped and introduces no generic evidence intake. Its planned
+scope and acceptance criteria are recorded in [ROADMAP.md](ROADMAP.md).
+
+`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), remains the
+next planned feature version and a later consumer milestone. It will build on
 the `v1.6.0` native run/invocation telemetry substrate; `v1.6.0` does not
 implement generic evidence envelopes, requirements, subject/environment
 identity, assurance policy, or compatibility evaluation.
