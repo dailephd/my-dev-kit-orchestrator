@@ -6,7 +6,7 @@ Versions are listed in chronological order.
 published project history. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.6.2` is the planned next maintenance patch for trace diagnostics. `v1.7.0` remains the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
+`v1.6.2` is implementation complete but unpublished, pending independent release readiness. `v1.7.0` remains the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
 
 ## Version summary
 
@@ -65,7 +65,7 @@ and the `v0.x.0` releases remain part of the published project history.
   2026-09-25.
 - `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. Released on 2026-09-26.
 - `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
-- `v1.6.2` is planned as a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
+- `v1.6.2` is implementation complete but unpublished, pending independent release readiness, as a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1490,7 +1490,8 @@ Explicit exclusions:
 
 ### v1.6.2 - Trace Diagnostic Accuracy and Correction Guidance
 
-Status: planned maintenance patch after v1.6.1, before v1.7.0.
+Status: implementation complete but unpublished; pending independent release
+readiness after v1.6.1, before v1.7.0.
 
 Goal:
 

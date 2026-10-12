@@ -396,8 +396,8 @@ any of these additive fields remains fully compatible.
 
 `src/traceChecker.ts` trace-aware correction suggestions (added in v0.6.0):
 
-- `suggestCorrectionStageFromTraceIssue(issue)`: maps `TRACE_MISSING_LINK_TARGET` context (ID prefix) to the owning stage; `TRACE_MALFORMED_ID` and `TRACE_ORPHAN_ID` suggest `design-map`
-- `buildTraceCorrectionSuggestions(results)`: produces deduplicated suggestion strings for check output
+- `suggestCorrectionStageFromTraceIssue(issue)`: provides a context-free missing-target prefix hint, unvalidated against any workflow; malformed/orphan issues return no hint in the unpublished v1.6.2 candidate
+- `buildTraceCorrectionSuggestions(results, stages)`: produces deduplicated advisory guidance validated against the actual run stage list, attributing issues to the reporting artifact's owner and adding only earlier-stage prefix hints; artifacts without a native owner receive artifact guidance. CLI callers pass `meta.stages`. These suggestions do not establish accepted judge routes.
 
 ## Trace checker implementation (v0.5.0)
 
@@ -406,15 +406,21 @@ any of these additive fields remains fully compatible.
 - `TRACE_PREFIXES`: `['REQ','CTX','BEH','INV','TRN','PSE','TST','RSP','IMP','VER','RISK']`
 - `TRACE_ID_RE`: derived from `TRACE_PREFIXES`; matches `PREFIX-NNN` with three or more digits
 - `isValidTraceId(id)`: returns true for canonical format (e.g., `BEH-001`)
-- `isMalformedTraceId(text)`: returns true for near-miss tokens (e.g., `BEH001`, `FOO-001`) that are not valid trace IDs
+- `isMalformedTraceId(text)`: returns true for recognized-prefix near misses (e.g., `BEH001`, `REQ-01`); contextual unknown-prefix classification belongs to `findMalformedTraceIds` in `traceParser.ts`
 
 `src/traceParser.ts` provides low-level parsing utilities. For checker use, prefer `src/traceChecker.ts`.
+
+At HEAD, the unpublished v1.6.2 candidate uses the parser's shared
+`findMalformedTraceIds` policy: ordinary technical tokens stay prose;
+unknown two-to-six-letter uppercase prefixes with three or more digits fail
+only as declaration labels or link endpoints whose opposite endpoint is
+canonical. Token scanning does not infer semantic identity or rewrite content.
 
 `src/traceChecker.ts` owns all trace check logic:
 
 - `parseDeclaredTraceIds(content)`: finds trace IDs declared with the `ID: text` label at the start of a line. A link line such as `REQ-001 -> BEH-999` never starts with that label, so link target IDs are not counted as declared; this is critical for correct `TRACE_MISSING_LINK_TARGET` detection. A declaration whose text contains `->` (for example `TRN-001: invalid-input -> validation-error`) is still a declaration.
 - `checkArtifactTrace(runFolder, artifactFile)`: checks one artifact for malformed IDs, duplicate declared IDs, orphan IDs, and missing link targets. Missing files return `passed: true` with no issues (the artifact checker handles missing files separately).
-- `checkAllTraces(meta)`: runs `checkArtifactTrace` for all run artifact files
+- `checkAllTraces(meta)`: evaluates all native primary/additional artifacts with actual declarations from the same artifact, same stage, and earlier stages in `RunMetadata` order. Later stages and unregistered files are excluded. Duplicate and orphan warnings remain file-local; `checkArtifactTrace` retains file-local target resolution.
 - `checkDesignMapTrace(runFolder)`: shorthand for checking `artifacts/design-map.txt`
 - `readTraceCheckResults(runFolder)` and `writeTraceCheckResults(runFolder, data)`: persistence for `trace-check-results.json`. Writes are atomic via a `.tmp` rename.
 

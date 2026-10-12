@@ -583,6 +583,31 @@ stage, mode, command, or persisted state is added.
 
 ## Status, check, and export
 
+Trace checking is owned by `src/traceModel.ts` (canonical vocabulary and lexical
+classification), `src/traceParser.ts` (links and contextual malformed-ID
+classification), and `src/traceChecker.ts` (declarations, evaluation, advisory
+suggestions, and version-1 result persistence). The checker shares the parser's
+malformed-ID policy, preserving ordinary technical prose while rejecting
+recognized-prefix near misses and supported explicit unknown-prefix attempts.
+
+`checkArtifactTrace` and `checkDesignMapTrace` resolve targets file-locally.
+`checkAllTraces` reads primary/additional native artifacts in `RunMetadata`
+stage order, caches their actual declarations, and evaluates each artifact
+against its own, same-stage, and earlier-stage declarations. Later stages and
+unregistered files contribute nothing. Prose references and link endpoints
+declare nothing; duplicate and orphan diagnostics remain file-local.
+
+`src/commands/check.ts` uses that same run-aware evaluator for `--trace` and
+`--all`, and passes `meta.stages` to `buildTraceCorrectionSuggestions` on all
+trace surfaces. Every named suggestion stage is checked against that list;
+prefix hints are added only for an earlier stage. Optional design-map issues
+receive artifact guidance because no native stage owns the file. The
+context-free `suggestCorrectionStageFromTraceIssue` remains only an unvalidated
+missing-target owner hint. Trace suggestions never become accepted judge
+routes or alter the canonical gate or lifecycle. These trace corrections are
+implemented at HEAD for the unpublished v1.6.2 candidate; v1.6.1 remains the
+published release.
+
 `status` reports human-readable implementation/test readiness, freshness,
 adequacy, primary blocker/reason, corrective action, evidence target, ordered
 issue codes, and the next stage. It has no status JSON option.

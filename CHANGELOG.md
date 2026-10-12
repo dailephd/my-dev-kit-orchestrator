@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Corrected malformed trace-ID classification to preserve ordinary technical
+  tokens such as `ECO-00` and `UTF-8`, while retaining recognized-prefix checks
+  and rejecting unsupported prefixes in explicit declarations and supported
+  trace-link contexts.
+- Run-level `check --trace` and native trace checks in `check --all` resolve
+  actual same-stage and upstream declarations; future-stage declarations do
+  not satisfy targets. Standalone and design-map checks remain file-local.
+- Trace correction suggestions validate stages against the active run and give
+  artifact-specific guidance for an optional design map. They remain advisory,
+  separate from judge routing. Missing-target messages describe the evaluated
+  scope; trace-result version `"1"`, strict exits, and integrity/lifecycle
+  ownership are unchanged.
+
 ## v1.6.1 - Test-Context Bootstrap Correction
 
 Release date: 2026-10-02.

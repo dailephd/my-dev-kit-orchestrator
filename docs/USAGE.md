@@ -297,7 +297,13 @@ A valid recommended-stage override applies under the normal routing contract, bu
 
 When correction is active, `prompt` selects the bounded correction stage and includes the verdict, stage, judge artifact, relevant predecessors, optional design map, and scope restrictions. The CLI does not edit files, call an LLM, execute an agent, or restart the run automatically.
 
-Trace checks can suggest owning stages deterministically: missing `BEH` targets point to behavior-model, missing `PSE` targets to pseudocode-packet, missing `TST` targets to test-strategy, and malformed/orphan trace IDs to design-map. Such suggestions do not create new native stages or override readiness.
+In the implemented, unpublished v1.6.2 candidate, trace suggestions identify the
+reporting artifact's native owner from the actual run stage list. A
+missing-target prefix hint is included only when that stage exists earlier in
+the run. The optional design map receives artifact guidance, never a native
+`design-map` stage. Suggestions are advisory: they do not establish accepted
+judge routes or override readiness. Published v1.6.1 retains its older generic
+prefix/design-map suggestions.
 
 ### Final-report eligibility
 
@@ -320,6 +326,19 @@ Codes:
 - `TRACE_DUPLICATE_ID`: warn for a duplicate declaration.
 - `TRACE_ORPHAN_ID`: warn for an unreferenced declared ID.
 - `TRACE_MISSING_LINK_TARGET`: fail for an undeclared link target.
+
+The unpublished v1.6.2 candidate preserves ordinary `ECO-00` and `UTF-8` tokens;
+recognized-prefix mistakes such as `REQ-01` and `RSP001` still fail. Unknown
+canonical-shaped prefixes such as `FOO-001` fail in declaration labels or
+trace-link endpoints whose opposite endpoint is canonical, but not in prose.
+Run-level `check --trace` and the native trace portion of `check --all` resolve
+targets against declarations in the checked artifact, its same-stage
+primary/additional artifacts, and earlier native stages. Future-stage
+declarations, unregistered files, prose references, and link endpoints do not
+satisfy targets. Duplicate/orphan warnings remain file-local. Published v1.6.1
+uses file-local target resolution. `check --design-map` retains file-local
+target resolution and its required-section check; `check --all` checks the
+optional map's trace links when present.
 
 Trace IDs are optional. Artifacts with no trace IDs pass the trace check without invented requirements. `check --trace` persists `trace-check-results.json`, which status summarizes when present. A not-run trace check is not a passed check.
 

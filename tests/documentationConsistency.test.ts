@@ -337,6 +337,40 @@ describe('v1.6.1 test-context bootstrap facts (current release)', () => {
   });
 
   it('rejects a manifest that classifies the current package version as implemented but unpublished', () => {
-    expectIssue('docs/documentation-preservation-manifest.json', (content) => content.replace('"implementedUnpublishedVersions": []', '"implementedUnpublishedVersions": ["v1.6.1"]'), 'UNPUBLISHED_VERSION_MATCHES_PACKAGE');
+    const relativePath = 'docs/documentation-preservation-manifest.json';
+    const actualContent = fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8');
+    const root = createIsolatedRoot();
+    const publishedVersion = `v${JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version}`;
+    const validResult = runCheck(root);
+    expect(validResult.status).toBe(0);
+    expect(validResult.output).toContain('DOCS_CHECK_PASS');
+
+    mutate(root, relativePath, (content) => {
+      const original = JSON.parse(content);
+      expect(original).toHaveProperty('protectedFacts.implementedUnpublishedVersions');
+      const existingVersions = original.protectedFacts.implementedUnpublishedVersions;
+      expect(Array.isArray(existingVersions)).toBe(true);
+      expect(existingVersions).not.toContain(publishedVersion);
+
+      // Serialize only this array so unrelated protected field formatting stays intact.
+      const field = /("implementedUnpublishedVersions"\s*:\s*)\[[^\]]*\]/g;
+      expect(content.match(field)).toHaveLength(1);
+      const updatedVersions = [...existingVersions, publishedVersion];
+      const updated = content.replace(field, (_match, prefix: string) => `${prefix}${JSON.stringify(updatedVersions)}`);
+      expect(updated).not.toBe(content);
+      const mutated = JSON.parse(updated);
+      expect(mutated.protectedFacts.implementedUnpublishedVersions).toEqual(updatedVersions);
+      expect(mutated.protectedFacts.implementedUnpublishedVersions).toContain(publishedVersion);
+      expect(mutated).toEqual({
+        ...original,
+        protectedFacts: { ...original.protectedFacts, implementedUnpublishedVersions: updatedVersions },
+      });
+      return updated;
+    });
+
+    const result = runCheck(root);
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('[UNPUBLISHED_VERSION_MATCHES_PACKAGE]');
+    expect(fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8')).toBe(actualContent);
   });
 });

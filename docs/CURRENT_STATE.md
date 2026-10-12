@@ -93,7 +93,9 @@ Current implementation includes exact workflow-instruction packets, supplemental
   such as `ECO-00` and `UTF-8` for malformed trace IDs, fail to resolve valid
   upstream declarations across separate native artifacts, and suggest a
   `design-map` correction stage that does not exist in the active workflow.
-  Trace diagnostics remain separate from the canonical RunIntegrityGate.
+  These published-release defects are corrected in the implemented, unpublished
+  v1.6.2 candidate. Trace diagnostics remain separate from the canonical
+  RunIntegrityGate.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
 
 ## Active next direction
@@ -102,10 +104,17 @@ The current release is `v1.6.1`, described above; [ROADMAP.md](ROADMAP.md) owns 
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
 
-`v1.6.2` is the planned next maintenance patch to correct trace-diagnostic
-accuracy, upstream-reference handling, and workflow-valid correction guidance.
-It has not shipped and introduces no generic evidence intake. Its planned
-scope and acceptance criteria are recorded in [ROADMAP.md](ROADMAP.md).
+`v1.6.2` is implementation complete but unpublished, pending independent release
+readiness. The candidate preserves `ECO-00` and `UTF-8` prose while rejecting
+recognized-prefix near misses and supported explicit unknown-prefix attempts.
+Its run-level `check --trace` and native trace checks in `check --all` resolve
+actual declarations from the same artifact, same-stage artifacts, and earlier
+native stages; future stages do not satisfy targets. Standalone and design-map
+checks remain file-local. Advisory correction guidance names only verified run
+stages or an explicit artifact, with no change to judge routing, the gate,
+lifecycle, or trace-results version `"1"`. It has not shipped and introduces no
+generic evidence intake. Its complete scope and acceptance criteria remain in
+[ROADMAP.md](ROADMAP.md).
 
 `v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), remains the
 next planned feature version and a later consumer milestone. It will build on
