@@ -20,6 +20,14 @@ export type TracePrefix = (typeof TRACE_PREFIXES)[number];
 // Derived from TRACE_PREFIXES so the vocabulary has a single source of truth.
 export const TRACE_ID_RE = new RegExp(`^(${TRACE_PREFIXES.join('|')})-(\\d{3,})$`);
 
+// Token boundary policy for finding trace IDs inside free text. A candidate is
+// a complete lexical token only when it is not attached to a longer technical
+// identifier: no letter/digit/underscore, identifier-joining hyphen, path
+// separator, or file-extension dot adjoins it. (A bare \b is insufficient
+// because '-' is a non-word character.) Shared by traceParser and traceChecker.
+export const TRACE_TOKEN_BEFORE = '(?<![A-Za-z0-9_/\\\\]|[A-Za-z0-9_]-)';
+export const TRACE_TOKEN_AFTER = '(?![A-Za-z0-9_/\\\\]|-[A-Za-z0-9_]|\\.[A-Za-z0-9])';
+
 // ─── Validation functions ─────────────────────────────────────────────────────
 
 export function isValidTracePrefix(prefix: string): prefix is TracePrefix {

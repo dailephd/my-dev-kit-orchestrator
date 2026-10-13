@@ -3,6 +3,8 @@ import {
   isValidTraceId,
   isMalformedTraceId,
   isUnsupportedPrefixTraceId,
+  TRACE_TOKEN_BEFORE,
+  TRACE_TOKEN_AFTER,
 } from './traceModel';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,14 +34,20 @@ export interface ParsedTrace {
 // ─── Inline patterns ──────────────────────────────────────────────────────────
 
 // Matches valid trace IDs embedded in text content
-const TRACE_ID_INLINE_RE = new RegExp(`(${TRACE_PREFIXES.join('|')})-(\\d{3,})`, 'g');
+const TRACE_ID_INLINE_RE = new RegExp(
+  `${TRACE_TOKEN_BEFORE}(${TRACE_PREFIXES.join('|')})-(\\d{3,})${TRACE_TOKEN_AFTER}`,
+  'g',
+);
 
 // Matches link expressions: FROM -> TO (non-whitespace tokens around ->)
 const TRACE_LINK_RE = /(\S+)\s*->\s*(\S+)/g;
 
 // Matches recognized-prefix tokens followed by dash-digits or digits; the
 // canonical-format check is left to isMalformedTraceId.
-const MALFORMED_INLINE_RE = new RegExp(`\\b((?:${TRACE_PREFIXES.join('|')})(?:-\\d+|\\d+))\\b`, 'g');
+const MALFORMED_INLINE_RE = new RegExp(
+  `${TRACE_TOKEN_BEFORE}((?:${TRACE_PREFIXES.join('|')})(?:-\\d+|\\d+))${TRACE_TOKEN_AFTER}`,
+  'g',
+);
 
 // An explicit declaration label at the start of a line ("FOO-001: ..."),
 // mirroring traceChecker's TRACE_DECLARATION_RE but accepting any prefix.

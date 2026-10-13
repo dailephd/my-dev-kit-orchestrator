@@ -440,3 +440,44 @@ describe('parseTrace', () => {
     expect(result.duplicateIds.sort()).toEqual(['BEH-001', 'PSE-001', 'REQ-001', 'TST-001']);
   });
 });
+
+// ─── Token boundaries (v1.6.2 T06) ───────────────────────────────────────────
+
+describe('trace token boundaries', () => {
+  const EMBEDDED = [
+    'CODE-REQ-01-suffix',
+    'REQ-001X',
+    'PREFIX-REQ-001-suffix',
+    'REQ-001_foo',
+    'docs/REQ-001.md',
+    'path/REQ-001/file',
+  ];
+
+  it.each(EMBEDDED)('extracts nothing from embedded %s', (text) => {
+    const parsed = parseTrace(text);
+    expect(parsed.ids).toEqual([]);
+    expect(parsed.malformed).toEqual([]);
+    expect(parsed.missingLinkTargets).toEqual([]);
+  });
+
+  it('does not treat REQ-001X as a declaration of REQ-001', () => {
+    const parsed = parseTrace('REQ-001X: invalid declaration\nBEH-001 -> REQ-001X');
+    expect(parsed.ids.map((i) => i.id)).toEqual(['BEH-001']);
+    expect(parsed.malformed).toEqual([]);
+  });
+
+  it('keeps standalone canonical IDs', () => {
+    for (const text of ['REQ-001: r', 'See REQ-001 for details.', '(REQ-001)', '`REQ-001`', 'REQ-001,']) {
+      expect(parseTraceIds(text).map((i) => i.id)).toEqual(['REQ-001']);
+    }
+    expect(parseTraceIds('REQ-0001').map((i) => i.id)).toEqual(['REQ-0001']);
+    expect(parseTraceIds('REQ-001 -> BEH-001').map((i) => i.id)).toEqual(['REQ-001', 'BEH-001']);
+  });
+
+  it('still flags complete malformed tokens and unsupported declarations/links', () => {
+    expect(findMalformedTraceIds('REQ-01\nRSP001\nBEH001\n(REQ-01)')).toEqual(['REQ-01', 'RSP001', 'BEH001']);
+    expect(findMalformedTraceIds('FOO-001: bad')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('REQ-001 -> FOO-001')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('ECO-00 ECO-01 UTF-8 UTF-16 ISO-8601 SHA-256')).toEqual([]);
+  });
+});

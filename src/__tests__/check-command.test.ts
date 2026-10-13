@@ -623,3 +623,63 @@ describe('check correction guidance - active-mode validation', () => {
     }
   });
 });
+
+// ─── Combined v1.7.0 failure-pattern regression (v1.6.2 T06/T21) ─────────────
+
+describe('check --trace and --all - combined v1.7.0 failure pattern', () => {
+  it('fails only on genuine structural trace problems and agrees across surfaces', () => {
+    const tmp = makeTempDir();
+    try {
+      initWorkspace(tmp);
+      const meta = createRun({
+        request: 'Keep ECO-00 and UTF-8 verbatim; see CODE-REQ-01-suffix',
+        mode: 'feature',
+        projectRoot: tmp,
+      });
+      const files = ['artifacts/request-brief.txt', 'artifacts/behavior-model.txt'];
+      writeArtifact(
+        meta.runFolder,
+        files[0],
+        'REQ-001: requirement\nUses ECO-00, ECO-01, UTF-8 and SHA-256 verbatim.\n',
+      );
+      writeArtifact(
+        meta.runFolder,
+        files[1],
+        [
+          'BEH-001: behavior',
+          'BEH-001 -> REQ-001',
+          'BEH-001 -> REQ-999',
+          'Technical id CODE-REQ-01-suffix and docs/REQ-002.md are not trace IDs.',
+          'RSP-01: malformed responsibility',
+        ].join('\n') + '\n',
+      );
+      runCheckCli(['status', '--root', tmp]);
+      const read = (): string[] => files.map((f) => fs.readFileSync(path.join(meta.runFolder, f), 'utf8'));
+      const sources = read();
+
+      const trace = runCheckCli(['check', '--trace', '--root', tmp]);
+      const all = runCheckCli(['check', '--all', '--root', tmp]);
+
+      for (const out of [trace.output, all.output]) {
+        expect(out).toContain('RSP-01');
+        expect(out).toContain('REQ-999');
+        expect(out).not.toContain('"ECO-00"');
+        expect(out).not.toContain('"UTF-8"');
+        expect(out).not.toContain('"REQ-01"');
+        expect(out).not.toContain('"REQ-002"');
+        expect(out).not.toMatch(/Link target "REQ-001"/);
+        expect(out).not.toMatch(/correction stage: design-map/);
+      }
+      for (const line of suggestionLines(trace.output)) {
+        expect(line).toMatch(/^Suggested correction (stage: (request-brief|behavior-model)|artifact: )/);
+      }
+      expect(trace.exitCode).toBe(1);
+      expect(all.exitCode).toBe(1);
+      expect(traceLines(all.output)).toEqual(traceLines(trace.output));
+      expect(suggestionLines(all.output)).toEqual(suggestionLines(trace.output));
+      expect(read()).toEqual(sources);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+});

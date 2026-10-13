@@ -5,6 +5,8 @@ import {
   isValidTraceId,
   isMalformedTraceId,
   isUnsupportedPrefixTraceId,
+  TRACE_TOKEN_BEFORE,
+  TRACE_TOKEN_AFTER,
 } from '../traceModel';
 
 // ─── TRACE_PREFIXES ───────────────────────────────────────────────────────────
@@ -254,5 +256,37 @@ describe("RSP trace family (v1.5 Batch 0)", () => {
     expect(isMalformedTraceId("RSP-01")).toBe(true);
     expect(isMalformedTraceId("RSP001")).toBe(true);
     expect(isMalformedTraceId("RSP-001")).toBe(false);
+  });
+});
+
+// ─── Token boundary policy (v1.6.2 T06) ──────────────────────────────────────
+
+describe('trace token boundaries', () => {
+  const find = (text: string): string[] => {
+    const re = new RegExp(`${TRACE_TOKEN_BEFORE}((?:${TRACE_PREFIXES.join('|')})-[0-9]{3,})${TRACE_TOKEN_AFTER}`, 'g');
+    return [...text.matchAll(re)].map((m) => m[1]);
+  };
+
+  it.each([
+    'CODE-REQ-001-suffix',
+    'REQ-001X',
+    'PREFIX-REQ-001-suffix',
+    'REQ-001_foo',
+    'docs/REQ-001.md',
+    'path/REQ-001/file',
+  ])('does not extract a partial ID from %s', (text) => {
+    expect(find(text)).toEqual([]);
+  });
+
+  it.each([
+    ['REQ-001: requirement', 'REQ-001'],
+    ['See REQ-001 for details.', 'REQ-001'],
+    ['(REQ-001)', 'REQ-001'],
+    ['`REQ-001`', 'REQ-001'],
+    ['REQ-001,', 'REQ-001'],
+    ['REQ-0001 ok', 'REQ-0001'],
+    ['REQ-001.', 'REQ-001'],
+  ])('extracts a standalone ID from %s', (text, id) => {
+    expect(find(text)).toEqual([id]);
   });
 });

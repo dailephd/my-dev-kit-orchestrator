@@ -1044,3 +1044,47 @@ describe('missing-target message scope wording (v1.6.2 Prompt 3)', () => {
     }
   });
 });
+
+// ─── Token boundaries through the checker (v1.6.2 T06) ───────────────────────
+
+describe('checkArtifactTrace - embedded trace-looking tokens', () => {
+  it('does not report or declare partial IDs from longer technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(
+        tmp,
+        'artifacts/a.txt',
+        [
+          'BEH-001: behavior',
+          'See CODE-REQ-01-suffix, REQ-001X, PREFIX-REQ-001-suffix, REQ-001_foo,',
+          'docs/REQ-001.md and path/REQ-001/file.',
+          'REQ-001X: not a declaration',
+          'BEH-001 -> REQ-001',
+        ].join('\n'),
+      );
+      const result = checkArtifactTrace(tmp, 'artifacts/a.txt');
+      const codes = result.issues.map((i) => i.code);
+      expect(codes).not.toContain('TRACE_MALFORMED_ID');
+      expect(codes).not.toContain('TRACE_DUPLICATE_ID');
+      // REQ-001 is a genuine missing target; nothing declared it.
+      expect(
+        result.issues.filter((i) => i.code === 'TRACE_MISSING_LINK_TARGET').map((i) => i.context),
+      ).toEqual(['REQ-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('still fails complete malformed IDs', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/a.txt', 'BEH-001: b\nREQ-01 RSP001 BEH001\n');
+      const malformed = checkArtifactTrace(tmp, 'artifacts/a.txt')
+        .issues.filter((i) => i.code === 'TRACE_MALFORMED_ID')
+        .map((i) => i.context);
+      expect(malformed).toEqual(['REQ-01', 'RSP001', 'BEH001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+});
