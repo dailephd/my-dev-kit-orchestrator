@@ -1626,13 +1626,13 @@ It should own:
 - graph artifacts
 - semantic artifacts
 - classification
-- future Kotlin indexing
-- future Java indexing
-- future AndroidManifest parsing
-- future resource indexing
-- future Compose semantic artifacts
-- future Android architecture classification
-- future Android retrieval benchmarks
+- Kotlin indexing
+- Java indexing
+- Android manifest parsing
+- Android resource indexing
+- Compose semantic artifacts
+- Android architecture classification
+- planned Android retrieval benchmarks, examples, and workflow documentation
 
 `my-dev-kit` should not become a project generator.
 

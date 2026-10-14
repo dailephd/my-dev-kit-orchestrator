@@ -11,9 +11,9 @@
 From the target project:
 
 ```bash
-npx @dailephd/my-dev-kit-orchestrator@1.5.0 init
-npx @dailephd/my-dev-kit-orchestrator@1.5.0 start "Add audit logging"
-npx @dailephd/my-dev-kit-orchestrator@1.5.0 prompt
+npx @dailephd/my-dev-kit-orchestrator@1.6.2 init
+npx @dailephd/my-dev-kit-orchestrator@1.6.2 start "Add audit logging"
+npx @dailephd/my-dev-kit-orchestrator@1.6.2 prompt
 ```
 
 Success means initialization creates `.my-dev-kit-orchestrator/`, `start` creates a discoverable run, and `prompt` prints/writes the first stage prompt. Give that prompt to a coding agent, save the requested artifact at the run path named by the prompt, then run `prompt` again.
@@ -21,8 +21,8 @@ Success means initialization creates `.my-dev-kit-orchestrator/`, `start` create
 Inspect without advancing work:
 
 ```bash
-npx @dailephd/my-dev-kit-orchestrator@1.5.0 status
-npx @dailephd/my-dev-kit-orchestrator@1.5.0 check --all
+npx @dailephd/my-dev-kit-orchestrator@1.6.2 status
+npx @dailephd/my-dev-kit-orchestrator@1.6.2 check --all
 ```
 
 These commands are read-only with respect to authored stage artifacts; `check --all` may exit nonzero while expected artifacts are still missing.
@@ -42,6 +42,6 @@ The resulting scaffold contract includes the common `agents.txt`,
 `claude.txt`, `AGENTS.md`, and `CLAUDE.md` instructions plus the Python profile
 targets. A user or coding agent still creates the files and runs Python,
 pytest, and `my-dev-kit`; the orchestrator does not execute them. The published
-`npx` examples above are pinned to `1.5.0`.
+`npx` examples above are pinned to `1.6.2`.
 
 Next, read [COMMANDS.md](COMMANDS.md) for every option and side effect, [WORKFLOWS.md](WORKFLOWS.md) for mode/stage selection, and [ARTIFACTS.md](ARTIFACTS.md) for files to save.
