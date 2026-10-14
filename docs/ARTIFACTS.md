@@ -258,15 +258,15 @@ Trace IDs are optional. Orphan warnings require both declarations and links in
 the checked artifact; link targets are checked even when that artifact declares
 no IDs. Prose references and link endpoints never create declarations.
 
-In the implemented, unpublished v1.6.2 candidate, `check --trace` and the native
+In v1.6.2, `check --trace` and the native
 trace portion of `check --all` resolve targets from the checked artifact, other
 primary/additional artifacts of its same stage, and earlier native stage
 artifacts in `RunMetadata` order. Later stages, unregistered files, and missing
 files contribute no declarations. Duplicate and orphan warnings stay
 file-local. Standalone `checkArtifactTrace` and the optional design-map check
 remain file-local. Missing-target messages name the scope actually evaluated;
-the result schema remains version `"1"`. Published v1.6.1 native trace checking
-uses file-local target resolution.
+the result schema remains version `"1"`. Native trace checking in v1.6.1 and earlier
+used file-local target resolution.
 
 ## DesignMap artifact (v0.5.0)
 
@@ -300,7 +300,7 @@ uses file-local target resolution.
 Use `my-dev-kit-orchestrator check --design-map` to verify the DesignMap artifact has all required sections and no trace link issues.
 
 DesignMap targets must be declared within that artifact. `check --all` also
-checks its trace links when the file exists. In the unpublished v1.6.2 candidate,
+checks its trace links when the file exists. In v1.6.2,
 trace correction guidance names `artifacts/design-map.txt` as an artifact,
 never an invented native stage. Suggestions are advisory and do not establish
 an accepted judge correction route.

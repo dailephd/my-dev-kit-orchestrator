@@ -2,11 +2,11 @@
 
 Versions are listed in chronological order.
 
-`v1.6.1` is the current release. `v1.6.0` and earlier versions remain part of
+`v1.6.2` is the current release. `v1.6.1` and earlier versions remain part of
 published project history. `v1.4.1`, `v1.4.0`, `v1.3.3`, `v1.3.2`,
 `v1.3.1`, `v1.3.0`, `v1.2.3`, `v1.2.2`, `v1.2.1`, `v1.2.0`, `v1.1.0`, `v1.0.0`,
 and the `v0.x.0` releases remain part of the published project history.
-`v1.6.2` is implementation complete but unpublished, pending independent release readiness. `v1.7.0` remains the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
+`v1.7.0` remains the planned next feature release for ORC-EVIDENCE-01; deferred scopes remain separate.
 
 ## Version summary
 
@@ -65,7 +65,7 @@ and the `v0.x.0` releases remain part of the published project history.
   2026-09-25.
 - `v1.6.0` provides versioned native run-invocation telemetry and deterministic workflow-economics derivation over Orchestrator-owned observations, while preserving the existing command/mode/stage surface and keeping external evidence intake in `v1.7.0`. Released on 2026-09-26.
 - `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
-- `v1.6.2` is implementation complete but unpublished, pending independent release readiness, as a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
+- `v1.6.2` is a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
 - `v1.7.0` is reserved for Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts.
 
 ## Published releases through v1.0.0
@@ -1197,7 +1197,7 @@ Explicit exclusions:
 
 Roadmap sequence:
 
-`v1.6.1` is the current release, released on 2026-10-02. `v1.6.0` and earlier
+`v1.6.2` is the current release, released on 2026-10-14. `v1.6.1` and earlier
 versions are historical. Greenfield-to-Feature
 Workflow Handoff Hardening and optional mobile-profile candidates remain deferred scopes.
 
@@ -1486,12 +1486,11 @@ Explicit exclusions:
 - no automatic `my-dev-kit` execution
 - no release or publication automation
 
-## Planned milestones
+## Published v1.6.2
 
 ### v1.6.2 - Trace Diagnostic Accuracy and Correction Guidance
 
-Status: implementation complete but unpublished; pending independent release
-readiness after v1.6.1, before v1.7.0.
+Status: Released as `1.6.2` on 2026-10-14.
 
 Goal:
 
@@ -1550,6 +1549,8 @@ Explicit exclusions:
   persisted schema, dependency, or release/publication automation
 - no Kit/Observer/Lab contract change and no generic ecosystem evidence
   intake; ORC-EVIDENCE-01 remains v1.7.0
+
+## Planned milestones
 
 ### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
 

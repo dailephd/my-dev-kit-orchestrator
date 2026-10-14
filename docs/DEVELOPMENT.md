@@ -396,7 +396,7 @@ any of these additive fields remains fully compatible.
 
 `src/traceChecker.ts` trace-aware correction suggestions (added in v0.6.0):
 
-- `suggestCorrectionStageFromTraceIssue(issue)`: provides a context-free missing-target prefix hint, unvalidated against any workflow; malformed/orphan issues return no hint in the unpublished v1.6.2 candidate
+- `suggestCorrectionStageFromTraceIssue(issue)`: provides a context-free missing-target prefix hint, unvalidated against any workflow; malformed/orphan issues return no hint since v1.6.2
 - `buildTraceCorrectionSuggestions(results, stages)`: produces deduplicated advisory guidance validated against the actual run stage list, attributing issues to the reporting artifact's owner and adding only earlier-stage prefix hints; artifacts without a native owner receive artifact guidance. CLI callers pass `meta.stages`. These suggestions do not establish accepted judge routes.
 
 ## Trace checker implementation (v0.5.0)
@@ -410,7 +410,7 @@ any of these additive fields remains fully compatible.
 
 `src/traceParser.ts` provides low-level parsing utilities. For checker use, prefer `src/traceChecker.ts`.
 
-At HEAD, the unpublished v1.6.2 candidate uses the parser's shared
+At HEAD, since v1.6.2, the checker uses the parser's shared
 `findMalformedTraceIds` policy: ordinary technical tokens stay prose;
 unknown two-to-six-letter uppercase prefixes with three or more digits fail
 only as declaration labels or link endpoints whose opposite endpoint is

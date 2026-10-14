@@ -227,19 +227,19 @@ The contract vocabulary includes `CONTRACT_MISSING_FILE`, `CONTRACT_EMPTY_FILE`,
 
 IDs use `PREFIX-NNN`, with prefixes `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `RSP`, `IMP`, `VER`, and `RISK`, plus at least three digits. A declaration is a line beginning `ID: text`, optionally preceded by a bullet, and it stays a declaration even when its text contains `->` (for example `TRN-001: invalid-input -> validation-error`). A link is `FROM_ID -> TO_ID`; its endpoints and ordinary prose references declare nothing. Trace checks distinguish `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, and `TRACE_MISSING_LINK_TARGET`. Artifacts without trace IDs do not acquire fabricated trace obligations.
 
-The implemented, unpublished v1.6.2 candidate preserves technical prose tokens
+Since v1.6.2, trace checking preserves technical prose tokens
 such as `ECO-00` and `UTF-8`. Recognized-prefix near misses (`REQ-01`, `RSP001`)
 still fail wherever they occur. Unknown uppercase prefixes with two to six
 letters and three or more digits (`FOO-001`) fail as declaration labels or
 trace-link endpoints when the opposite endpoint is canonical; ordinary prose
 and links between two unknown prefixes are not treated as trace intent.
 
-In that candidate, `check --trace` and the native trace checks in `check --all`
+Likewise, `check --trace` and the native trace checks in `check --all`
 share run-aware target resolution: declarations in the same artifact, its
 same-stage primary/additional artifacts, and earlier native stages can satisfy
 a target. Future stages and unregistered files cannot. Duplicate and orphan
 warnings remain file-local; orphan warnings require links in that artifact.
-Published v1.6.1 resolves native trace targets file-locally.
+v1.6.1 and earlier resolved native trace targets file-locally.
 
 `check --design-map` checks required sections and file-local trace links in the
 optional `artifacts/design-map.txt`; `check --all` checks its trace links when

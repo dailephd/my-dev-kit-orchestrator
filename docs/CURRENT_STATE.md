@@ -3,15 +3,15 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.6.1`
-- Current release: `v1.6.1`
-- Release date: `2026-10-02`
-- Previous release: `v1.6.0`
+- Package metadata version: `1.6.2`
+- Current release: `v1.6.2`
+- Release date: `2026-10-14`
+- Previous release: `v1.6.1`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.6.1`
-- Latest Git tag and GitHub Release: `v1.6.1`
+- Latest npm version: `1.6.2`
+- Latest Git tag and GitHub Release: `v1.6.2`
 
-Package metadata, npm, the `v1.6.1` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.6.2` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -56,9 +56,22 @@ Implemented behavior:
 
 Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
-## Current release: Test-Context Bootstrap Correction
+## Current release: Trace Diagnostic Accuracy and Correction Guidance
 
-`v1.6.1`, a test-context bootstrap correction, is the current release; it is a patch between `v1.6.0` and `v1.7.0`.
+`v1.6.2`, a trace-diagnostic correction patch, is the current release; it is a patch between `v1.6.1` and `v1.7.0`.
+
+Implemented behavior:
+
+- ordinary technical tokens such as `ECO-00` and `UTF-8` are preserved as prose, while recognized-prefix near misses (`REQ-01`, `RSP001`) still fail wherever they occur and supported explicit unknown-prefix declarations or link endpoints still fail
+- run-level `check --trace` and native trace checks in `check --all` resolve actual declarations from the same artifact, same-stage artifacts, and earlier native stages; future stages do not satisfy targets, and standalone and design-map checks remain file-local
+- advisory correction guidance names only verified run stages or an explicit artifact, with no change to judge routing, the gate, lifecycle, or trace-results version `"1"`
+- the development-only documentation linter is `markdownlint-cli` (configured by `.markdownlint.jsonc`), replacing `markdownlint-cli2` and removing a high-severity development-only dependency chain; the runtime dependency set is unchanged
+
+Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or runtime dependency. `RunIntegrityGate` remains the single enforcement consumer, and generic evidence intake is not implemented.
+
+## Previous release: Test-Context Bootstrap Correction
+
+`v1.6.1`, a test-context bootstrap correction, is the previous release; it is a patch between `v1.6.0` and `v1.7.0`.
 
 Why it exists: repository-context readiness required every critical test responsibility to be fully mapped, including related-test and oracle evidence, before `test-implementation` could begin. That evidence can only be created during `test-implementation`, so a new subsystem with no tests yet could never enter the stage.
 
@@ -89,32 +102,19 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
 - Semantic Continuity corroboration shows identity presence in bounded my-dev-kit evidence, not causality; verification results are agent-reported; and the reuse of an `RSP` ID for a different meaning cannot be detected.
-- In v1.6.1, run-level trace checks can mistake ordinary technical identifiers
-  such as `ECO-00` and `UTF-8` for malformed trace IDs, fail to resolve valid
-  upstream declarations across separate native artifacts, and suggest a
-  `design-map` correction stage that does not exist in the active workflow.
-  These published-release defects are corrected in the implemented, unpublished
-  v1.6.2 candidate. Trace diagnostics remain separate from the canonical
-  RunIntegrityGate.
+- In v1.6.1 and earlier, run-level trace checks could mistake ordinary technical
+  identifiers such as `ECO-00` and `UTF-8` for malformed trace IDs, fail to
+  resolve valid upstream declarations across separate native artifacts, and
+  suggest a `design-map` correction stage that does not exist in the active
+  workflow. These defects are corrected in v1.6.2. Trace diagnostics remain
+  separate from the canonical RunIntegrityGate.
 - `scaffold-plan` and `scaffold-implementation` retain specialized renderers.
 
 ## Active next direction
 
-The current release is `v1.6.1`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+The current release is `v1.6.2`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
-
-`v1.6.2` is implementation complete but unpublished, pending independent release
-readiness. The candidate preserves `ECO-00` and `UTF-8` prose while rejecting
-recognized-prefix near misses and supported explicit unknown-prefix attempts.
-Its run-level `check --trace` and native trace checks in `check --all` resolve
-actual declarations from the same artifact, same-stage artifacts, and earlier
-native stages; future stages do not satisfy targets. Standalone and design-map
-checks remain file-local. Advisory correction guidance names only verified run
-stages or an explicit artifact, with no change to judge routing, the gate,
-lifecycle, or trace-results version `"1"`. It has not shipped and introduces no
-generic evidence intake. Its complete scope and acceptance criteria remain in
-[ROADMAP.md](ROADMAP.md).
 
 `v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), remains the
 next planned feature version and a later consumer milestone. It will build on

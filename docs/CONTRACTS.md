@@ -14,7 +14,7 @@ The instruction catalog and exact resolution live under `src/instructions/`; pro
 
 Run paths, artifact formats, state transitions, deterministic checks, correction metadata, and export inclusion are owned by workflow definitions, `src/artifactLifecycle.ts`, check commands, and export code. Shared checking does not imply identical syntax: text artifact kinds use section-header contracts, while registered structured JSON kinds require valid JSON and their actual structured fields. Both retain shared existence, predecessor, lifecycle, judge-integrity, and readiness behavior. File-level definitions remain canonical in [ARTIFACTS.md](ARTIFACTS.md).
 
-The trace contract at HEAD includes the unpublished v1.6.2 corrections.
+The trace contract at HEAD includes the v1.6.2 corrections.
 Canonical IDs remain case-sensitive `PREFIX-NNN` with at least three decimal
 digits, using `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `RSP`, `IMP`,
 `VER`, and `RISK`. `isMalformedTraceId` classifies recognized-prefix near

@@ -193,7 +193,7 @@
     "unknown_verdict",
     "missing_verdict"
   ],
-  "currentPackageVersion": "1.6.1",
+  "currentPackageVersion": "1.6.2",
   "documentedLegacyExceptions": [
     "stage.greenfield.scaffold-plan",
     "stage.greenfield.scaffold-implementation"
