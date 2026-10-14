@@ -1,6 +1,6 @@
 {
   "name": "@dailephd/my-dev-kit-orchestrator",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "CLI-first workflow tool for design-first software development with coding agents",
   "main": "dist/index.js",
   "repository": {
@@ -31,7 +31,7 @@
     "test:security": "node scripts/test-security.mjs",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
-    "lint:docs": "markdownlint-cli2 \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
+    "lint:docs": "markdownlint --config .markdownlint.jsonc \"README.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
     "verify": "npm run typecheck && npm run build && npm run smoke:context && npm run lint && npm run lint:docs && npm run docs:check && npm run test:security && npm run smoke:cli -- normal && npm run smoke:cli -- lifecycle && npm run smoke:cli -- extraction && npm run smoke:cli -- check && npm run smoke:cli -- trace && npm run smoke:cli -- correction && npm run smoke:cli -- export && npm run smoke:cli -- greenfield"
@@ -62,7 +62,7 @@
     "@typescript-eslint/parser": "^8.62.0",
     "eslint": "^8.55.0",
     "jest": "^30.4.2",
-    "markdownlint-cli2": "0.23.3",
+    "markdownlint-cli": "0.49.1",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.4.11",
     "typescript": "^5.3.3"

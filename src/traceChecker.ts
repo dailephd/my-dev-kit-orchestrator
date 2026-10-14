@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { CheckSeverity } from './artifactChecker';
-import { TRACE_PREFIXES, isValidTraceId, isMalformedTraceId } from './traceModel';
-import { TraceId, TraceLink, parseTraceLinks } from './traceParser';
+import { TRACE_PREFIXES, isValidTraceId } from './traceModel';
+import { TraceId, TraceLink, parseTraceLinks, findMalformedTraceIds } from './traceParser';
 import { RunMetadata } from './run';
+import { StageDefinition } from './workflows';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,9 +37,6 @@ const TRACE_DECLARATION_RE = new RegExp(
   `^\\s*(?:[-*+]\\s+)?(${TRACE_PREFIXES.join('|')})-(\\d{3,})\\s*:`,
 );
 
-// Malformed token pattern
-const MALFORMED_TOKEN_RE = /\b([A-Z]{2,6}(?:-\d+|\d+))\b/g;
-
 /**
  * Finds trace IDs declared in content, excluding IDs that only appear in link
  * expressions. This separates declared IDs from link-line references, fixing
@@ -60,36 +58,49 @@ export function parseDeclaredTraceIds(content: string): TraceId[] {
   return results;
 }
 
-function findMalformedInContent(content: string): string[] {
-  const found = new Set<string>();
-  let match: RegExpExecArray | null;
-  const re = new RegExp(MALFORMED_TOKEN_RE.source, 'g');
-  while ((match = re.exec(content)) !== null) {
-    const token = match[1];
-    if (isMalformedTraceId(token)) found.add(token);
-  }
-  return [...found];
-}
-
 // ─── Single-artifact trace check ─────────────────────────────────────────────
 
+/**
+ * File-local trace check: link targets resolve only against declarations in
+ * this one artifact. Run-aware resolution lives in checkAllTraces.
+ */
 export function checkArtifactTrace(
   runFolder: string,
   artifactFile: string,
 ): TraceCheckResult {
-  const fullPath = path.join(runFolder, artifactFile);
   const checkedAt = new Date().toISOString();
-  const issues: TraceCheckIssue[] = [];
-
-  if (!fs.existsSync(fullPath)) {
+  const content = readArtifactContent(runFolder, artifactFile);
+  if (content === null) {
     // Missing file is already reported by checkArtifact; skip trace check silently
     return { artifactFile, issues: [], passed: true, checkedAt };
   }
+  return evaluateTraceContent(artifactFile, content, checkedAt);
+}
 
-  const content = fs.readFileSync(fullPath, 'utf8');
+function readArtifactContent(runFolder: string, artifactFile: string): string | null {
+  const fullPath = path.join(runFolder, artifactFile);
+  if (!fs.existsSync(fullPath)) return null;
+  return fs.readFileSync(fullPath, 'utf8');
+}
 
-  // Malformed IDs (tokens that look like trace IDs but are invalid format)
-  const malformed = findMalformedInContent(content);
+// Shared evaluation. `upstreamKnownIds` carries declarations visible from other
+// applicable artifacts (run-aware mode); it only widens link-target resolution.
+// Duplicate and orphan diagnostics remain strictly file-local.
+function evaluateTraceContent(
+  artifactFile: string,
+  content: string,
+  checkedAt: string,
+  upstreamKnownIds?: ReadonlySet<string>,
+): TraceCheckResult {
+  // Describes only the scope that was actually searched for declarations.
+  const scopeDescription = upstreamKnownIds
+    ? 'this artifact, its same-stage artifacts, or earlier native stage artifacts'
+    : 'this artifact';
+  const issues: TraceCheckIssue[] = [];
+
+  // Malformed IDs: recognized-prefix near misses, plus unsupported prefixes
+  // used as an explicit declaration or link endpoint (shared parser policy).
+  const malformed = findMalformedTraceIds(content);
   for (const token of malformed) {
     issues.push({
       code: 'TRACE_MALFORMED_ID',
@@ -144,6 +155,9 @@ export function checkArtifactTrace(
   // Missing link targets: link.to is a valid trace ID but not a declared ID
   if (links.length > 0) {
     const knownIds = new Set(declaredIds.map((id) => id.id));
+    if (upstreamKnownIds) {
+      for (const id of upstreamKnownIds) knownIds.add(id);
+    }
     const missing = new Set<string>();
     for (const link of links) {
       if (isValidTraceId(link.to) && !knownIds.has(link.to)) {
@@ -154,7 +168,7 @@ export function checkArtifactTrace(
       issues.push({
         code: 'TRACE_MISSING_LINK_TARGET',
         severity: 'fail',
-        message: `Link target "${target}" is a valid trace ID but is not declared in this artifact`,
+        message: `Link target "${target}" is a valid trace ID but has no declaration in ${scopeDescription}`,
         context: target,
       });
     }
@@ -166,12 +180,58 @@ export function checkArtifactTrace(
 
 // ─── All-artifacts trace check ────────────────────────────────────────────────
 
+/**
+ * Run-aware trace check. Link targets resolve against declarations in the
+ * artifact itself, in other artifacts of the same native stage (primary plus
+ * declared additional artifacts), and in artifacts of earlier stages in
+ * RunMetadata order. Declarations in later stages are never visible, and a
+ * missing artifact contributes nothing. Only declaration labels count; prose
+ * mentions and link endpoints never make an ID known.
+ */
 export function checkAllTraces(meta: RunMetadata): TraceCheckResult[] {
+  const contentCache = new Map<string, string | null>();
+  const declaredCache = new Map<string, string[]>();
+
+  const contentOf = (file: string): string | null => {
+    if (!contentCache.has(file)) {
+      contentCache.set(file, readArtifactContent(meta.runFolder, file));
+    }
+    return contentCache.get(file) ?? null;
+  };
+  const declaredOf = (file: string): string[] => {
+    let ids = declaredCache.get(file);
+    if (!ids) {
+      const content = contentOf(file);
+      ids = content === null ? [] : parseDeclaredTraceIds(content).map((d) => d.id);
+      declaredCache.set(file, ids);
+    }
+    return ids;
+  };
+
   const results: TraceCheckResult[] = [];
+  const priorStageIds = new Set<string>();
+
   for (const stage of meta.stages) {
-    results.push(checkArtifactTrace(meta.runFolder, stage.artifactFile));
-    for (const additional of stage.additionalArtifactFiles ?? []) {
-      results.push(checkArtifactTrace(meta.runFolder, additional));
+    const stageFiles = [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])];
+
+    const visible = new Set<string>(priorStageIds);
+    for (const file of stageFiles) {
+      for (const id of declaredOf(file)) visible.add(id);
+    }
+
+    for (const file of stageFiles) {
+      const checkedAt = new Date().toISOString();
+      const content = contentOf(file);
+      results.push(
+        content === null
+          ? { artifactFile: file, issues: [], passed: true, checkedAt }
+          : evaluateTraceContent(file, content, checkedAt, visible),
+      );
+    }
+
+    // Only after the stage is evaluated do its declarations become upstream.
+    for (const file of stageFiles) {
+      for (const id of declaredOf(file)) priorStageIds.add(id);
     }
   }
   return results;
@@ -185,7 +245,8 @@ export function checkDesignMapTrace(runFolder: string): TraceCheckResult {
 
 // ─── Trace-aware correction suggestions ──────────────────────────────────────
 
-// Maps trace ID prefix to the workflow stage that owns IDs with that prefix
+// Generic trace ID prefix -> conventional owner stage hint. Never authoritative:
+// consumers must validate a hint against the active mode's stage list.
 const PREFIX_TO_STAGE: Record<string, string> = {
   REQ: 'request-brief',
   CTX: 'architecture-context',
@@ -202,9 +263,11 @@ const PREFIX_TO_STAGE: Record<string, string> = {
 };
 
 /**
- * Suggests a correction stage for a trace check issue.
- * Returns null when no meaningful suggestion can be made.
- * These suggestions are deterministic and do not infer semantics with an LLM.
+ * Context-free owner hint for a trace check issue. Only a missing link target
+ * with a recognized prefix yields a hint, and the hint is NOT validated against
+ * any workflow: it may name a stage the active mode does not have. CLI
+ * presentation must use buildTraceCorrectionSuggestions with the run's stages.
+ * Returns null when no meaningful hint can be made.
  */
 export function suggestCorrectionStageFromTraceIssue(
   issue: TraceCheckIssue,
@@ -216,41 +279,72 @@ export function suggestCorrectionStageFromTraceIssue(
     if (prefix && PREFIX_TO_STAGE[prefix]) {
       return PREFIX_TO_STAGE[prefix];
     }
-    return 'design-map';
   }
-
-  if (issue.code === 'TRACE_MALFORMED_ID') {
-    return 'design-map';
-  }
-
-  if (issue.code === 'TRACE_ORPHAN_ID') {
-    return 'design-map';
-  }
-
   return null;
 }
 
+function stageIndexOwningArtifact(stages: StageDefinition[], artifactFile: string): number {
+  return stages.findIndex(
+    (s) => s.artifactFile === artifactFile || (s.additionalArtifactFiles ?? []).includes(artifactFile),
+  );
+}
+
 /**
- * Returns deduplicated correction suggestions from a list of trace check results.
- * Each entry is "suggested stage: reason".
+ * Returns deduplicated, advisory correction suggestions from trace results.
+ *
+ * With `stages` (the active run's native stage list) every named stage is
+ * verified to exist: an issue is attributed to the stage owning the artifact
+ * that reported it, a missing-target prefix hint is added only when that stage
+ * exists and precedes the reporting stage, and an artifact with no owning
+ * native stage (for example the optional design-map) gets artifact-level
+ * guidance instead of an invented stage. Without `stages`, only context-free
+ * owner hints are produced. Suggestions never change run state and are not an
+ * accepted judge correction route.
  */
 export function buildTraceCorrectionSuggestions(
   results: TraceCheckResult[],
+  stages?: StageDefinition[],
 ): string[] {
-  const suggestions = new Map<string, Set<string>>();
+  const suggestions = new Map<string, { label: string; target: string; codes: Set<string> }>();
+  const add = (label: string, target: string, code: string): void => {
+    const key = `${label}\u0000${target}`;
+    if (!suggestions.has(key)) suggestions.set(key, { label, target, codes: new Set() });
+    suggestions.get(key)!.codes.add(code);
+  };
 
   for (const result of results) {
+    const ownerIdx = stages ? stageIndexOwningArtifact(stages, result.artifactFile) : -1;
     for (const issue of result.issues) {
-      const stage = suggestCorrectionStageFromTraceIssue(issue);
-      if (stage) {
-        if (!suggestions.has(stage)) suggestions.set(stage, new Set());
-        suggestions.get(stage)!.add(issue.code);
+      if (!stages) {
+        const hint = suggestCorrectionStageFromTraceIssue(issue);
+        if (hint) add('stage', hint, issue.code);
+        continue;
+      }
+      const reviewsReportingArtifact =
+        issue.code === 'TRACE_MALFORMED_ID' ||
+        issue.code === 'TRACE_ORPHAN_ID' ||
+        issue.code === 'TRACE_MISSING_LINK_TARGET';
+      if (!reviewsReportingArtifact) continue;
+
+      if (ownerIdx >= 0) {
+        add('stage', stages[ownerIdx].name, issue.code);
+      } else {
+        add('artifact', result.artifactFile, issue.code);
+      }
+
+      if (issue.code === 'TRACE_MISSING_LINK_TARGET' && ownerIdx >= 0) {
+        const hint = suggestCorrectionStageFromTraceIssue(issue);
+        const hintIdx = hint ? stages.findIndex((s) => s.name === hint) : -1;
+        if (hintIdx >= 0 && hintIdx < ownerIdx) {
+          add('stage', stages[hintIdx].name, issue.code);
+        }
       }
     }
   }
 
-  return [...suggestions.entries()].map(
-    ([stage, codes]) => `Suggested correction stage: ${stage}  (${[...codes].join(', ')})`,
+  return [...suggestions.values()].map(
+    ({ label, target, codes }) =>
+      `Suggested correction ${label}: ${target}  (${[...codes].join(', ')})`,
   );
 }
 

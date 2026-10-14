@@ -14,6 +14,28 @@ The instruction catalog and exact resolution live under `src/instructions/`; pro
 
 Run paths, artifact formats, state transitions, deterministic checks, correction metadata, and export inclusion are owned by workflow definitions, `src/artifactLifecycle.ts`, check commands, and export code. Shared checking does not imply identical syntax: text artifact kinds use section-header contracts, while registered structured JSON kinds require valid JSON and their actual structured fields. Both retain shared existence, predecessor, lifecycle, judge-integrity, and readiness behavior. File-level definitions remain canonical in [ARTIFACTS.md](ARTIFACTS.md).
 
+The trace contract at HEAD includes the v1.6.2 corrections.
+Canonical IDs remain case-sensitive `PREFIX-NNN` with at least three decimal
+digits, using `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `RSP`, `IMP`,
+`VER`, and `RISK`. `isMalformedTraceId` classifies recognized-prefix near
+misses only; the parser diagnoses unknown two-to-six-letter uppercase prefixes
+with three or more digits in explicit declaration labels or link endpoints
+whose opposite endpoint is canonical. `ECO-00`, `UTF-8`, unknown-prefix prose,
+and links between two unknown prefixes are outside that malformed-ID contract.
+
+`checkArtifactTrace` and `checkDesignMapTrace` retain file-local target scope.
+`checkAllTraces`, used by `check --trace` and `check --all`, accepts actual
+declarations from the same artifact, same-stage primary/additional artifacts,
+and earlier native stages in `RunMetadata` order. Future-stage declarations,
+prose references, and link endpoints cannot satisfy targets. Duplicate and
+orphan warnings stay file-local; semantic identity reuse is not adjudicated.
+`TRACE_MALFORMED_ID` and `TRACE_MISSING_LINK_TARGET` remain failures;
+`TRACE_DUPLICATE_ID` and `TRACE_ORPHAN_ID` remain warnings, fatal only under
+`--strict`. Missing-target messages describe the evaluated scope. Result and
+issue fields and `trace-check-results.json` version `"1"` are unchanged.
+Run-stage-validated trace suggestions are advisory, with artifact guidance for
+an optional design map; they are separate from accepted judge routing.
+
 ## Supplemental repository-evidence contract
 
 Supplemental implementation/test packets and retrieval reports mirror evidence produced outside the orchestrator. They carry repository/index provenance, freshness, adequacy, allocation, truncation, and critical test-responsibility evidence. The orchestrator does not perform retrieval or accept workflow/stage/run identity claims that the producer contract does not enforce.
@@ -52,7 +74,7 @@ The canonical 15-file greenfield document baseline is owned by `src/greenfield/b
 
 ## Semantic responsibility contract
 
-The Orchestrator owns the canonical semantic responsibility identity `RSP-NNN`: the prefix `RSP`, a hyphen, and three or more decimal digits. `RSP-001` and `RSP-0001` are valid; `RSP-01`, `RSP001`, `RESP-001`, and `rsp-001` are not. `RSP` is part of the canonical trace vocabulary in `src/traceModel.ts`, and the trace parser and checker derive their patterns from it. Generic trace-correction suggestions for `RSP` use `test-strategy` only as the generic declaration owner.
+The Orchestrator owns the canonical semantic responsibility identity `RSP-NNN`: the prefix `RSP`, a hyphen, and three or more decimal digits. `RSP-001` and `RSP-0001` are valid; `RSP-01`, `RSP001`, `RESP-001`, and `rsp-001` are not. `RSP` is part of the canonical trace vocabulary in `src/traceModel.ts`, and the trace parser and checker derive their patterns from it. The context-free missing-target hint for `RSP` is `test-strategy`; CLI trace suggestions validate hints against the actual run and also identify the reporting artifact's native owner.
 
 Responsibilities are declared in the existing mode-specific test-strategy artifacts, whose paths come from the `TEST_STRATEGY_SOURCE_REQUIREMENTS` registry. There is no separate artifact, stage, mode, or command. A canonical block requires `test responsibility ID` (an `RSP-*` value), `criticality` (`critical` or `noncritical`), `responsibility` (a non-blank statement), `traces to`, `setup`, `action or trigger`, `expected result`, and `test level`. `traces to` is a comma-separated list of unique canonical trace IDs whose prefixes are limited to `REQ`, `CTX`, `BEH`, `INV`, `TRN`, and `PSE`; `RSP`, `TST`, `IMP`, `VER`, and `RISK` are rejected as origins. The declared upstream IDs must exist in artifacts of stages before the strategy stage (see the evaluator below).
 

@@ -225,9 +225,33 @@ The contract vocabulary includes `CONTRACT_MISSING_FILE`, `CONTRACT_EMPTY_FILE`,
 
 ### Trace checks
 
-IDs use `PREFIX-NNN`, with prefixes `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `IMP`, `VER`, and `RISK`, plus at least three digits. A declaration is a line beginning `ID: text`, and it stays a declaration even when its text contains `->` (for example `TRN-001: invalid-input -> validation-error`). A link is `FROM_ID -> TO_ID`. Trace checks distinguish `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, and `TRACE_MISSING_LINK_TARGET`. Artifacts without trace IDs do not acquire fabricated trace obligations.
+IDs use `PREFIX-NNN`, with prefixes `REQ`, `CTX`, `BEH`, `INV`, `TRN`, `PSE`, `TST`, `RSP`, `IMP`, `VER`, and `RISK`, plus at least three digits. A declaration is a line beginning `ID: text`, optionally preceded by a bullet, and it stays a declaration even when its text contains `->` (for example `TRN-001: invalid-input -> validation-error`). A link is `FROM_ID -> TO_ID`; its endpoints and ordinary prose references declare nothing. Trace checks distinguish `TRACE_MALFORMED_ID`, `TRACE_DUPLICATE_ID`, `TRACE_ORPHAN_ID`, and `TRACE_MISSING_LINK_TARGET`. Artifacts without trace IDs do not acquire fabricated trace obligations.
 
-Results are persisted to `trace-check-results.json` and summarized by status. A deterministic suggested stage is guidance, not automatic source editing or a new native stage.
+Since v1.6.2, trace checking preserves technical prose tokens
+such as `ECO-00` and `UTF-8`. Recognized-prefix near misses (`REQ-01`, `RSP001`)
+still fail wherever they occur. Unknown uppercase prefixes with two to six
+letters and three or more digits (`FOO-001`) fail as declaration labels or
+trace-link endpoints when the opposite endpoint is canonical; ordinary prose
+and links between two unknown prefixes are not treated as trace intent.
+
+Likewise, `check --trace` and the native trace checks in `check --all`
+share run-aware target resolution: declarations in the same artifact, its
+same-stage primary/additional artifacts, and earlier native stages can satisfy
+a target. Future stages and unregistered files cannot. Duplicate and orphan
+warnings remain file-local; orphan warnings require links in that artifact.
+v1.6.1 and earlier resolved native trace targets file-locally.
+
+`check --design-map` checks required sections and file-local trace links in the
+optional `artifacts/design-map.txt`; `check --all` checks its trace links when
+present. It is not a native stage. Native trace results from `--trace` and
+`--all` are persisted to `trace-check-results.json` (version `"1"`) and
+summarized by status.
+
+Candidate trace correction suggestions are advisory. They name the reporting
+artifact's owner from the actual run stage list, with a missing-target prefix
+hint only when that stage exists earlier in the run. An artifact without a
+native owner receives artifact guidance. These suggestions do not establish
+accepted judge correction routes or change readiness or lifecycle state.
 
 ## export
 

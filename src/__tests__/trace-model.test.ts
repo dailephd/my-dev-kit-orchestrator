@@ -4,6 +4,9 @@ import {
   isValidTracePrefix,
   isValidTraceId,
   isMalformedTraceId,
+  isUnsupportedPrefixTraceId,
+  TRACE_TOKEN_BEFORE,
+  TRACE_TOKEN_AFTER,
 } from '../traceModel';
 
 // ─── TRACE_PREFIXES ───────────────────────────────────────────────────────────
@@ -161,10 +164,29 @@ describe('isMalformedTraceId', () => {
     expect(isMalformedTraceId('BEH-01')).toBe(true);
   });
 
-  it('returns true for unknown prefix with digit suffix', () => {
-    expect(isMalformedTraceId('FOO-001')).toBe(true);
-    expect(isMalformedTraceId('XYZ-123')).toBe(true);
-    expect(isMalformedTraceId('ABC-999')).toBe(true);
+  // v1.6.2: token-level malformed detection is limited to recognized prefixes.
+  // An unknown prefix is only a trace-ID attempt in declaration/link context,
+  // which is classified by findMalformedTraceIds (see trace-parser.test.ts).
+  it('returns false for unknown prefix with digit suffix (context-free)', () => {
+    expect(isMalformedTraceId('FOO-001')).toBe(false);
+    expect(isMalformedTraceId('XYZ-123')).toBe(false);
+    expect(isMalformedTraceId('ABC-999')).toBe(false);
+  });
+
+  it('returns false for ordinary technical identifiers', () => {
+    expect(isMalformedTraceId('ECO-00')).toBe(false);
+    expect(isMalformedTraceId('ECO-01')).toBe(false);
+    expect(isMalformedTraceId('UTF-8')).toBe(false);
+  });
+
+  it('keeps canonical IDs valid and recognized-prefix near misses malformed', () => {
+    for (const id of ['REQ-001', 'BEH-042', 'RSP-0002', 'RISK-1234']) {
+      expect(isValidTraceId(id)).toBe(true);
+      expect(isMalformedTraceId(id)).toBe(false);
+    }
+    for (const id of ['REQ-01', 'BEH-1', 'RSP-01', 'REQ001', 'BEH001', 'RSP001']) {
+      expect(isMalformedTraceId(id)).toBe(true);
+    }
   });
 
   it('returns false for valid trace IDs', () => {
@@ -186,6 +208,23 @@ describe('isMalformedTraceId', () => {
 
   it('returns false for single-letter prefixes', () => {
     expect(isMalformedTraceId('A-001')).toBe(false);
+  });
+});
+
+describe('isUnsupportedPrefixTraceId', () => {
+  it('matches canonical-shaped IDs with an unsupported prefix', () => {
+    expect(isUnsupportedPrefixTraceId('FOO-001')).toBe(true);
+    expect(isUnsupportedPrefixTraceId('XYZ-1234')).toBe(true);
+  });
+
+  it('does not match valid IDs, recognized-prefix near misses or non-trace shapes', () => {
+    expect(isUnsupportedPrefixTraceId('REQ-001')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('REQ-01')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('ECO-00')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('UTF-8')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('foo-001')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('A-001')).toBe(false);
+    expect(isUnsupportedPrefixTraceId('')).toBe(false);
   });
 });
 
@@ -217,5 +256,37 @@ describe("RSP trace family (v1.5 Batch 0)", () => {
     expect(isMalformedTraceId("RSP-01")).toBe(true);
     expect(isMalformedTraceId("RSP001")).toBe(true);
     expect(isMalformedTraceId("RSP-001")).toBe(false);
+  });
+});
+
+// ─── Token boundary policy (v1.6.2 T06) ──────────────────────────────────────
+
+describe('trace token boundaries', () => {
+  const find = (text: string): string[] => {
+    const re = new RegExp(`${TRACE_TOKEN_BEFORE}((?:${TRACE_PREFIXES.join('|')})-[0-9]{3,})${TRACE_TOKEN_AFTER}`, 'g');
+    return [...text.matchAll(re)].map((m) => m[1]);
+  };
+
+  it.each([
+    'CODE-REQ-001-suffix',
+    'REQ-001X',
+    'PREFIX-REQ-001-suffix',
+    'REQ-001_foo',
+    'docs/REQ-001.md',
+    'path/REQ-001/file',
+  ])('does not extract a partial ID from %s', (text) => {
+    expect(find(text)).toEqual([]);
+  });
+
+  it.each([
+    ['REQ-001: requirement', 'REQ-001'],
+    ['See REQ-001 for details.', 'REQ-001'],
+    ['(REQ-001)', 'REQ-001'],
+    ['`REQ-001`', 'REQ-001'],
+    ['REQ-001,', 'REQ-001'],
+    ['REQ-0001 ok', 'REQ-0001'],
+    ['REQ-001.', 'REQ-001'],
+  ])('extracts a standalone ID from %s', (text, id) => {
+    expect(find(text)).toEqual([id]);
   });
 });

@@ -5,11 +5,18 @@ import {
   parseDeclaredTraceIds,
   suggestCorrectionStageFromTraceIssue,
   checkArtifactTrace,
+  checkAllTraces,
   checkDesignMapTrace,
   readTraceCheckResults,
   writeTraceCheckResults,
   TraceCheckResultsFile,
+  TraceCheckIssue,
+  TraceCheckResult,
+  buildTraceCorrectionSuggestions,
 } from '../traceChecker';
+import { RunMetadata } from '../run';
+import { getWorkflow, StageDefinition } from '../workflows';
+import { VALID_MODES } from '../types';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-trace-checker-'));
@@ -151,13 +158,103 @@ describe('checkArtifactTrace - malformed IDs', () => {
     }
   });
 
-  it('reports unknown prefix as malformed', () => {
+  // v1.6.2: previously 'See FOO-001 for details.' in prose failed as malformed.
+  it('does not report an unknown prefix in ordinary prose as malformed', () => {
     const tmp = makeTempDir();
     try {
       writeFile(tmp, 'artifacts/behavior-model.txt', 'See FOO-001 for details.\n');
       const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.passed).toBe(true);
+      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports an unknown prefix in an explicit declaration as malformed', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'FOO-001: new behavior\n');
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
       expect(result.passed).toBe(false);
-      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(true);
+      const issue = result.issues.find((i) => i.code === 'TRACE_MALFORMED_ID');
+      expect(issue).toMatchObject({ severity: 'fail', context: 'FOO-001' });
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports an unknown prefix as an explicit link target as malformed', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'REQ-001: requirement\nREQ-001 -> FOO-001\n');
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.filter((i) => i.code === 'TRACE_MALFORMED_ID').map((i) => i.context)).toEqual(['FOO-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not report ECO-00, ECO-01 or UTF-8 technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'The ECO-00 contract and ECO-01 certification are external.',
+        'Output is encoded as UTF-8.',
+        '"UTF-8"',
+        'UTF-8:',
+        '(ECO-00)',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.some((i) => i.code === 'TRACE_MALFORMED_ID')).toBe(false);
+      expect(result.passed).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('reports recognized-prefix near misses but not technical identifiers in mixed content', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'ECO-00 and UTF-8 are plain technical text.',
+        'REQ-001: valid requirement',
+        'RSP-01: malformed responsibility',
+        'RSP-01 again, and REQ001.',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(result.issues.filter((i) => i.code === 'TRACE_MALFORMED_ID').map((i) => i.context)).toEqual(['RSP-01', 'REQ001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('keeps duplicate and missing-target diagnostics unchanged alongside technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', [
+        'Uses UTF-8 and ECO-00.',
+        'REQ-001: first',
+        'REQ-001: second',
+        'REQ-001 -> BEH-999',
+      ].join('\n'));
+      const result = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      const codes = result.issues.map((i) => i.code);
+      expect(codes).toContain('TRACE_DUPLICATE_ID');
+      expect(codes).toContain('TRACE_MISSING_LINK_TARGET');
+      expect(codes).not.toContain('TRACE_MALFORMED_ID');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not modify the checked artifact', () => {
+    const tmp = makeTempDir();
+    try {
+      const content = 'REQ-01\nFOO-001: x\nECO-00 UTF-8\n';
+      writeFile(tmp, 'artifacts/behavior-model.txt', content);
+      checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(fs.readFileSync(path.join(tmp, 'artifacts/behavior-model.txt'), 'utf8')).toBe(content);
     } finally {
       cleanup(tmp);
     }
@@ -426,5 +523,568 @@ describe('RSP trace family (v1.5 Batch 0)', () => {
         context: 'RSP-001',
       } as never),
     ).toBe('test-strategy');
+  });
+});
+
+// ─── checkAllTraces - run-aware cross-artifact resolution (v1.6.2) ───────────
+
+function stageDef(name: string, artifactFile: string, additional?: string[]): StageDefinition {
+  return {
+    name,
+    artifactFile,
+    promptFile: `prompts/${name}.prompt.txt`,
+    ...(additional ? { additionalArtifactFiles: additional } : {}),
+  };
+}
+
+function makeRunMeta(dir: string, stages: StageDefinition[]): RunMetadata {
+  return {
+    runId: 'trace-run-aware',
+    mode: 'feature',
+    request: 'run-aware trace',
+    projectRoot: dir,
+    runFolder: dir,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    currentStage: stages[0].name,
+    stages,
+    status: 'in_progress',
+  };
+}
+
+const THREE_STAGES = [
+  stageDef('request-brief', 'artifacts/request-brief.txt'),
+  stageDef('behavior-model', 'artifacts/behavior-model.txt'),
+  stageDef('implementation', 'artifacts/implementation-report.txt'),
+];
+
+function resultFor(results: ReturnType<typeof checkAllTraces>, file: string) {
+  const r = results.find((x) => x.artifactFile === file);
+  if (!r) throw new Error(`no result for ${file}`);
+  return r;
+}
+
+function missingTargets(result: { issues: { code: string; context?: string }[] }): string[] {
+  return result.issues.filter((i) => i.code === 'TRACE_MISSING_LINK_TARGET').map((i) => i.context ?? '');
+}
+
+describe('checkAllTraces - run-aware declaration scope', () => {
+  it('resolves a target declared in an earlier native artifact (T162-19)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: original requirement\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nBEH-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      expect(missingTargets(resultFor(results, 'artifacts/behavior-model.txt'))).toEqual([]);
+
+      // Standalone checking keeps the file-local contract (T162-29).
+      const local = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      expect(missingTargets(local)).toEqual(['REQ-001']);
+      expect(local.passed).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('still fails for a target no applicable artifact declares (T162-20)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nBEH-001 -> BEH-999\n');
+      const bm = resultFor(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)), 'artifacts/behavior-model.txt');
+      expect(missingTargets(bm)).toEqual(['BEH-999']);
+      expect(bm.passed).toBe(false);
+      expect(bm.issues.find((i) => i.code === 'TRACE_MISSING_LINK_TARGET')?.severity).toBe('fail');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not treat a prose mention upstream as a declaration (T162-21)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'The request relates to REQ-001 and see REQ-001 again.\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nBEH-001 -> REQ-001\n');
+      const bm = resultFor(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)), 'artifacts/behavior-model.txt');
+      expect(missingTargets(bm)).toEqual(['REQ-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not treat an upstream link endpoint as a declaration (T162-22)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\nREQ-001 -> BEH-001\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-002: behavior\nBEH-002 -> BEH-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      // The upstream link is itself missing its target, and that target does
+      // not become known downstream.
+      expect(missingTargets(resultFor(results, 'artifacts/request-brief.txt'))).toEqual(['BEH-001']);
+      expect(missingTargets(resultFor(results, 'artifacts/behavior-model.txt'))).toEqual(['BEH-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('does not let a later-stage declaration satisfy an earlier reference (T162-23)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\nREQ-001 -> IMP-001\n');
+      writeFile(tmp, 'artifacts/implementation-report.txt', 'IMP-001: implementation\nIMP-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      expect(missingTargets(resultFor(results, 'artifacts/request-brief.txt'))).toEqual(['IMP-001']);
+      // The reverse direction (upstream target) resolves.
+      expect(missingTargets(resultFor(results, 'artifacts/implementation-report.txt'))).toEqual([]);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('resolves a same-artifact declaration without any upstream artifact (T162-24)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: a\nBEH-002: b\nBEH-001 -> BEH-002\n');
+      const bm = resultFor(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)), 'artifacts/behavior-model.txt');
+      expect(missingTargets(bm)).toEqual([]);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('shares declarations across declared additional artifacts only (T162-25)', () => {
+    const tmp = makeTempDir();
+    try {
+      const stages = [
+        stageDef('request-brief', 'artifacts/request-brief.txt'),
+        stageDef('porting-map', 'artifacts/porting-map.txt', ['artifacts/do-not-port.txt']),
+      ];
+      writeFile(tmp, 'artifacts/porting-map.txt', 'RSP-001: owner\nRSP-001 -> RSP-002\nRSP-001 -> RSP-003\n');
+      writeFile(tmp, 'artifacts/do-not-port.txt', 'RSP-002: companion declaration\nRSP-002 -> RSP-001\n');
+      // Unregistered file in artifacts/ must not contribute declarations.
+      writeFile(tmp, 'artifacts/unrelated-notes.txt', 'RSP-003: not part of any native stage\n');
+      const results = checkAllTraces(makeRunMeta(tmp, stages));
+      expect(missingTargets(resultFor(results, 'artifacts/porting-map.txt'))).toEqual(['RSP-003']);
+      expect(missingTargets(resultFor(results, 'artifacts/do-not-port.txt'))).toEqual([]);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('fabricates nothing for a missing upstream artifact (T162-26)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: behavior\nBEH-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      const rb = resultFor(results, 'artifacts/request-brief.txt');
+      expect(rb.issues).toEqual([]);
+      expect(rb.passed).toBe(true);
+      expect(missingTargets(resultFor(results, 'artifacts/behavior-model.txt'))).toEqual(['REQ-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('follows RunMetadata stage order, not filename or enumeration order (T162-27)', () => {
+    const tmp = makeTempDir();
+    try {
+      // Lexically, a-late.txt sorts before z-early.txt; stage order is reverse.
+      const stages = [
+        stageDef('first', 'artifacts/z-early.txt'),
+        stageDef('second', 'artifacts/a-late.txt'),
+      ];
+      writeFile(tmp, 'artifacts/z-early.txt', 'REQ-001: early\nREQ-001 -> BEH-001\n');
+      writeFile(tmp, 'artifacts/a-late.txt', 'BEH-001: late\nBEH-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, stages));
+      expect(missingTargets(resultFor(results, 'artifacts/z-early.txt'))).toEqual(['BEH-001']);
+      expect(missingTargets(resultFor(results, 'artifacts/a-late.txt'))).toEqual([]);
+      expect(results.map((r) => r.artifactFile)).toEqual(['artifacts/z-early.txt', 'artifacts/a-late.txt']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('is deterministic on unchanged input (T162-28)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\nREQ-001: again\n');
+      writeFile(
+        tmp,
+        'artifacts/behavior-model.txt',
+        'BEH-001: behavior\nBEH-002: orphan\nBEH-001 -> REQ-001\nBEH-001 -> BEH-999\nBEH-001 -> REQ-777\n',
+      );
+      const strip = (rs: ReturnType<typeof checkAllTraces>) =>
+        rs.map(({ checkedAt: _c, ...rest }) => rest);
+      const first = strip(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)));
+      const second = strip(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)));
+      expect(second).toEqual(first);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('keeps duplicate and orphan diagnostics file-local warnings (T162-31)', () => {
+    const tmp = makeTempDir();
+    try {
+      // REQ-001 is declared in both artifacts: no cross-artifact duplicate.
+      writeFile(
+        tmp,
+        'artifacts/request-brief.txt',
+        'REQ-001: requirement\nREQ-002: dup\nREQ-002: dup again\nREQ-001 -> REQ-002\n',
+      );
+      writeFile(
+        tmp,
+        'artifacts/behavior-model.txt',
+        'REQ-001: restated\nBEH-001: behavior\nBEH-002: lonely\nBEH-001 -> REQ-001\n',
+      );
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      const rb = resultFor(results, 'artifacts/request-brief.txt');
+      expect(rb.issues.filter((i) => i.code === 'TRACE_DUPLICATE_ID').map((i) => i.context)).toEqual(['REQ-002']);
+      expect(rb.passed).toBe(true);
+      const bm = resultFor(results, 'artifacts/behavior-model.txt');
+      expect(bm.issues.some((i) => i.code === 'TRACE_DUPLICATE_ID')).toBe(false);
+      const orphans = bm.issues.filter((i) => i.code === 'TRACE_ORPHAN_ID');
+      expect(orphans.map((i) => i.context)).toEqual(['BEH-002']);
+      expect(orphans[0].severity).toBe('warn');
+      expect(bm.passed).toBe(true);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('preserves Prompt 1 malformed-ID behavior in run-aware mode (T162-32)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\n');
+      const content = [
+        'BEH-001: behavior',
+        'Evidence: see ECO-00 and ECO-01 contracts, UTF-8 encoded.',
+        'Near miss: REQ-01 should be flagged.',
+        'BEH-001 -> REQ-001',
+      ].join('\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', content);
+      const runAware = resultFor(checkAllTraces(makeRunMeta(tmp, THREE_STAGES)), 'artifacts/behavior-model.txt');
+      const fileLocal = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt');
+      const malformed = (r: { issues: { code: string; context?: string }[] }) =>
+        r.issues.filter((i) => i.code === 'TRACE_MALFORMED_ID').map((i) => i.context);
+      expect(malformed(runAware)).toEqual(malformed(fileLocal));
+      expect(malformed(runAware)).toContain('REQ-01');
+      expect(malformed(runAware)).not.toContain('ECO-00');
+      expect(malformed(runAware)).not.toContain('UTF-8');
+      expect(runAware.passed).toBe(false);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('writes nothing and mutates no run state while checking (T162-33)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/request-brief.txt', 'REQ-001: requirement\n');
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const snapshot = (): string[] => {
+        const out: string[] = [];
+        const walk = (d: string): void => {
+          for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+            const full = path.join(d, e.name);
+            if (e.isDirectory()) walk(full);
+            else out.push(`${path.relative(tmp, full)}:${fs.readFileSync(full, 'utf8')}`);
+          }
+        };
+        walk(tmp);
+        return out.sort();
+      };
+      const before = snapshot();
+      const meta = makeRunMeta(tmp, THREE_STAGES);
+      const metaBefore = JSON.stringify(meta);
+      checkAllTraces(meta);
+      expect(snapshot()).toEqual(before);
+      expect(JSON.stringify(meta)).toBe(metaBefore);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('respects each native mode stage registry without assuming feature names (T162-34)', () => {
+    for (const mode of VALID_MODES) {
+      const stages = getWorkflow(mode).stages;
+      expect(stages.length).toBeGreaterThan(1);
+      const firstFile = stages[0].artifactFile;
+      const lastFile = stages[stages.length - 1].artifactFile;
+      if (firstFile === lastFile) continue;
+      const tmp = makeTempDir();
+      try {
+        writeFile(tmp, firstFile, 'REQ-001: first-stage declaration\nREQ-001 -> RSP-998\n');
+        writeFile(tmp, lastFile, 'RSP-998: last-stage declaration\nRSP-998 -> REQ-001\n');
+        const results = checkAllTraces({ ...makeRunMeta(tmp, stages), mode });
+        expect(missingTargets(resultFor(results, firstFile))).toEqual(['RSP-998']);
+        expect(missingTargets(resultFor(results, lastFile))).toEqual([]);
+      } finally {
+        cleanup(tmp);
+      }
+    }
+  });
+});
+
+// ─── Mode-aware advisory correction guidance (v1.6.2 Prompt 3) ───────────────
+
+const ALL_ISSUE_CODES = [
+  'TRACE_MALFORMED_ID',
+  'TRACE_ORPHAN_ID',
+  'TRACE_MISSING_LINK_TARGET',
+  'TRACE_DUPLICATE_ID',
+];
+const ALL_PREFIXES = ['REQ', 'CTX', 'BEH', 'INV', 'TRN', 'PSE', 'TST', 'RSP', 'IMP', 'VER', 'RISK'];
+
+function issueOf(code: string, context?: string): TraceCheckIssue {
+  return {
+    code,
+    severity: code === 'TRACE_MALFORMED_ID' || code === 'TRACE_MISSING_LINK_TARGET' ? 'fail' : 'warn',
+    message: `${code} fixture`,
+    ...(context ? { context } : {}),
+  };
+}
+
+function resultWith(artifactFile: string, issues: TraceCheckIssue[]): TraceCheckResult {
+  return { artifactFile, issues, passed: !issues.some((i) => i.severity === 'fail'), checkedAt: 'fixed' };
+}
+
+const FEATURE = getWorkflow('feature').stages;
+
+describe('buildTraceCorrectionSuggestions - mode-aware advisory guidance', () => {
+  it('attributes malformed and orphan issues to the owning native stage, never design-map (T162-35, T162-36)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/behavior-model.txt', [
+          issueOf('TRACE_MALFORMED_ID', 'REQ-01'),
+          issueOf('TRACE_ORPHAN_ID', 'BEH-002'),
+        ]),
+      ],
+      FEATURE,
+    );
+    expect(out).toEqual(['Suggested correction stage: behavior-model  (TRACE_MALFORMED_ID, TRACE_ORPHAN_ID)']);
+    expect(out.join('\n')).not.toContain('design-map');
+  });
+
+  it('adds a verified earlier owner hint for a missing target (T162-37)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      FEATURE,
+    );
+    expect(out).toEqual([
+      'Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)',
+      'Suggested correction stage: request-brief  (TRACE_MISSING_LINK_TARGET)',
+    ]);
+    expect(buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      FEATURE,
+    )).toEqual(out);
+  });
+
+  it('does not name a hint stage that is absent from the active mode or later than the reporter (T162-38)', () => {
+    const repair = getWorkflow('repair').stages;
+    expect(repair.some((s) => s.name === 'request-brief')).toBe(false);
+    const absent = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-trace.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009')])],
+      repair,
+    );
+    expect(absent).toEqual(['Suggested correction stage: behavior-trace  (TRACE_MISSING_LINK_TARGET)']);
+
+    // PSE hint exists in feature mode but comes after behavior-model.
+    const later = buildTraceCorrectionSuggestions(
+      [resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'PSE-999')])],
+      FEATURE,
+    );
+    expect(later).toEqual(['Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)']);
+  });
+
+  it.each(VALID_MODES.map((m) => [m]))(
+    'only suggests stages of the %s workflow (T162-39..44, T162-47)',
+    (mode) => {
+      const stages = getWorkflow(mode).stages;
+      const names = new Set(stages.map((s) => s.name));
+      const results: TraceCheckResult[] = [];
+      for (const stage of stages) {
+        for (const file of [stage.artifactFile, ...(stage.additionalArtifactFiles ?? [])]) {
+          results.push(
+            resultWith(file, [
+              ...ALL_ISSUE_CODES.filter((c) => c !== 'TRACE_MISSING_LINK_TARGET').map((c) => issueOf(c, 'REQ-01')),
+              ...ALL_PREFIXES.map((p) => issueOf('TRACE_MISSING_LINK_TARGET', `${p}-900`)),
+            ]),
+          );
+        }
+      }
+      const out = buildTraceCorrectionSuggestions(results, stages);
+      expect(out.length).toBeGreaterThan(0);
+      for (const line of out) {
+        const m = /^Suggested correction stage: (\S+) {2}\(/.exec(line);
+        expect(m).not.toBeNull();
+        expect(names.has(m![1])).toBe(true);
+      }
+      // Every owning stage is reported once, deduplicated.
+      expect(new Set(out).size).toBe(out.length);
+      expect(out.join('\n')).not.toContain('design-map');
+    },
+  );
+
+  it('gives artifact guidance, not a stage, for an artifact no native stage owns (T162-45, T162-46)', () => {
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/design-map.txt', [
+          issueOf('TRACE_MALFORMED_ID', 'REQ-01'),
+          issueOf('TRACE_MISSING_LINK_TARGET', 'BEH-009'),
+        ]),
+        resultWith('artifacts/stray.txt', [issueOf('TRACE_ORPHAN_ID', 'REQ-001')]),
+      ],
+      FEATURE,
+    );
+    expect(out).toEqual([
+      'Suggested correction artifact: artifacts/design-map.txt  (TRACE_MALFORMED_ID, TRACE_MISSING_LINK_TARGET)',
+      'Suggested correction artifact: artifacts/stray.txt  (TRACE_ORPHAN_ID)',
+    ]);
+    expect(out.join('\n')).not.toMatch(/correction stage: design-map/);
+  });
+
+  it('design-map is not a native stage in any registered mode (design-map duplication NOT_REPRODUCED)', () => {
+    for (const mode of VALID_MODES) {
+      for (const stage of getWorkflow(mode).stages) {
+        expect(stage.name).not.toBe('design-map');
+        expect(stage.artifactFile).not.toBe('artifacts/design-map.txt');
+        expect(stage.additionalArtifactFiles ?? []).not.toContain('artifacts/design-map.txt');
+      }
+    }
+  });
+
+  it('groups primary and additional artifacts of one stage into one deterministic line (T162-48)', () => {
+    const stages = [
+      { name: 'porting-map', artifactFile: 'artifacts/a.txt', promptFile: 'p', additionalArtifactFiles: ['artifacts/b.txt'] },
+    ];
+    const out = buildTraceCorrectionSuggestions(
+      [
+        resultWith('artifacts/a.txt', [issueOf('TRACE_MALFORMED_ID', 'REQ-01'), issueOf('TRACE_MALFORMED_ID', 'REQ-02')]),
+        resultWith('artifacts/b.txt', [issueOf('TRACE_ORPHAN_ID', 'REQ-001')]),
+      ],
+      stages,
+    );
+    expect(out).toEqual(['Suggested correction stage: porting-map  (TRACE_MALFORMED_ID, TRACE_ORPHAN_ID)']);
+  });
+
+  it('does not add guidance for duplicate declarations (existing warning behavior)', () => {
+    expect(
+      buildTraceCorrectionSuggestions([resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_DUPLICATE_ID', 'BEH-001')])], FEATURE),
+    ).toEqual([]);
+  });
+
+  it('keeps a context-free owner hint only for missing targets when no stages are supplied', () => {
+    const issues = [issueOf('TRACE_MALFORMED_ID', 'REQ-01'), issueOf('TRACE_ORPHAN_ID', 'BEH-002'), issueOf('TRACE_MISSING_LINK_TARGET', 'BEH-009')];
+    expect(buildTraceCorrectionSuggestions([resultWith('artifacts/x.txt', issues)])).toEqual([
+      'Suggested correction stage: behavior-model  (TRACE_MISSING_LINK_TARGET)',
+    ]);
+    expect(suggestCorrectionStageFromTraceIssue(issueOf('TRACE_MALFORMED_ID', 'REQ-01'))).toBeNull();
+    expect(suggestCorrectionStageFromTraceIssue(issueOf('TRACE_ORPHAN_ID', 'REQ-001'))).toBeNull();
+  });
+
+  it('does not mutate trace results (T162-51)', () => {
+    const results = [
+      resultWith('artifacts/behavior-model.txt', [issueOf('TRACE_MISSING_LINK_TARGET', 'REQ-009'), issueOf('TRACE_ORPHAN_ID', 'BEH-002')]),
+    ];
+    const before = JSON.stringify(results);
+    buildTraceCorrectionSuggestions(results, FEATURE);
+    expect(JSON.stringify(results)).toBe(before);
+  });
+});
+
+describe('missing-target message scope wording (v1.6.2 Prompt 3)', () => {
+  it('describes file-local scope for standalone checking (T162-49)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const issue = checkArtifactTrace(tmp, 'artifacts/behavior-model.txt').issues.find(
+        (i) => i.code === 'TRACE_MISSING_LINK_TARGET',
+      )!;
+      expect(issue.message).toBe('Link target "REQ-001" is a valid trace ID but has no declaration in this artifact');
+      expect(issue.severity).toBe('fail');
+      expect(issue.context).toBe('REQ-001');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('describes run-aware scope without claiming the whole run was searched (T162-50)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const results = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      const issue = resultFor(results, 'artifacts/behavior-model.txt').issues.find(
+        (i) => i.code === 'TRACE_MISSING_LINK_TARGET',
+      )!;
+      expect(issue.message).toBe(
+        'Link target "REQ-001" is a valid trace ID but has no declaration in this artifact, its same-stage artifacts, or earlier native stage artifacts',
+      );
+      expect(issue.message).not.toMatch(/run|repository/i);
+      expect(issue.severity).toBe('fail');
+      expect(issue.context).toBe('REQ-001');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('persists the unchanged version-1 schema and issue fields (T162-53)', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/behavior-model.txt', 'BEH-001: b\nBEH-001 -> REQ-001\n');
+      const traceResults = checkAllTraces(makeRunMeta(tmp, THREE_STAGES));
+      writeTraceCheckResults(tmp, { version: '1', checkedAt: 'now', traceResults });
+      const read = readTraceCheckResults(tmp)!;
+      expect(read.version).toBe('1');
+      expect(Object.keys(read).sort()).toEqual(['checkedAt', 'traceResults', 'version']);
+      const issue = read.traceResults.flatMap((r) => r.issues)[0];
+      expect(Object.keys(issue).sort()).toEqual(['code', 'context', 'message', 'severity']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+});
+
+// ─── Token boundaries through the checker (v1.6.2 T06) ───────────────────────
+
+describe('checkArtifactTrace - embedded trace-looking tokens', () => {
+  it('does not report or declare partial IDs from longer technical identifiers', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(
+        tmp,
+        'artifacts/a.txt',
+        [
+          'BEH-001: behavior',
+          'See CODE-REQ-01-suffix, REQ-001X, PREFIX-REQ-001-suffix, REQ-001_foo,',
+          'docs/REQ-001.md and path/REQ-001/file.',
+          'REQ-001X: not a declaration',
+          'BEH-001 -> REQ-001',
+        ].join('\n'),
+      );
+      const result = checkArtifactTrace(tmp, 'artifacts/a.txt');
+      const codes = result.issues.map((i) => i.code);
+      expect(codes).not.toContain('TRACE_MALFORMED_ID');
+      expect(codes).not.toContain('TRACE_DUPLICATE_ID');
+      // REQ-001 is a genuine missing target; nothing declared it.
+      expect(
+        result.issues.filter((i) => i.code === 'TRACE_MISSING_LINK_TARGET').map((i) => i.context),
+      ).toEqual(['REQ-001']);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  it('still fails complete malformed IDs', () => {
+    const tmp = makeTempDir();
+    try {
+      writeFile(tmp, 'artifacts/a.txt', 'BEH-001: b\nREQ-01 RSP001 BEH001\n');
+      const malformed = checkArtifactTrace(tmp, 'artifacts/a.txt')
+        .issues.filter((i) => i.code === 'TRACE_MALFORMED_ID')
+        .map((i) => i.context);
+      expect(malformed).toEqual(['REQ-01', 'RSP001', 'BEH001']);
+    } finally {
+      cleanup(tmp);
+    }
   });
 });

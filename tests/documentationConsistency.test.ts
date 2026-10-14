@@ -101,7 +101,7 @@ describe('documentation consistency gate', () => {
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
     ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
     ['contradictory v1.2.3 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.3 is unreleased.\n`, 'V123_RELEASE_STATUS_CONTRADICTION'],
-    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.6.1', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
+    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.6.2', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
     ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
@@ -121,12 +121,12 @@ describe('documentation consistency gate', () => {
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, 'first stage whose effective gate-aware state is not complete', 'first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'cannot rediscover custom-output runs', 'cannot select custom-output runs'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
     ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.6.1 is current; v1.7.0 remains planned.
+    // v1.6.2 is current; v1.7.0 remains planned.
     ['planned v1.7.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
     ['planned v1.7.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['current v1.6.1 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.6.1 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
-    ['current v1.6.1 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.6.1 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
-    ['current v1.6.1 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-10-02\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    ['current v1.6.2 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
+    ['current v1.6.2 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.6.2 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    ['current v1.6.2 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-10-14\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
     ['semantic contract version drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| Semantic Continuity contract | `1.0.0` |', '| Semantic Continuity contract | `2.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['run-integrity gate schema drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| `RunIntegrityGate` | `1.1.0` |', '| `RunIntegrityGate` | `1.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
@@ -287,14 +287,14 @@ describe('v1.6.0 telemetry facts (second isolated builder)', () => {
     expectIssue('docs/ARCHITECTURE.md', (content) => content.replace('| Workflow Economics | `1.0.0` |', ''), 'SCHEMA_VERSION_CLAIM_MISMATCH');
   });
 
-  it('keeps v1.6.1 current and v1.7.0 planned', () => {
-    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.1 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
+  it('keeps v1.6.2 current and v1.7.0 planned', () => {
+    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
     expectIssue('docs/ROADMAP.md', (content) => content.replace('### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT');
-    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.1 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
+    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.2 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
   });
 });
 
-describe('v1.6.1 test-context bootstrap facts (current release)', () => {
+describe('v1.6.1 test-context bootstrap facts (previous release)', () => {
   it('fails when the source warning code or the deferrable reasons drift from the manifest', () => {
     for (const [from, to] of [
       ["CONTEXT_TEST_EVIDENCE_PENDING_PRETEST = 'CONTEXT_TEST_EVIDENCE_PENDING_PRETEST'", "CONTEXT_TEST_EVIDENCE_PENDING_PRETEST = 'CONTEXT_TEST_EVIDENCE_PENDING_PRETEST_V2'"],
@@ -332,11 +332,45 @@ describe('v1.6.1 test-context bootstrap facts (current release)', () => {
     expect(result.output).not.toContain('[BOOTSTRAP_SURFACE_FALSE_CLAIM]');
   });
 
-  it('keeps v1.6.1 current without a pending or unpublished status', () => {
-    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.1 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
+  it('keeps v1.6.2 current without a pending or unpublished status', () => {
+    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
   });
 
   it('rejects a manifest that classifies the current package version as implemented but unpublished', () => {
-    expectIssue('docs/documentation-preservation-manifest.json', (content) => content.replace('"implementedUnpublishedVersions": []', '"implementedUnpublishedVersions": ["v1.6.1"]'), 'UNPUBLISHED_VERSION_MATCHES_PACKAGE');
+    const relativePath = 'docs/documentation-preservation-manifest.json';
+    const actualContent = fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8');
+    const root = createIsolatedRoot();
+    const publishedVersion = `v${JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version}`;
+    const validResult = runCheck(root);
+    expect(validResult.status).toBe(0);
+    expect(validResult.output).toContain('DOCS_CHECK_PASS');
+
+    mutate(root, relativePath, (content) => {
+      const original = JSON.parse(content);
+      expect(original).toHaveProperty('protectedFacts.implementedUnpublishedVersions');
+      const existingVersions = original.protectedFacts.implementedUnpublishedVersions;
+      expect(Array.isArray(existingVersions)).toBe(true);
+      expect(existingVersions).not.toContain(publishedVersion);
+
+      // Serialize only this array so unrelated protected field formatting stays intact.
+      const field = /("implementedUnpublishedVersions"\s*:\s*)\[[^\]]*\]/g;
+      expect(content.match(field)).toHaveLength(1);
+      const updatedVersions = [...existingVersions, publishedVersion];
+      const updated = content.replace(field, (_match, prefix: string) => `${prefix}${JSON.stringify(updatedVersions)}`);
+      expect(updated).not.toBe(content);
+      const mutated = JSON.parse(updated);
+      expect(mutated.protectedFacts.implementedUnpublishedVersions).toEqual(updatedVersions);
+      expect(mutated.protectedFacts.implementedUnpublishedVersions).toContain(publishedVersion);
+      expect(mutated).toEqual({
+        ...original,
+        protectedFacts: { ...original.protectedFacts, implementedUnpublishedVersions: updatedVersions },
+      });
+      return updated;
+    });
+
+    const result = runCheck(root);
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('[UNPUBLISHED_VERSION_MATCHES_PACKAGE]');
+    expect(fs.readFileSync(path.join(repositoryRoot, relativePath), 'utf8')).toBe(actualContent);
   });
 });

@@ -46,7 +46,7 @@ ROOT /
   CHANGELOG.md: append-preserving release history and unreleased changes.
   LICENSE: retained licensing.
   .gitignore: ignored workspace/security rules; deliberate tracked exceptions for root manifest.txt and agents.txt only.
-  .markdownlint-cli2.jsonc: Markdown lint configuration.
+  .markdownlint.jsonc: Markdown lint configuration (markdownlint-cli).
   manifest.txt: tracked structure and agent-safety contract; read before changes.
   agents.txt: tracked small agent bootstrap that requires reading this manifest and other applicable local instructions.
   NEW root files: require an approved distinct responsibility, an owner rationale, and package/ignore review.

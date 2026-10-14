@@ -194,7 +194,7 @@
       "Reconciliation and stop threshold"
     ],
     "docs/RELEASE_CHECKLIST.md": [
-      "current release is `v1.6.1`",
+      "current release is `v1.6.2`",
       "79 native stages",
       "eight CLI commands",
       "11 context-sensitive direct stages",
@@ -298,12 +298,11 @@
   },
   "protectedFacts": {
     "packageName": "@dailephd/my-dev-kit-orchestrator",
-    "packageMetadataVersion": "1.6.1",
-    "latestPublishedVersion": "1.6.1",
-    "currentReleaseDate": "2026-10-02",
+    "packageMetadataVersion": "1.6.2",
+    "latestPublishedVersion": "1.6.2",
+    "currentReleaseDate": "2026-10-14",
     "implementedUnpublishedVersions": [],
     "plannedUnpublishedVersions": [
-      "v1.6.2",
       "v1.7.0"
     ],
     "cliCommands": [
@@ -380,12 +379,12 @@
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",
-    "published v1.6.1 with older releases historically scoped, v1.6.2 planned trace-diagnostic maintenance, and v1.7.0 reserved for ORC-EVIDENCE-01",
-    "v1.6.1 has a finalized changelog section with the current release date",
+    "published v1.6.2 with older releases historically scoped and v1.7.0 reserved for ORC-EVIDENCE-01",
+    "v1.6.2 has a finalized changelog section with the current release date",
     "derived semantic continuity contract version, gate schema version, and activated-mode set",
     "derived run telemetry contract version, Workflow Economics version, and recorded-command set",
     "derived test-context bootstrap warning code and deferrable reasons guarded across ARCHITECTURE and CONTRACTS, and no bootstrap command, mode, stage, or option claim",
-    "v1.6.1 is the current release with package metadata and the latest published release at 1.6.1 and v1.7.0 remains planned",
+    "v1.6.2 is the current release with package metadata and the latest published release at 1.6.2 and v1.7.0 remains planned",
     "manual my-dev-kit execution boundary",
     "non-persisted TaskState and StageContextBundle",
     "non-native context files and packet sidecars",
@@ -455,7 +454,7 @@
           "Documentation"
         ]
       ],
-      "versionStatusPolicy": "v1.6.1 is the current release; older releases remain historical, and v1.7.0 remains planned.",
+      "versionStatusPolicy": "v1.6.2 is the current release; older releases remain historical, and v1.7.0 remains planned.",
       "sourceOfTruthOwners": [
         "package.json",
         "src/program.ts",
@@ -512,7 +511,7 @@
           "v1.2.0 - Android Compose Greenfield Profile"
         ]
       ],
-      "versionStatusPolicy": "v1.6.1 is the current release and its finalized section carries the release date; future changes use an Unreleased section.",
+      "versionStatusPolicy": "v1.6.2 is the current release and its finalized section carries the release date; future changes use an Unreleased section.",
       "sourceOfTruthOwners": [
         "package.json",
         "tests/fixtures/v121-compatibility/compatibility-manifest.json"
@@ -900,7 +899,7 @@
           "Non-goals"
         ]
       ],
-      "versionStatusPolicy": "Keep v1.6.1 as the current release, v1.6.2 as a planned maintenance patch, and v1.7.0 as the planned ORC-EVIDENCE-01 feature; historical versions remain published only when verified.",
+      "versionStatusPolicy": "Keep v1.6.2 as the current release while older releases remain historical, and v1.7.0 as the planned ORC-EVIDENCE-01 feature; historical versions remain published only when verified.",
       "sourceOfTruthOwners": [
         "package.json",
         "tests/fixtures/v121-compatibility/compatibility-manifest.json"

@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## v1.6.2 - Trace Diagnostic Accuracy and Correction Guidance
+
+Release date: 2026-10-14.
+
+### Fixed
+
+- Corrected malformed trace-ID classification to preserve ordinary technical
+  tokens such as `ECO-00` and `UTF-8`, while retaining recognized-prefix checks
+  and rejecting unsupported prefixes in explicit declarations and supported
+  trace-link contexts.
+- Run-level `check --trace` and native trace checks in `check --all` resolve
+  actual same-stage and upstream declarations; future-stage declarations do
+  not satisfy targets. Standalone and design-map checks remain file-local.
+- Trace correction suggestions validate stages against the active run and give
+  artifact-specific guidance for an optional design map. They remain advisory,
+  separate from judge routing. Missing-target messages describe the evaluated
+  scope; trace-result version `"1"`, strict exits, and integrity/lifecycle
+  ownership are unchanged.
+
+### Security
+
+- Replaced the development-only `markdownlint-cli2` documentation linter with `markdownlint-cli` 0.49.1, eliminating the high-severity `braces` advisory chain (GHSA-vfj7-8cjw-p6xm). Markdown rules and file coverage are unchanged.
+- Retained the development-only `handlebars` correction. The runtime dependency set (`commander`) is unchanged and has no known vulnerabilities.
+
+### Compatibility
+
+- No CLI command, option, workflow mode, native stage, artifact family, runtime dependency, or package export was added or changed.
+
 ## v1.6.1 - Test-Context Bootstrap Correction
 
 Release date: 2026-10-02.

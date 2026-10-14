@@ -6,8 +6,9 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.6.1`, a test-context bootstrap correction that
-makes test-context readiness phase-aware. It follows `v1.6.0`, which shipped
+The current release is `v1.6.2`, a trace-diagnostic correction patch. It follows
+`v1.6.1`, a test-context bootstrap correction that makes test-context readiness
+phase-aware, and `v1.6.0`, which shipped
 native run telemetry and Workflow Economics, alongside `v1.5.0`'s Semantic Continuity and the prior
 greenfield, integrity, and instruction-bootstrap contracts,
 `v1.4.0`'s maintained-line trace/lifecycle reconciliation, phase-aware
@@ -582,6 +583,30 @@ stage, mode, command, or persisted state is added.
   `check`, `export`, and the judge prompt so no surface re-derives continuity.
 
 ## Status, check, and export
+
+Trace checking is owned by `src/traceModel.ts` (canonical vocabulary and lexical
+classification), `src/traceParser.ts` (links and contextual malformed-ID
+classification), and `src/traceChecker.ts` (declarations, evaluation, advisory
+suggestions, and version-1 result persistence). The checker shares the parser's
+malformed-ID policy, preserving ordinary technical prose while rejecting
+recognized-prefix near misses and supported explicit unknown-prefix attempts.
+
+`checkArtifactTrace` and `checkDesignMapTrace` resolve targets file-locally.
+`checkAllTraces` reads primary/additional native artifacts in `RunMetadata`
+stage order, caches their actual declarations, and evaluates each artifact
+against its own, same-stage, and earlier-stage declarations. Later stages and
+unregistered files contribute nothing. Prose references and link endpoints
+declare nothing; duplicate and orphan diagnostics remain file-local.
+
+`src/commands/check.ts` uses that same run-aware evaluator for `--trace` and
+`--all`, and passes `meta.stages` to `buildTraceCorrectionSuggestions` on all
+trace surfaces. Every named suggestion stage is checked against that list;
+prefix hints are added only for an earlier stage. Optional design-map issues
+receive artifact guidance because no native stage owns the file. The
+context-free `suggestCorrectionStageFromTraceIssue` remains only an unvalidated
+missing-target owner hint. Trace suggestions never become accepted judge
+routes or alter the canonical gate or lifecycle. These trace corrections are
+shipped in v1.6.2; v1.6.1 trace checking was file-local.
 
 `status` reports human-readable implementation/test readiness, freshness,
 adequacy, primary blocker/reason, corrective action, evidence target, ordered

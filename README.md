@@ -23,11 +23,23 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.6.1`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.6.2`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
 
-`v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
+`v1.6.2` corrects trace diagnostics. Ordinary technical tokens such as `ECO-00`
+and `UTF-8` are no longer reported as malformed trace IDs, while recognized-prefix
+near misses and explicit unknown-prefix declarations still fail. Run-level
+`check --trace` and the native trace checks in `check --all` resolve targets
+against declarations in the same artifact, its same-stage artifacts, and earlier
+native stages. Correction suggestions name only stages that exist in the active
+run, or an explicit artifact for the optional design map, and remain advisory.
+The documentation linter moved to `markdownlint-cli`, removing a vulnerable
+development-only dependency chain. No command, mode, stage, or runtime dependency
+was added. Generic ecosystem evidence intake remains planned for `v1.7.0`
+(ORC-EVIDENCE-01).
+
+`v1.6.1``v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
 yet can enter `test-implementation`: while the `TestImplementationReport` does
 not exist, a critical responsibility that is only missing related-test and
 oracle evidence is accepted for entry with a pending-test warning, and the raw

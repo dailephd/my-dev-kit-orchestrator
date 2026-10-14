@@ -133,9 +133,60 @@ describe('findMalformedTraceIds', () => {
     expect(result).toContain('REQ042');
   });
 
-  it('finds IDs with unknown prefixes', () => {
-    const result = findMalformedTraceIds('FOO-001 is malformed');
-    expect(result).toContain('FOO-001');
+  // v1.6.2: previously 'FOO-001 is malformed' (ordinary prose) was flagged.
+  // An unknown prefix is flagged only in explicit declaration or link context.
+  it('does not flag an unknown prefix in ordinary prose', () => {
+    expect(findMalformedTraceIds('FOO-001 is malformed')).toEqual([]);
+    expect(findMalformedTraceIds('See FOO-001 for details.')).toEqual([]);
+  });
+
+  it('finds an unknown prefix in an explicit declaration', () => {
+    expect(findMalformedTraceIds('FOO-001: declaration')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('- FOO-002: bulleted declaration')).toEqual(['FOO-002']);
+  });
+
+  it('finds an unknown prefix as the target or source of an explicit trace link', () => {
+    expect(findMalformedTraceIds('REQ-001 -> FOO-001')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('FOO-003 -> BEH-001')).toEqual(['FOO-003']);
+  });
+
+  it('does not treat a link between two non-trace tokens as trace intent', () => {
+    expect(findMalformedTraceIds('FOO-001 -> BAR-002')).toEqual([]);
+    expect(findMalformedTraceIds('REQ-001 -> UTF-8')).toEqual([]);
+  });
+
+  it('does not flag ordinary technical identifiers', () => {
+    expect(findMalformedTraceIds('ECO-00 is a milestone')).toEqual([]);
+    expect(findMalformedTraceIds('ECO-01 follows ECO-00')).toEqual([]);
+    expect(findMalformedTraceIds('Encode as UTF-8.')).toEqual([]);
+    expect(findMalformedTraceIds('SHA256 and ISO8601')).toEqual([]);
+  });
+
+  it('does not flag technical tokens solely because of punctuation', () => {
+    for (const text of ['ECO-00,', '(ECO-00)', '"UTF-8"', 'UTF-8:', 'UTF-8: encoding', 'ECO-00: milestone', '# UTF-8']) {
+      expect(findMalformedTraceIds(text)).toEqual([]);
+    }
+  });
+
+  it('reports only genuine malformed attempts in mixed content', () => {
+    const content = [
+      'The ECO-00 milestone requires UTF-8 output.',
+      'REQ-001: valid requirement',
+      'RSP-01: malformed responsibility',
+      'REQ-001 -> BEH-001',
+    ].join('\n');
+    expect(findMalformedTraceIds(content)).toEqual(['RSP-01']);
+  });
+
+  it('flags recognized-prefix near misses in any context', () => {
+    expect(findMalformedTraceIds('see REQ-01, BEH-1 and RSP001')).toEqual(['REQ-01', 'BEH-1', 'RSP001']);
+  });
+
+  it('does not mutate or depend on prior calls', () => {
+    const content = 'REQ-01\nFOO-001: x';
+    const first = findMalformedTraceIds(content);
+    expect(findMalformedTraceIds(content)).toEqual(first);
+    expect(content).toBe('REQ-01\nFOO-001: x');
   });
 
   it('does not flag valid trace IDs as malformed', () => {
@@ -147,6 +198,11 @@ describe('findMalformedTraceIds', () => {
   it('deduplicates malformed IDs', () => {
     const result = findMalformedTraceIds('BEH001 BEH001 BEH001');
     expect(result.filter((id) => id === 'BEH001')).toHaveLength(1);
+  });
+
+  it('deduplicates repeated attempts across contexts in first-occurrence order', () => {
+    const content = 'FOO-001: a\nREQ-001 -> FOO-001\nBEH001 BEH001\nFOO-001: again';
+    expect(findMalformedTraceIds(content)).toEqual(['FOO-001', 'BEH001']);
   });
 
   it('does not flag lowercase tokens', () => {
@@ -352,11 +408,17 @@ describe('parseTrace', () => {
     expect(result).toContain('BEH-999');
   });
 
+  // v1.6.2: FOO-001 is now malformed only in declaration/link context.
   it('detects malformed IDs', () => {
-    const content = 'BEH001 and FOO-001 are malformed';
+    const content = 'BEH001 is malformed\nFOO-001: unsupported prefix declaration';
     const result = parseTrace(content);
     expect(result.malformed).toContain('BEH001');
     expect(result.malformed).toContain('FOO-001');
+  });
+
+  it('does not report ordinary technical identifiers or prose unknown prefixes as malformed', () => {
+    const result = parseTrace('ECO-00 and UTF-8 and FOO-001 appear in prose');
+    expect(result.malformed).toEqual([]);
   });
 
   it('handles content that mixes valid IDs and links correctly', () => {
@@ -376,5 +438,46 @@ describe('parseTrace', () => {
     expect(result.orphanIds).toEqual([]);
     expect(result.missingLinkTargets).toEqual([]);
     expect(result.duplicateIds.sort()).toEqual(['BEH-001', 'PSE-001', 'REQ-001', 'TST-001']);
+  });
+});
+
+// ─── Token boundaries (v1.6.2 T06) ───────────────────────────────────────────
+
+describe('trace token boundaries', () => {
+  const EMBEDDED = [
+    'CODE-REQ-01-suffix',
+    'REQ-001X',
+    'PREFIX-REQ-001-suffix',
+    'REQ-001_foo',
+    'docs/REQ-001.md',
+    'path/REQ-001/file',
+  ];
+
+  it.each(EMBEDDED)('extracts nothing from embedded %s', (text) => {
+    const parsed = parseTrace(text);
+    expect(parsed.ids).toEqual([]);
+    expect(parsed.malformed).toEqual([]);
+    expect(parsed.missingLinkTargets).toEqual([]);
+  });
+
+  it('does not treat REQ-001X as a declaration of REQ-001', () => {
+    const parsed = parseTrace('REQ-001X: invalid declaration\nBEH-001 -> REQ-001X');
+    expect(parsed.ids.map((i) => i.id)).toEqual(['BEH-001']);
+    expect(parsed.malformed).toEqual([]);
+  });
+
+  it('keeps standalone canonical IDs', () => {
+    for (const text of ['REQ-001: r', 'See REQ-001 for details.', '(REQ-001)', '`REQ-001`', 'REQ-001,']) {
+      expect(parseTraceIds(text).map((i) => i.id)).toEqual(['REQ-001']);
+    }
+    expect(parseTraceIds('REQ-0001').map((i) => i.id)).toEqual(['REQ-0001']);
+    expect(parseTraceIds('REQ-001 -> BEH-001').map((i) => i.id)).toEqual(['REQ-001', 'BEH-001']);
+  });
+
+  it('still flags complete malformed tokens and unsupported declarations/links', () => {
+    expect(findMalformedTraceIds('REQ-01\nRSP001\nBEH001\n(REQ-01)')).toEqual(['REQ-01', 'RSP001', 'BEH001']);
+    expect(findMalformedTraceIds('FOO-001: bad')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('REQ-001 -> FOO-001')).toEqual(['FOO-001']);
+    expect(findMalformedTraceIds('ECO-00 ECO-01 UTF-8 UTF-16 ISO-8601 SHA-256')).toEqual([]);
   });
 });
