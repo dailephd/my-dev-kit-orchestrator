@@ -162,7 +162,7 @@ This procedure is inactive until a separately authorized release workflow
 begins. Completing this checklist does not itself authorize a release.
 
 1. Verify the corrected `v1.2.2` candidate commit and a clean candidate branch.
-2. Confirm that `@dailephd/my-dev-kit-orchestrator@1.2.2` is available on npm.
+2. Confirm that `@dailephd/my-dev-kit-orchestrator@1.2.2` has not already been published on npm.
 3. Create `release/v1.2.2` from the verified candidate.
 4. Update `package.json` and both package-lock root version fields to `1.2.2`.
 5. Update the changelog and release-state documentation for the release.
