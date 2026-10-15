@@ -3,7 +3,7 @@ import * as path from 'path';
 import { createHash } from 'crypto';
 import { createRun, loadRun, RunMetadata } from '../src/run';
 import { initWorkspace, getRunsDir } from '../src/workspace';
-import { inspectRunEcosystemRecords, replaceRunEcosystemEvidence } from '../src/ecosystemEvidenceStore';
+import { assertEcosystemPathSafety, inspectRunEcosystemRecords, replaceRunEcosystemEvidence } from '../src/ecosystemEvidenceStore';
 import { replaceRunEcosystemEvidence as publicReplacement } from '../src/index';
 import { RunEcosystemRequirementsDocumentV1, RunEcosystemEvidenceDocumentV1 } from '../src/ecosystemEvidenceContracts';
 import { evaluateRunIntegrityGate, evaluateStageRunIntegrity, resolveArtifactStateWithRunIntegrity } from '../src/runIntegrityGate';
@@ -200,6 +200,35 @@ describe('atomic complete replacement and path/data safety', () => {
     fs.symlinkSync(meta.runFolder, link, 'junction');
     try { expect(() => replaceRunEcosystemEvidence(link, evidence)).toThrow('ECO_RECORD_INVALID'); }
     finally { fs.unlinkSync(link); }
+  });
+  it('rejects a symlink below the trusted project boundary while allowing the OS temp ancestor', () => {
+    const meta = newRun();
+    const outside = fs.mkdtempSync(path.join(path.dirname(root), 'outside ecosystem '));
+    const link = path.join(meta.runFolder, 'artifact-link');
+    fs.symlinkSync(outside, link, 'junction');
+    try {
+      expect(() => assertEcosystemPathSafety(path.join(link, 'artifact.json'), false, true, root)).toThrow('ECO_RECORD_INVALID');
+      expect(() => assertEcosystemPathSafety(meta.runFolder, true, false, root)).not.toThrow();
+    } finally {
+      fs.unlinkSync(link);
+      fs.rmSync(outside, { recursive: true, force: true });
+    }
+  });
+  it('accepts an activated run when a system-level ancestor aliases the trusted project path', () => {
+    const target = fs.mkdtempSync(path.join(path.dirname(root), 'real ecosystem parent '));
+    const alias = `${target} alias`;
+    const project = path.join(alias, 'project');
+    fs.symlinkSync(target, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    try {
+      fs.mkdirSync(project);
+      initWorkspace(project);
+      const meta = createRun({ request: 'aliased temp ancestor', mode: 'greenfield', projectRoot: project, ecosystemRequirementsDocument: clone(requirements) });
+      expect(loadRun(meta.runFolder).ecosystemEvidenceVersion).toBe('1.0.0');
+      expect(inspectRunEcosystemRecords(meta.runFolder, meta).issues).toEqual([]);
+    } finally {
+      fs.rmSync(alias, { recursive: true, force: true });
+      fs.rmSync(target, { recursive: true, force: true });
+    }
   });
   it('accepts filesystem-equivalent path variants while preserving evidence identities', () => {
     const meta = newRun();

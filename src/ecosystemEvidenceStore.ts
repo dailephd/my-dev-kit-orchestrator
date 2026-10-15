@@ -11,6 +11,7 @@ const EVIDENCE_FILE = 'ecosystem-evidence.json';
 export interface EcosystemActivationMetadata {
   ecosystemEvidenceVersion?: unknown;
   ecosystemRequirementsSha256?: unknown;
+  projectRoot?: unknown;
 }
 export class EcosystemEvidenceError extends Error {
   constructor(public readonly code: EcosystemRecordIssueCode) {
@@ -24,35 +25,72 @@ export function hasEcosystemActivation(metadata: EcosystemActivationMetadata): b
 // Apply existing local-file safety conventions: inspect raw traversal before
 // resolving, refuse directories as files and links/junctions before descending.
 // This helper is internal to activation/storage, not an evidence ingestion API.
-export function assertEcosystemPathSafety(raw: string, mustExist = true, file = false): string {
+export function assertEcosystemPathSafety(raw: string, mustExist = true, file = false, trustedBoundary?: string): string {
   if (typeof raw !== 'string' || !raw || raw.includes('\0') || raw.includes('..') || /^(?:[a-z]+:\/\/|\\\\|\/\/)/i.test(raw)) {
     throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
   }
   const resolved = path.resolve(raw);
-  let current = path.parse(resolved).root;
-  for (const segment of resolved.slice(current.length).split(path.sep).filter(Boolean)) {
+  // Ancestors above a runtime-established boundary may be system-managed
+  // aliases (for example macOS /var -> /private/var). Canonicalize that
+  // boundary once, then inspect every component at or below it without
+  // following links. With no boundary, only the selected leaf is trusted as
+  // a caller-supplied location; protected run/artifact paths pass their root.
+  const boundary = trustedBoundary === undefined ? path.dirname(resolved) : path.resolve(trustedBoundary);
+  const relative = path.relative(boundary, resolved);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
+  }
+  let canonicalBoundary: string;
+  try {
+    if (trustedBoundary === undefined) {
+      canonicalBoundary = path.dirname(fs.realpathSync.native(resolved));
+      const leaf = fs.lstatSync(resolved);
+      if (leaf.isSymbolicLink()) throw new Error();
+      if (file ? !leaf.isFile() : !leaf.isDirectory()) throw new Error();
+      return resolved;
+    }
+    const boundaryStat = fs.lstatSync(boundary);
+    if (boundaryStat.isSymbolicLink() || !boundaryStat.isDirectory()) throw new Error();
+    if (relative === '' && file) throw new Error();
+    canonicalBoundary = fs.realpathSync.native(boundary);
+  } catch (error) {
+    if (!mustExist && (error as NodeJS.ErrnoException).code === 'ENOENT') return resolved;
+    throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
+  }
+  let current = canonicalBoundary;
+  const segments = relative === '' ? [] : relative.split(path.sep).filter(Boolean);
+  for (let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
     current = path.join(current, segment);
     let stat: fs.Stats;
     try { stat = fs.lstatSync(current); } catch (error) {
       if (!mustExist && (error as NodeJS.ErrnoException).code === 'ENOENT') continue;
       throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
     }
-    if (stat.isSymbolicLink() || (current !== resolved && !stat.isDirectory())) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
-    if (current === resolved && (file ? !stat.isFile() : !stat.isDirectory())) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
+    if (stat.isSymbolicLink() || (index < segments.length - 1 && !stat.isDirectory())) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
+    if (index === segments.length - 1 && (file ? !stat.isFile() : !stat.isDirectory())) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
   }
   return resolved;
 }
-export function assertEcosystemRunFolderIdentity(runFolder: string, storedRunFolder: unknown): void {
+export function assertEcosystemRunFolderIdentity(runFolder: string, storedRunFolder: unknown, projectRoot?: unknown): void {
   if (typeof storedRunFolder !== 'string') throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
-  const actual = assertEcosystemPathSafety(runFolder);
-  const stored = assertEcosystemPathSafety(storedRunFolder);
+  const boundary = typeof projectRoot === 'string' && isWithinPath(projectRoot, runFolder) ? projectRoot : path.dirname(path.resolve(runFolder));
+  const actual = assertEcosystemPathSafety(runFolder, true, false, boundary);
+  const stored = assertEcosystemPathSafety(storedRunFolder, true, false, boundary);
   // Compare filesystem identities, so Windows drive/path casing differences
   // do not turn the same safe directory into a mismatched run. Neither producer
   // identifiers nor locator strings are normalized by this operation.
   if (fs.realpathSync.native(actual) !== fs.realpathSync.native(stored)) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
 }
-function readLocalBytes(file: string): Buffer {
-  assertEcosystemPathSafety(file, true, true);
+function isWithinPath(root: string, target: string): boolean {
+  const relative = path.relative(path.resolve(root), path.resolve(target));
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+function runBoundary(runFolder: string, projectRoot?: unknown): string {
+  return typeof projectRoot === 'string' && isWithinPath(projectRoot, runFolder) ? projectRoot : path.dirname(path.resolve(runFolder));
+}
+function readLocalBytes(file: string, trustedBoundary?: string): Buffer {
+  assertEcosystemPathSafety(file, true, true, trustedBoundary);
   const descriptor = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
     if (!fs.fstatSync(descriptor).isFile()) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
@@ -77,8 +115,11 @@ function requireValidEvidence(document: unknown): RunEcosystemEvidenceDocumentV1
 export function prepareRunEcosystemRequirements(document: unknown): string {
   return serializeEcosystemDocument(requireValidRequirements(document));
 }
-export function readEcosystemRequirementsInput(inputPath: string): RunEcosystemRequirementsDocumentV1 {
-  try { return requireValidRequirements(parseBytes(readLocalBytes(inputPath))); } catch (error) {
+export function readEcosystemRequirementsInput(inputPath: string, projectRoot?: string): RunEcosystemRequirementsDocumentV1 {
+  try {
+    const trustedBoundary = projectRoot && isWithinPath(projectRoot, inputPath) ? projectRoot : undefined;
+    return requireValidRequirements(parseBytes(readLocalBytes(inputPath, trustedBoundary)));
+  } catch (error) {
     if (error instanceof EcosystemEvidenceError) throw error;
     throw new EcosystemEvidenceError('ECO_REQUIREMENTS_UNAVAILABLE');
   }
@@ -90,15 +131,15 @@ export function initializeRunEcosystemEvidence(runFolder: string, requirementsBy
   ecosystemEvidenceVersion: '1.0.0'; ecosystemRequirementsSha256: string;
 } {
   try {
-    assertEcosystemPathSafety(runFolder);
+    assertEcosystemPathSafety(runFolder, true, false, path.dirname(path.resolve(runFolder)));
     requireValidRequirements(JSON.parse(requirementsBytes));
     const requirementsPath = path.join(runFolder, REQUIREMENTS_FILE);
     fs.writeFileSync(requirementsPath, requirementsBytes, { encoding: 'utf8', flag: 'wx' });
-    const saved = readLocalBytes(requirementsPath);
+    const saved = readLocalBytes(requirementsPath, runFolder);
     if (!saved.equals(Buffer.from(requirementsBytes, 'utf8'))) throw new EcosystemEvidenceError('ECO_REQUIREMENTS_DIGEST_MISMATCH');
     requireValidRequirements(parseBytes(saved));
     fs.writeFileSync(path.join(runFolder, EVIDENCE_FILE), serializeEcosystemDocument({ schemaVersion: '1.0.0', evidence: [] }), { encoding: 'utf8', flag: 'wx' });
-    requireValidEvidence(parseBytes(readLocalBytes(path.join(runFolder, EVIDENCE_FILE))));
+    requireValidEvidence(parseBytes(readLocalBytes(path.join(runFolder, EVIDENCE_FILE), runFolder)));
     return { ecosystemEvidenceVersion: '1.0.0', ecosystemRequirementsSha256: sha256(saved) };
   } catch (error) {
     if (error instanceof EcosystemEvidenceError) throw error;
@@ -113,7 +154,7 @@ export interface RunEcosystemRecordInspection {
 }
 export function verifyRunEcosystemInitialization(runFolder: string, expected: EcosystemActivationMetadata): void {
   try {
-    const stored = parseBytes(readLocalBytes(path.join(runFolder, 'run.json')));
+    const stored = parseBytes(readLocalBytes(path.join(runFolder, 'run.json'), runBoundary(runFolder, expected.projectRoot)));
     if (stored === null || typeof stored !== 'object' || Array.isArray(stored)) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
     const actual = stored as EcosystemActivationMetadata;
     if (actual.ecosystemEvidenceVersion !== expected.ecosystemEvidenceVersion ||
@@ -136,16 +177,17 @@ export function inspectRunEcosystemRecords(runFolder: string, metadata: Ecosyste
     issues.push(typeof metadata.ecosystemEvidenceVersion === 'string' && metadata.ecosystemEvidenceVersion.length > 0 ? 'ECO_SCHEMA_UNSUPPORTED' : 'ECO_RECORD_INVALID');
   }
   if (typeof metadata.ecosystemRequirementsSha256 !== 'string' || metadata.ecosystemRequirementsSha256.length !== 64 || !/^[0-9a-f]{64}$/.test(metadata.ecosystemRequirementsSha256)) issues.push('ECO_RECORD_INVALID');
-  try { assertEcosystemPathSafety(runFolder); } catch { return { activated: true, issues: [...new Set([...issues, 'ECO_RECORD_INVALID' as const])] }; }
+  const boundary = runBoundary(runFolder, metadata.projectRoot);
+  try { assertEcosystemPathSafety(runFolder, true, false, boundary); } catch { return { activated: true, issues: [...new Set([...issues, 'ECO_RECORD_INVALID' as const])] }; }
   try {
-    const bytes = readLocalBytes(path.join(runFolder, REQUIREMENTS_FILE));
+    const bytes = readLocalBytes(path.join(runFolder, REQUIREMENTS_FILE), runFolder);
     if (typeof metadata.ecosystemRequirementsSha256 === 'string' && sha256(bytes) !== metadata.ecosystemRequirementsSha256) issues.push('ECO_REQUIREMENTS_DIGEST_MISMATCH');
     try { requirements = requireValidRequirements(parseBytes(bytes)); } catch (error) {
       issues.push(error instanceof EcosystemEvidenceError ? error.code : 'ECO_RECORD_INVALID');
     }
   } catch { issues.push('ECO_REQUIREMENTS_UNAVAILABLE'); }
   try {
-    const bytes = readLocalBytes(path.join(runFolder, EVIDENCE_FILE));
+    const bytes = readLocalBytes(path.join(runFolder, EVIDENCE_FILE), runFolder);
     try { evidence = requireValidEvidence(parseBytes(bytes)); } catch (error) {
       issues.push(error instanceof EcosystemEvidenceError ? error.code : 'ECO_RECORD_INVALID');
     }
@@ -158,17 +200,17 @@ export function replaceRunEcosystemEvidence(runFolder: string, document: RunEcos
   let temporaryPath: string | undefined;
   let ownsTemporary = false;
   try {
-    const folder = assertEcosystemPathSafety(runFolder);
-    const metadata = parseBytes(readLocalBytes(path.join(folder, 'run.json')));
+    const folder = assertEcosystemPathSafety(runFolder, true, false, path.dirname(path.resolve(runFolder)));
+    const metadata = parseBytes(readLocalBytes(path.join(folder, 'run.json'), folder));
     if (metadata === null || typeof metadata !== 'object' || Array.isArray(metadata)) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
     const activation = metadata as EcosystemActivationMetadata & { runFolder?: unknown };
     if (!hasEcosystemActivation(activation)) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
-    assertEcosystemRunFolderIdentity(folder, activation.runFolder);
+    assertEcosystemRunFolderIdentity(folder, activation.runFolder, activation.projectRoot);
     const inspection = inspectRunEcosystemRecords(folder, activation);
     if (inspection.issues.length) throw new EcosystemEvidenceError(inspection.issues[0]);
     const bytes = serializeEcosystemDocument(requireValidEvidence(document));
     const destination = path.join(folder, EVIDENCE_FILE);
-    assertEcosystemPathSafety(destination, true, true);
+    assertEcosystemPathSafety(destination, true, true, folder);
     temporaryPath = path.join(folder, `.ecosystem-evidence-${randomUUID()}.tmp`);
     const descriptor = fs.openSync(temporaryPath, 'wx');
     ownsTemporary = true;
@@ -176,7 +218,7 @@ export function replaceRunEcosystemEvidence(runFolder: string, document: RunEcos
     // Recheck immutable requirements and target safety immediately before rename.
     const beforeRename = inspectRunEcosystemRecords(folder, activation);
     if (beforeRename.issues.length) throw new EcosystemEvidenceError(beforeRename.issues[0]);
-    assertEcosystemPathSafety(destination, true, true);
+    assertEcosystemPathSafety(destination, true, true, folder);
     fs.renameSync(temporaryPath, destination);
     ownsTemporary = false;
   } catch (error) {

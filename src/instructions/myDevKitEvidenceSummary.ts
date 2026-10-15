@@ -405,13 +405,14 @@ export function readKitEcosystemEvidence(envelope: EvidenceEnvelopeV1, runFolder
   try {
     const resolved = resolveRawEvidencePath(ref.locator.value, runFolder);
     if (!resolved.safe) throw new Error();
-    assertEcosystemPathSafety(resolved.resolved, true, true);
     // Both owning roots already exist: run-scoped files and the run's project.
     const roots = [runFolder, ...(projectRoot ? [projectRoot] : [])];
-    if (!roots.some(root => {
-      const relative = path.relative(assertEcosystemPathSafety(root), resolved.resolved);
-      return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
-    })) throw new Error();
+    const trustedRoot = roots.find(root => {
+      const relative = path.relative(path.resolve(root), path.resolve(resolved.resolved));
+      return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+    });
+    if (!trustedRoot) throw new Error();
+    assertEcosystemPathSafety(resolved.resolved, true, true, trustedRoot);
     if (['ecosystem-requirements.json', 'ecosystem-evidence.json'].includes(path.basename(resolved.resolved))) throw new Error();
     const fd = fs.openSync(resolved.resolved, 'r');
     let bytes: Buffer;

@@ -106,8 +106,14 @@ export function createRun(options: {
     const stages = workflow.stages;
 
     if (ecosystemRequirementsBytes !== undefined) {
-      assertEcosystemPathSafety(runFolder, false);
       fs.mkdirSync(baseDir, { recursive: true });
+      const projectBoundary = path.resolve(projectRoot);
+      const resolvedBase = path.resolve(baseDir);
+      const relativeBase = path.relative(projectBoundary, resolvedBase);
+      const trustedBoundary = relativeBase === '' || (relativeBase !== '..' && !relativeBase.startsWith(`..${path.sep}`) && !path.isAbsolute(relativeBase))
+        ? projectBoundary
+        : resolvedBase;
+      assertEcosystemPathSafety(runFolder, false, false, trustedBoundary);
       // Exclusive directory creation preserves the collision contract even if
       // another creator wins between existsSync and mkdirSync.
       fs.mkdirSync(runFolder);
@@ -173,7 +179,7 @@ export function loadRun(runFolder: string): RunMetadata {
   }
   const raw = fs.readFileSync(metaPath, 'utf8');
   const meta = JSON.parse(raw) as RunMetadata;
-  if (hasEcosystemActivation(meta)) assertEcosystemRunFolderIdentity(runFolder, meta.runFolder);
+  if (hasEcosystemActivation(meta)) assertEcosystemRunFolderIdentity(runFolder, meta.runFolder, meta.projectRoot);
   return reconcileRunLifecycle(meta);
 }
 

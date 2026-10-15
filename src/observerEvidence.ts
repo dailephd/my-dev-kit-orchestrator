@@ -97,11 +97,14 @@ export function readObserverEcosystemEvidence(envelope: EvidenceEnvelopeV1, runF
   }
   try {
     if (ref.locator.value.includes('..') || ref.locator.value.includes('\0') || /^(?:[a-z]+:\/\/|\\\\|\/\/)/i.test(ref.locator.value)) throw new Error();
-    const file = assertEcosystemPathSafety(path.resolve(runFolder, ref.locator.value), true, true);
-    if (![runFolder, ...(projectRoot ? [projectRoot] : [])].some(root => {
-      const relative = path.relative(assertEcosystemPathSafety(root), file);
-      return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
-    })) throw new Error();
+    const candidate = path.resolve(runFolder, ref.locator.value);
+    const roots = [runFolder, ...(projectRoot ? [projectRoot] : [])];
+    const trustedRoot = roots.find(root => {
+      const relative = path.relative(path.resolve(root), candidate);
+      return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+    });
+    if (!trustedRoot) throw new Error();
+    const file = assertEcosystemPathSafety(candidate, true, true, trustedRoot);
     if (['ecosystem-requirements.json', 'ecosystem-evidence.json'].includes(path.basename(file))) throw new Error();
     const fd = fs.openSync(file, 'r');
     let bytes: Buffer;

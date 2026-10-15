@@ -159,6 +159,16 @@ describe('export command: accepted judge correction states (ORC-INTEGRATION-002)
   const section = (text: string, name: string): string =>
     text.split(`=== ${name} ===`)[1].split('=== ')[0].trim();
 
+  it('creates, reloads, inspects, and exports activated runs under the OS temporary directory', () => {
+    const meta = activatedRun();
+    const reloaded = loadRun(meta.runFolder);
+    expect(reloaded.ecosystemEvidenceVersion).toBe('1.0.0');
+    expect(evaluateRunIntegrityGate({ ...reloaded, workflowStageNames: reloaded.stages.map(stage => stage.name) }).ecosystemEvidenceRequired).toBe(true);
+    const exported = runCli(['export', '--root', root]);
+    expect(exported.exitCode ?? 0).toBe(0);
+    expect(exported.output).toContain('Ecosystem evidence');
+  });
+
   it('exports accepted NEED_CONTEXT without a route honestly and keeps final completion blocked', () => {
     const meta = activatedRun();
     writeJudge(meta, 'Verdict: NEED_CONTEXT\n');

@@ -69,7 +69,7 @@ export function makeStartCommand(): Command {
 
       try {
         const ecosystemRequirementsDocument = options.ecosystemRequirements !== undefined
-          ? readEcosystemRequirementsInput(options.ecosystemRequirements)
+          ? readEcosystemRequirementsInput(options.ecosystemRequirements, projectRoot)
           : undefined;
         if (ecosystemRequirementsDocument !== undefined) initWorkspace(projectRoot);
         const meta = createRun({
