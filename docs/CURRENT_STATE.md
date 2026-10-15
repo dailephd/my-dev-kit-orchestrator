@@ -40,9 +40,9 @@ Implemented behavior:
 
 The command, mode, native-stage, and profile counts below are unchanged, no dependency was added, and no semantic state file is persisted.
 
-## Previous release: Workflow Economics and Deterministic Run Telemetry
+## Earlier release: Workflow Economics and Deterministic Run Telemetry
 
-`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is the previous release.
+`v1.6.0`, Workflow Economics and Deterministic Run Telemetry (`ORC-TELEMETRY`), is an earlier release.
 
 Implemented behavior:
 
@@ -54,7 +54,7 @@ Implemented behavior:
 - `status` adds one compact Workflow Economics section, `export` adds one bounded fixed-size section, and the default `check` and `check --all` add a `Run telemetry` section whose findings are warnings only (existing `--strict` promotes them like any warning); legacy runs show none of these
 - `init`, `list`, `status`, `check`, and `export` never record telemetry
 
-Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
+Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` had no JSON option in `v1.6.0` (introduced in `v1.7.0`), no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
 ## Current release: Generic Ecosystem Evidence Intake
 
@@ -82,7 +82,7 @@ Implemented behavior:
 - advisory correction guidance names only verified run stages or an explicit artifact, with no change to judge routing, the gate, lifecycle, or trace-results version `"1"`
 - the development-only documentation linter is `markdownlint-cli` (configured by `.markdownlint.jsonc`), replacing `markdownlint-cli2` and removing a high-severity development-only dependency chain; the runtime dependency set is unchanged
 
-Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or runtime dependency. `RunIntegrityGate` remains the single enforcement consumer, and generic evidence intake is not implemented.
+Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or runtime dependency. `RunIntegrityGate` remains the single enforcement consumer, and generic evidence intake had not yet been implemented at the `v1.6.2` baseline (it shipped in `v1.7.0`).
 
 ## Earlier release: Test-Context Bootstrap Correction
 
