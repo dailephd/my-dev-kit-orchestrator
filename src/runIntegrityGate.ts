@@ -33,6 +33,10 @@ import {
   SemanticContinuityResult,
 } from './instructions/semanticContinuity';
 import { findTestStrategySourceRequirement } from './instructions/testResponsibilityCriticality';
+import { inspectRunEcosystemRecords } from './ecosystemEvidenceStore';
+import { evaluateRunEcosystemEvidenceReadiness, RunEcosystemEvidenceReadiness, EcosystemEvidenceIssueCode } from './ecosystemEvidenceReadiness';
+import { readKitEcosystemEvidence } from './instructions/myDevKitEvidenceSummary';
+import { readObserverEcosystemEvidence } from './observerEvidence';
 
 // 1.1.0: additive Semantic Continuity fields (v1.5.0 Batch 4); no field is removed or redefined.
 export const RUN_INTEGRITY_GATE_SCHEMA_VERSION = '1.1.0';
@@ -67,6 +71,16 @@ const CONTEXT_SENSITIVE_STAGE_NAMES = ['implementation', 'test-implementation'] 
 export type ContextSensitiveStageName = (typeof CONTEXT_SENSITIVE_STAGE_NAMES)[number];
 
 export interface RunIntegrityGateResult {
+  // Present only for explicit activation (including malformed metadata).
+  ecosystemEvidenceVersion?: unknown;
+  ecosystemEvidenceRequired?: boolean;
+  ecosystemEvidenceReady?: boolean;
+  ecosystemEvidenceClassification?: RunEcosystemEvidenceReadiness['classification'];
+  ecosystemEvidence?: RunEcosystemEvidenceReadiness;
+  ecosystemEvidenceBlockingCodes?: EcosystemEvidenceIssueCode[];
+  ecosystemEvidenceWarningCodes?: EcosystemEvidenceIssueCode[];
+  ecosystemEvidenceBlockedStageNames?: string[];
+  ecosystemEvidenceRecommendedCorrectionStage?: string | null;
   schemaVersion: string;
   mode: string;
   contextRequired: boolean;
@@ -112,6 +126,8 @@ export interface RunIntegrityGateResult {
 }
 
 export interface EvaluateRunIntegrityGateInput {
+  ecosystemEvidenceVersion?: unknown;
+  ecosystemRequirementsSha256?: unknown;
   mode: string;
   runFolder: string;
   workflowStageNames: readonly string[];
@@ -419,14 +435,45 @@ export function evaluateRunIntegrityGateFromSummary(
     implementationContextReadiness: summary.implementationContext,
     testContextReadiness: summary.testContext,
   });
-  return deriveRunIntegrityGateResult(input.mode, summary, {
+  const gate = deriveRunIntegrityGateResult(input.mode, summary, {
     run,
     workflowStageNames: input.workflowStageNames,
     currentStage: input.currentStage,
   });
+  const records = inspectRunEcosystemRecords(input.runFolder, input);
+  const native = records.evidence?.evidence.map(e =>
+    e.nativeArtifact.producer.packageName === '@dailephd/my-dev-kit'
+      ? readKitEcosystemEvidence(e, input.runFolder, input.projectRoot)
+      : e.nativeArtifact.producer.packageName === '@dailephd/my-frontend-observer'
+        ? readObserverEcosystemEvidence(e, input.runFolder, input.projectRoot)
+        : { evidenceId: e.evidenceId, issueCodes: ['ECO_EVIDENCE_UNSUPPORTED_PRODUCER' as const, 'ECO_COMPATIBILITY_UNVERIFIED' as const] });
+  const ecosystem = evaluateRunEcosystemEvidenceReadiness(records, native);
+  const blockedStages: string[] = input.workflowStageNames.filter(s => s === 'judge' || s === 'final-report');
+  if (!blockedStages.length && input.workflowStageNames.length) blockedStages.push(input.workflowStageNames[input.workflowStageNames.length - 1]);
+  const ready = gate.runIntegrityReady && ecosystem.ready;
+  return {
+    ...gate,
+    ...(records.activated ? { ecosystemEvidenceVersion: input.ecosystemEvidenceVersion, ecosystemEvidence: ecosystem } : {}),
+    ecosystemEvidenceRequired: ecosystem.required,
+    ecosystemEvidenceReady: ecosystem.ready,
+    ecosystemEvidenceClassification: ecosystem.classification,
+    ...(records.activated ? { ecosystemEvidenceBlockingCodes: ecosystem.blockingCodes } : {}),
+    ecosystemEvidenceWarningCodes: ecosystem.warningCodes,
+    ecosystemEvidenceBlockedStageNames: ecosystem.ready ? [] : blockedStages,
+    ecosystemEvidenceRecommendedCorrectionStage: ecosystem.recommendedCorrectionStage,
+    blockingCodes: [...gate.blockingCodes, ...ecosystem.blockingCodes],
+    warnings: [...gate.warnings, ...ecosystem.warningCodes],
+    runIntegrityReady: ready,
+    expectedJudgeVerdict: ready ? 'PASS' : 'NEED_CONTEXT',
+    ...(ecosystem.primaryBlockingCode && !gate.primaryBlockingCode ? {
+      primaryBlockingCode: ecosystem.primaryBlockingCode,
+      primaryBlockingReason: ecosystem.primaryBlockingReason,
+    } : {}),
+  };
 }
 
 export interface StageRunIntegrityDecision {
+  ecosystemBlocked?: boolean;
   stageName: string;
   contextSensitive: boolean;
   contextBlocked: boolean;
@@ -456,12 +503,14 @@ export function evaluateStageRunIntegrity(
   const contextSensitive = (CONTEXT_SENSITIVE_STAGE_NAMES as readonly string[]).includes(stageName);
   const contextBlocked = contextSensitive && gate.blockedStageNames.includes(stageName as ContextSensitiveStageName);
   const semanticBlocked = gate.semanticBlockedStageNames.includes(stageName);
-  const blocked = contextBlocked || semanticBlocked;
+  const ecosystemBlocked = Boolean(gate.ecosystemEvidenceBlockedStageNames?.includes(stageName));
+  const blocked = contextBlocked || semanticBlocked || ecosystemBlocked;
   return {
     stageName,
     contextSensitive,
     contextBlocked,
     semanticBlocked,
+    ...(ecosystemBlocked ? { ecosystemBlocked: true } : {}),
     blocked,
     stageMayRenderNormalPrompt: !blocked,
     stageMayCreateOrAcceptCompletionArtifact: !blocked,
@@ -471,6 +520,8 @@ export function evaluateStageRunIntegrity(
       ? { blockingReason: blockingReasonFor(gate, stageName as ContextSensitiveStageName) }
       : semanticBlocked
         ? { blockingReason: gate.primarySemanticBlocker?.primaryReason }
+        : ecosystemBlocked
+          ? { blockingReason: gate.ecosystemEvidenceBlockingCodes?.[0] }
         : {}),
   };
 }
@@ -553,6 +604,7 @@ export function isRunIntegrityBlockedArtifactFile(
   finalReportEligible = true,
 ): boolean {
   return (
+    (gate.ecosystemEvidenceBlockedStageNames?.includes(stageForArtifactFile(stages, artifactFile)?.name ?? '') === true) ||
     isContextBlockedArtifactFile(gate, stages, artifactFile) ||
     isSemanticBlockedArtifactFile(gate, stages, artifactFile) ||
     isFinalReportIneligibleArtifactFile(stages, artifactFile, finalReportEligible)

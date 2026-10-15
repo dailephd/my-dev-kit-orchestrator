@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { inspectionError, projectRunEvidenceInspection, serializeRunEvidenceInspection } from '../ecosystemEvidenceInspection';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
@@ -34,25 +35,41 @@ export function makeStatusCommand(): Command {
     .description('Show the current or selected workflow run status')
     .option('--run <run-id>', 'select a specific workflow run by ID')
     .option('--root <path>', 'project root directory (default: current working directory)')
-    .action((options: { run?: string; root?: string }) => {
+    .option('--json', 'print versioned run evidence inspection JSON')
+    .action((options: { run?: string; root?: string; json?: boolean }) => {
+      try {
       const projectRoot = path.resolve(options.root ?? process.cwd());
 
       let meta;
       if (options.run) {
         const runFolder = getRunFolder(projectRoot, options.run);
         if (!fs.existsSync(runFolder)) {
+          if (options.json) {
+            process.stdout.write(serializeRunEvidenceInspection(inspectionError('INSPECTION_RUN_NOT_FOUND')));
+            process.exitCode = 1;
+            return;
+          }
           console.error(`Error: run not found: ${options.run}`);
           process.exit(1);
         }
         try {
           meta = loadRun(runFolder);
         } catch {
+          if (options.json) {
+            process.stdout.write(serializeRunEvidenceInspection(inspectionError('INSPECTION_RUN_UNREADABLE')));
+            process.exitCode = 1;
+            return;
+          }
           console.error(`Error: could not load run.json for: ${options.run}`);
           process.exit(1);
         }
       } else {
         meta = getMostRecentRun(projectRoot);
         if (!meta) {
+          if (options.json) {
+            process.stdout.write(serializeRunEvidenceInspection(inspectionError('INSPECTION_NO_RUNS_FOUND')));
+            return;
+          }
           console.log('No runs found.\n\nNext:\n  my-dev-kit-orchestrator start "<software change request>"');
           return;
         }
@@ -71,6 +88,8 @@ export function makeStatusCommand(): Command {
         currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
         semanticContinuityVersion: meta.semanticContinuityVersion,
+        ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+        ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
         proofOnly: meta.proofOnly === true,
       };
       const readiness = evaluateRunContextReadiness(gateInput);
@@ -90,6 +109,10 @@ export function makeStatusCommand(): Command {
         proofOnly: meta.proofOnly === true,
         verificationResponsibility: meta.verificationResponsibility,
       });
+      if (options.json) {
+        process.stdout.write(serializeRunEvidenceInspection(projectRunEvidenceInspection(meta, gate, judgeIntegrity, finalReportEligibility)));
+        return;
+      }
       const lifecycleStatuses = getArtifactLifecycleStatusesWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
       const legacyStatuses = getArtifactStatuses(meta);
       const nextStage = getNextStageWithRunIntegrity(meta, stateFile, gate, finalReportEligibility.eligible);
@@ -98,6 +121,16 @@ export function makeStatusCommand(): Command {
       const supportingReports = getSupportingReportStatuses(meta);
 
       const lines: string[] = [
+        ...(gate.ecosystemEvidenceRequired ? [
+          `Ecosystem evidence: ${gate.ecosystemEvidenceClassification}`,
+          ...(gate.ecosystemEvidenceWarningCodes?.length ? [`Ecosystem evidence warnings: ${gate.ecosystemEvidenceWarningCodes.join(', ')}`] : []),
+        ] : []),
+        ...(gate.ecosystemEvidenceBlockingCodes?.length ? [
+          `Ecosystem evidence blockers: ${gate.ecosystemEvidenceBlockingCodes.join(', ')}`,
+          `Expected judge verdict: ${gate.expectedJudgeVerdict}`,
+          `Final-report eligible: ${finalReportEligibility.eligible}`,
+          '',
+        ] : []),
         `Run:`,
         `  ${meta.runId}`,
         ``,
@@ -298,6 +331,12 @@ export function makeStatusCommand(): Command {
       }
 
       console.log(lines.join('\n'));
+      } catch (error) {
+        if (!options.json) throw error;
+        console.error('Error: run evidence inspection failed.');
+        process.stdout.write(serializeRunEvidenceInspection(inspectionError('INSPECTION_FAILED')));
+        process.exitCode = 1;
+      }
     });
   return cmd;
 }

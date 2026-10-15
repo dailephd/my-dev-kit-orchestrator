@@ -20,6 +20,8 @@ npm pack --dry-run
 git diff --check
 ```
 
+When a release adds public exports or run-schema fields, also confirm the packed package exposes them from its built entry point and that [CONTRACTS.md](CONTRACTS.md) matches the source.
+
 Run relevant temporary-directory and profile smoke checks from [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md). Verify package contents contain intended runtime/docs files and exclude local plans, run state, reports, and secrets.
 
 ## Version and documentation finalization

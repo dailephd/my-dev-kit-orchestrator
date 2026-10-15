@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { inspectRunEcosystemRecords } from '../ecosystemEvidenceStore';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
@@ -85,6 +86,9 @@ function formatCorrectionState(judgeIntegrity: JudgeIntegrityResult): string {
   }
   if (judgeIntegrity.judgeVerdictAccepted && judgeIntegrity.authoredJudgeVerdict === 'PASS') {
     return '  PASS -- no correction required';
+  }
+  if (judgeIntegrity.judgeVerdictAccepted) {
+    return `  ${judgeIntegrity.authoredJudgeVerdict} -- accepted; no correction stage available (final report ineligible)`;
   }
   // Authored PASS rejected because it contradicts the canonical expected
   // verdict (Batch 3 section 6.2) -- never reported as accepted.
@@ -236,6 +240,8 @@ export function buildExportText(meta: {
   proofOnly?: boolean;
   verificationResponsibility?: string;
   semanticContinuityVersion?: string;
+  ecosystemEvidenceVersion?: '1.0.0';
+  ecosystemRequirementsSha256?: string;
   runTelemetryVersion?: string;
 }): string {
   const parts: string[] = [];
@@ -251,6 +257,8 @@ export function buildExportText(meta: {
     currentStage: resolveGateCurrentStage(meta, exportStateFile),
     projectRoot: meta.projectRoot,
     semanticContinuityVersion: meta.semanticContinuityVersion,
+    ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+    ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
     proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -283,6 +291,10 @@ export function buildExportText(meta: {
   }
 
   parts.push(sectionHeader('Request'));
+  if (gate.ecosystemEvidenceBlockingCodes?.length) {
+    parts.push(`  Expected judge verdict: ${gate.expectedJudgeVerdict}`);
+    parts.push(`  Final-report eligible: ${finalEligibility.eligible}`);
+  }
   parts.push(`  ${meta.request}`);
 
   parts.push(sectionHeader('Artifact checklist'));
@@ -323,6 +335,35 @@ export function buildExportText(meta: {
   if (economicsLines.length > 0) {
     parts.push(sectionHeader('Workflow Economics'));
     parts.push(economicsLines.join('\n'));
+  }
+
+  if (gate.ecosystemEvidenceRequired) {
+    const records = inspectRunEcosystemRecords(meta.runFolder, meta);
+    const ecosystem = gate.ecosystemEvidence!;
+    const available = Boolean(records.requirements && records.evidence);
+    const count = (state: string): number | string => available
+      ? ecosystem.requirements.filter(r => r.state === state).length : '(unavailable)';
+    const matchingIds = new Set(ecosystem.requirements.filter(r => r.state === 'satisfied').flatMap(r => r.matchingEvidenceIds));
+    const references = (records.evidence?.evidence ?? []).filter(e => matchingIds.has(e.evidenceId))
+      .sort((a, b) => a.evidenceId < b.evidenceId ? -1 : a.evidenceId > b.evidenceId ? 1 : 0);
+    parts.push(sectionHeader('Ecosystem evidence'));
+    parts.push(`  Contract version: ${meta.ecosystemEvidenceVersion === '1.0.0' ? '1.0.0' : '(unavailable)'}`);
+    parts.push(`  Readiness: ${ecosystem.classification}`);
+    parts.push(`  Requirements: ${records.requirements?.requirements.length ?? '(unavailable)'}`);
+    parts.push(`  Satisfied: ${count('satisfied')}`);
+    parts.push(`  Unmet critical: ${count('unmet-critical')}`);
+    parts.push(`  Unmet noncritical: ${count('unmet-noncritical')}`);
+    parts.push(`  Blocking codes: ${[...new Set(ecosystem.blockingCodes)].sort().join(', ') || '(none)'}`);
+    parts.push(`  Warning codes: ${[...new Set(ecosystem.warningCodes)].sort().join(', ') || '(none)'}`);
+    parts.push('  Verified native references:');
+    for (const evidence of references.slice(0, 20)) {
+      const ref = evidence.nativeArtifact;
+      // JSON quoting prevents user-controlled IDs from injecting handoff sections.
+      const label = (value: string): string => [...value].some(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ? JSON.stringify(value) : value;
+      parts.push(`    ${label(evidence.evidenceId)} | ${label(ref.producer.packageName)}@${label(ref.producer.packageVersion)} | ${label(ref.artifactKind)}`);
+    }
+    if (!references.length) parts.push('    (none)');
+    parts.push(`  Additional verified references omitted: ${Math.max(0, references.length - 20)}`);
   }
 
   parts.push(sectionHeader('Next command'));

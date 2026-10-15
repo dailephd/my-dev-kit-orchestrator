@@ -24,6 +24,8 @@ export function reconcileRunLifecycle(meta: RunMetadata): RunMetadata {
     currentStage: lifecycleNextStage?.name ?? '(complete)',
     projectRoot: meta.projectRoot,
     semanticContinuityVersion: meta.semanticContinuityVersion,
+    ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+    ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
     proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });

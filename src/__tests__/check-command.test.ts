@@ -5,6 +5,7 @@ import { createProgram } from '../program';
 import { createRun } from '../run';
 import { initWorkspace } from '../workspace';
 import { readCheckResults } from '../promptChecker';
+import { runCli } from '../../tests/cliTestHelpers';
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mdko-chk-'));
@@ -681,5 +682,101 @@ describe('check --trace and --all - combined v1.7.0 failure pattern', () => {
     } finally {
       cleanup(tmp);
     }
+  });
+});
+
+
+describe('versioned JSON command branches', () => {
+  let root: string;
+  beforeEach(() => { root = makeTempDir(); initWorkspace(root); });
+  afterEach(() => cleanup(root));
+  function invoke(args: string[]) {
+    const previous = process.exitCode;
+    process.exitCode = 0;
+    try {
+      const result = runCli([...args, '--json', '--root', root]);
+      const code = Number(process.exitCode);
+      expect(result.output.endsWith('\n')).toBe(true);
+      expect(result.output).not.toContain(String.fromCharCode(27) + '[');
+      return { data: JSON.parse(result.output), code, output: result.output };
+    } finally { process.exitCode = previous; }
+  }
+  it.each([
+    [[], 'default', 'artifact-check-results.json'],
+    [['--artifact', 'idea-brief'], 'single-artifact', null],
+    [['--artifacts'], 'artifacts', null],
+    [['--all'], 'all', 'trace-check-results.json'],
+    [['--prompts'], 'prompts', null],
+    [['--trace'], 'trace', 'trace-check-results.json'],
+    [['--design-map'], 'design-map', null],
+    [['--strict'], 'default', 'artifact-check-results.json'],
+    [['--all', '--artifacts', '--trace'], 'artifacts', null],
+    [['--prompts', '--artifact', 'idea-brief'], 'single-artifact', null],
+  ] as Array<[string[], string, string | null]>)('executes %j as %s with original writes', (flags, selection, persisted) => {
+    const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'SECRET-REQUEST' });
+    fs.writeFileSync(path.join(meta.runFolder, 'ecosystem-evidence.json'), 'stray malformed');
+    const before = fs.readdirSync(meta.runFolder).sort();
+    const status = invoke(['status', '--run', meta.runId]);
+    expect(Object.keys(status.data)).toEqual(['schemaVersion', 'run', 'ecosystem', 'integrity', 'judge']);
+    expect(status.data.ecosystem).toEqual({ required: false, classification: 'not-required', requirements: [], blockers: [], warnings: [] });
+    expect(fs.readdirSync(meta.runFolder).sort()).toEqual(before);
+    const result = invoke(['check', '--run', meta.runId, ...flags]);
+    expect(result.data.checks.selection).toBe(selection);
+    expect(result.data.checks.exitCode).toBe(result.code);
+    expect(Object.keys(result.data)).toEqual(['schemaVersion', 'run', 'ecosystem', 'integrity', 'judge', 'checks']);
+    expect(result.data.ecosystem).toEqual(status.data.ecosystem);
+    expect(result.data.integrity).toEqual(status.data.integrity);
+    expect(result.data.judge).toEqual(status.data.judge);
+    expect(result.output).not.toContain(root);
+    expect(result.output).not.toContain('SECRET-REQUEST');
+    const added = fs.readdirSync(meta.runFolder).filter(f => !before.includes(f));
+    expect(added).toEqual(persisted ? [persisted] : []);
+    if (persisted) expect(JSON.parse(fs.readFileSync(path.join(meta.runFolder, persisted), 'utf8')).version).toBe('1');
+    if (selection === 'trace') expect(result.data.checks).toMatchObject({ outcome: 'passed', issueCounts: { fail: 0, warn: 0 }, exitCode: 0 });
+    if (selection === 'single-artifact' || selection === 'design-map') expect(result.data.checks.issueCounts.fail).toBeGreaterThan(0);
+  });
+  it('uses current prompt diagnostics and distinguishes strict warnings from native failures', () => {
+    const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'prompt diagnostics' });
+    const prompt = path.join(meta.runFolder, meta.stages[0].promptFile);
+    fs.writeFileSync(prompt, 'Stage: idea-brief\nTask: '+ 'a'.repeat(100));
+    const normal = invoke(['check', '--run', meta.runId, '--prompts']);
+    const strict = invoke(['check', '--run', meta.runId, '--prompts', '--strict']);
+    expect(normal.data.checks).toMatchObject({ outcome: 'warning', exitCode: 0 });
+    expect(strict.data.checks).toMatchObject({ outcome: 'warning', exitCode: 1 });
+    expect(strict.data.checks.issueCounts).toEqual(normal.data.checks.issueCounts);
+    fs.writeFileSync(prompt, '');
+    const failed = invoke(['check', '--run', meta.runId, '--prompts']);
+    expect(failed.data.checks.outcome).toBe('failed');
+    expect(failed.data.checks.issueCounts.fail).toBeGreaterThan(0);
+    expect(fs.existsSync(path.join(meta.runFolder, 'artifact-check-results.json'))).toBe(false);
+  });
+  it.each(['status', 'check'])('emits sanitized %s selection/load errors', command => {
+    const empty = invoke([command]);
+    expect(empty.data).toEqual({ schemaVersion: '1.0.0', error: { code: 'INSPECTION_NO_RUNS_FOUND' } });
+    expect(empty.code).toBe(command === 'status' ? 0 : 1);
+    const missing = invoke([command, '--run', 'private-missing']);
+    expect(missing.data).toEqual({ schemaVersion: '1.0.0', error: { code: 'INSPECTION_RUN_NOT_FOUND' } });
+    expect(missing.code).toBe(1);
+    const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'unreadable' });
+    fs.writeFileSync(path.join(meta.runFolder, 'run.json'), '{SECRET-invalid');
+    const unreadable = invoke([command, '--run', meta.runId]);
+    expect(unreadable.data).toEqual({ schemaVersion: '1.0.0', error: { code: 'INSPECTION_RUN_UNREADABLE' } });
+    expect(unreadable.code).toBe(1);
+    expect(unreadable.output).not.toContain('SECRET');
+  });
+  it('rejects only the effective invalid artifact selector', () => {
+    const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'invalid selector' });
+    const invalid = invoke(['check', '--run', meta.runId, '--artifact', 'bad-secret']);
+    expect(invalid.data).toEqual({ schemaVersion: '1.0.0', error: { code: 'INSPECTION_CHECK_INVALID_SELECTION' } });
+    expect(invalid.code).toBe(1);
+    expect(invoke(['check', '--run', meta.runId, '--trace', '--artifact', 'bad-secret']).data.checks.selection).toBe('trace');
+  });
+  it('retains known native failure counts when telemetry warnings have no comparable count', () => {
+    const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'telemetry counts', runTelemetryVersion: 'unsupported' });
+    const result = invoke(['check', '--run', meta.runId]);
+    expect(result.data.checks.issueCounts.fail).toBeGreaterThan(0);
+    expect(result.data.checks.issueCounts.warn).toBeNull();
+    expect(result.data.checks.exitCode).toBe(result.code);
+    expect(fs.existsSync(path.join(meta.runFolder, 'inspection.json'))).toBe(false);
   });
 });

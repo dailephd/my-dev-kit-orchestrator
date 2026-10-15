@@ -13,6 +13,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { identityPathsEqual } from './contextIdentity';
+import { createHash } from 'crypto';
+import { assertEcosystemPathSafety } from '../ecosystemEvidenceStore';
+import type { EvidenceEnvelopeV1 } from '../ecosystemEvidenceContracts';
+import type { EcosystemNativeAdapterResult } from '../ecosystemEvidenceReadiness';
 
 export const RAW_CONTEXT_CAPSULE_SUPPORTED_MAJOR = 1;
 export const RAW_RETRIEVAL_AUDIT_SUPPORTED_MAJOR = 1;
@@ -378,6 +382,90 @@ export function readRawContextCapsule(declaredPath: string, runFolder: string): 
 
 export function readRawRetrievalAudit(declaredPath: string, runFolder: string): RawEvidenceParseResult {
   return readRawEvidenceFile(declaredPath, runFolder, RAW_RETRIEVAL_AUDIT_SUPPORTED_MAJOR);
+}
+
+/** Bounded ECO adapter for the pinned Kit wire contract; legacy readers remain unchanged. */
+export function readKitEcosystemEvidence(envelope: EvidenceEnvelopeV1, runFolder: string, projectRoot?: string): EcosystemNativeAdapterResult {
+  const result: EcosystemNativeAdapterResult = { evidenceId: envelope.evidenceId, issueCodes: [] };
+  const ref = envelope.nativeArtifact;
+  if (ref.producer.packageName !== '@dailephd/my-dev-kit' || ref.producer.packageVersion !== '1.12.5') {
+    result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_PRODUCER');
+    return result;
+  }
+  if (!['my-dev-kit/context-capsule', 'my-dev-kit/retrieval-audit'].includes(ref.artifactKind)) {
+    result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_KIND');
+    return result;
+  }
+  if (envelope.capabilityId !== 'my-dev-kit/static-context') result.issueCodes.push('ECO_EVIDENCE_RUNTIME_PROOF_MISSING');
+  if (ref.artifactSchemaVersion !== '1.0.0') result.issueCodes.push('ECO_SCHEMA_UNSUPPORTED');
+  if (ref.locator.kind !== 'path') {
+    result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+    return result;
+  }
+  try {
+    const resolved = resolveRawEvidencePath(ref.locator.value, runFolder);
+    if (!resolved.safe) throw new Error();
+    assertEcosystemPathSafety(resolved.resolved, true, true);
+    // Both owning roots already exist: run-scoped files and the run's project.
+    const roots = [runFolder, ...(projectRoot ? [projectRoot] : [])];
+    if (!roots.some(root => {
+      const relative = path.relative(assertEcosystemPathSafety(root), resolved.resolved);
+      return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+    })) throw new Error();
+    if (['ecosystem-requirements.json', 'ecosystem-evidence.json'].includes(path.basename(resolved.resolved))) throw new Error();
+    const fd = fs.openSync(resolved.resolved, 'r');
+    let bytes: Buffer;
+    try {
+      const size = fs.fstatSync(fd).size;
+      if (size > 4 * 1024 * 1024) throw new Error();
+      bytes = Buffer.alloc(size + 1);
+      const count = fs.readSync(fd, bytes, 0, bytes.length, 0);
+      if (count !== size) throw new Error();
+      bytes = bytes.subarray(0, count);
+    } finally { fs.closeSync(fd); }
+    if (ref.integrity && createHash('sha256').update(bytes).digest('hex') !== ref.integrity.sha256) throw new Error();
+    const raw: unknown = JSON.parse(bytes.toString('utf8'));
+    if (!isPlainObject(raw) || (ref.artifactKind === 'my-dev-kit/retrieval-audit' ? !Array.isArray(raw.steps) : !isPlainObject(raw.selectedGraph))) throw new Error();
+    const parsed = parseRawEvidenceText(bytes.toString('utf8'), 1);
+    if (!parsed.ok) {
+      result.issueCodes.push(parsed.status === 'unsupported-schema' ? 'ECO_SCHEMA_UNSUPPORTED' : 'ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+      return result;
+    }
+    const p = parsed.projection;
+    if (new Set(p.responsibilityMappings.map(m => m.responsibilityId)).size !== p.responsibilityMappings.length ||
+      new Set(p.roleConditionCoverage.map(c => c.conditionId)).size !== p.roleConditionCoverage.length) result.issueCodes.push('ECO_DUPLICATE_ID');
+    const freshness = isPlainObject(raw.freshness) ? raw.freshness : {};
+    if (Array.isArray(freshness.comparedIdentities)) {
+      const labels = freshness.comparedIdentities.filter(isPlainObject).map(i => i.label);
+      if (new Set(labels).size !== labels.length) result.issueCodes.push('ECO_EVIDENCE_CONFLICT');
+    }
+    const adequacy = isPlainObject(raw.roleAdequacy) ? raw.roleAdequacy : {};
+    const truncation = isPlainObject(raw.truncation) ? raw.truncation : {};
+    if (p.schemaVersion !== '1.0.0') result.issueCodes.push('ECO_SCHEMA_UNSUPPORTED');
+    if (p.toolName !== 'my-dev-kit' || p.toolVersion !== '1.12.5') result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_PRODUCER');
+    if (p.projectRoot) result.subject = { schemaVersion: '1.0.0', authority: '@dailephd/my-dev-kit', namespace: 'my-dev-kit/static', value: p.projectRoot };
+    if (!projectRoot || !p.projectRoot || !identityPathsEqual(projectRoot, p.projectRoot)) result.issueCodes.push('ECO_EVIDENCE_SUBJECT_MISMATCH');
+    if (p.freshnessState !== 'fresh' || !p.freshnessAfterIndexDeclared || !p.freshnessAfterIndexPath || !p.indexPath ||
+      !identityPathsEqual(p.indexPath, p.freshnessAfterIndexPath)) result.issueCodes.push('ECO_EVIDENCE_FRESHNESS_UNACCEPTABLE');
+    if (p.overallAdequacyStatus !== 'context sufficient for implementation' ||
+      p.roleAdequacyStatus !== 'context sufficient for implementation' ||
+      !p.requestRole || p.requestRole !== p.roleContextRole || p.requestRole !== p.freshnessRole ||
+      !p.provenanceCount || p.truncationRequiredEvidenceLost || truncation.requiredEvidenceLost === true ||
+      p.requiredConditionWitnessLost || p.responsibilityMappingsTruncated ||
+      !Array.isArray(adequacy.missingConditions) || adequacy.missingConditions.length > 0 ||
+      !Array.isArray(adequacy.blockingConditions) || adequacy.blockingConditions.length > 0 ||
+      (Array.isArray(adequacy.requiredConditions) && adequacy.requiredConditions.length > 0 && !p.roleConditionCoverage.length) ||
+      p.roleConditionCoverage.some(c => c.required && (!c.conditionSatisfied || !c.retainedWitnessIds.length))) {
+      result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+    }
+    result.responsibilityIds = p.responsibilityMappings.filter(m => m.mappingStatus === 'mapped' && (m.productionSymbols?.length ?? 0) > 0 && m.unresolvedReasons?.length === 0).map(m => m.responsibilityId);
+    const nativeRequest = isPlainObject(raw.request) ? raw.request : {};
+    // Adequacy/mappings are relative to this native request/focus, not every
+    // other independent context generated from the same project/index.
+    result.identityKey = JSON.stringify([p.projectRoot, p.indexPath, p.requestRole, nativeRequest.normalizedQuery, raw.roleContext]);
+    result.factSignature = JSON.stringify([p.freshnessState, p.overallAdequacyStatus, p.roleAdequacyStatus, p.requiredConditionWitnessLost, p.truncationRequiredEvidenceLost, p.responsibilityMappings]);
+  } catch { result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED'); }
+  return result;
 }
 
 // Stable, order-independent signature for a roleConditionCoverage array, used

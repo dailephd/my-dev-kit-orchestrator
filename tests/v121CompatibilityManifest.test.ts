@@ -14,8 +14,22 @@ describe('v1.2.1 compatibility manifest', () => {
   const manifest = loadManifest();
   const baseline = loadV120Baseline();
 
-  it('is deterministic: rebuilding in-process matches the fixture on disk byte-for-byte', () => {
+  it('adds exactly the authorized ECO start option and preserves the historical manifest byte-for-byte', () => {
     const rebuilt = buildCompatibilityManifest();
+    const commands = rebuilt.cliCommands as Array<{ name: string; options: string[] }>;
+    const historicalCommands = manifest.cliCommands as Array<{ name: string; options: string[] }>;
+    const start = commands.find((command) => command.name === 'start')!;
+    const historicalStart = historicalCommands.find((command) => command.name === 'start')!;
+    expect(start.options).toEqual([...historicalStart.options, '--ecosystem-requirements']);
+    // Preserve the fixture itself. Compare its complete historical surface
+    // after projecting only this explicitly asserted additive option out.
+    start.options = start.options.filter((option) => option !== '--ecosystem-requirements');
+    for (const name of ['status', 'check']) {
+      const command = commands.find(c => c.name === name)!;
+      const historical = historicalCommands.find(c => c.name === name)!;
+      expect(command.options).toEqual([...historical.options, '--json']);
+      command.options = command.options.filter(option => option !== '--json');
+    }
     const fixture = fs
       .readFileSync(path.join(__dirname, 'fixtures', 'v121-compatibility', 'compatibility-manifest.json'), 'utf8')
       .replace(/\r\n/g, '\n');

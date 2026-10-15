@@ -36,8 +36,18 @@ native stages. Correction suggestions name only stages that exist in the active
 run, or an explicit artifact for the optional design map, and remain advisory.
 The documentation linter moved to `markdownlint-cli`, removing a vulnerable
 development-only dependency chain. No command, mode, stage, or runtime dependency
-was added. Generic ecosystem evidence intake remains planned for `v1.7.0`
-(ORC-EVIDENCE-01).
+was added. Generic ecosystem evidence intake (ORC-EVIDENCE-01) is the `v1.7.0`
+scope; see the unpublished candidate note below.
+
+**Unpublished `v1.7.0` candidate.** The development branch contains optional,
+explicitly activated generic ecosystem evidence intake: `start
+--ecosystem-requirements <path>`, supported Kit `1.12.5` static-context and
+Observer `0.10.0` bounded-context evidence, readiness enforced through the
+existing integrity gate, and opt-in `status --json` / `check --json`
+inspection. It is not published, `npx @dailephd/my-dev-kit-orchestrator@1.6.2`
+does not include it, and it does not establish runtime execution or
+ecosystem certification. See [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)
+and [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
 `v1.6.1``v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
 yet can enter `test-implementation`: while the `TestImplementationReport` does
@@ -315,7 +325,9 @@ executed. A coding agent supplies actual application, browser, and test evidence
   effect.
 - `scaffold-plan` and `scaffold-implementation` retain their specialized
   greenfield scaffold renderer and still receive catalog entries and sidecars.
-- `status` is human-readable and has no JSON option.
+- In published `1.6.2`, `status` is human-readable and has no JSON option;
+  opt-in `status --json` and `check --json` exist only in the unpublished
+  `v1.7.0` candidate.
 - `start --output-dir` creates a run in the requested directory, but later
   commands cannot rediscover custom-output runs in the reviewed release.
   Omit this option for a run that must be resumed through the CLI.

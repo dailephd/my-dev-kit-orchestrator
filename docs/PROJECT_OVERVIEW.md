@@ -33,6 +33,8 @@ Greenfield supports the `typescript-cli`, `nextjs-app`, `android-compose`, and b
 
 The integrations are explicit. The orchestrator does not automatically execute either companion tool.
 
+The unpublished `v1.7.0` candidate adds optional, explicitly activated ecosystem evidence intake. The orchestrator reads supported native `my-dev-kit` static-context and `my-frontend-observer` bounded-context outputs already produced elsewhere, and applies readiness through its existing integrity and judge owners. Kit evidence is static; Observer context does not prove browser execution; a `my-dev-kit-lab` execution-assurance producer and ecosystem certification are not established. See [CURRENT_STATE.md](CURRENT_STATE.md).
+
 ## Evidence and output model
 
 A run lives beneath `.my-dev-kit-orchestrator/runs/` by default and contains request metadata, prompts, stage artifacts, lifecycle state, deterministic check output, and final/export material. Supplemental repository-context packets are inputs to readiness; they are not native lifecycle artifacts. In `v1.6.0`, bounded native run telemetry is stored beside `runs/` (not inside a run) and feeds a descriptive Workflow Economics summary. See [ARTIFACTS.md](ARTIFACTS.md) for exact file and schema contracts.

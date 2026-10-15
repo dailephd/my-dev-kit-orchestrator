@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { inspectionError, projectRunEvidenceInspection, serializeRunEvidenceInspection, RunEvidenceInspectionV1 } from '../ecosystemEvidenceInspection';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getMostRecentRun, loadRun, getRunFolder } from '../run';
@@ -21,6 +22,7 @@ import {
 import { evaluateRunContextReadiness, RunContextReadinessSummary } from '../instructions/runContextReadiness';
 import { ContextReadinessResult } from '../instructions/contextReadiness';
 import { evaluateRunIntegrityGate, RunIntegrityGateResult } from '../runIntegrityGate';
+import { hasEcosystemActivation } from '../ecosystemEvidenceStore';
 import { renderSemanticContinuityCheckLines, summarizeSemanticContinuityGate } from '../semanticContinuitySurface';
 import { resolveGateCurrentStage } from '../stageDetector';
 import { evaluateJudgeIntegrity, evaluateFinalReportEligibility, JudgeIntegrityResult, FinalReportEligibilityResult } from '../judgeIntegrity';
@@ -200,6 +202,8 @@ function evaluateJudgeCheckState(meta: RunMetadata): {
     currentStage: resolveGateCurrentStage(meta, stateFile),
     projectRoot: meta.projectRoot,
     semanticContinuityVersion: meta.semanticContinuityVersion,
+    ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+    ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
     proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -350,6 +354,7 @@ export function makeCheckCommand(): Command {
     .option('--trace', 'check trace IDs and links in all artifacts')
     .option('--design-map', 'check the design-map artifact (sections and trace links)')
     .option('--strict', 'treat warn-severity issues as failures in exit code')
+    .option('--json', 'print versioned run evidence inspection JSON')
     .action(
       (options: {
         run?: string;
@@ -361,25 +366,34 @@ export function makeCheckCommand(): Command {
         trace?: boolean;
         designMap?: boolean;
         strict?: boolean;
+        json?: boolean;
       }) => {
+        const emitError = (code: Parameters<typeof inspectionError>[0], exitCode: 0 | 1): void => {
+          process.stdout.write(serializeRunEvidenceInspection(inspectionError(code)));
+          process.exitCode = exitCode;
+        };
+        try {
         const projectRoot = path.resolve(options.root ?? process.cwd());
 
         let meta;
         if (options.run) {
           const runFolder = getRunFolder(projectRoot, options.run);
           if (!fs.existsSync(runFolder)) {
+            if (options.json) { emitError('INSPECTION_RUN_NOT_FOUND', 1); return; }
             console.error(`Error: run not found: ${options.run}`);
             process.exit(1);
           }
           try {
             meta = loadRun(runFolder);
           } catch {
+            if (options.json) { emitError('INSPECTION_RUN_UNREADABLE', 1); return; }
             console.error(`Error: could not load run.json for: ${options.run}`);
             process.exit(1);
           }
         } else {
           meta = getMostRecentRun(projectRoot);
           if (!meta) {
+            if (options.json) { emitError('INSPECTION_NO_RUNS_FOUND', 1); return; }
             console.log(
               'No runs found.\n\nNext:\n  my-dev-kit-orchestrator start "<software change request>"',
             );
@@ -388,6 +402,39 @@ export function makeCheckCommand(): Command {
         }
 
         // ── --artifacts mode (v1 contract check) ──────────────────────────────
+        const activatedJudgeState = hasEcosystemActivation(meta) || options.json ? evaluateJudgeCheckState(meta) : null;
+        const emitInspection = (
+          selection: NonNullable<RunEvidenceInspectionV1['checks']>['selection'],
+          issues: Array<{ severity: string; code?: string }>,
+          exitFailure: boolean,
+          ordinaryFailure = false,
+          warning = false,
+          comparable = true,
+        ): void => {
+          const state = activatedJudgeState!;
+          // Strict contract checks elevate these warnings in their actual diagnostics.
+          const elevated = new Set(['CONTRACT_STAGE_NO_CONTRACT', 'CONTRACT_PREDECESSOR_MISSING', 'CONTRACT_BLANK_SECTION', 'CONTRACT_PLACEHOLDER_SECTION']);
+          const nativeFailure = issues.some(i => i.severity === 'fail' && !(options.strict && elevated.has(i.code ?? '')));
+          const nativeWarning = issues.some(i => i.severity === 'warn' || (options.strict && elevated.has(i.code ?? '')));
+          const blocked = !state.gate.runIntegrityReady;
+          const hasWarning = warning || nativeWarning || Boolean(state.gate.warnings.length) || Boolean(state.gate.ecosystemEvidenceWarningCodes?.length) || Boolean(state.gate.semanticContinuityWarningCodes.length);
+          const exitCode = exitFailure ? 1 : 0;
+          process.stdout.write(serializeRunEvidenceInspection(projectRunEvidenceInspection(meta, state.gate, state.judgeIntegrity, state.eligibility, {
+            selection, outcome: ordinaryFailure || nativeFailure || blocked ? 'failed' : hasWarning ? 'warning' : 'passed',
+            issueCounts: { fail: issues.filter(i => i.severity === 'fail').length, warn: comparable ? issues.filter(i => i.severity === 'warn').length : null },
+            strict: options.strict === true, exitCode,
+          })));
+          process.exitCode = exitCode;
+        };
+        const ecosystemBlocked = Boolean(activatedJudgeState?.gate.ecosystemEvidenceBlockingCodes?.length) ||
+          Boolean(options.strict && activatedJudgeState?.gate.ecosystemEvidenceWarningCodes?.length);
+        if (activatedJudgeState && !options.json) {
+          console.log(`Ecosystem evidence: ${activatedJudgeState.gate.ecosystemEvidenceClassification}`);
+          if (activatedJudgeState.gate.ecosystemEvidenceWarningCodes?.length) console.log(`Ecosystem evidence warnings: ${activatedJudgeState.gate.ecosystemEvidenceWarningCodes.join(', ')}`);
+        }
+        if (!options.json && activatedJudgeState?.gate.ecosystemEvidenceBlockingCodes?.length) {
+          console.log(`Ecosystem evidence blockers: ${activatedJudgeState!.gate.ecosystemEvidenceBlockingCodes!.join(', ')}\nPrimary blocker: ${activatedJudgeState!.gate.primaryBlockingCode}\nExpected judge verdict: ${activatedJudgeState!.gate.expectedJudgeVerdict}\nFinal-report eligible: ${activatedJudgeState!.eligibility.eligible}`);
+        }
         if (options.artifacts) {
           const contractResult = checkRunArtifactContracts(meta, { strict: options.strict });
           const lines: string[] = [`Artifact contract check for run: ${meta.runId}`, ``];
@@ -436,16 +483,16 @@ export function makeCheckCommand(): Command {
           // Canonical judge/final-report integrity (v1.2.3 Batch 3):
           // structural artifact validity never overrides an unaccepted
           // judge verdict or an ineligible final report.
-          const contractJudgeState = evaluateJudgeCheckState(meta);
+          const contractJudgeState = activatedJudgeState ?? evaluateJudgeCheckState(meta);
           const contractJudgeCheck = formatJudgeIntegrityCheck(contractJudgeState.judgeIntegrity, contractJudgeState.eligibility);
           lines.push(...contractJudgeCheck.lines);
 
           const contractSemanticCheck = formatSemanticContinuityCheck(contractJudgeState.gate);
           if (contractSemanticCheck) lines.push(...contractSemanticCheck.lines);
 
-          console.log(lines.join('\n'));
+          if (!options.json) console.log(lines.join('\n'));
 
-          const anyFail = !contractResult.modeValid ||
+          const anyFail = ecosystemBlocked || !contractResult.modeValid ||
             contractResult.results.some((r) => !r.passed) ||
             contractResult.modeIssues.some((i) => i.severity === 'fail') ||
             contractContextCheck.hasFail ||
@@ -454,6 +501,10 @@ export function makeCheckCommand(): Command {
           const anyWarn =
             contractResult.results.some((r) => r.issues.some((i) => i.severity === 'warn')) ||
             Boolean(contractSemanticCheck?.hasWarn);
+          if (options.json) {
+            emitInspection('artifacts', [...contractResult.modeIssues, ...contractResult.results.flatMap(r => r.issues)], Boolean(anyFail || (options.strict && anyWarn)), !contractResult.modeValid || contractContextCheck.hasFail || contractJudgeCheck.hasFail, Boolean(contractSemanticCheck?.hasWarn));
+            return;
+          }
           if (anyFail || (options.strict && anyWarn)) {
             process.exit(1);
           }
@@ -475,7 +526,7 @@ export function makeCheckCommand(): Command {
           // Canonical judge/final-report integrity (v1.2.3 Batch 3): replaces
           // the raw readCorrectionState-based correction section below with
           // the accepted (not authored-literal) judge state.
-          const allJudgeState = evaluateJudgeCheckState(meta);
+          const allJudgeState = activatedJudgeState ?? evaluateJudgeCheckState(meta);
 
           // Repository context readiness check
           const contextReadiness = evaluateRunContextReadiness({
@@ -613,7 +664,7 @@ export function makeCheckCommand(): Command {
             lines.push(`  Run telemetry: ${allTelemetryCheck.hasWarn ? 'warn' : 'pass'}`);
           }
 
-          console.log(lines.join('\n'));
+          if (!options.json) console.log(lines.join('\n'));
 
           const anyContractFail =
             !contractResult.modeValid ||
@@ -629,7 +680,7 @@ export function makeCheckCommand(): Command {
           const hasGateViolations = gateViolations.length > 0;
 
           const hasFail =
-            anyContractFail ||
+            ecosystemBlocked || anyContractFail ||
             anyTraceFail ||
             hasGateViolations ||
             contextCheck.hasFail ||
@@ -638,6 +689,12 @@ export function makeCheckCommand(): Command {
             Boolean(allGreenfieldReadinessCheck?.hasFail);
           const hasWarn = anyContractWarn || anyTraceWarn || Boolean(allSemanticCheck?.hasWarn) || Boolean(allTelemetryCheck?.hasWarn);
 
+          if (options.json) {
+            const diagnostics = [...contractResult.modeIssues, ...contractResult.results.flatMap(r => r.issues), ...traceResults.flatMap(r => r.issues), ...(dmTraceResult?.issues ?? []), ...gateViolations,
+              ...(allGreenfieldReadinessResult?.issues ?? []).map(i => ({ severity: i.severity === 'error' ? 'fail' : 'warn', code: i.code }))];
+            emitInspection('all', diagnostics, Boolean(hasFail || (options.strict && hasWarn)), !contractResult.modeValid || contextCheck.hasFail || allJudgeCheck.hasFail || Boolean(allGreenfieldReadinessCheck?.hasFail), hasWarn, !allTelemetryCheck?.hasWarn);
+            return;
+          }
           if (hasFail || (options.strict && hasWarn)) {
             process.exit(1);
           }
@@ -673,7 +730,7 @@ export function makeCheckCommand(): Command {
             }
           }
 
-          console.log(lines.join('\n'));
+          if (!options.json) console.log(lines.join('\n'));
 
           // Persist
           try {
@@ -686,10 +743,14 @@ export function makeCheckCommand(): Command {
             // Non-fatal
           }
 
-          const anyFail = traceResults.some((r) => !r.passed);
+          const anyFail = ecosystemBlocked || traceResults.some((r) => !r.passed);
           const anyWarn = traceResults.some((r) =>
             r.issues.some((i) => i.severity === 'warn'),
           );
+          if (options.json) {
+            emitInspection('trace', traceResults.flatMap(r => r.issues), Boolean(anyFail || (options.strict && anyWarn)));
+            return;
+          }
           if (anyFail || (options.strict && anyWarn)) {
             process.exit(1);
           }
@@ -718,7 +779,7 @@ export function makeCheckCommand(): Command {
           lines.push(...formatTraceResult(traceResult));
           lines.push('');
 
-          const anyFail = !artifactResult.passed || !traceResult.passed;
+          const anyFail = ecosystemBlocked || !artifactResult.passed || !traceResult.passed;
           const anyWarn =
             artifactResult.issues.some((i) => i.severity === 'warn') ||
             traceResult.issues.some((i) => i.severity === 'warn');
@@ -733,8 +794,12 @@ export function makeCheckCommand(): Command {
             lines.push('');
           }
 
-          console.log(lines.join('\n'));
+          if (!options.json) console.log(lines.join('\n'));
 
+          if (options.json) {
+            emitInspection('design-map', [...artifactResult.issues, ...traceResult.issues], Boolean(anyFail || (options.strict && anyWarn)));
+            return;
+          }
           if (anyFail || (options.strict && anyWarn)) {
             process.exit(1);
           }
@@ -749,6 +814,7 @@ export function makeCheckCommand(): Command {
         if (options.artifact) {
           const target = resolveArtifactTarget(meta, options.artifact);
           if (!target) {
+            if (options.json) { emitError('INSPECTION_CHECK_INVALID_SELECTION', 1); return; }
             console.error(
               `Error: artifact not found: "${options.artifact}"\n` +
                 `Available stages: ${meta.stages.map((s) => s.name).join(', ')}`,
@@ -783,7 +849,7 @@ export function makeCheckCommand(): Command {
             : null;
         // Canonical judge/final-report integrity (v1.2.3 Batch 3), scoped
         // identically to runContextCheck above.
-        const runJudgeState = !options.artifact && !options.prompts ? evaluateJudgeCheckState(meta) : null;
+        const runJudgeState = !options.artifact && !options.prompts ? activatedJudgeState ?? evaluateJudgeCheckState(meta) : null;
         const runJudgeCheck = runJudgeState
           ? formatJudgeIntegrityCheck(runJudgeState.judgeIntegrity, runJudgeState.eligibility)
           : null;
@@ -836,7 +902,7 @@ export function makeCheckCommand(): Command {
 
         lines.push(...summarize(artifactResults, promptResults));
 
-        console.log(lines.join('\n'));
+        if (!options.json) console.log(lines.join('\n'));
 
         // Persist results when checking all
         if (!options.artifact && !options.prompts) {
@@ -863,7 +929,7 @@ export function makeCheckCommand(): Command {
         );
 
         const hasFail =
-          anyArtifactFail ||
+          ecosystemBlocked || anyArtifactFail ||
           anyPromptFail ||
           Boolean(runContextCheck?.hasFail) ||
           Boolean(runJudgeCheck?.hasFail) ||
@@ -871,8 +937,19 @@ export function makeCheckCommand(): Command {
           Boolean(greenfieldReadinessCheck?.hasFail);
         const hasWarn = anyArtifactWarn || anyPromptWarn || Boolean(runSemanticCheck?.hasWarn) || Boolean(runTelemetryCheck?.hasWarn);
 
+        if (options.json) {
+          const diagnostics = [...artifactResults.flatMap(r => r.issues), ...promptResults.flatMap(r => r.issues),
+            ...(greenfieldReadinessResult?.issues ?? []).map(i => ({ severity: i.severity === 'error' ? 'fail' : 'warn', code: i.code }))];
+          emitInspection(options.artifact ? 'single-artifact' : options.prompts ? 'prompts' : 'default', diagnostics, Boolean(hasFail || (options.strict && hasWarn)), Boolean(runContextCheck?.hasFail) || Boolean(runJudgeCheck?.hasFail) || Boolean(greenfieldReadinessCheck?.hasFail), hasWarn, !runTelemetryCheck?.hasWarn);
+          return;
+        }
         if (hasFail || (options.strict && hasWarn)) {
           process.exit(1);
+        }
+        } catch (error) {
+          if (!options.json) throw error;
+          console.error('Error: run evidence inspection failed.');
+          emitError('INSPECTION_FAILED', 1);
         }
       },
     );

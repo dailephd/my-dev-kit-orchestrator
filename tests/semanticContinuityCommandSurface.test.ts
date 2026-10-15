@@ -451,7 +451,7 @@ describe('invariants', () => {
     });
   });
 
-  it('keeps 8 commands and 7 modes, with no activation or status-JSON flag', () => {
+  it('keeps 8 commands and 7 modes, no semantic activation flag, and exact additive status JSON', () => {
     const program = createProgram();
     expect(program.commands.map((c) => c.name()).sort()).toEqual(
       ['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status'],
@@ -463,7 +463,7 @@ describe('invariants', () => {
         expect(flags).not.toContain(banned);
       }
     }
-    expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).not.toContain('--json');
+    expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).toEqual(['--run', '--root', '--json']);
   });
 
   it('the package version matches the current release', () => {

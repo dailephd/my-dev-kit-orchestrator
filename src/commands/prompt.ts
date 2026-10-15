@@ -124,6 +124,8 @@ export function makePromptCommand(): Command {
         currentStage: resolveGateCurrentStage(meta, stateFile),
         projectRoot: meta.projectRoot,
         semanticContinuityVersion: meta.semanticContinuityVersion,
+        ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+        ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
         proofOnly: meta.proofOnly === true,
       });
       // Canonical judge-integrity / final-report eligibility (v1.2.3
@@ -147,6 +149,17 @@ export function makePromptCommand(): Command {
         judge: judgeIntegrity,
         finalReportEligible: finalReportEligibility.eligible,
       });
+      if (gate.ecosystemEvidenceBlockedStageNames?.includes(stage ?? meta.currentStage)) {
+        if (stage && !meta.stages.some((candidate) => candidate.name === stage)) {
+          console.error('Error: stage does not exist in this workflow.');
+          exitFailed();
+        }
+        const selectedStage = stage ?? meta.currentStage;
+        const emitted = generateLiveStagePrompt(meta, selectedStage, gate);
+        process.stdout.write(emitted);
+        telemetry.succeed({ ...canonical, selectedStage, promptKind: 'stage', promptCharacterCount: emitted.length });
+        return;
+      }
 
       if (stage) {
         const stageExists = meta.stages.some((s) => s.name === stage);

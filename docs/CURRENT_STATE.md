@@ -96,7 +96,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 - Repository retrieval is manual; the orchestrator does not run `my-dev-kit`.
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
-- `status` is human-readable and has no JSON option.
+- Published v1.6.2 status is human-readable; the unreleased source candidate adds opt-in JSON inspection.
 - Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
@@ -112,22 +112,53 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
+The working-tree candidate implements unreleased v1.7.0 evidence intake, native readiness
+and inspection. It has passed local integration validation but is uncommitted and
+unpublished; hosted CI, pre-release audit and release approval are pending, and the
+published package and current release remain v1.6.2. The candidate adds
+strict ECO-00 reference validation, optional `start --ecosystem-requirements`
+and programmatic `createRun({ ecosystemRequirementsDocument })` activation,
+immutable requirements with a saved-byte SHA-256, empty evidence initialization,
+and atomic complete evidence replacement. No new command, native stage, mode,
+profile, dependency, telemetry policy, or producer contract is added.
+
+Deterministic native requirement evaluation in the existing RunIntegrityGate
+replaces the earlier storage-only interim guard. Pinned Kit v1.12.5 static-context
+and Observer v0.10.0 bounded review-context adapters require exact native subject
+binding, schema 1.0.0, fresh adequate evidence and safe local reads. Critical gaps
+block judge/final-report; earlier stages can generate evidence. Noncritical gaps
+warn. Current bytes are reevaluated without a persisted eligibility cache.
+Execution assurance, commit/environment attestation, cross-producer project
+correlation, optional Observer fidelity verification,
+integration certification, release preparation and publication remain unimplemented.
+Kit evidence is static context; Observer native context from the supported fixture
+used validated synthetic observation input, not real browser execution. A Lab
+execution-assurance producer and ECO-01 certification are not established.
+
+The candidate implements `status --json` and `check --json` as stdout-only
+RunEvidenceInspectionV1 schema 1.0.0 projections. Check executes the selected
+native checks and preserves their diagnostics, writes and strict exits.
+Activated plain-text export adds one bounded Ecosystem evidence section;
+unactivated handoffs retain their existing format. Default status/check text
+remains compatible. These are unreleased source capabilities.
+
 The current release is `v1.6.2`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
 
 `v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), remains the
-next planned feature version and a later consumer milestone. It will build on
-the `v1.6.0` native run/invocation telemetry substrate; `v1.6.0` does not
-implement generic evidence envelopes, requirements, subject/environment
-identity, assurance policy, or compatibility evaluation.
+next feature version. It is implemented in the unpublished local candidate
+described above and builds on the `v1.6.0` native run/invocation telemetry
+substrate; published `v1.6.0` and `v1.6.2` do not implement generic evidence
+envelopes, requirements, subject/environment identity, assurance policy, or
+compatibility evaluation.
 
 The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
 `contracts/ecosystem/` and `docs/ecosystem/`. They reserve `v1.6.0` as
 `ORC-TELEMETRY` and `v1.7.0` as `ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite
 of v1.7.0. Those assets are cross-repository coordination/reference contracts;
 v1.6.0 provides native telemetry
-and v1.7.0 remains the planned generic evidence consumer.
+and v1.7.0 is the generic evidence consumer implemented in the unpublished candidate.
 
 Greenfield-to-Feature Workflow Handoff Hardening and optional mobile profile
 candidates remain deferred scopes.

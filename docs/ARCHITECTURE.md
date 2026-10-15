@@ -507,6 +507,26 @@ converts an error-bearing result to ready.
 
 ## Lifecycle boundaries
 
+The unreleased v1.7.0 candidate adds explicit ECO-00 storage/import and native readiness.
+`src/ecosystemEvidenceContracts.ts` owns the six frozen reference types and
+strict nested validation, plus `RunEcosystemRequirementsDocumentV1` and
+`RunEcosystemEvidenceDocumentV1`. Kit v1.12.5 remains the schema authority.
+`src/ecosystemEvidenceStore.ts` owns the two sidecars directly in the activated
+run folder: `ecosystem-requirements.json` and `ecosystem-evidence.json`.
+`createRun({ ecosystemRequirementsDocument })` validates before folder creation,
+stores canonical UTF-8 requirements, derives their SHA-256 from saved bytes,
+initializes empty evidence, and writes only the two derived ECO metadata fields.
+The CLI's optional `start --ecosystem-requirements <path>` uses this same input.
+
+Requirements remain immutable: activated reads and imports validate them and
+compare their stored bytes with `run.json#ecosystemRequirementsSha256`.
+`replaceRunEcosystemEvidence(runFolder, document)` performs complete validated
+replacement through an exclusive temporary file in that same folder and rename.
+It reads no native locator, fetches no URI, and authenticates no producer claim.
+Neither sidecar is a native artifact, stage, or manually completable mark target.
+Initialization failure never returns success; an incomplete run is blocked and
+is not silently repaired or downgraded to legacy.
+
 Each native stage produces its expected artifact file. Lifecycle progression
 uses artifact existence and artifact state with applicable integrity decisions.
 Explicit content and dependency checks do not replace that mechanism.
@@ -521,6 +541,27 @@ They can affect readiness, rendered prompts, checks, and exported readiness
 summaries without changing the native lifecycle graph.
 
 ## RunIntegrityGate and judge integrity
+
+Explicit ECO version/digest metadata reaches every existing gate consumer.
+`ecosystemEvidenceReadiness.ts` owns the deterministic requirement join over
+digest-verified snapshots and bounded native facts. The existing Kit reader
+supports only v1.12.5 capsule/audit static context; the Observer consumer supports
+only v0.10.0 bounded frontend review context, both at native schema 1.0.0.
+Each adapter requires its exact producer-native subject profile, adequacy and
+safe local bytes. URI and opaque references remain descriptive. Neither adapter
+attests source commits, execution environments, browser acceptance or test runs.
+One subject cannot equate the two producer profiles without further authorized
+correlation. Optional Observer fidelity projections remain unverified here.
+
+`RunIntegrityGate` replaces the interim blocker with this readiness result,
+preserving context and Semantic Continuity primary precedence and field meanings.
+Critical unmet requirements block; noncritical unmet requirements warn. Global
+record/digest defects always block. ECO blocks judge/final-report, allowing earlier
+stages to produce evidence; a workflow lacking both blocks its last existing stage.
+An external evidence refresh has no invented correction stage. Authored correction
+reports do not refresh native facts. Every evaluation rereads current bytes, and
+final eligibility still requires existing artifact and accepted judge checks.
+Legacy runs ignore stray ECO files and keep their existing gate behavior.
 
 `src/runIntegrityGate.ts` is the sole canonical run-integrity evaluator. It
 derives `contextReady`, `blockedStageNames`, deterministic blocking codes, the
@@ -610,7 +651,13 @@ shipped in v1.6.2; v1.6.1 trace checking was file-local.
 
 `status` reports human-readable implementation/test readiness, freshness,
 adequacy, primary blocker/reason, corrective action, evidence target, ordered
-issue codes, and the next stage. It has no status JSON option.
+issue codes, and the next stage. Opt-in `status --json` prints versioned inspection JSON.
+The shared pure owner `src/ecosystemEvidenceInspection.ts` projects the existing
+run, RunIntegrityGate, judge integrity and final eligibility; it performs no
+native evidence read, mutation or policy evaluation. Check JSON retains the
+selected native check path and its existing result writes. Default text output
+remains compatible. Activated export adds a bounded Ecosystem evidence section
+using only satisfying native references from validated sidecars.
 
 `check` evaluates context readiness alongside its selected checks. Blocking
 context issues fail the command. Warning-only conditions do not, and duplicate
@@ -714,7 +761,7 @@ evidence authority beyond explicit stage requirements.
   history or semantic comparison.
 - Producer corroboration is exact identity presence only; my-dev-kit evidence is
   request-scoped and does not establish per-responsibility causality.
-- The current CLI has no status JSON output.
+- JSON inspection describes current verified state; it does not attest execution or certification.
 - There is no shared cross-repository schema package or Lab runtime integration.
 - Cross-tool recipes are externally executed compositions. Documentation
   consolidation does not add an automatic browser or full-stack executor.

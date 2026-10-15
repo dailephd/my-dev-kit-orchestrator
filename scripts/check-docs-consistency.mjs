@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import ts from 'typescript';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -80,6 +81,49 @@ function extractCliCommands(root) {
     if (!match) throw new Error(`Could not extract command name from ${relPath}`);
     return match[1];
   });
+}
+
+function statusJsonSupported(root) {
+  const source = ts.createSourceFile('status.ts', readText(root, 'src/commands/status.ts'), ts.ScriptTarget.Latest, true);
+  let supported = false;
+  function visit(node) {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
+        && node.expression.name.text === 'option' && node.arguments[0]
+        && ts.isStringLiteral(node.arguments[0]) && node.arguments[0].text === '--json') supported = true;
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return supported;
+}
+
+// Only explicitly historical sections/paragraphs are excluded from current claims.
+function currentStatusCapabilityText(content) {
+  let historical = false;
+  const lines = content.split(/\r?\n/).filter(line => {
+    if (/^## /.test(line)) historical = /^## (?:Earlier release|Previous release|Published v)/i.test(line);
+    return !historical;
+  }).join('\n');
+  return lines.split(/\n\s*\n/).filter(paragraph => !/^(?:In (?:published |released )?\x60?v\d+\.\d+\.\d+|Historically,|Before \x60?v\d+\.\d+\.\d+)/i.test(paragraph.trim())).join('\n\n');
+}
+
+// ECO facts are always source-derived. A missing authoritative source input is
+// reported by the caller as ECO_SOURCE_FACT_UNAVAILABLE and never treated as PASS.
+const ECO_SOURCE_INPUTS = ['src/ecosystemEvidenceStore.ts', 'src/commands/start.ts'];
+
+function extractEcosystemEvidenceFacts(root) {
+  const unavailable = ECO_SOURCE_INPUTS.filter((relPath) => !fs.existsSync(path.join(root, relPath)));
+  if (unavailable.length > 0) {
+    return { present: false, unavailable, sidecars: [], activationOption: null };
+  }
+  const store = readText(root, 'src/ecosystemEvidenceStore.ts');
+  const sidecar = (name) => store.match(new RegExp(`const ${name}_FILE = '([^']+)'`))?.[1];
+  const start = readText(root, 'src/commands/start.ts');
+  return {
+    present: true,
+    unavailable: [],
+    sidecars: [sidecar('REQUIREMENTS'), sidecar('EVIDENCE')].filter(Boolean),
+    activationOption: start.match(/\.option\('(--ecosystem-requirements)(?: <[^>]+>)?'/)?.[1] ?? null,
+  };
 }
 
 function extractGreenfieldProfiles(root) {
@@ -384,6 +428,8 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   const modes = extractModes(root);
   const workflowFacts = extractWorkflowFacts(root);
   const cliCommands = extractCliCommands(root);
+  const supportsStatusJson = statusJsonSupported(root);
+  const ecosystemFacts = extractEcosystemEvidenceFacts(root);
   const greenfieldProfiles = extractGreenfieldProfiles(root);
   const structuredGreenfieldArtifacts = extractStructuredGreenfieldArtifacts(root);
   const customOutputRediscovery = customOutputRunRediscoverySupported(root);
@@ -417,6 +463,14 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
   compareFact(issues, manifestPath, 'packageMetadataVersion', pkg.version, facts.packageMetadataVersion);
   compareFact(issues, manifestPath, 'latestPublishedVersion', pkg.version, facts.latestPublishedVersion);
   compareFact(issues, manifestPath, 'cliCommands', cliCommands, facts.cliCommands);
+  compareFact(issues, manifestPath, 'statusJsonSupported', supportsStatusJson, facts.statusJsonSupported);
+  for (const missingPath of ecosystemFacts.unavailable) {
+    addIssue(issues, 'ECO_SOURCE_FACT_UNAVAILABLE', missingPath, 'authoritative source file for ECO documentation facts', 'missing', `Restore ${missingPath}; the source-backed docs check cannot be completed without it.`);
+  }
+  if (ecosystemFacts.present) {
+    compareFact(issues, manifestPath, 'ecosystemEvidenceSidecars', ecosystemFacts.sidecars, facts.ecosystemEvidenceSidecars);
+    compareFact(issues, manifestPath, 'ecosystemActivationOption', ecosystemFacts.activationOption, facts.ecosystemActivationOption);
+  }
   compareFact(issues, manifestPath, 'workflowModeCount', modes.length, facts.workflowModeCount);
   compareFact(issues, manifestPath, 'nativeStageCount', workflowFacts.nativeStageCount, facts.nativeStageCount);
   compareFact(issues, manifestPath, 'greenfieldStageCount', workflowFacts.stageOrderByMode.greenfield.length, facts.greenfieldStageCount);
@@ -499,7 +553,12 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     requireTokens(issues, documentPath, byPath[documentPath] ?? '', [bootstrapFacts.warningCode, ...bootstrapFacts.deferrableReasons], 'BOOTSTRAP_FACT_DOCUMENTATION_MISSING');
   }
   requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ['not native artifacts', 'not native stage artifacts', ...contextFacts.fixedPaths, ...workflowFacts.extractionGateArtifacts, ...structuredGreenfieldArtifacts]);
-  requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'no JSON option', 'refresh-only', ...contextFacts.fixedPaths]);
+  requireTokens(issues, 'docs/USAGE.md', usage, ['<MY_DEV_KIT_CLI>', 'refresh-only', ...contextFacts.fixedPaths]);
+  requireTokens(issues, 'docs/ARTIFACTS.md', artifacts, ecosystemFacts.sidecars, 'ECO_FACT_DOCUMENTATION_MISSING');
+  for (const documentPath of ['docs/COMMANDS.md', 'docs/USAGE.md']) {
+    requireTokens(issues, documentPath, byPath[documentPath] ?? '', ecosystemFacts.activationOption ? [ecosystemFacts.activationOption] : [], 'ECO_FACT_DOCUMENTATION_MISSING');
+  }
+  requireTokens(issues, 'docs/CONTRACTS.md', byPath['docs/CONTRACTS.md'] ?? '', ['RunEvidenceInspectionV1', 'replaceRunEcosystemEvidence'], 'ECO_FACT_DOCUMENTATION_MISSING');
   requireTokens(issues, 'docs/DEVELOPMENT.md', development, ['Node.js 24', 'Node.js 26', 'src/__tests__/', 'tests/greenfield/']);
   for (const documentPath of ['docs/ARCHITECTURE.md', 'docs/ARTIFACTS.md']) {
     requireTokens(
@@ -634,12 +693,36 @@ export function runDocsConsistencyCheck(argv = process.argv.slice(2)) {
     );
   }
 
+  const statusJsonClaim = /status\s+--json|status[^\n]{0,40}(?:supports|provides|outputs?)\s+JSON/i;
+  if (supportsStatusJson) {
+    for (const documentPath of ['docs/USAGE.md', 'docs/COMMANDS.md']) {
+      if (!containsUnnegatedClaim(currentStatusCapabilityText(byPath[documentPath]), /status\s+--json/i)) {
+        addIssue(issues, 'STATUS_JSON_DOCUMENTATION_MISSING', documentPath, 'current opt-in status --json behavior', 'missing', 'Document the implemented option and legacy default text output.');
+      }
+    }
+    // These owners describe the published package/release process, not the
+    // unreleased source capability. Their preserved denial is historically
+    // scoped by the document's publication lens and release baseline.
+    const sourceCapabilityDocs = docs.filter(({ relPath }) => !['README.md', 'CHANGELOG.md', 'docs/ROADMAP.md', 'docs/RELEASE_CHECKLIST.md'].includes(relPath));
+    for (const { relPath, content } of sourceCapabilityDocs) {
+      if (/status[^\n]{0,100}(?:no JSON (?:option|output)|no status JSON output)/i.test(currentStatusCapabilityText(content))) {
+        addIssue(issues, 'STATUS_JSON_STALE_DENIAL', relPath, 'current opt-in status JSON support', 'current no-JSON denial', 'Replace the stale denial or scope it explicitly to a historical release.');
+      }
+    }
+  } else {
+    requireTokens(issues, 'docs/USAGE.md', currentStatusCapabilityText(usage), ['no JSON option']);
+  }
   const contradictionChecks = [
     ['AUTOMATIC_MY_DEV_KIT_CLAIM', /(?:orchestrator|CLI|tool|initial-index)\s+(?:automatically\s+)?(?:runs|executes|invokes)\s+`?my-dev-kit`?/i, 'manual my-dev-kit execution'],
-    ['STATUS_JSON_FALSE_CLAIM', /status\s+--json|status[^\n]{0,40}(?:supports|provides|outputs?)\s+JSON/i, 'status has no JSON option'],
+    ...(!supportsStatusJson ? [['STATUS_JSON_FALSE_CLAIM', statusJsonClaim, 'status has no JSON option']] : []),
     ['TASK_STATE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?TaskState`?/i, 'TaskState is in memory only'],
     ['STAGE_CONTEXT_BUNDLE_PERSISTENCE_FALSE_CLAIM', /(?:persist(?:s|ed)?|writes?|stores?)\s+(?:the\s+)?`?StageContextBundle`?/i, 'StageContextBundle is in memory only'],
     ['NATIVE_CONTEXT_STAGE_FALSE_CLAIM', /(?:adds?|has|uses|creates?|provides?)\s+(?:a\s+)?native\s+(?:implementation-|test-)?context\s+stages?/i, 'no native context stage'],
+    ['ECO_UNSUPPORTED_COMMAND_FALSE_CLAIM', /(?:adds?|introduces?|provides?|has)\s+(?:a\s+|an\s+)?(?:new\s+)?`?(?:evidence|ecosystem|import)`?\s+(?:command|subcommand|mode)\b/i, 'ecosystem activation is an option of the existing start command and a typed API, not a new command or mode'],
+    ['ECO_SIDECAR_NATIVE_TARGET_FALSE_CLAIM', /ecosystem-(?:requirements|evidence)\.json`?\s+(?:is|are)\s+(?:a\s+)?(?:native\s+(?:stage\s+)?artifacts?|`?mark`?\s+targets?)/i, 'ECO sidecars are not native artifacts or mark targets'],
+    ['ECO_KIT_RUNTIME_PROOF_FALSE_CLAIM', /(?:my-dev-kit|Kit)\s+(?:static\s+)?(?:context\s+|capsule\s+|audit\s+)?(?:evidence\s+)?(?:proves?|establishes?|demonstrates?)\s+(?:runtime|test|execution)/i, 'Kit static evidence does not prove runtime or test execution'],
+    ['ECO_OBSERVER_BROWSER_PROOF_FALSE_CLAIM', /Observer\s+(?:native\s+|synthetic\s+|bounded\s+)*(?:agent\s+)?(?:context|evidence)\s+(?:proves?|establishes?|demonstrates?)\s+(?:browser|runtime)/i, 'Observer bounded context does not prove browser execution'],
+    ['ECO_CERTIFICATION_FALSE_CLAIM', /\bECO-01\s+(?:certification\s+)?(?:is|has\s+been|was)\s+(?:certified|active|established|complete)\b|\bLab\s+(?:execution-assurance\s+)?(?:producer\s+)?(?:certifies|is\s+certified)\b/i, 'ECO-01 certification and a Lab execution-assurance producer are not established'],
     ['BOOTSTRAP_SURFACE_FALSE_CLAIM', /(?:adds?|has|introduces?|provides?)\s+(?:a\s+|an\s+)?(?:new\s+)?(?:`?--bootstrap`?|`?bootstrap`?\s+(?:command|mode|stage|option|flag))/i, 'test-context bootstrap is a phase of existing readiness, not a command, mode, stage, or option'],
   ];
   for (const [code, regex, expected] of contradictionChecks) {

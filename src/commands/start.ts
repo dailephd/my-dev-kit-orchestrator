@@ -8,6 +8,7 @@ import { SEMANTIC_CONTINUITY_CONTRACT_VERSION } from '../instructions/runSemanti
 import { RUN_TELEMETRY_VERSION, nowUtcIso, startMonotonicTimer } from '../runTelemetry';
 import { beginTelemetryInvocation } from '../runTelemetryObservation';
 import { shouldActivateSemanticContinuity } from '../instructions/semanticContinuityPrompt';
+import { EcosystemEvidenceError, readEcosystemRequirementsInput } from '../ecosystemEvidenceStore';
 
 export function makeStartCommand(): Command {
   const cmd = new Command('start');
@@ -22,7 +23,8 @@ export function makeStartCommand(): Command {
     .option('--target <path>', 'target repository root (required for extraction mode)')
     .option('--proof-only', 'declare this run as verification-only with no implementation changed surface')
     .option('--verification-responsibility <path>', 'run-relative proof evidence file (required with --proof-only)')
-    .action((request: string, options: { mode: string; root?: string; name?: string; outputDir?: string; source?: string; target?: string; proofOnly?: boolean; verificationResponsibility?: string }) => {
+    .option('--ecosystem-requirements <path>', 'explicit ECO-00 run requirements JSON (supported native evidence required)')
+    .action((request: string, options: { mode: string; root?: string; name?: string; outputDir?: string; source?: string; target?: string; proofOnly?: boolean; verificationResponsibility?: string; ecosystemRequirements?: string }) => {
       // Anchors for the recorded interaction, captured at command entry.
       const telemetryTimer = startMonotonicTimer();
       const telemetryStartedAt = nowUtcIso();
@@ -63,10 +65,15 @@ export function makeStartCommand(): Command {
 
       // For extraction mode, run artifacts live under the target repository
       const projectRoot = targetRepoRoot ?? path.resolve(options.root ?? process.cwd());
-      initWorkspace(projectRoot);
+      if (options.ecosystemRequirements === undefined) initWorkspace(projectRoot);
 
       try {
+        const ecosystemRequirementsDocument = options.ecosystemRequirements !== undefined
+          ? readEcosystemRequirementsInput(options.ecosystemRequirements)
+          : undefined;
+        if (ecosystemRequirementsDocument !== undefined) initWorkspace(projectRoot);
         const meta = createRun({
+          ...(ecosystemRequirementsDocument !== undefined ? { ecosystemRequirementsDocument } : {}),
           request,
           mode: options.mode,
           projectRoot,
@@ -106,7 +113,10 @@ export function makeStartCommand(): Command {
         // It is non-blocking and never changes start output or exit behavior.
         beginTelemetryInvocation(meta, 'start', { timer: telemetryTimer, startedAt: telemetryStartedAt }).succeed();
       } catch (err) {
-        console.error(`Error: ${(err as Error).message}`);
+        const message = options.ecosystemRequirements !== undefined
+          ? err instanceof EcosystemEvidenceError ? err.code : 'ECO_RECORD_INVALID'
+          : (err as Error).message;
+        console.error(`Error: ${message}`);
         process.exit(1);
       }
     });

@@ -355,9 +355,13 @@ export function evaluateFinalReportEligibility(input: {
 
   const proofEvidence = proofOnly ? evaluateProofEvidence(runFolder, verificationResponsibility) : undefined;
   const proofReady = !proofOnly || proofEvidence?.state === 'pass';
-  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid && greenfieldReady && proofReady;
+  const eligible = judgeIntegrity.finalReportEligible && priorArtifactsValid && greenfieldReady && proofReady &&
+    !gate.ecosystemEvidenceBlockingCodes?.length;
 
   const blockingCodes = [...judgeIntegrity.blockingCodes];
+  for (const code of gate.ecosystemEvidenceBlockingCodes ?? []) {
+    if (!blockingCodes.includes(code)) blockingCodes.push(code);
+  }
   if (!priorArtifactsValid && blockingCodes.length === 0) {
     blockingCodes.push(FINAL_REPORT_PRIOR_ARTIFACTS_INCOMPLETE);
   }

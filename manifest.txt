@@ -62,12 +62,17 @@ src/ — production TypeScript code. Do not store plans, generated reports, fixt
   src/commands/: one handler per existing CLI command (init, start, status, prompt, list, mark, check, export). Option, run selection, command output, and exit behavior belong here; shared policy does not.
   src/types.ts and src/workflows.ts: workflow modes and 79 native stages, stage identity and artifact registry. No new mode/stage just for evidence intake.
   src/workspace.ts and src/run.ts: workspace locations, run identity, run.json creation/loading/discovery, optional versioned run capabilities.
+  src/ecosystemEvidenceContracts.ts: strict ECO-00 1.0.0 reference-shape validation and Orchestrator run requirements/evidence document types; no producer verification or copied schema registry.
+  src/ecosystemEvidenceStore.ts: activated-run ecosystem-requirements.json and ecosystem-evidence.json directly under runFolder only; immutable requirements SHA-256 and atomic complete evidence replacement. These sidecars are not native artifacts or artifact-state.json entries.
+  src/ecosystemEvidenceInspection.ts: pure RunEvidenceInspectionV1 stdout projection of existing run/gate/judge results; consumers src/commands/status.ts and src/commands/check.ts; closest tests tests/ecosystemEvidenceInspection.test.ts, tests/ecosystemEvidenceReadiness.test.ts and src/__tests__/check-command.test.ts. No policy, external reads or persistence.
+  src/ecosystemEvidenceReadiness.ts: single Orchestrator-owned deterministic requirement join/classification over validated storage snapshots and bounded native adapter facts; closest tests: tests/ecosystemEvidenceReadiness.test.ts.
+  ECO activation uses start --ecosystem-requirements or createRun ecosystemRequirementsDocument; src/runIntegrityGate.ts enforces native readiness at judge/final-report, replacing the Batch 1 interim guard.
   src/runLifecycle.ts, src/artifactLifecycle.ts, src/stageDetector.ts: one load reconciliation, effective native artifact states, stage progression and stale/manual state rules. Keep lifecycle state distinct from external evidence.
   src/runIntegrityGate.ts: SINGLE canonical context/Semantic Continuity integrity decision, expected judge verdict and gate-aware lifecycle override. Future generic evidence policy must enter this owner, not establish another gate.
   src/judgeIntegrity.ts, src/judgeParser.ts: accepted judge decisions and final-report eligibility, including greenfield/proof-only rules.
   src/correctionRouter.ts, src/correctionState.ts: existing correctable stages and accepted judge-derived correction, not a separate durable correction engine.
   src/proofOnly.ts: proof-only responsibility-path validation and literal proof evidence. A new evidence envelope cannot replace proof evidence.
-  src/observerEvidence.ts: pure bounded native Observer consumer; do not replace Observer's schema or runtime/reference identities.
+  src/observerEvidence.ts: pure bounded native Observer consumer plus safe local pinned v0.10.0 context adapter; do not replace Observer's schema or runtime/reference identities.
   src/runTelemetry.ts, src/runTelemetryStore.ts, src/runTelemetryObservation.ts, src/runWorkflowEconomics.ts, src/workflowEconomicsSurface.ts: native deterministic invocation observation and economics; TELEMETRY NEVER GOVERNS READINESS.
   src/artifactChecker.ts, src/contractChecker.ts, src/promptChecker.ts: native artifact, contract and prompt checking, not substitute integrity authorities.
   src/promptGenerator.ts: native stage prompt rendering; do not introduce an independent stage instruction runtime.
@@ -79,7 +84,7 @@ src/instructions/ — native instruction resolution, context evidence, and canon
   catalog.ts, catalogIds.ts, catalogTypes.ts, catalogResolver.ts, catalogValidation.ts, stageInstructionContent.ts: one instruction catalog and resolution authority.
   workflowInstructionPacket.ts, workflowInstructionPacketRenderer.ts, workflowInstructionPacketSerialization.ts, instructionBudget.ts: bounded instruction packet and serialization.
   stageContextBundle.ts, taskState.ts, supplementalContextTemplates.ts, supplementalContextTypes.ts, supplementalContextContracts.ts, supplementalContextParser.ts: native stage context and supplemental carrier structures.
-  repositoryEvidenceReference.ts, myDevKitEvidenceSummary.ts, stageRepositoryEvidenceRequirements.ts, contextIdentity.ts, contextReadiness.ts, runContextReadiness.ts, supplementalPairReconciliation.ts, testContextBootstrap.ts: Kit raw/supplemental parsing and reconciliation, evidence identity, deterministic phase-aware readiness.
+  repositoryEvidenceReference.ts, myDevKitEvidenceSummary.ts, stageRepositoryEvidenceRequirements.ts, contextIdentity.ts, contextReadiness.ts, runContextReadiness.ts, supplementalPairReconciliation.ts, testContextBootstrap.ts: Kit raw/supplemental parsing and reconciliation, evidence identity, deterministic phase-aware readiness; myDevKitEvidenceSummary.ts also owns the bounded pinned v1.12.5 native static-context adapter.
   semanticResponsibility.ts, runSemanticContinuity.ts, semanticContinuity.ts, semanticContinuityPrompt.ts, responsibilityEvidenceShared.ts: RSP-NNN identity, stage-aware semantic evaluator and presentation.
   implementationResponsibilityEvidence.ts, testImplementationResponsibilityEvidence.ts, verificationResponsibilityEvidence.ts, testResponsibilityCriticality.ts: native responsibility bridge and strategy criticality ownership.
   src/instructions/index.ts: established instruction module surface; do not add parallel registries.

@@ -15,6 +15,26 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
 
 ## Run layout
 
+The unreleased v1.7.0 candidate creates two optional sidecars only when
+the run is explicitly activated:
+
+```text
+<runFolder>/ecosystem-requirements.json
+<runFolder>/ecosystem-evidence.json
+```
+
+These are not native artifacts, not stage outputs, not `artifact-state.json`
+entries, and not `mark` targets. Requirements are immutable canonical UTF-8 JSON
+whose exact saved bytes are hashed into `run.json#ecosystemRequirementsSha256`.
+Evidence starts as `{ "schemaVersion": "1.0.0", "evidence": [] }` and is replaced
+as a complete validated document by `replaceRunEcosystemEvidence` using an
+exclusive temporary file and rename in the same run folder. Activated reads
+verify strict shapes and the requirements digest; missing, changed or malformed
+records are never silently recreated. Legacy runs ignore stray ECO sidecars.
+Sidecar syntax alone never makes a run eligible. The existing RunIntegrityGate
+requires supported native readiness, blocking judge/final-report when critical
+requirements are unmet. Earlier native stages remain available to produce evidence.
+
 ```text
 .my-dev-kit-orchestrator/runs/<run-id>/
   00-request.txt
@@ -111,6 +131,11 @@ Dependencies follow stage order: artifacts for stage N depend on artifacts from 
 For extraction mode, the `porting-map` stage has two artifacts - `source-to-target-porting-map.txt` and `do-not-port-list.txt` - and both are treated as upstream for subsequent stages.
 
 ## artifact-check-results.json (v0.4.0)
+
+The candidate's status/check JSON inspection is stdout-only
+RunEvidenceInspectionV1 schema 1.0.0, not a native run artifact. No inspection
+file is written. Existing `artifact-check-results.json` version '1', filename and fields
+remain unchanged, including when default check uses JSON presentation.
 
 `artifact-check-results.json` stores the most recent check results for a run.
 
