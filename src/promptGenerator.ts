@@ -375,6 +375,8 @@ function evaluateFinalReportEligibilityForRun(meta: RunMetadata, currentStage = 
     currentStage,
     projectRoot: meta.projectRoot,
     semanticContinuityVersion: meta.semanticContinuityVersion,
+    ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+    ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
     proofOnly: meta.proofOnly === true,
   });
   const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -2433,6 +2435,10 @@ function renderSemanticBlockedPrompt(meta: RunMetadata, gate: RunIntegrityGateRe
 //   final-report keeps its own eligibility-blocked prompt)
 // - the judge stage otherwise: the canonical Semantic Continuity summary
 export function generateLiveStagePrompt(meta: RunMetadata, stageName: string, gate: RunIntegrityGateResult): string {
+  const stageDecision = evaluateStageRunIntegrity(gate, stageName);
+  if (stageDecision.ecosystemBlocked && !stageDecision.contextBlocked && !stageDecision.semanticBlocked) {
+    return `Stage: ${stageName}\nRun integrity blocked: ${gate.primaryBlockingCode}\nEcosystem evidence blockers: ${gate.ecosystemEvidenceBlockingCodes?.join(', ')}\nExpected judge verdict: ${gate.expectedJudgeVerdict}\nRefresh producer-native evidence and replace the run evidence snapshot; then reevaluate readiness.\n`;
+  }
   const summary = summarizeSemanticContinuityGate(gate);
   // The gate (not the prompt predicate) decides: an unsupported contract
   // version is not prompt-active but must still block fail-closed.

@@ -1529,7 +1529,7 @@ describe('BR. warning-state agreement', () => {
 // ─── BU/BV/BW public surface and boundaries ─────────────────────────────────
 
 describe('BU. public surface', () => {
-  it('BU1: 8 commands, 7 modes, 79 native stages, no semantic flag, no status JSON', () => {
+  it('BU1: 8 commands, 7 modes, 79 native stages, no semantic flag, exact additive status JSON', () => {
     const program = createProgram();
     expect(program.commands.map((c) => c.name()).sort()).toEqual(['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
     expect(VALID_MODES).toHaveLength(7);
@@ -1538,8 +1538,8 @@ describe('BU. public surface', () => {
       const flags = cmd.options.map((o) => o.long);
       for (const banned of ['--semantic', '--continuity', '--rsp', '--direct', '--full-stage-context']) expect(flags).not.toContain(banned);
     }
-    expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).not.toContain('--json');
-    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version).toBe('1.6.2');
+    expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).toEqual(['--run', '--root', '--json']);
+    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version).toBe('1.7.0');
   });
 });
 

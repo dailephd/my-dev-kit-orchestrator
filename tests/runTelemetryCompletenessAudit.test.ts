@@ -34,11 +34,16 @@ describe('public CLI surface is frozen relative to v1.5.0', () => {
     expect(program.commands.map((c) => c.name()).sort()).toEqual(['check', 'export', 'init', 'list', 'mark', 'prompt', 'start', 'status']);
   });
 
-  it('adds no telemetry/economics/metrics/json option or command anywhere', () => {
+  it('preserves forbidden telemetry surfaces with only exact status/check JSON additions', () => {
     const forbidden = /telemetry|economics|metrics|json|invocation/i;
     for (const command of program.commands) {
       expect(forbidden.test(command.name())).toBe(false);
-      for (const option of command.options) expect(option.flags).not.toMatch(forbidden);
+      const inspectionCommand = command.name() === 'status' || command.name() === 'check';
+      expect(command.options.filter(option => option.long === '--json')).toHaveLength(inspectionCommand ? 1 : 0);
+      for (const option of command.options) {
+        if (inspectionCommand && option.long === '--json') expect(option.flags).toBe('--json');
+        else expect(option.flags).not.toMatch(forbidden);
+      }
       expect(command.description()).not.toMatch(/telemetry|economics/i);
     }
   });

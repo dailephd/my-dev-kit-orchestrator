@@ -3,15 +3,15 @@
 ## Identity and publication
 
 - Package: `@dailephd/my-dev-kit-orchestrator`
-- Package metadata version: `1.6.2`
-- Current release: `v1.6.2`
-- Release date: `2026-10-14`
-- Previous release: `v1.6.1`
+- Package metadata version: `1.7.0`
+- Current release: `v1.7.0`
+- Release date: `2026-10-15`
+- Previous release: `v1.6.2`
 - Required runtime: Node.js 24 or later
-- Latest npm version: `1.6.2`
-- Latest Git tag and GitHub Release: `v1.6.2`
+- Latest npm version: `1.7.0`
+- Latest Git tag and GitHub Release: `v1.7.0`
 
-Package metadata, npm, the `v1.6.2` tag, and the GitHub Release agree. Release
+Package metadata, npm, the `v1.7.0` tag, and the GitHub Release agree. Release
 history is recorded in [CHANGELOG.md](../CHANGELOG.md).
 
 `v1.4.1` corrects the installed greenfield instruction surface: five stage
@@ -56,9 +56,24 @@ Implemented behavior:
 
 Boundaries preserved: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command or option, `status` still has no JSON option, no dependency was added, and no Semantic Continuity or economics state is persisted. Telemetry observes `RunIntegrityGate`, judge integrity, lifecycle, correction routing, and Semantic Continuity but never decides for them. Coding-agent time, human time, provider/model identity, token use, API cost, external build/test duration, and target-application measurements remain unavailable.
 
-## Current release: Trace Diagnostic Accuracy and Correction Guidance
+## Current release: Generic Ecosystem Evidence Intake
 
-`v1.6.2`, a trace-diagnostic correction patch, is the current release; it is a patch between `v1.6.1` and `v1.7.0`.
+`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the current release.
+
+Implemented behavior:
+
+- strict validation of the six frozen ECO-00 `1.0.0` reference contracts and run-level requirements and evidence documents
+- explicit activation through `start --ecosystem-requirements <path>` or programmatic `createRun({ ecosystemRequirementsDocument })`; runs without activation are unchanged
+- activated-run sidecars `ecosystem-requirements.json` (immutable, SHA-256 verified) and `ecosystem-evidence.json` (atomic complete replacement through `replaceRunEcosystemEvidence`); neither is a native artifact
+- adapters for supported native outputs only: `@dailephd/my-dev-kit@1.12.5` static context capsule and retrieval audit and `@dailephd/my-frontend-observer@0.10.0` bounded agent context, each at native schema `1.0.0`
+- deterministic native requirement evaluation inside the existing RunIntegrityGate: critical gaps block judge and final-report eligibility, noncritical gaps warn, and current bytes are re-evaluated without a persisted eligibility cache
+- opt-in stdout-only `status --json` and `check --json` projecting RunEvidenceInspectionV1 schema `1.0.0`, and a bounded Ecosystem evidence section in plain-text `export` for activated runs
+
+Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, mode, stage, profile, or runtime dependency. Kit evidence is static context and Observer evidence is bounded review context; neither proves test execution or real browser behavior. Execution assurance, a Lab adapter, and ECO-01 certification are not part of this release.
+
+## Previous release: Trace Diagnostic Accuracy and Correction Guidance
+
+`v1.6.2`, a trace-diagnostic correction patch, is the previous release; it is a patch between `v1.6.1` and `v1.7.0`.
 
 Implemented behavior:
 
@@ -69,9 +84,9 @@ Implemented behavior:
 
 Preserved contracts: eight commands, seven workflow modes, 79 native stages, 13 greenfield stages, and four starter profiles are unchanged; there is no new command, option, mode, stage, artifact family, persisted state, schema-major bump, or runtime dependency. `RunIntegrityGate` remains the single enforcement consumer, and generic evidence intake is not implemented.
 
-## Previous release: Test-Context Bootstrap Correction
+## Earlier release: Test-Context Bootstrap Correction
 
-`v1.6.1`, a test-context bootstrap correction, is the previous release; it is a patch between `v1.6.0` and `v1.7.0`.
+`v1.6.1`, a test-context bootstrap correction, is an earlier release; it is a patch between `v1.6.0` and `v1.7.0`.
 
 Why it exists: repository-context readiness required every critical test responsibility to be fully mapped, including related-test and oracle evidence, before `test-implementation` could begin. That evidence can only be created during `test-implementation`, so a new subsystem with no tests yet could never enter the stage.
 
@@ -96,7 +111,7 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 - Repository retrieval is manual; the orchestrator does not run `my-dev-kit`.
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
-- `status` is human-readable and has no JSON option.
+- Releases up to v1.6.2 print human-readable status only; opt-in JSON inspection (`status --json`, `check --json`) is available since v1.7.0.
 - Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
@@ -112,22 +127,45 @@ Current implementation includes exact workflow-instruction packets, supplemental
 
 ## Active next direction
 
-The current release is `v1.6.2`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
+The `v1.7.0` release implements generic ecosystem evidence intake, native
+readiness and inspection, as described above. Strict ECO-00 reference validation,
+optional `start --ecosystem-requirements` and programmatic
+`createRun({ ecosystemRequirementsDocument })` activation, immutable
+requirements with a saved-byte SHA-256, empty evidence initialization, and atomic
+complete evidence replacement are included. No new command, native stage, mode,
+profile, dependency, telemetry policy, or producer contract is added.
+
+Pinned Kit v1.12.5 static-context and Observer v0.10.0 bounded review-context
+adapters require exact native subject binding, schema 1.0.0, fresh adequate
+evidence and safe local reads. Execution assurance, commit/environment
+attestation, cross-producer project correlation, optional Observer fidelity
+verification and integration certification remain unimplemented. Observer native
+context from the supported fixture used validated synthetic observation input,
+not real browser execution. A Lab execution-assurance producer and ECO-01
+certification are not established.
+
+`status --json` and `check --json` are stdout-only RunEvidenceInspectionV1
+schema 1.0.0 projections. Check executes the selected native checks and
+preserves their diagnostics, writes and strict exits. Activated plain-text export
+adds one bounded Ecosystem evidence section; unactivated handoffs retain their
+existing format. Default status/check text remains compatible.
+
+The current release is `v1.7.0`, described above; [ROADMAP.md](ROADMAP.md) owns the high-level version scope and
 boundaries, and detailed execution sequencing is kept outside current-state
 documentation.
 
-`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), remains the
-next planned feature version and a later consumer milestone. It will build on
-the `v1.6.0` native run/invocation telemetry substrate; `v1.6.0` does not
-implement generic evidence envelopes, requirements, subject/environment
-identity, assurance policy, or compatibility evaluation.
+`v1.7.0`, Generic Ecosystem Evidence Intake (`ORC-EVIDENCE-01`), is the
+current release. It builds on the `v1.6.0` native run/invocation telemetry
+substrate; `v1.6.0` and `v1.6.2` do not implement generic evidence
+envelopes, requirements, subject/environment identity, assurance policy, or
+compatibility evaluation.
 
 The adopted ECO-00 coordination assets are maintained in `my-dev-kit` under
 `contracts/ecosystem/` and `docs/ecosystem/`. They reserve `v1.6.0` as
 `ORC-TELEMETRY` and `v1.7.0` as `ORC-EVIDENCE-01`, with v1.6.0 as a prerequisite
 of v1.7.0. Those assets are cross-repository coordination/reference contracts;
 v1.6.0 provides native telemetry
-and v1.7.0 remains the planned generic evidence consumer.
+and v1.7.0 is the generic evidence consumer.
 
 Greenfield-to-Feature Workflow Handoff Hardening and optional mobile profile
 candidates remain deferred scopes.

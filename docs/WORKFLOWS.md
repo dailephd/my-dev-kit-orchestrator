@@ -371,6 +371,10 @@ A stage blocked by Semantic Continuity renders correction guidance for the canon
 - A context-blocked stage, a semantically blocked stage, or an ineligible final report cannot advance through file presence or a manual completion mark.
 - External runtime/test/assurance results must describe the final candidate. The ecosystem guide's PASS labels do not expand the native judge vocabulary.
 
+### Ecosystem evidence in the workflow (v1.7.0)
+
+Evidence intake is optional and adds no mode, stage, or command. A run is activated only by `start --ecosystem-requirements <path>` (or programmatic `createRun`); runs without it behave exactly as before. For an activated run the user or coding agent provides supported native Kit `1.12.5` or Observer `0.10.0` outputs as local files and replaces the run's evidence snapshot through the typed API. Earlier stages remain available to produce evidence; unmet critical requirements block the judge and final-report stages through the existing `RunIntegrityGate`, and noncritical gaps warn. To correct a block, refresh the native file, replace the snapshot, and rerun `status` or `check`. `mark` and an authored `PASS` cannot override a blocker, and no external tool is run by the orchestrator. See [CONTRACTS.md](CONTRACTS.md) and [ARTIFACTS.md](ARTIFACTS.md).
+
 ### Run telemetry in the workflow
 
 In `v1.6.0`, telemetry is part of the existing workflow rather than a new one; there is no new command or sequence. New CLI-created runs record one bounded observation for each `start`, `prompt`, and `mark` interaction outside the run directory. `status` shows a compact Workflow Economics section, `check` and `check --all` validate telemetry structure as warnings, and `export` carries a bounded summary in the handoff. `init`, `list`, `status`, `check`, and `export` never record, so inspecting a run does not change what is being inspected. Older runs show none of this, and unsupported or corrupt telemetry is reported without failing the command. The figures are descriptive only: they never make a stage, final report, or run eligible or ineligible, and they cover Orchestrator activity, not coding-agent or human work time.

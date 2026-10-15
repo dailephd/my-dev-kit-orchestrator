@@ -154,6 +154,8 @@ export function makeMarkCommand(): Command {
             currentStage: targetStage?.name ?? meta.currentStage,
             projectRoot: meta.projectRoot,
             semanticContinuityVersion: meta.semanticContinuityVersion,
+            ecosystemEvidenceVersion: meta.ecosystemEvidenceVersion,
+            ecosystemRequirementsSha256: meta.ecosystemRequirementsSha256,
             proofOnly: meta.proofOnly === true,
           });
           const judgeIntegrity = evaluateJudgeIntegrity({ gate, runFolder: meta.runFolder, mode: meta.mode });
@@ -171,6 +173,9 @@ export function makeMarkCommand(): Command {
           canonicalResults.judge = judgeIntegrity;
           canonicalResults.finalReportEligible = finalReportEligibility.eligible;
           if (isRunIntegrityBlockedArtifactFile(gate, meta.stages, artifactKey, finalReportEligibility.eligible)) {
+            if (gate.ecosystemEvidenceBlockingCodes?.length) {
+              console.error(`Ecosystem evidence blockers: ${gate.ecosystemEvidenceBlockingCodes.join(', ')}`);
+            }
             const isFinalReport = path.basename(artifactKey) === 'final-report.txt';
             if (isFinalReport) {
               console.error(
@@ -185,6 +190,8 @@ export function makeMarkCommand(): Command {
                 `  my-dev-kit-orchestrator check\n` +
                 `before marking this artifact complete.`,
               );
+            } else if (gate.contextReady && gate.semanticContinuityReady && gate.ecosystemEvidenceBlockingCodes?.length) {
+              console.error('Error: cannot mark complete -- ecosystem evidence is not ready. Refresh native evidence and replace the run evidence snapshot.');
             } else if (gate.contextReady && !gate.semanticContinuityReady) {
               // Semantic Continuity is the actual blocker (v1.5.0 Batch 4):
               // report the unified gate fields, not a context message.

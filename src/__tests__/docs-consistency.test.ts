@@ -36,6 +36,7 @@ function makeFixture(): string {
     'src/instructions/runSemanticContinuity.ts',
     'src/instructions/testResponsibilityCriticality.ts',
     'src/runIntegrityGate.ts',
+    'src/ecosystemEvidenceStore.ts',
     'src/runTelemetry.ts',
     'src/runWorkflowEconomics.ts',
     'src/instructions/testContextBootstrap.ts',
@@ -69,6 +70,33 @@ describe('docs consistency check script', () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('DOCS_CHECK_PASS');
     expect(result.stdout).toContain('4 greenfield profiles');
+  });
+
+  it('fails with ECO_SOURCE_FACT_UNAVAILABLE when the ECO storage source is missing', () => {
+    const root = makeFixture();
+    fs.rmSync(path.join(root, 'src/ecosystemEvidenceStore.ts'));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('[ECO_SOURCE_FACT_UNAVAILABLE]');
+    expect(result.stderr).toContain('src/ecosystemEvidenceStore.ts');
+    expect(result.stdout).not.toContain('DOCS_CHECK_PASS');
+  });
+
+  it('fails when the source-defined ECO sidecar path drifts from manifest and docs', () => {
+    const root = makeFixture();
+    mutate(root, 'src/ecosystemEvidenceStore.ts', (content) => content.replace("'ecosystem-evidence.json'", "'ecosystem-evidence-v2.json'"));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('[MANIFEST_FACT_DRIFT]');
+    expect(result.stderr).toContain('[ECO_FACT_DOCUMENTATION_MISSING]');
+  });
+
+  it('fails when the source-defined ecosystem activation option drifts', () => {
+    const root = makeFixture();
+    mutate(root, 'src/commands/start.ts', (content) => content.replace("'--ecosystem-requirements <path>'", "'--eco-input <path>'"));
+    const result = run(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('[MANIFEST_FACT_DRIFT]');
   });
 
   it('fails when README contains a stale current-published version claim', () => {
@@ -164,17 +192,17 @@ describe('v1.6.0 telemetry facts (isolated fixture)', () => {
     }
   });
 
-  it('requires v1.6.2 current-release wording and a dated finalized changelog section', () => {
+  it('requires v1.7.0 current-release wording and a dated finalized changelog section', () => {
     const transitional = makeFixture();
-    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.6.2 is not yet published.\n`);
+    mutate(transitional, 'docs/ROADMAP.md', (content) => `${content}\nv1.7.0 is not yet published.\n`);
     expect(run(transitional).stderr).toContain('[CURRENT_RELEASE_STATUS_CONTRADICTION]');
 
     const missingHeading = makeFixture();
-    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.6.2 - ', '## Draft - '));
+    mutate(missingHeading, 'CHANGELOG.md', (content) => content.replace('## v1.7.0 - ', '## Draft - '));
     expect(run(missingHeading).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
 
     const missingDate = makeFixture();
-    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-10-14\.\r?\n/, ''));
+    mutate(missingDate, 'CHANGELOG.md', (content) => content.replace(/Release date: 2026-10-15\.\r?\n/, ''));
     expect(run(missingDate).stderr).toContain('[CURRENT_RELEASE_CHANGELOG_NOT_FINAL]');
   });
 });

@@ -143,7 +143,7 @@ describe('automatic activation through `start`', () => {
     for (const flag of ['--semantic', '--continuity', '--rsp', '--direct', '--full-stage-context']) {
       expect(help).not.toContain(flag);
     }
-    expect(runCli(['status', '--help']).output).not.toContain('--json');
+    expect(runCli(['status', '--help']).output.match(/--json/g)).toHaveLength(1);
   });
 });
 

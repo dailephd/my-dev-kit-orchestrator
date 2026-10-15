@@ -417,3 +417,23 @@ describe('export --out path traversal rejection (CLI-level regression)', () => {
     }
   });
 });
+
+
+describe('legacy export inspection compatibility', () => {
+  it('keeps the entire handoff byte-identical with stray ECO files and writes nothing', () => {
+    const root = makeTempDir();
+    try {
+      initWorkspace(root);
+      const meta = createRun({ mode: 'greenfield', projectRoot: root, request: 'legacy export' });
+      const withoutTime = (text: string) => text.replace(/^Generated:.*$/m, 'Generated: controlled');
+      const before = withoutTime(buildExportText(meta));
+      fs.writeFileSync(path.join(meta.runFolder, 'ecosystem-evidence.json'), '{malformed stray');
+      fs.writeFileSync(path.join(meta.runFolder, 'ecosystem-requirements.json'), '{malformed stray');
+      const files = fs.readdirSync(meta.runFolder).sort();
+      const after = withoutTime(buildExportText(meta));
+      expect(after).toBe(before);
+      expect(after).not.toContain('=== Ecosystem evidence ===');
+      expect(fs.readdirSync(meta.runFolder).sort()).toEqual(files);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+});

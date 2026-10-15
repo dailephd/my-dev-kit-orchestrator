@@ -5,8 +5,12 @@ import { getWorkflow, StageDefinition } from './workflows';
 import { getRunsDir } from './workspace';
 import { writeStagePrompts } from './promptGenerator';
 import { reconcileRunLifecycle } from './runLifecycle';
+import type { RunEcosystemRequirementsDocumentV1 } from './ecosystemEvidenceContracts';
+import { assertEcosystemPathSafety, assertEcosystemRunFolderIdentity, EcosystemEvidenceError, hasEcosystemActivation, initializeRunEcosystemEvidence, prepareRunEcosystemRequirements, verifyRunEcosystemInitialization } from './ecosystemEvidenceStore';
 
 export interface RunMetadata {
+  ecosystemEvidenceVersion?: '1.0.0';
+  ecosystemRequirementsSha256?: string;
   runId: string;
   mode: WorkflowMode;
   request: string;
@@ -60,6 +64,7 @@ export function makeRunId(request: string, name?: string): string {
 }
 
 export function createRun(options: {
+  ecosystemRequirementsDocument?: RunEcosystemRequirementsDocumentV1;
   request: string;
   mode: WorkflowMode;
   projectRoot: string;
@@ -79,53 +84,95 @@ export function createRun(options: {
   // callers keep the historical run.json key set.
   runTelemetryVersion?: string;
 }): RunMetadata {
-  const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
-  const runId = makeRunId(request, name);
-
-  const baseDir = outputDir ?? getRunsDir(projectRoot);
-  const runFolder = path.join(baseDir, runId);
-
-  if (fs.existsSync(runFolder)) {
-    throw new Error(`Run folder already exists: ${runFolder}`);
+  // Runtime JS callers cannot forge the derived persisted activation fields.
+  if (Object.prototype.hasOwnProperty.call(options, 'ecosystemEvidenceVersion') || Object.prototype.hasOwnProperty.call(options, 'ecosystemRequirementsSha256')) {
+    throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
   }
+  const ecosystemRequirementsBytes = options.ecosystemRequirementsDocument !== undefined
+    ? prepareRunEcosystemRequirements(options.ecosystemRequirementsDocument)
+    : undefined;
+  try {
+    const { request, mode, projectRoot, name, outputDir, sourceRepoRoot, targetRepoRoot } = options;
+    const runId = makeRunId(request, name);
 
-  const workflow = getWorkflow(mode);
-  const stages = workflow.stages;
+    const baseDir = outputDir ?? getRunsDir(projectRoot);
+    const runFolder = path.join(baseDir, runId);
 
-  fs.mkdirSync(runFolder, { recursive: true });
-  fs.mkdirSync(path.join(runFolder, 'prompts'), { recursive: true });
-  fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
-  fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
+    if (fs.existsSync(runFolder)) {
+      throw new Error(`Run folder already exists: ${runFolder}`);
+    }
 
-  fs.writeFileSync(path.join(runFolder, '00-request.txt'), request, 'utf8');
+    const workflow = getWorkflow(mode);
+    const stages = workflow.stages;
 
-  const meta: RunMetadata = {
-    runId,
-    mode,
-    request,
-    projectRoot,
-    runFolder,
-    createdAt: new Date().toISOString(),
-    currentStage: stages[0].name,
-    stages,
-    status: 'created',
-    ...(sourceRepoRoot !== undefined ? { sourceRepoRoot } : {}),
-    ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
-    proofOnly: options.proofOnly === true,
-    ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
-    ...(options.semanticContinuityVersion !== undefined ? { semanticContinuityVersion: options.semanticContinuityVersion } : {}),
-    ...(options.runTelemetryVersion !== undefined ? { runTelemetryVersion: options.runTelemetryVersion } : {}),
-  };
+    if (ecosystemRequirementsBytes !== undefined) {
+      const projectBoundary = path.resolve(projectRoot);
+      const resolvedBase = path.resolve(baseDir);
+      const relativeBase = path.relative(projectBoundary, resolvedBase);
+      const trustedBoundary = relativeBase === '' || (relativeBase !== '..' && !relativeBase.startsWith(`..${path.sep}`) && !path.isAbsolute(relativeBase))
+        ? projectBoundary
+        : resolvedBase;
+      // Reject linked components at/below the boundary before any directory is
+      // created, then recheck once the base directory exists.
+      assertEcosystemPathSafety(runFolder, false, false, trustedBoundary);
+      fs.mkdirSync(baseDir, { recursive: true });
+      assertEcosystemPathSafety(runFolder, false, false, trustedBoundary);
+      // Exclusive directory creation preserves the collision contract even if
+      // another creator wins between existsSync and mkdirSync.
+      fs.mkdirSync(runFolder);
+    } else {
+      fs.mkdirSync(runFolder, { recursive: true });
+    }
+    fs.mkdirSync(path.join(runFolder, 'prompts'), { recursive: true });
+    fs.mkdirSync(path.join(runFolder, 'artifacts'), { recursive: true });
+    fs.mkdirSync(path.join(runFolder, 'reports'), { recursive: true });
 
-  fs.writeFileSync(
-    path.join(runFolder, 'run.json'),
-    JSON.stringify(meta, null, 2),
-    'utf8'
-  );
+    fs.writeFileSync(path.join(runFolder, '00-request.txt'), request, 'utf8');
 
-  writeStagePrompts(meta);
+    const meta: RunMetadata = {
+      ...(ecosystemRequirementsBytes !== undefined ? { ecosystemEvidenceVersion: '1.0.0' as const } : {}),
+      runId,
+      mode,
+      request,
+      projectRoot,
+      runFolder,
+      createdAt: new Date().toISOString(),
+      currentStage: stages[0].name,
+      stages,
+      status: 'created',
+      ...(sourceRepoRoot !== undefined ? { sourceRepoRoot } : {}),
+      ...(targetRepoRoot !== undefined ? { targetRepoRoot } : {}),
+      proofOnly: options.proofOnly === true,
+      ...(options.verificationResponsibility !== undefined ? { verificationResponsibility: options.verificationResponsibility } : {}),
+      ...(options.semanticContinuityVersion !== undefined ? { semanticContinuityVersion: options.semanticContinuityVersion } : {}),
+      ...(options.runTelemetryVersion !== undefined ? { runTelemetryVersion: options.runTelemetryVersion } : {}),
+    };
 
-  return meta;
+    fs.writeFileSync(
+      path.join(runFolder, 'run.json'),
+      JSON.stringify(meta, null, 2),
+      'utf8'
+    );
+
+    // The initial metadata deliberately declares activation without a digest.
+    // If initialization fails, readers/gate block the incomplete run; no repair,
+    // legacy downgrade or broad rollback is performed.
+    if (ecosystemRequirementsBytes !== undefined) {
+      Object.assign(meta, initializeRunEcosystemEvidence(runFolder, ecosystemRequirementsBytes));
+      fs.writeFileSync(path.join(runFolder, 'run.json'), JSON.stringify(meta, null, 2), 'utf8');
+      writeStagePrompts(meta);
+      verifyRunEcosystemInitialization(runFolder, meta);
+    } else {
+      writeStagePrompts(meta);
+    }
+
+    return meta;
+  } catch (error) {
+    if (ecosystemRequirementsBytes !== undefined && !(error instanceof EcosystemEvidenceError)) {
+      throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
+    }
+    throw error;
+  }
 }
 
 export function loadRun(runFolder: string): RunMetadata {
@@ -134,7 +181,9 @@ export function loadRun(runFolder: string): RunMetadata {
     throw new Error(`run.json not found in: ${runFolder}`);
   }
   const raw = fs.readFileSync(metaPath, 'utf8');
-  return reconcileRunLifecycle(JSON.parse(raw) as RunMetadata);
+  const meta = JSON.parse(raw) as RunMetadata;
+  if (hasEcosystemActivation(meta)) assertEcosystemRunFolderIdentity(runFolder, meta.runFolder, meta.projectRoot);
+  return reconcileRunLifecycle(meta);
 }
 
 export function getRunFolder(projectRoot: string, runId: string, outputDir?: string): string {

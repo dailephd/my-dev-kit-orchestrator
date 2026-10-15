@@ -36,6 +36,21 @@ This creates `.my-dev-kit-orchestrator/`, its `runs/` directory, and `config.jso
 
 ## Start a run
 
+Since v1.7.0, explicit ECO native-evidence intake is:
+
+```bash
+node dist/cli.js start "<request>" --ecosystem-requirements "requirements input.json"
+```
+
+The input must be a valid `RunEcosystemRequirementsDocumentV1`; see
+[CONTRACTS.md](CONTRACTS.md). Invalid input creates no run folder. Start stores
+canonical requirements and empty evidence, deriving the digest from saved bytes.
+Omitting this option preserves unactivated behavior. Activated runs require
+supported native evidence; syntax-valid replacement through the typed
+`replaceRunEcosystemEvidence` API alone cannot satisfy requirements. Critical
+gaps block judge and final-report; earlier stages can produce evidence. Refresh
+native files, replace the snapshot and reevaluate. No producer is fetched or run.
+
 ```bash
 my-dev-kit-orchestrator start "add structured logging to the import pipeline"
 my-dev-kit-orchestrator start --mode repair "CSV export omits the final column"
@@ -207,7 +222,19 @@ Status reports run ID/mode/request/folder, current stage, prompts and artifacts,
 
 In `v1.6.0`, a telemetry-activated run also shows a compact `Workflow Economics:` section (interaction counts, prompt characters, Orchestrator duration, stage movement, and observed span). It is descriptive and appears only for runs created by that source; see [COMMANDS.md](COMMANDS.md#status).
 
-`status` is human-readable and has no JSON option.
+Default status output remains human-readable. Since v1.7.0,
+`status --json` is supported for a single newline-terminated versioned inspection:
+
+```bash
+node dist/cli.js status --json --run <run-id> --root <project-root>
+node dist/cli.js check --json --prompts --run <run-id> --root <project-root>
+```
+
+Both commands use the current canonical gate and judge results. Check still
+executes its selected native branch; its JSON adds a bounded checks summary.
+See [COMMANDS.md](COMMANDS.md) for selections and exit cases. Inspection does
+not write an inspection artifact or modify ECO sidecars. Positive context
+evidence never proves test execution or certification.
 
 ## List runs
 

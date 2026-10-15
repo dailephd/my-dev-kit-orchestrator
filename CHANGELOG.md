@@ -2,6 +2,56 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
+
+Release date: 2026-10-15.
+
+### Added
+
+- Strict validation of the six frozen ECO-00 `1.0.0` reference contracts
+  (subject, environment, native artifact reference, evidence envelope,
+  evidence requirement, compatibility bundle) and run-level requirements and
+  evidence documents.
+- Explicit activation through `start --ecosystem-requirements <path>` and the
+  programmatic `createRun({ ecosystemRequirementsDocument })`, with two derived
+  `run.json` fields, `ecosystemEvidenceVersion` and
+  `ecosystemRequirementsSha256`. Runs without activation are unchanged.
+- Run sidecars `ecosystem-requirements.json` (immutable, digest-verified) and
+  `ecosystem-evidence.json` (atomically replaced through the exported
+  `replaceRunEcosystemEvidence`). Neither is a native artifact or `mark` target.
+- Adapters for the supported native outputs only: `@dailephd/my-dev-kit@1.12.5`
+  context capsule and retrieval audit, and `@dailephd/my-frontend-observer@0.10.0`
+  bounded agent context, each at native schema `1.0.0`.
+- Deterministic identity, freshness, adequacy and compatibility matching. Critical
+  unmet requirements block judge and final-report eligibility through the
+  existing `RunIntegrityGate`; noncritical gaps warn.
+- Opt-in `status --json` and `check --json` printing versioned
+  `RunEvidenceInspectionV1` (`1.0.0`) with sanitized error codes. Default
+  text output and the existing check-result files are unchanged.
+- A bounded Ecosystem evidence section in `export` for activated runs.
+
+### Compatibility
+
+- No new command, workflow mode, native stage, starter profile or dependency.
+  The eight commands, seven modes and 79 native stages are unchanged.
+- Legacy runs, and runs with stray ECO files but no activation, keep their
+  existing behavior. The orchestrator never runs `my-dev-kit`, Observer or Lab,
+  and never fetches a URI.
+
+### Security
+
+- Activated-run JSON, paths, locators and digests are treated as untrusted:
+  traversal, links, URI locators and files over 4 MiB are rejected, and output
+  contains no raw producer payload or local path.
+
+### Limitations
+
+- Kit evidence is static context; Observer context is bounded review context.
+  Neither proves test execution or real browser behavior.
+- No execution-assurance producer, Lab adapter, or ECO-01 certification exists.
+
 ## v1.6.2 - Trace Diagnostic Accuracy and Correction Guidance
 
 Release date: 2026-10-14.

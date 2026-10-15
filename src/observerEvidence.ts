@@ -4,6 +4,13 @@
  * consumes the published wire contract, it does not run the Observer.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
+import { createHash } from 'crypto';
+import { assertEcosystemPathSafety } from './ecosystemEvidenceStore';
+import type { EvidenceEnvelopeV1 } from './ecosystemEvidenceContracts';
+import type { EcosystemNativeAdapterResult } from './ecosystemEvidenceReadiness';
+
 export const OBSERVER_BOUNDED_AGENT_CONTEXT_ARTIFACT_KIND = 'my-frontend-observer/bounded-agent-context' as const;
 export const OBSERVER_BOUNDED_AGENT_CONTEXT_SCHEMA_VERSION = '1.0.0' as const;
 
@@ -69,6 +76,66 @@ function truncations(value: unknown, limit?: number): value is ObserverTruncatio
   return Array.isArray(value) && (limit === undefined || value.length <= limit) && value.every((entry) => object(entry) && text(entry.subject) && integerAtLeastZero(entry.limit) && integerAtLeastZero(entry.actualCount) && typeof entry.required === 'boolean');
 }
 function invalid(disposition: ObserverEvidenceInvalidDisposition, reason: string): ConsumeBoundedObserverEvidenceResult { return { ok: false, disposition, reason }; }
+
+/** Released v0.10.0 context-only ECO profile. No browser or execution attestation. */
+export function readObserverEcosystemEvidence(envelope: EvidenceEnvelopeV1, runFolder: string, projectRoot?: string): EcosystemNativeAdapterResult {
+  const result: EcosystemNativeAdapterResult = { evidenceId: envelope.evidenceId, issueCodes: [] };
+  const ref = envelope.nativeArtifact;
+  if (ref.producer.packageName !== '@dailephd/my-frontend-observer' || ref.producer.packageVersion !== '0.10.0') {
+    result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_PRODUCER');
+    return result;
+  }
+  if (ref.artifactKind !== OBSERVER_BOUNDED_AGENT_CONTEXT_ARTIFACT_KIND) {
+    result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_KIND');
+    return result;
+  }
+  if (envelope.capabilityId !== 'my-frontend-observer/frontend-change-review') result.issueCodes.push('ECO_EVIDENCE_RUNTIME_PROOF_MISSING');
+  if (ref.artifactSchemaVersion !== '1.0.0') result.issueCodes.push('ECO_SCHEMA_UNSUPPORTED');
+  if (ref.locator.kind !== 'path') {
+    result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+    return result;
+  }
+  try {
+    if (ref.locator.value.includes('..') || ref.locator.value.includes('\0') || /^(?:[a-z]+:\/\/|\\\\|\/\/)/i.test(ref.locator.value)) throw new Error();
+    const candidate = path.resolve(runFolder, ref.locator.value);
+    const roots = [runFolder, ...(projectRoot ? [projectRoot] : [])];
+    const trustedRoot = roots.find(root => {
+      const relative = path.relative(path.resolve(root), candidate);
+      return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+    });
+    if (!trustedRoot) throw new Error();
+    const file = assertEcosystemPathSafety(candidate, true, true, trustedRoot);
+    if (['ecosystem-requirements.json', 'ecosystem-evidence.json'].includes(path.basename(file))) throw new Error();
+    const fd = fs.openSync(file, 'r');
+    let bytes: Buffer;
+    try {
+      const size = fs.fstatSync(fd).size;
+      if (size > 4 * 1024 * 1024) throw new Error();
+      bytes = Buffer.alloc(size + 1);
+      const count = fs.readSync(fd, bytes, 0, bytes.length, 0);
+      if (count !== size) throw new Error();
+      bytes = bytes.subarray(0, count);
+    } finally { fs.closeSync(fd); }
+    if (ref.integrity && createHash('sha256').update(bytes).digest('hex') !== ref.integrity.sha256) throw new Error();
+    const artifact: unknown = JSON.parse(bytes.toString('utf8'));
+    if (object(artifact) && object(artifact.sources) &&
+      ['referenceId', 'referenceRequestId'].some(key => artifact.sources && object(artifact.sources) &&
+        artifact.sources[key] !== undefined && !text(artifact.sources[key]))) throw new Error();
+    const consumed = consumeBoundedObserverEvidence({ artifact });
+    if (!consumed.ok) {
+      result.issueCodes.push(consumed.disposition === 'UNSUPPORTED_OBSERVER_SCHEMA' ? 'ECO_SCHEMA_UNSUPPORTED' : 'ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+      return result;
+    }
+    const p = consumed.evidence;
+    if (p.producer.version !== '0.10.0') result.issueCodes.push('ECO_EVIDENCE_UNSUPPORTED_PRODUCER');
+    result.subject = { schemaVersion: '1.0.0', authority: '@dailephd/my-frontend-observer', namespace: 'my-frontend-observer/runtime', value: p.contextId };
+    if (consumed.readiness !== 'READY' || p.omissions.some(o => o.required) || p.truncations.some(t => t.required) ||
+      (object(artifact) && artifact.fidelity !== undefined)) result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED');
+    result.identityKey = `observer:${p.contextId}:${p.contextRequestId}`;
+    result.factSignature = JSON.stringify([p.adequacy, p.omissions, p.truncations]);
+  } catch { result.issueCodes.push('ECO_EVIDENCE_NATIVE_VALIDATION_FAILED'); }
+  return result;
+}
 
 /** Pure, fail-closed consumption of the released Observer v0.6 wire contract. */
 export function consumeBoundedObserverEvidence(input: ConsumeBoundedObserverEvidenceInput): ConsumeBoundedObserverEvidenceResult {

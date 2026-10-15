@@ -92,6 +92,14 @@ Important implementation files:
 - `src/workflows.ts`: workflow stage order and artifact mappings
 - `src/promptGenerator.ts`: stage-specific prompt text generation
 - `src/run.ts`: run creation and run metadata handling
+- `src/ecosystemEvidenceContracts.ts`, `src/ecosystemEvidenceStore.ts`,
+  `src/ecosystemEvidenceReadiness.ts`, `src/ecosystemEvidenceInspection.ts`
+  (v1.7.0): strict ECO-00 shape validation, the two run
+  sidecars, the pure requirement evaluator, and the stdout inspection
+  projection; the producer readers stay in
+  `src/instructions/myDevKitEvidenceSummary.ts` and `src/observerEvidence.ts`,
+  and policy stays in `src/runIntegrityGate.ts`. Nearest tests:
+  `tests/ecosystemEvidence*.test.ts`
 - `src/stageDetector.ts`: effective lifecycle and run-integrity-aware next-stage
   detection, with file-presence helpers retained for backward compatibility
 - `src/workspace.ts`: workspace creation and config handling
@@ -357,8 +365,9 @@ any of these additive fields remains fully compatible.
 - Extraction has no generic `architecture-context` stage; exact
   `NEED_CONTEXT` recommendations are safe, but generic non-`NEED_CONTEXT`
   architecture routing remains a pre-existing edge case.
-- There is no automatic retrieval, status JSON option, shared schema package,
-  or `my-dev-kit-lab` runtime integration.
+- There is no automatic retrieval, shared schema package, or
+  `my-dev-kit-lab` runtime integration. Opt-in `status --json` and
+  `check --json` exist since v1.7.0.
 
 ## Extraction mode implementation (v0.2.1)
 

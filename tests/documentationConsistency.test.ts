@@ -36,6 +36,7 @@ function createIsolatedRoot(): string {
     'src/instructions/runSemanticContinuity.ts',
     'src/instructions/testResponsibilityCriticality.ts',
     'src/runIntegrityGate.ts',
+    'src/ecosystemEvidenceStore.ts',
     'src/runTelemetry.ts',
     'src/runWorkflowEconomics.ts',
     'src/instructions/testContextBootstrap.ts',
@@ -85,6 +86,58 @@ afterAll(() => {
 });
 
 describe('documentation consistency gate', () => {
+  it('allows opt-in JSON claims only with an actual exact source registration', () => {
+    const root = createIsolatedRoot();
+    mutate(root, 'docs/USAGE.md', text => `${text}\nThe status --json option emits JSON.\n`);
+    expect(runCheck(root).status).toBe(0);
+    mutate(root, 'src/commands/status.ts', text => text.replace(/^\s*\.option\('--json',[^\n]*\r?\n/m, '\n'));
+    const result = runCheck(root);
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('[STATUS_JSON_FALSE_CLAIM]');
+    expect(result.output).toContain('[MANIFEST_FACT_DRIFT]');
+    // Comments and longer option names never establish support.
+    mutate(root, 'src/commands/status.ts', text => `${text}\n// .option('--json', 'comment only')\n`);
+    expect(runCheck(root).output).toContain('[STATUS_JSON_FALSE_CLAIM]');
+    mutate(root, 'src/commands/status.ts', text => text.replace("// .option('--json', 'comment only')", ".option('--json-extra', 'different option')"));
+    expect(runCheck(root).output).toContain('[STATUS_JSON_FALSE_CLAIM]');
+  });
+
+  it('detects a stale status support manifest independently of accurate docs', () => {
+    expectIssue('docs/documentation-preservation-manifest.json', text => text.replace('"statusJsonSupported": true', '"statusJsonSupported": false'), 'MANIFEST_FACT_DRIFT');
+  });
+
+  it('permits explicitly historical no-JSON facts without allowing them to replace current documentation', () => {
+    const root = createIsolatedRoot();
+    mutate(root, 'docs/USAGE.md', text => `${text}\nIn published v1.6.2, status had no JSON option.\n`);
+    expect(runCheck(root).status).toBe(0);
+    mutate(root, 'docs/USAGE.md', text => text.replace(/status --json/g, 'status inspection'));
+    const result = runCheck(root);
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('[STATUS_JSON_DOCUMENTATION_MISSING]');
+  });
+
+  it.each([
+    ['unsupported evidence command', 'docs/COMMANDS.md', 'The orchestrator adds a new evidence command for imports.', 'ECO_UNSUPPORTED_COMMAND_FALSE_CLAIM'],
+    ['sidecar as native artifact', 'docs/ARTIFACTS.md', 'ecosystem-evidence.json is a native artifact.', 'ECO_SIDECAR_NATIVE_TARGET_FALSE_CLAIM'],
+    ['Kit static evidence as runtime proof', 'docs/CONTRACTS.md', 'my-dev-kit static evidence proves runtime behavior.', 'ECO_KIT_RUNTIME_PROOF_FALSE_CLAIM'],
+    ['Observer context as browser proof', 'docs/CONTRACTS.md', 'Observer synthetic context proves browser execution.', 'ECO_OBSERVER_BROWSER_PROOF_FALSE_CLAIM'],
+    ['ECO-01 certification claim', 'docs/CURRENT_STATE.md', 'ECO-01 certification is established.', 'ECO_CERTIFICATION_FALSE_CLAIM'],
+  ])('rejects the unsupported ecosystem claim: %s', (_name, relativePath, claim, code) => {
+    expectIssue(relativePath, (text) => `${text}\n${claim}\n`, code);
+  });
+
+  it('allows explicit negations of unsupported ecosystem claims', () => {
+    const root = createIsolatedRoot();
+    mutate(root, 'docs/CONTRACTS.md', (text) => `${text}\nKit static evidence does not prove runtime behavior, and ECO-01 certification is not established.\n`);
+    expect(runCheck(root).status).toBe(0);
+  });
+
+  it('requires documentation of the source-derived ECO sidecar paths and activation option', () => {
+    expectIssue('docs/ARTIFACTS.md', (text) => text.replace(/ecosystem-evidence\.json/g, 'evidence sidecar'), 'ECO_FACT_DOCUMENTATION_MISSING');
+    expectIssue('docs/COMMANDS.md', (text) => text.replace(/--ecosystem-requirements/g, '--eco-input'), 'ECO_FACT_DOCUMENTATION_MISSING');
+    expectIssue('docs/documentation-preservation-manifest.json', (text) => text.replace('"ecosystem-requirements.json"', '"ecosystem-requirements-other.json"'), 'MANIFEST_FACT_DRIFT');
+  });
+
   it('passes the reconciled canonical documentation', () => {
     const result = runCheck(createIsolatedRoot());
     expect(result.status).toBe(0);
@@ -101,9 +154,9 @@ describe('documentation consistency gate', () => {
     ['missing fixed path', 'docs/ARTIFACTS.md', (text: string) => replace(text, /- `artifacts\/test-context-packet\.txt`\r?\n/, ''), 'FIXED_CONTEXT_PATH_MISSING'],
     ['contradictory v1.2.1 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.1 is unreleased.\n`, 'V121_RELEASE_STATUS_CONTRADICTION'],
     ['contradictory v1.2.3 unreleased status', 'README.md', (text: string) => `${text}\nv1.2.3 is unreleased.\n`, 'V123_RELEASE_STATUS_CONTRADICTION'],
-    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.6.2', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
+    ['missing current-version publication', 'README.md', (text: string) => replace(text, '@dailephd/my-dev-kit-orchestrator@1.7.0', '@dailephd/my-dev-kit-orchestrator@1.2.9'), 'V123_PUBLISHED_CLAIM_MISSING'],
     ['automatic retrieval claim', 'README.md', (text: string) => `${text}\nThe orchestrator automatically runs my-dev-kit.\n`, 'AUTOMATIC_MY_DEV_KIT_CLAIM'],
-    ['status JSON claim', 'docs/USAGE.md', (text: string) => `${text}\nThe status --json option emits JSON.\n`, 'STATUS_JSON_FALSE_CLAIM'],
+    ['stale current status denial', 'docs/USAGE.md', (text: string) => `${text}\nThe status command has no JSON option.\n`, 'STATUS_JSON_STALE_DENIAL'],
     ['persisted TaskState claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime persists TaskState for later runs.\n`, 'TASK_STATE_PERSISTENCE_FALSE_CLAIM'],
     ['persisted StageContextBundle claim', 'docs/ARCHITECTURE.md', (text: string) => `${text}\nThe runtime stores StageContextBundle on disk.\n`, 'STAGE_CONTEXT_BUNDLE_PERSISTENCE_FALSE_CLAIM'],
     ['native context-stage claim', 'docs/WORKFLOWS.md', (text: string) => `${text}\nThe workflow adds a native context stage.\n`, 'NATIVE_CONTEXT_STAGE_FALSE_CLAIM'],
@@ -121,12 +174,10 @@ describe('documentation consistency gate', () => {
     ['missing-file-only prompt selection', 'docs/USAGE.md', (text: string) => replace(text, 'first stage whose effective gate-aware state is not complete', 'first stage whose expected artifact file is missing'), 'PROMPT_STAGE_SELECTION_SEMANTICS_DRIFT'],
     ['missing custom-output rediscovery warning', 'docs/USAGE.md', (text: string) => replace(text, 'cannot rediscover custom-output runs', 'cannot select custom-output runs'), 'CUSTOM_OUTPUT_REDISCOVERY_LIMITATION_MISSING'],
     ['android xml removed from its preserved v1.3.0 assignment', 'docs/ROADMAP.md', (text: string) => replace(text, '- `android-xml`', '- `android-xml-removed`'), 'ROADMAP_CANDIDATE_ASSIGNMENT_DRIFT'],
-    // v1.6.2 is current; v1.7.0 remains planned.
-    ['planned v1.7.0 marked implemented', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['planned v1.7.0 marked published', 'docs/ROADMAP.md', (text: string) => replace(text, '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nPublished.'), 'PLANNED_VERSION_STATUS_DRIFT'],
-    ['current v1.6.2 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
-    ['current v1.6.2 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.6.2 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
-    ['current v1.6.2 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-10-14\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    // v1.7.0 is current; no later roadmap version is implemented.
+    ['current v1.7.0 described as unpublished', 'docs/ROADMAP.md', (text: string) => `${text}\nv1.7.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION'],
+    ['current v1.7.0 without a finalized changelog heading', 'CHANGELOG.md', (text: string) => replace(text, '## v1.7.0 - ', '## Unreleased - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
+    ['current v1.7.0 without its release date', 'CHANGELOG.md', (text: string) => replace(text, /Release date: 2026-10-15\.\r?\n/, ''), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL'],
     ['semantic contract version drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| Semantic Continuity contract | `1.0.0` |', '| Semantic Continuity contract | `2.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['run-integrity gate schema drift in the architecture table', 'docs/ARCHITECTURE.md', (text: string) => replace(text, '| `RunIntegrityGate` | `1.1.0` |', '| `RunIntegrityGate` | `1.0.0` |'), 'SCHEMA_VERSION_CLAIM_MISMATCH'],
     ['current release residue', 'README.md', (text: string) => `${text}\nv1.2.3 is pending.\n`, 'CURRENT_RELEASE_RESIDUE'],
@@ -159,7 +210,7 @@ describe('documentation consistency gate', () => {
 
   it('emits deterministic output ordering', () => {
     const root = createIsolatedRoot();
-    mutate(root, 'README.md', (text) => `${text}\nThe orchestrator automatically runs my-dev-kit.\nThe status --json option emits JSON.\n`);
+    mutate(root, 'README.md', (text) => `${text}\nThe orchestrator automatically runs my-dev-kit.\nThe runtime persists TaskState.\n`);
     const first = runCheck(root);
     const second = runCheck(root);
     expect(first.status).toBe(1);
@@ -287,10 +338,9 @@ describe('v1.6.0 telemetry facts (second isolated builder)', () => {
     expectIssue('docs/ARCHITECTURE.md', (content) => content.replace('| Workflow Economics | `1.0.0` |', ''), 'SCHEMA_VERSION_CLAIM_MISMATCH');
   });
 
-  it('keeps v1.6.2 current and v1.7.0 planned', () => {
-    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
-    expectIssue('docs/ROADMAP.md', (content) => content.replace('### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)', '### v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)\n\nImplemented.'), 'PLANNED_VERSION_STATUS_DRIFT');
-    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.6.2 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
+  it('keeps v1.7.0 current with a finalized changelog section', () => {
+    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.7.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
+    expectIssue('CHANGELOG.md', (content) => content.replace('## v1.7.0 - ', '## Draft - '), 'CURRENT_RELEASE_CHANGELOG_NOT_FINAL');
   });
 });
 
@@ -332,8 +382,8 @@ describe('v1.6.1 test-context bootstrap facts (previous release)', () => {
     expect(result.output).not.toContain('[BOOTSTRAP_SURFACE_FALSE_CLAIM]');
   });
 
-  it('keeps v1.6.2 current without a pending or unpublished status', () => {
-    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.6.2 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
+  it('keeps v1.7.0 current without a pending or unpublished status', () => {
+    expectIssue('docs/ROADMAP.md', (content) => `${content}\nv1.7.0 is not yet published.\n`, 'CURRENT_RELEASE_STATUS_CONTRADICTION');
   });
 
   it('rejects a manifest that classifies the current package version as implemented but unpublished', () => {

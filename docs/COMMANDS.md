@@ -70,8 +70,25 @@ Supported options and inputs:
 - `--output-dir <path>`: alternate run placement, with the rediscovery limitation below.
 - `--proof-only`: explicit verification-only capability, not another mode.
 - `--verification-responsibility <path>`: required safe run-relative proof responsibility with `--proof-only`.
+- `--ecosystem-requirements <path>`: explicit local requirements JSON for v1.7.0 native-evidence intake.
 
 Start initializes the workspace if needed, creates the run folder, writes request/run metadata, and generates the chosen workflow's prompts and applicable sidecars. The agent executes stage work externally.
+
+### Ecosystem evidence activation (v1.7.0)
+
+ECO activation is separate and explicit. With `--ecosystem-requirements`, start
+rejects unsafe, unreadable or invalid input before creating a run, then passes
+the validated document through `createRun({ ecosystemRequirementsDocument })`.
+Creation derives the two ECO metadata fields from the canonical saved snapshot
+and initializes the exact two run sidecars. Without the option no ECO field or
+file is created. An initialization failure reports an error; an incomplete run
+is blocked rather than reported successful. The existing gate evaluates current
+native evidence; critical gaps block judge/final-report, while noncritical gaps
+warn (`check --strict` fails on them). Status/check/export show bounded readiness
+and issue codes for activated runs. Earlier stages remain available to generate
+evidence. Syntactically valid imported evidence alone cannot establish readiness.
+There is no new evidence CLI command; the typed replacement API is documented
+in [CONTRACTS.md](CONTRACTS.md).
 
 ### Semantic Continuity activation
 
@@ -147,7 +164,20 @@ For an activated run, `status` adds one compact `Semantic continuity:` section p
 
 For a telemetry-activated run in `v1.6.0`, `status` also adds one compact `Workflow Economics:` section derived on demand from the run's native telemetry: availability (`available`, `partial`, or `unsupported`), interaction counts, per-command counts, prompt render count and characters, Orchestrator invocation duration, stage movement (forward, backward/revisits, unchanged), correction-prompt renders, integrity blocked-entry/recovery and final-eligibility reached/lost observations, the observed workflow span (wall clock, not active work time), and a coverage line (diagnostics, wall-clock anomalies, numeric limit, concurrency). Unavailable values print `unavailable`. `status` never records telemetry, shows no raw records, invocation IDs, timestamps, or paths, and a legacy run shows no such section; malformed telemetry shows `partial` rather than failing, and an unsupported version shows only `Availability: unsupported`.
 
-`status` is human-readable. There is no JSON option. Do not invent a JSON-output flag for `status`.
+Default status output is human-readable and unchanged. Since
+v1.7.0, `status --json` emits one newline-terminated
+RunEvidenceInspectionV1 object (schemaVersion 1.0.0), with run, ecosystem,
+integrity and judge objects, and no checks property. It uses the reconciled
+run and the same canonical gate, judge and final eligibility results. It
+writes no inspection artifact, ECO sidecar or telemetry. Existing loadRun
+lifecycle reconciliation still applies.
+
+No discovered run emits INSPECTION_NO_RUNS_FOUND and exits 0; an explicitly
+missing run emits INSPECTION_RUN_NOT_FOUND and exits 1; unreadable explicit
+metadata emits INSPECTION_RUN_UNREADABLE and exits 1. Unexpected failure uses
+INSPECTION_FAILED, exit 1. Error objects contain only schemaVersion 1.0.0 and
+error.code. ECO blockers produce a valid inspection and ordinary status exit 0.
+No request, root, locator, raw producer payload or diagnostic message is emitted.
 
 For selected greenfield profiles, status also surfaces scaffold/readiness evidence. It consumes the existing evaluator rather than executing project commands or proving runtime correctness.
 
@@ -217,6 +247,30 @@ For an activated run, the default `check`, `check --artifacts`, and `check --all
 
 For a telemetry-activated run, the default `check` and `check --all` also include a `=== Run telemetry ===` section built from the canonical telemetry reader: `[pass] telemetry records valid` when the structure is clean (a run with no records yet is valid), otherwise bounded `[warn]` lines that reuse the reader's diagnostic codes (for example `DUPLICATE_INVOCATION_ID` or `UNSUPPORTED_RUN_TELEMETRY_VERSION`) plus `INCOMPLETE_TELEMETRY_INVOCATION`, `TELEMETRY_WALL_CLOCK_ANOMALY`, `TELEMETRY_NUMERIC_LIMIT_EXCEEDED`, and `TELEMETRY_UNRECOGNIZED_VALUE` for valid-but-partial coverage. At most 20 lines are shown, followed by a `TELEMETRY_DIAGNOSTICS_TRUNCATED` line with the total. Every telemetry finding is a warning, never a failure: a run's exit code is unchanged unless `--strict` promotes warnings, exactly as for any other warning, and no telemetry finding changes the gate, judge, lifecycle, or correction decisions. `check --all` adds a `Run telemetry` summary line. Narrow checks (`--artifact`, `--prompts`, `--artifacts`, `--trace`, `--design-map`) and legacy runs show no telemetry section, and there is no telemetry flag. `check` never records telemetry.
 
+### JSON inspection
+
+Since v1.7.0, `check --json` is available, retaining every selector.
+Effective precedence is artifacts, all, trace, design-map, single-artifact,
+prompts, then default; JSON never implies all. The selected native checks
+still execute and preserve their original persistence and exit behavior.
+The same inspection shape as status includes checks.selection, outcome,
+issueCounts (fail/warn), strict and exitCode. Counts summarize current native
+diagnostics, not saved reports; the aggregate warn count is null for default/all
+when warning telemetry summaries lack comparable counts.
+Strict contract diagnostics retain their elevated fail counts but warning-only
+native findings retain outcome warning. A canonical gate blocker yields failed
+outcome; narrow legacy checks retain their historical exit even when the
+inspection also exposes unrelated gate blockers. exitCode always reports the
+actual invocation exit. Default/all/artifacts retain existing judge failures.
+
+Default writes artifact-check-results.json version '1'; trace/all retain
+trace-check-results.json version '1'. Narrow artifact/prompts/design-map and
+artifacts checks add no result files. JSON creates no new inspection file.
+No run emits INSPECTION_NO_RUNS_FOUND, exit 1. Missing/unreadable explicit runs
+use the status error codes, exit 1. Invalid effective artifact selection uses
+INSPECTION_CHECK_INVALID_SELECTION, exit 1. Unexpected failure uses
+INSPECTION_FAILED, exit 1. Each invocation emits exactly one JSON document.
+
 ### Artifact contracts
 
 Registered JSON artifacts use strict JSON/structured-field checks. Text artifacts use required sections. Shared validation does not impose text headers on JSON.
@@ -271,6 +325,16 @@ The handoff includes identity, original request, artifact checklist/missing item
 For an activated run the handoff names the semantic contract version in the run identity and adds one compact `=== Semantic continuity ===` section from the same gate: `contractVersion`, `semanticClassification`, `continuityState`, `runIntegrityReady`, critical and noncritical counts and unsatisfied IDs, `blockingCodes`, `warningCodes`, `expectedJudgeVerdict`, and `recommendedCorrectionStage`. It never copies raw context capsules, retrieval audits, or parser output. A legacy run is never labeled activated.
 
 For a telemetry-activated run in `v1.6.0`, the handoff also adds one bounded, fixed-size `=== Workflow Economics ===` section from the same on-demand evaluator: economics version, availability, interaction and per-command counts, prompt render and character statistics, Orchestrator invocation duration statistics, the observed workflow span (labelled wall clock, not active work time), stage movement, mark counts, integrity, judge, and final-eligibility observation counts, continuity snapshot counts (recorded observations of the existing Semantic Continuity projection, not a second continuity concept), and coverage (diagnostics, wall-clock anomalies, numeric limit, concurrency, unrecognized values). It shows counts only, never raw telemetry, invocation history, prompt text, or paths, is identical across repeated exports (except the existing `Generated:` line), and never records telemetry. Legacy runs omit it, and an unsupported version shows only `Availability: unsupported`.
+
+For an ECO-activated run, one Ecosystem evidence section follows
+existing readiness/economics sections and precedes Next command. It reports
+contract version, readiness, validated requirement/state counts, sorted unique
+blocking/warning codes, at most 20 satisfying native references ordered by exact
+evidence ID, and the additional verified references omitted count. Invalid
+sidecars show blocked readiness and unavailable counts where records cannot be
+validated. References are descriptive producer/version/kind tuples; no native
+payload or locator is copied and moving the handoff does not make references
+portable. Unactivated runs, including stray ECO sidecars, omit this section.
 
 ## Manual context integration
 

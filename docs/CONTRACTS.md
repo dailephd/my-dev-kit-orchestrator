@@ -12,6 +12,34 @@ The instruction catalog and exact resolution live under `src/instructions/`; pro
 
 ## Artifact and lifecycle contract
 
+The v1.7.0 storage/import contract is explicit and optional.
+`createRun` gains only the input `ecosystemRequirementsDocument?:
+RunEcosystemRequirementsDocumentV1`; caller-supplied ECO version/digest fields
+are rejected. The input is validated at runtime before creating a run folder.
+`RunMetadata` gains only derived `ecosystemEvidenceVersion?: '1.0.0'` and
+`ecosystemRequirementsSha256?: string` (64 lowercase hex characters).
+No document or input path is persisted in metadata. Both fields absent means
+legacy; either field alone, an unsupported version, or invalid digest fails closed.
+
+The contracts owner `src/ecosystemEvidenceContracts.ts` validates the exact six
+Kit v1.12.5 ECO-00 1.0.0 shapes, including nested closed objects, unique arrays,
+digest formats and date-time forms. Native schema versions and locator text are
+preserved. A run requirements document has `schemaVersion`, `subject`, optional
+`environment`, and a nonempty `requirements` array with unique `requirementId`.
+A run evidence document has `schemaVersion`, an `evidence` array (possibly empty)
+with unique `evidenceId`, and optional `compatibilityBundles` with unique bundle
+IDs. Both run documents reject unknown keys. Invalid shapes use
+`ECO_RECORD_INVALID`; unsupported ECO versions use `ECO_SCHEMA_UNSUPPORTED`.
+Validation issues are deterministic and expose no untrusted keys or values.
+
+`src/ecosystemEvidenceStore.ts` owns immutable canonical UTF-8 requirements and
+their saved-byte SHA-256, plus atomic complete evidence replacement through
+`replaceRunEcosystemEvidence(runFolder, document)`. The exact sidecar paths are
+in [ARTIFACTS.md](ARTIFACTS.md). Replacement verifies activation and immutable
+requirements before writing, rejects unsafe paths and duplicate/malformed input,
+and performs no native artifact resolution. Syntactic validity establishes no
+testing, certification, compatibility, or requirement satisfaction.
+
 Run paths, artifact formats, state transitions, deterministic checks, correction metadata, and export inclusion are owned by workflow definitions, `src/artifactLifecycle.ts`, check commands, and export code. Shared checking does not imply identical syntax: text artifact kinds use section-header contracts, while registered structured JSON kinds require valid JSON and their actual structured fields. Both retain shared existence, predecessor, lifecycle, judge-integrity, and readiness behavior. File-level definitions remain canonical in [ARTIFACTS.md](ARTIFACTS.md).
 
 The trace contract at HEAD includes the v1.6.2 corrections.
@@ -48,7 +76,74 @@ Test-context readiness is phase-aware without changing any schema major. Outside
 
 ## RunIntegrityGate, judge integrity, and final-report eligibility
 
+Activated ECO runs evaluate the latest validated sidecars and native evidence
+through one deterministic result at schema `1.0.0`: `required`, `ready`,
+`classification`, sorted `requirements` (ID, capability, criticality, state,
+matching evidence IDs and issue codes), `blockingCodes`, `warningCodes`, optional
+primary code/reason and `recommendedCorrectionStage`. Classifications are
+`not-required`, `ready`, `warning`, and `blocked`; warnings alone remain ready.
+Global record/digest defects always block. Exact native package/version/kind/schema,
+subject, freshness and adequacy are required; compatibility bundle status assertions
+confer no certification. Kit's only positive capability is
+`my-dev-kit/static-context`, through `my-dev-kit/context-capsule` or
+`my-dev-kit/retrieval-audit` from package `@dailephd/my-dev-kit@1.12.5`.
+Observer's only positive capability is `my-frontend-observer/frontend-change-review`,
+through `my-frontend-observer/bounded-agent-context` from
+`@dailephd/my-frontend-observer@0.10.0`. Native schemas are exactly `1.0.0`.
+Kit binds `@dailephd/my-dev-kit` / `my-dev-kit/static` to native `index.projectRoot`
+and the run project. Observer binds `@dailephd/my-frontend-observer` /
+`my-frontend-observer/runtime` to native `contextId`, with native request identity.
+Neither proves repository commits, declared execution environments or test success.
+These producer subject bindings cannot share a universal project subject. URI/opaque references,
+unsupported tuples and optional Observer fidelity projections remain unverified.
+Local native files are bounded to 4 MiB under the existing run/project roots, with
+traversal/link rejection and optional saved-byte SHA-256 verification.
+
+Prior context/semantic blockers retain primary precedence. The gate combines all
+three readiness facts and alone derives `PASS` versus `NEED_CONTEXT`. ECO-unready
+runs block judge/final-report completion; earlier stages may generate evidence.
+Without either terminal stage, the last existing stage is blocked. External
+refresh instructions have no new correction stage or sidecar lifecycle. An
+authored PASS cannot override ECO blockers; ECO-ready alone cannot grant final
+eligibility. Unactivated behavior and existing check-results JSON are unchanged.
+
 `src/runIntegrityGate.ts` is the canonical run-integrity decision. It combines repository-context readiness with Semantic Continuity (see "Semantic Continuity activation and enforcement" below) and reports one expected judge verdict. `src/judgeIntegrity.ts` prevents an authored `PASS` from overriding a required `NEED_CONTEXT` state and evaluates final-report eligibility. A normal final report requires an accepted `PASS`, no active correction, and no remaining readiness or semantic blocker. Artifact presence or a manual lifecycle mark cannot substitute.
+
+### RunEvidenceInspectionV1
+
+The pure inspection owner is
+`src/ecosystemEvidenceInspection.ts`. Successful status/check JSON objects
+have exactly schemaVersion: '1.0.0', run, ecosystem, integrity, judge, and
+optional checks (check only). Fields are:
+
+- run: runId, mode, currentStage, status (existing current run strings).
+- ecosystem: required (boolean), classification (not-required, ready, warning,
+  blocked), requirements, blockers and warnings (ordered code arrays).
+- requirements rows: requirementId, capabilityId, criticality (critical or
+  noncritical), state (satisfied, unmet-critical, unmet-noncritical),
+  matchingEvidenceIds and issueCodes. Rows sort by exact requirementId;
+  matching IDs sort lexicographically. Evaluator code precedence is retained.
+- integrity: ready (canonical runIntegrityReady), expectedJudgeVerdict (PASS or
+  NEED_CONTEXT), blockingCodes (deduplicated context, semantic, ECO precedence).
+- judge: accepted (canonical judgeVerdictAccepted), finalReportEligible
+  (canonical final eligibility), both booleans.
+- checks: selection (default, single-artifact, artifacts, all, prompts, trace,
+  design-map), outcome (passed, warning, failed, not-run), issueCounts with
+  fail/warn numbers or null, strict (boolean), exitCode (0 or 1). Counts and
+  selector semantics are detailed in [COMMANDS.md](COMMANDS.md#json-inspection).
+
+Unactivated ecosystem is required=false, classification=not-required and empty
+arrays regardless of stray files. Global activated defects remain blocked
+without invented requirement rows. Positive ECO state cannot accept a missing
+or rejected judge verdict or independently authorize a final report.
+
+Error objects have exactly schemaVersion: '1.0.0' and error: { code }, where
+code is INSPECTION_NO_RUNS_FOUND, INSPECTION_RUN_NOT_FOUND,
+INSPECTION_RUN_UNREADABLE, INSPECTION_CHECK_INVALID_SELECTION or
+INSPECTION_FAILED. No error message, stack or path is serialized. Both success
+and error emit one two-space formatted JSON object plus LF to stdout. No
+request, timestamp, root, raw evidence, producer payload, certification claim,
+extra metadata or unbounded diagnostics are included.
 
 ## Proof-only and bounded Observer-evidence contracts
 
