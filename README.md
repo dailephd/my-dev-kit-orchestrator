@@ -49,7 +49,7 @@ The documentation linter moved to `markdownlint-cli`, removing a vulnerable
 development-only dependency chain. No command, mode, stage, or runtime dependency
 was added.
 
-`v1.6.1``v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
+`v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
 yet can enter `test-implementation`: while the `TestImplementationReport` does
 not exist, a critical responsibility that is only missing related-test and
 oracle evidence is accepted for entry with a pending-test warning, and the raw
