@@ -8,7 +8,7 @@ import { SEMANTIC_CONTINUITY_CONTRACT_VERSION } from '../instructions/runSemanti
 import { RUN_TELEMETRY_VERSION, nowUtcIso, startMonotonicTimer } from '../runTelemetry';
 import { beginTelemetryInvocation } from '../runTelemetryObservation';
 import { shouldActivateSemanticContinuity } from '../instructions/semanticContinuityPrompt';
-import { EcosystemEvidenceError, readEcosystemRequirementsInput } from '../ecosystemEvidenceStore';
+import { assertEcosystemWorkspaceSafe, EcosystemEvidenceError, readEcosystemRequirementsInput } from '../ecosystemEvidenceStore';
 
 export function makeStartCommand(): Command {
   const cmd = new Command('start');
@@ -71,7 +71,10 @@ export function makeStartCommand(): Command {
         const ecosystemRequirementsDocument = options.ecosystemRequirements !== undefined
           ? readEcosystemRequirementsInput(options.ecosystemRequirements, projectRoot)
           : undefined;
-        if (ecosystemRequirementsDocument !== undefined) initWorkspace(projectRoot);
+        if (ecosystemRequirementsDocument !== undefined) {
+          assertEcosystemWorkspaceSafe(projectRoot);
+          initWorkspace(projectRoot);
+        }
         const meta = createRun({
           ...(ecosystemRequirementsDocument !== undefined ? { ecosystemRequirementsDocument } : {}),
           request,

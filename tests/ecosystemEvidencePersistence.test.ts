@@ -3,7 +3,7 @@ import * as path from 'path';
 import { createHash } from 'crypto';
 import { createRun, loadRun, RunMetadata } from '../src/run';
 import { initWorkspace, getRunsDir } from '../src/workspace';
-import { assertEcosystemPathSafety, inspectRunEcosystemRecords, replaceRunEcosystemEvidence } from '../src/ecosystemEvidenceStore';
+import { assertEcosystemPathSafety, inspectRunEcosystemRecords, readEcosystemRequirementsInput, replaceRunEcosystemEvidence } from '../src/ecosystemEvidenceStore';
 import { replaceRunEcosystemEvidence as publicReplacement } from '../src/index';
 import { RunEcosystemRequirementsDocumentV1, RunEcosystemEvidenceDocumentV1 } from '../src/ecosystemEvidenceContracts';
 import { evaluateRunIntegrityGate, evaluateStageRunIntegrity, resolveArtifactStateWithRunIntegrity } from '../src/runIntegrityGate';
@@ -409,5 +409,85 @@ describe('CLI activation and canonical guard agreement', () => {
     const result = runCli(['mark', sidecar, '--state', 'complete', '--root', root, '--run', meta.runId]);
     expect(result.exitCode).toBe(1);
     expect(fs.existsSync(path.join(meta.runFolder, 'artifact-state.json'))).toBe(false);
+  });
+});
+
+describe('trusted-root write order and external input parent (review of macOS path fix)', () => {
+  const link = (target: string, at: string): void => fs.symlinkSync(target, at, process.platform === 'win32' ? 'junction' : 'dir');
+  const listing = (dir: string): string[] => fs.readdirSync(dir, { recursive: true } as { recursive: true }).map(String).sort();
+  const scratch = (label: string): string => fs.mkdtempSync(path.join(path.dirname(root), `${label} `));
+  const activate = (project: string) => createRun({ request: 'linked boundary', mode: 'greenfield', projectRoot: project, ecosystemRequirementsDocument: clone(requirements) });
+  const cleanup: string[] = [];
+  afterEach(() => {
+    for (const entry of cleanup.splice(0)) {
+      try { if (fs.lstatSync(entry).isSymbolicLink()) fs.unlinkSync(entry); else fs.rmSync(entry, { recursive: true, force: true }); } catch { /* absent */ }
+    }
+  });
+
+  it('N2: a linked runs directory is rejected before anything is written through it', () => {
+    const project = scratch('eco linked runs'); const outside = scratch('eco outside runs');
+    cleanup.push(project, outside);
+    fs.mkdirSync(path.join(project, '.my-dev-kit-orchestrator'));
+    link(outside, path.join(project, '.my-dev-kit-orchestrator', 'runs'));
+    const before = listing(outside);
+    expect(() => activate(project)).toThrow('ECO_RECORD_INVALID');
+    expect(listing(outside)).toEqual(before);
+  });
+  it('N2: a linked workspace directory cannot cause a recursive mkdir outside the project', () => {
+    const project = scratch('eco linked workspace'); const outside = scratch('eco outside workspace');
+    cleanup.push(project, outside);
+    link(outside, path.join(project, '.my-dev-kit-orchestrator'));
+    expect(() => activate(project)).toThrow('ECO_RECORD_INVALID');
+    expect(listing(outside)).toEqual([]);
+  });
+  it('N1: a linked projectRoot is rejected and its target is not written', () => {
+    const real = scratch('eco real root'); const alias = `${real} link`;
+    cleanup.push(alias, real);
+    link(real, alias);
+    expect(() => activate(alias)).toThrow('ECO_RECORD_INVALID');
+    expect(listing(real)).toEqual([]);
+  });
+  it('N1: activated CLI start rejects a linked workspace before initWorkspace writes', () => {
+    const project = scratch('eco cli linked workspace'); const outside = scratch('eco cli outside');
+    cleanup.push(project, outside);
+    link(outside, path.join(project, '.my-dev-kit-orchestrator'));
+    const requirementsFile = path.join(path.dirname(root), `eco cli requirements ${path.basename(project)}.json`);
+    fs.writeFileSync(requirementsFile, JSON.stringify(requirements));
+    cleanup.push(requirementsFile);
+    const result = runCli(['start', 'linked workspace', '--root', project, '--ecosystem-requirements', requirementsFile]);
+    expect(result.exitCode).not.toBe(0);
+    expect(listing(outside)).toEqual([]);
+  });
+  it('N6: an external requirements file reached through a linked parent is rejected; a regular parent is accepted', () => {
+    const real = scratch('eco input real'); const alias = `${real} link`;
+    cleanup.push(alias, real);
+    fs.writeFileSync(path.join(real, 'requirements.json'), JSON.stringify(requirements));
+    link(real, alias);
+    const projectRoot = path.join(root, 'unrelated-project');
+    expect(() => readEcosystemRequirementsInput(path.join(alias, 'requirements.json'), projectRoot)).toThrow('ECO_RECORD_INVALID');
+    expect(readEcosystemRequirementsInput(path.join(real, 'requirements.json'), projectRoot).schemaVersion).toBe('1.0.0');
+  });
+  it('N6: a linked directory inside the project is rejected for requirements input', () => {
+    const outside = scratch('eco input outside');
+    cleanup.push(outside);
+    fs.writeFileSync(path.join(outside, 'requirements.json'), JSON.stringify(requirements));
+    const inner = path.join(root, 'inner-link');
+    cleanup.push(inner);
+    link(outside, inner);
+    expect(() => readEcosystemRequirementsInput(path.join(inner, 'requirements.json'), root)).toThrow('ECO_RECORD_INVALID');
+  });
+  it('D: replacement cannot be redirected by run.json narrowing the project root across a linked runs directory', () => {
+    const meta = newRun();
+    const runsDir = path.dirname(meta.runFolder);
+    const moved = `${runsDir}-real`;
+    fs.renameSync(runsDir, moved);
+    link(moved, runsDir);
+    cleanup.push(runsDir, moved);
+    const forged = JSON.parse(fs.readFileSync(path.join(moved, path.basename(meta.runFolder), 'run.json'), 'utf8'));
+    forged.projectRoot = moved;
+    fs.writeFileSync(path.join(moved, path.basename(meta.runFolder), 'run.json'), JSON.stringify(forged));
+    const before = fs.readFileSync(path.join(moved, path.basename(meta.runFolder), 'ecosystem-evidence.json'));
+    expect(() => replaceRunEcosystemEvidence(meta.runFolder, evidence)).toThrow('ECO_RECORD_INVALID');
+    expect(fs.readFileSync(path.join(moved, path.basename(meta.runFolder), 'ecosystem-evidence.json'))).toEqual(before);
   });
 });

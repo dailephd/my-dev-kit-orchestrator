@@ -106,13 +106,16 @@ export function createRun(options: {
     const stages = workflow.stages;
 
     if (ecosystemRequirementsBytes !== undefined) {
-      fs.mkdirSync(baseDir, { recursive: true });
       const projectBoundary = path.resolve(projectRoot);
       const resolvedBase = path.resolve(baseDir);
       const relativeBase = path.relative(projectBoundary, resolvedBase);
       const trustedBoundary = relativeBase === '' || (relativeBase !== '..' && !relativeBase.startsWith(`..${path.sep}`) && !path.isAbsolute(relativeBase))
         ? projectBoundary
         : resolvedBase;
+      // Reject linked components at/below the boundary before any directory is
+      // created, then recheck once the base directory exists.
+      assertEcosystemPathSafety(runFolder, false, false, trustedBoundary);
+      fs.mkdirSync(baseDir, { recursive: true });
       assertEcosystemPathSafety(runFolder, false, false, trustedBoundary);
       // Exclusive directory creation preserves the collision contract even if
       // another creator wins between existsSync and mkdirSync.

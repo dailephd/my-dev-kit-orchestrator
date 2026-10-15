@@ -74,7 +74,7 @@ export function assertEcosystemPathSafety(raw: string, mustExist = true, file = 
 }
 export function assertEcosystemRunFolderIdentity(runFolder: string, storedRunFolder: unknown, projectRoot?: unknown): void {
   if (typeof storedRunFolder !== 'string') throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
-  const boundary = typeof projectRoot === 'string' && isWithinPath(projectRoot, runFolder) ? projectRoot : path.dirname(path.resolve(runFolder));
+  const boundary = runBoundary(runFolder, projectRoot);
   const actual = assertEcosystemPathSafety(runFolder, true, false, boundary);
   const stored = assertEcosystemPathSafety(storedRunFolder, true, false, boundary);
   // Compare filesystem identities, so Windows drive/path casing differences
@@ -86,8 +86,24 @@ function isWithinPath(root: string, target: string): boolean {
   const relative = path.relative(path.resolve(root), path.resolve(target));
   return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
 }
+// The default workspace layout <root>/.my-dev-kit-orchestrator/runs/<id> fixes
+// the protected project root from the path itself, so run.json cannot narrow it.
+function defaultLayoutRoot(runFolder: string): string | undefined {
+  const runs = path.dirname(path.resolve(runFolder));
+  const workspace = path.dirname(runs);
+  return path.basename(runs) === 'runs' && path.basename(workspace) === '.my-dev-kit-orchestrator' ? path.dirname(workspace) : undefined;
+}
 function runBoundary(runFolder: string, projectRoot?: unknown): string {
+  const layoutRoot = defaultLayoutRoot(runFolder);
+  if (layoutRoot !== undefined) return layoutRoot;
   return typeof projectRoot === 'string' && isWithinPath(projectRoot, runFolder) ? projectRoot : path.dirname(path.resolve(runFolder));
+}
+// Pre-write guard for activated CLI start: no workspace component or config
+// file at/below projectRoot may be a link before initWorkspace creates anything.
+export function assertEcosystemWorkspaceSafe(projectRoot: string): void {
+  const workspace = path.join(projectRoot, '.my-dev-kit-orchestrator');
+  assertEcosystemPathSafety(path.join(workspace, 'runs'), false, false, projectRoot);
+  assertEcosystemPathSafety(path.join(workspace, 'config.json'), false, true, projectRoot);
 }
 function readLocalBytes(file: string, trustedBoundary?: string): Buffer {
   assertEcosystemPathSafety(file, true, true, trustedBoundary);
@@ -117,7 +133,9 @@ export function prepareRunEcosystemRequirements(document: unknown): string {
 }
 export function readEcosystemRequirementsInput(inputPath: string, projectRoot?: string): RunEcosystemRequirementsDocumentV1 {
   try {
-    const trustedBoundary = projectRoot && isWithinPath(projectRoot, inputPath) ? projectRoot : undefined;
+    // Inside the project the project root is the boundary; an explicit external
+    // input is protected from its own immediate parent directory.
+    const trustedBoundary = projectRoot && isWithinPath(projectRoot, inputPath) ? projectRoot : path.dirname(path.resolve(inputPath));
     return requireValidRequirements(parseBytes(readLocalBytes(inputPath, trustedBoundary)));
   } catch (error) {
     if (error instanceof EcosystemEvidenceError) throw error;
@@ -200,7 +218,7 @@ export function replaceRunEcosystemEvidence(runFolder: string, document: RunEcos
   let temporaryPath: string | undefined;
   let ownsTemporary = false;
   try {
-    const folder = assertEcosystemPathSafety(runFolder, true, false, path.dirname(path.resolve(runFolder)));
+    const folder = assertEcosystemPathSafety(runFolder, true, false, runBoundary(runFolder));
     const metadata = parseBytes(readLocalBytes(path.join(folder, 'run.json'), folder));
     if (metadata === null || typeof metadata !== 'object' || Array.isArray(metadata)) throw new EcosystemEvidenceError('ECO_RECORD_INVALID');
     const activation = metadata as EcosystemActivationMetadata & { runFolder?: unknown };
