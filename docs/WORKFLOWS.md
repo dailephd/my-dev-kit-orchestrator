@@ -371,7 +371,7 @@ A stage blocked by Semantic Continuity renders correction guidance for the canon
 - A context-blocked stage, a semantically blocked stage, or an ineligible final report cannot advance through file presence or a manual completion mark.
 - External runtime/test/assurance results must describe the final candidate. The ecosystem guide's PASS labels do not expand the native judge vocabulary.
 
-### Ecosystem evidence in the workflow (unpublished v1.7.0 candidate)
+### Ecosystem evidence in the workflow (v1.7.0)
 
 Evidence intake is optional and adds no mode, stage, or command. A run is activated only by `start --ecosystem-requirements <path>` (or programmatic `createRun`); runs without it behave exactly as before. For an activated run the user or coding agent provides supported native Kit `1.12.5` or Observer `0.10.0` outputs as local files and replaces the run's evidence snapshot through the typed API. Earlier stages remain available to produce evidence; unmet critical requirements block the judge and final-report stages through the existing `RunIntegrityGate`, and noncritical gaps warn. To correct a block, refresh the native file, replace the snapshot, and rerun `status` or `check`. `mark` and an authored `PASS` cannot override a blocker, and no external tool is run by the orchestrator. See [CONTRACTS.md](CONTRACTS.md) and [ARTIFACTS.md](ARTIFACTS.md).
 

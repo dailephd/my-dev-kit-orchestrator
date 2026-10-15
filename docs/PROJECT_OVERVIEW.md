@@ -33,7 +33,7 @@ Greenfield supports the `typescript-cli`, `nextjs-app`, `android-compose`, and b
 
 The integrations are explicit. The orchestrator does not automatically execute either companion tool.
 
-The unpublished `v1.7.0` candidate adds optional, explicitly activated ecosystem evidence intake. The orchestrator reads supported native `my-dev-kit` static-context and `my-frontend-observer` bounded-context outputs already produced elsewhere, and applies readiness through its existing integrity and judge owners. Kit evidence is static; Observer context does not prove browser execution; a `my-dev-kit-lab` execution-assurance producer and ecosystem certification are not established. See [CURRENT_STATE.md](CURRENT_STATE.md).
+Since `v1.7.0`, the orchestrator provides optional, explicitly activated ecosystem evidence intake. The orchestrator reads supported native `my-dev-kit` static-context and `my-frontend-observer` bounded-context outputs already produced elsewhere, and applies readiness through its existing integrity and judge owners. Kit evidence is static; Observer context does not prove browser execution; a `my-dev-kit-lab` execution-assurance producer and ecosystem certification are not established. See [CURRENT_STATE.md](CURRENT_STATE.md).
 
 ## Evidence and output model
 

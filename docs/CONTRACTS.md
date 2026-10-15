@@ -12,7 +12,7 @@ The instruction catalog and exact resolution live under `src/instructions/`; pro
 
 ## Artifact and lifecycle contract
 
-The unreleased v1.7.0 storage/import contract is explicit and optional.
+The v1.7.0 storage/import contract is explicit and optional.
 `createRun` gains only the input `ecosystemRequirementsDocument?:
 RunEcosystemRequirementsDocumentV1`; caller-supplied ECO version/digest fields
 are rejected. The input is validated at runtime before creating a run folder.
@@ -111,7 +111,7 @@ eligibility. Unactivated behavior and existing check-results JSON are unchanged.
 
 ### RunEvidenceInspectionV1
 
-The unreleased candidate's pure inspection owner is
+The pure inspection owner is
 `src/ecosystemEvidenceInspection.ts`. Successful status/check JSON objects
 have exactly schemaVersion: '1.0.0', run, ecosystem, integrity, judge, and
 optional checks (check only). Fields are:

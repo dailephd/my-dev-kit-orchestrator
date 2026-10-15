@@ -36,7 +36,7 @@ This creates `.my-dev-kit-orchestrator/`, its `runs/` directory, and `config.jso
 
 ## Start a run
 
-For the unreleased v1.7.0 native-evidence candidate, explicit ECO intake is:
+Since v1.7.0, explicit ECO native-evidence intake is:
 
 ```bash
 node dist/cli.js start "<request>" --ecosystem-requirements "requirements input.json"
@@ -222,8 +222,8 @@ Status reports run ID/mode/request/folder, current stage, prompts and artifacts,
 
 In `v1.6.0`, a telemetry-activated run also shows a compact `Workflow Economics:` section (interaction counts, prompt characters, Orchestrator duration, stage movement, and observed span). It is descriptive and appears only for runs created by that source; see [COMMANDS.md](COMMANDS.md#status).
 
-Default status output remains human-readable. The unreleased source candidate
-supports `status --json` for a single newline-terminated versioned inspection:
+Default status output remains human-readable. Since v1.7.0,
+`status --json` is supported for a single newline-terminated versioned inspection:
 
 ```bash
 node dist/cli.js status --json --run <run-id> --root <project-root>

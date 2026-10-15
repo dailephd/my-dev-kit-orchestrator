@@ -94,7 +94,7 @@ Important implementation files:
 - `src/run.ts`: run creation and run metadata handling
 - `src/ecosystemEvidenceContracts.ts`, `src/ecosystemEvidenceStore.ts`,
   `src/ecosystemEvidenceReadiness.ts`, `src/ecosystemEvidenceInspection.ts`
-  (unpublished v1.7.0 candidate): strict ECO-00 shape validation, the two run
+  (v1.7.0): strict ECO-00 shape validation, the two run
   sidecars, the pure requirement evaluator, and the stdout inspection
   projection; the producer readers stay in
   `src/instructions/myDevKitEvidenceSummary.ts` and `src/observerEvidence.ts`,
@@ -367,7 +367,7 @@ any of these additive fields remains fully compatible.
   architecture routing remains a pre-existing edge case.
 - There is no automatic retrieval, shared schema package, or
   `my-dev-kit-lab` runtime integration. Opt-in `status --json` and
-  `check --json` exist only in the unpublished v1.7.0 candidate.
+  `check --json` exist since v1.7.0.
 
 ## Extraction mode implementation (v0.2.1)
 

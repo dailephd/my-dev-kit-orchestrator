@@ -6,7 +6,8 @@
 software development with coding agents. This document describes the
 architecture implemented at repository HEAD.
 
-The current release is `v1.6.2`, a trace-diagnostic correction patch. It follows
+The current release is `v1.7.0`, generic ecosystem evidence intake. It follows
+`v1.6.2`, a trace-diagnostic correction patch, and
 `v1.6.1`, a test-context bootstrap correction that makes test-context readiness
 phase-aware, and `v1.6.0`, which shipped
 native run telemetry and Workflow Economics, alongside `v1.5.0`'s Semantic Continuity and the prior
@@ -507,7 +508,7 @@ converts an error-bearing result to ready.
 
 ## Lifecycle boundaries
 
-The unreleased v1.7.0 candidate adds explicit ECO-00 storage/import and native readiness.
+Since v1.7.0, explicit ECO-00 storage/import and native readiness are implemented.
 `src/ecosystemEvidenceContracts.ts` owns the six frozen reference types and
 strict nested validation, plus `RunEcosystemRequirementsDocumentV1` and
 `RunEcosystemEvidenceDocumentV1`. Kit v1.12.5 remains the schema authority.

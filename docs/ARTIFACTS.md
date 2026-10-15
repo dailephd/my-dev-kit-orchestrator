@@ -15,7 +15,7 @@ storage. See [Workflows](WORKFLOWS.md) for stage procedures and
 
 ## Run layout
 
-The unreleased v1.7.0 candidate creates two optional sidecars only when
+Since v1.7.0, the orchestrator creates two optional sidecars only when
 the run is explicitly activated:
 
 ```text
@@ -132,7 +132,7 @@ For extraction mode, the `porting-map` stage has two artifacts - `source-to-targ
 
 ## artifact-check-results.json (v0.4.0)
 
-The candidate's status/check JSON inspection is stdout-only
+The status/check JSON inspection is stdout-only
 RunEvidenceInspectionV1 schema 1.0.0, not a native run artifact. No inspection
 file is written. Existing `artifact-check-results.json` version '1', filename and fields
 remain unchanged, including when default check uses JSON presentation.

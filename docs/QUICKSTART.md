@@ -11,9 +11,9 @@
 From the target project:
 
 ```bash
-npx @dailephd/my-dev-kit-orchestrator@1.6.2 init
-npx @dailephd/my-dev-kit-orchestrator@1.6.2 start "Add audit logging"
-npx @dailephd/my-dev-kit-orchestrator@1.6.2 prompt
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 init
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 start "Add audit logging"
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 prompt
 ```
 
 Success means initialization creates `.my-dev-kit-orchestrator/`, `start` creates a discoverable run, and `prompt` prints/writes the first stage prompt. Give that prompt to a coding agent, save the requested artifact at the run path named by the prompt, then run `prompt` again.
@@ -21,8 +21,8 @@ Success means initialization creates `.my-dev-kit-orchestrator/`, `start` create
 Inspect without advancing work:
 
 ```bash
-npx @dailephd/my-dev-kit-orchestrator@1.6.2 status
-npx @dailephd/my-dev-kit-orchestrator@1.6.2 check --all
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 status
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 check --all
 ```
 
 These commands are read-only with respect to authored stage artifacts; `check --all` may exit nonzero while expected artifacts are still missing.
@@ -42,8 +42,8 @@ The resulting scaffold contract includes the common `agents.txt`,
 `claude.txt`, `AGENTS.md`, and `CLAUDE.md` instructions plus the Python profile
 targets. A user or coding agent still creates the files and runs Python,
 pytest, and `my-dev-kit`; the orchestrator does not execute them. The published
-`npx` examples above are pinned to `1.6.2`.
+`npx` examples above are pinned to `1.7.0`.
 
-Optional, unpublished `v1.7.0` source candidate only: from a local build, a run can be explicitly activated for ecosystem evidence with `node dist/cli.js start "<request>" --ecosystem-requirements "<requirements.json>"`, and `status --json` / `check --json` print versioned inspection JSON. Published `npx ...@1.6.2` does not include these options; see [USAGE.md](USAGE.md) and [CONTRACTS.md](CONTRACTS.md).
+Optional, since `v1.7.0`: a run can be explicitly activated for ecosystem evidence with `node dist/cli.js start "<request>" --ecosystem-requirements "<requirements.json>"`, and `status --json` / `check --json` print versioned inspection JSON. Releases before `1.7.0` do not include these options; see [USAGE.md](USAGE.md) and [CONTRACTS.md](CONTRACTS.md).
 
 Next, read [COMMANDS.md](COMMANDS.md) for every option and side effect, [WORKFLOWS.md](WORKFLOWS.md) for mode/stage selection, and [ARTIFACTS.md](ARTIFACTS.md) for files to save.

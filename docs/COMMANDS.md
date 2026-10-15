@@ -70,11 +70,11 @@ Supported options and inputs:
 - `--output-dir <path>`: alternate run placement, with the rediscovery limitation below.
 - `--proof-only`: explicit verification-only capability, not another mode.
 - `--verification-responsibility <path>`: required safe run-relative proof responsibility with `--proof-only`.
-- `--ecosystem-requirements <path>`: explicit local requirements JSON for the unreleased v1.7.0 native-evidence candidate.
+- `--ecosystem-requirements <path>`: explicit local requirements JSON for v1.7.0 native-evidence intake.
 
 Start initializes the workspace if needed, creates the run folder, writes request/run metadata, and generates the chosen workflow's prompts and applicable sidecars. The agent executes stage work externally.
 
-### Ecosystem evidence activation (unreleased candidate)
+### Ecosystem evidence activation (v1.7.0)
 
 ECO activation is separate and explicit. With `--ecosystem-requirements`, start
 rejects unsafe, unreadable or invalid input before creating a run, then passes
@@ -164,8 +164,8 @@ For an activated run, `status` adds one compact `Semantic continuity:` section p
 
 For a telemetry-activated run in `v1.6.0`, `status` also adds one compact `Workflow Economics:` section derived on demand from the run's native telemetry: availability (`available`, `partial`, or `unsupported`), interaction counts, per-command counts, prompt render count and characters, Orchestrator invocation duration, stage movement (forward, backward/revisits, unchanged), correction-prompt renders, integrity blocked-entry/recovery and final-eligibility reached/lost observations, the observed workflow span (wall clock, not active work time), and a coverage line (diagnostics, wall-clock anomalies, numeric limit, concurrency). Unavailable values print `unavailable`. `status` never records telemetry, shows no raw records, invocation IDs, timestamps, or paths, and a legacy run shows no such section; malformed telemetry shows `partial` rather than failing, and an unsupported version shows only `Availability: unsupported`.
 
-Default status output is human-readable and unchanged. In the unreleased
-v1.7.0 source candidate, `status --json` emits one newline-terminated
+Default status output is human-readable and unchanged. Since
+v1.7.0, `status --json` emits one newline-terminated
 RunEvidenceInspectionV1 object (schemaVersion 1.0.0), with run, ecosystem,
 integrity and judge objects, and no checks property. It uses the reconciled
 run and the same canonical gate, judge and final eligibility results. It
@@ -249,7 +249,7 @@ For a telemetry-activated run, the default `check` and `check --all` also includ
 
 ### JSON inspection
 
-The unreleased source candidate adds `check --json`, retaining every selector.
+Since v1.7.0, `check --json` is available, retaining every selector.
 Effective precedence is artifacts, all, trace, design-map, single-artifact,
 prompts, then default; JSON never implies all. The selected native checks
 still execute and preserve their original persistence and exit behavior.
@@ -326,7 +326,7 @@ For an activated run the handoff names the semantic contract version in the run 
 
 For a telemetry-activated run in `v1.6.0`, the handoff also adds one bounded, fixed-size `=== Workflow Economics ===` section from the same on-demand evaluator: economics version, availability, interaction and per-command counts, prompt render and character statistics, Orchestrator invocation duration statistics, the observed workflow span (labelled wall clock, not active work time), stage movement, mark counts, integrity, judge, and final-eligibility observation counts, continuity snapshot counts (recorded observations of the existing Semantic Continuity projection, not a second continuity concept), and coverage (diagnostics, wall-clock anomalies, numeric limit, concurrency, unrecognized values). It shows counts only, never raw telemetry, invocation history, prompt text, or paths, is identical across repeated exports (except the existing `Generated:` line), and never records telemetry. Legacy runs omit it, and an unsupported version shows only `Availability: unsupported`.
 
-For an ECO-activated candidate run, one Ecosystem evidence section follows
+For an ECO-activated run, one Ecosystem evidence section follows
 existing readiness/economics sections and precedes Next command. It reports
 contract version, readiness, validated requirement/state counts, sorted unique
 blocking/warning codes, at most 20 satisfying native references ordered by exact

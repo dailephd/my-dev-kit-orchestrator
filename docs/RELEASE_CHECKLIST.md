@@ -3,7 +3,7 @@
 > [RELEASE.md](RELEASE.md) is the canonical maintainer release procedure. This file remains the detailed smoke, compatibility, and historical checklist.
 
 Use this checklist for release-readiness work. This file is a checklist
-template, not evidence that the listed steps have already run. The current release is `v1.6.2`.
+template, not evidence that the listed steps have already run. The current release is `v1.7.0`.
 Older releases remain historical baselines.
 
 ## Current release baseline
@@ -13,10 +13,10 @@ Older releases remain historical baselines.
 - [ ] docs describe 79 native stages and preserve exact stage order
 - [ ] docs describe the 13 greenfield stages and implemented artifact paths
 - [ ] docs describe all current source greenfield starter profiles (`typescript-cli`, `nextjs-app`, `android-compose`, `python-cli`) sourced from `SUPPORTED_PROFILES` in `resolveGreenfieldProfile.ts`, not a hardcoded list
-- [ ] docs identify `v1.6.2` as the current release and scope older versions historically
+- [ ] docs identify `v1.7.0` as the current release and scope older versions historically
 - [ ] docs describe telemetry contract `1.0.0`, Workflow Economics `1.0.0`, and observations for `start`, `prompt`, and `mark`
 - [ ] docs state that `status`, `check`, and `export` are non-recording and that Workflow Economics is derived rather than persisted
-- [ ] docs describe generic ecosystem evidence intake (`ORC-EVIDENCE-01`) for `v1.7.0` as implemented in the local candidate and unpublished until it is released
+- [ ] docs describe generic ecosystem evidence intake (`ORC-EVIDENCE-01`) for `v1.7.0` as the current release
 - [ ] docs preserve the 15-file public project-document baseline while classifying `agents.txt`, `claude.txt`, `AGENTS.md`, and `CLAUDE.md` as generated-project instructions
 
 ## Required local validation
@@ -57,7 +57,7 @@ Older releases remain historical baselines.
 - [ ] docs state that supplemental context files and sidecars are not native
   lifecycle artifacts
 - [ ] docs state that `TaskState` and `StageContextBundle` are not persisted
-- [ ] docs state that published `1.6.2` `status` has no JSON option and that opt-in `status --json` and `check --json` belong only to the unpublished `v1.7.0` candidate until it is released
+- [ ] docs state that `status` in `1.6.2` and earlier has no JSON option and that opt-in `status --json` and `check --json` are available since `v1.7.0`
 - [ ] refresh-only prompts, verification/judge review, `NEED_CONTEXT`, and the
   exact `Recommended next stage` policy are documented
 - [ ] every refresh-required result has a deterministic primary blocker,

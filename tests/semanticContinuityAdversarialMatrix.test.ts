@@ -1539,7 +1539,7 @@ describe('BU. public surface', () => {
       for (const banned of ['--semantic', '--continuity', '--rsp', '--direct', '--full-stage-context']) expect(flags).not.toContain(banned);
     }
     expect(program.commands.find((c) => c.name() === 'status')!.options.map((o) => o.long)).toEqual(['--run', '--root', '--json']);
-    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version).toBe('1.6.2');
+    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version).toBe('1.7.0');
   });
 });
 

@@ -23,9 +23,20 @@ is `my-dev-kit-orchestrator`.
 ## Current release
 
 The current release is
-`@dailephd/my-dev-kit-orchestrator@1.6.2`. See [CHANGELOG.md](CHANGELOG.md) for
+`@dailephd/my-dev-kit-orchestrator@1.7.0`. See [CHANGELOG.md](CHANGELOG.md) for
 release history and [docs/ROADMAP.md](docs/ROADMAP.md) for implementation and
 planned-work status.
+
+`v1.7.0` adds optional, explicitly activated generic ecosystem evidence intake
+(ORC-EVIDENCE-01): `start --ecosystem-requirements <path>`, supported
+`my-dev-kit` `1.12.5` static-context and `my-frontend-observer` `0.10.0`
+bounded-context evidence, readiness enforced through the existing integrity
+gate, and opt-in `status --json` / `check --json` inspection. Runs without
+activation are unchanged. It does not run `my-dev-kit`, Observer or Lab, does not
+establish runtime execution or browser behavior, and is not ECO-01 or ecosystem
+certification. No command, mode, stage, starter profile or runtime dependency
+was added. See [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) and
+[docs/CONTRACTS.md](docs/CONTRACTS.md).
 
 `v1.6.2` corrects trace diagnostics. Ordinary technical tokens such as `ECO-00`
 and `UTF-8` are no longer reported as malformed trace IDs, while recognized-prefix
@@ -36,18 +47,7 @@ native stages. Correction suggestions name only stages that exist in the active
 run, or an explicit artifact for the optional design map, and remain advisory.
 The documentation linter moved to `markdownlint-cli`, removing a vulnerable
 development-only dependency chain. No command, mode, stage, or runtime dependency
-was added. Generic ecosystem evidence intake (ORC-EVIDENCE-01) is the `v1.7.0`
-scope; see the unpublished candidate note below.
-
-**Unpublished `v1.7.0` candidate.** The development branch contains optional,
-explicitly activated generic ecosystem evidence intake: `start
---ecosystem-requirements <path>`, supported Kit `1.12.5` static-context and
-Observer `0.10.0` bounded-context evidence, readiness enforced through the
-existing integrity gate, and opt-in `status --json` / `check --json`
-inspection. It is not published, `npx @dailephd/my-dev-kit-orchestrator@1.6.2`
-does not include it, and it does not establish runtime execution or
-ecosystem certification. See [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)
-and [docs/CONTRACTS.md](docs/CONTRACTS.md).
+was added.
 
 `v1.6.1``v1.6.1` fixes a test-context bootstrap deadlock. A new subsystem with no tests
 yet can enter `test-implementation`: while the `TestImplementationReport` does
@@ -58,7 +58,7 @@ verification, and judge remain strict and require a refreshed post-test
 context. Legacy compatible runs need no Semantic Continuity activation, and
 `RunIntegrityGate` remains the canonical enforcement consumer. No command,
 mode, stage, or dependency was added. Generic ecosystem evidence intake
-remains planned for `v1.7.0` (ORC-EVIDENCE-01).
+was then planned for `v1.7.0` (ORC-EVIDENCE-01) and shipped there.
 
 `v1.6.0` ships versioned native run telemetry and deterministic Workflow
 Economics. New CLI-created runs record bounded observations for `start`,
@@ -70,7 +70,7 @@ target-application behavior. Telemetry never changes run-integrity, judge,
 lifecycle, or final-report decisions. The eight commands, seven modes, 79
 native stages, 13 greenfield stages, and four starter profiles are unchanged;
 `my-dev-kit` remains a manual operation. Generic ecosystem evidence intake
-remains planned for `v1.7.0`. See [docs/COMMANDS.md](docs/COMMANDS.md) and
+was then planned for `v1.7.0` and shipped there. See [docs/COMMANDS.md](docs/COMMANDS.md) and
 [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
 `v1.5.0` ships Semantic Continuity. New staged runs in `feature`, `repair`,
@@ -325,9 +325,8 @@ executed. A coding agent supplies actual application, browser, and test evidence
   effect.
 - `scaffold-plan` and `scaffold-implementation` retain their specialized
   greenfield scaffold renderer and still receive catalog entries and sidecars.
-- In published `1.6.2`, `status` is human-readable and has no JSON option;
-  opt-in `status --json` and `check --json` exist only in the unpublished
-  `v1.7.0` candidate.
+- In `1.6.2` and earlier, `status` is human-readable and has no JSON option;
+  opt-in `status --json` and `check --json` are available since `1.7.0`.
 - `start --output-dir` creates a run in the requested directory, but later
   commands cannot rediscover custom-output runs in the reviewed release.
   Omit this option for a run that must be resumed through the CLI.

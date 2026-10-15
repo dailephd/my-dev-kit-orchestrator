@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-Changes targeting `v1.7.0`, Generic Ecosystem Evidence Intake
-(ORC-EVIDENCE-01). This work is implemented in the source tree but is not
-published and has no release date.
+No unreleased changes.
+
+## v1.7.0 - Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01)
+
+Release date: 2026-10-15.
 
 ### Added
 
