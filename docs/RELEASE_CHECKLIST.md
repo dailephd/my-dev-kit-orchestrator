@@ -99,7 +99,7 @@ Older releases remain historical baselines.
 ## v1.3.0 profile and scaffold verification checklist
 
 - [ ] `validateGreenfieldProfile()`/`validateGreenfieldProfileRegistry()` pass
-  for all three current profiles with zero issues
+  for all three profiles supported in `v1.3.0` with zero issues
 - [ ] `validateGreenfieldScaffoldPlan()` passes for a real plan per profile,
   including `android-compose`'s empty `setupCommands` and optional
   `connectedAndroidTest`
