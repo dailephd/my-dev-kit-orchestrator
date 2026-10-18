@@ -1620,7 +1620,7 @@ Boundary:
 
 `my-dev-kit` understands existing codebases.
 
-It should own:
+It owns:
 
 - indexing
 - search
@@ -1630,13 +1630,18 @@ It should own:
 - graph artifacts
 - semantic artifacts
 - classification
-- future Kotlin indexing
-- future Java indexing
-- future AndroidManifest parsing
-- future resource indexing
-- future Compose semantic artifacts
-- future Android architecture classification
-- future Android retrieval benchmarks
+- Kotlin indexing
+- Java indexing
+- AndroidManifest parsing
+- resource indexing
+- Compose semantic artifacts
+- Android architecture classification
+- Android retrieval benchmarks
+
+These Android capabilities have shipped through `my-dev-kit` v1.13.0. They
+provide static repository evidence and retrieval benchmarks, not Gradle,
+device, emulator, or runtime-test execution. Current details remain owned by
+[my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/PROJECT_PROGRESS.md).
 
 `my-dev-kit` should not become a project generator.
 

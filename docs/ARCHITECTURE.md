@@ -350,9 +350,10 @@ conditions, and the required return format.
 Context-sensitive implementation and test-implementation stages render normal
 work only when their required repository evidence is ready. When readiness is
 blocked, the direct-stage prompt is refresh-only and prohibits normal
-implementation or test work. Printing a prompt reevaluates readiness but does
-not create sidecars or templates and does not mutate `run.json` or
-`artifact-state.json`.
+implementation or test work. Printing a prompt reevaluates readiness without
+creating sidecars or templates or changing manual `artifact-state.json`
+records. Shared run loading may reconcile and persist `run.json`'s derived
+`currentStage` and `status` from existing artifacts and integrity decisions.
 
 For an unfamiliar existing project, prompt assembly also has a manual ecosystem
 precondition: the [Architecture Assimilation Gate in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#6-existing-project-onboarding-workflow)
@@ -532,6 +533,14 @@ Each native stage produces its expected artifact file. Lifecycle progression
 uses artifact existence and artifact state with applicable integrity decisions.
 Explicit content and dependency checks do not replace that mechanism.
 
+`src/run.ts` loads metadata through `src/runLifecycle.ts`'s
+`reconcileRunLifecycle`. Loading a run recomputes its current stage and status
+from existing artifacts, manual state, accepted correction routing, and the
+integrity gate. If those derived fields changed, it atomically replaces
+`run.json`. This shared behavior applies to inspection and prompt commands as
+well as other run consumers; it does not author missing stage artifacts or
+manually mark them complete.
+
 Instruction-packet sidecars are inspection aids, not native lifecycle artifacts.
 They are absent from `run.json` and `artifact-state.json`, are not mark targets,
 and cannot advance a run.
@@ -565,14 +574,14 @@ final eligibility still requires existing artifact and accepted judge checks.
 Legacy runs ignore stray ECO files and keep their existing gate behavior.
 
 `src/runIntegrityGate.ts` is the sole canonical run-integrity evaluator. It
-derives `contextReady`, `blockedStageNames`, deterministic blocking codes, the
-recommended correction stage, and `expectedJudgeVerdict` (`PASS` when context
-is ready or not required, `NEED_CONTEXT` otherwise) directly from
-`ContextReadiness`/`RunContextReadiness` results. It does not recompute readiness.
-Every readiness-sensitive command evaluates this gate once per invocation and
-threads the same result through its decisions: automatic/explicit prompt
-selection, lifecycle resolution, stage detection, `mark`, `status`, `check`,
-`check --all`, `check --artifacts`, and `export`.
+combines repository-context readiness, Semantic Continuity, and optional ECO
+readiness into `runIntegrityReady`, deterministic blocking codes, the
+recommended correction stage, and `expectedJudgeVerdict` (`PASS` only when
+all applicable readiness inputs allow it, `NEED_CONTEXT` otherwise).
+Command decisions share their computed gate result across automatic/explicit
+prompt selection, stage detection, `mark`, `status`, `check`, `check --all`,
+`check --artifacts`, and `export`. Shared lifecycle reconciliation evaluates
+the same gate while loading the run before the command's own inspection.
 
 `resolveArtifactStateWithRunIntegrity` is the single override point. It forces
 a context-blocked implementation/test artifact, a semantically blocked current
@@ -663,7 +672,9 @@ using only satisfying native references from validated sidecars.
 `check` evaluates context readiness alongside its selected checks. Blocking
 context issues fail the command. Warning-only conditions do not, and duplicate
 failures for the same context kind are suppressed. Its failure message uses
-the same canonical blocker summary. Checks do not advance lifecycle state.
+the same canonical blocker summary. Checks do not author stage artifacts or
+manually mark completion; shared run loading can persist derived stage/status
+reconciliation as described under Lifecycle boundaries.
 
 For a greenfield run with a selected profile, `status` and `check`/`check --all`
 also surface `checkGreenfieldRunReadiness()` findings through the same shared

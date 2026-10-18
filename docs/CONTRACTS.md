@@ -99,6 +99,34 @@ unsupported tuples and optional Observer fidelity projections remain unverified.
 Local native files are bounded to 4 MiB under the existing run/project roots, with
 traversal/link rejection and optional saved-byte SHA-256 verification.
 
+The producer versions above are exact compatibility pins, not minimum versions.
+Orchestrator `1.7.0` rejects newer producer versions, including Kit `1.13.0` and
+Observer `0.10.1`, for this ECO intake path. Generate evidence with the supported
+producer version or keep newer native outputs in their separately documented
+manual review workflow. Do not relabel an artifact's producer version to make it
+appear compatible. The older supplemental repository-context and pure
+`consumeBoundedObserverEvidence` interfaces retain their own contracts; these
+ECO pins do not redefine them.
+
+Each activated run has one requirements subject. That subject must match both
+the envelope and the native artifact exactly. A Kit static project subject and
+an Observer runtime context subject therefore cannot be combined into one
+satisfied run by assigning them a common project label. Their complementary
+evidence can be reviewed separately without inventing cross-producer identity.
+If the optional requirements `environment` is present, the current adapters
+report `ECO_EVIDENCE_ENVIRONMENT_MISMATCH` even when envelope fields agree,
+because neither producer attests native execution environments. A context-only
+run may omit that optional field; a workflow that requires environment
+attestation needs external assurance rather than a weaker claim.
+
+An unsuitable evidence item for a required capability can keep its requirement
+unmet even when another item qualifies. Refresh native files and replace the
+complete current evidence snapshot through `replaceRunEcosystemEvidence`,
+rather than append stale references. Optional ECO responsibility binding also
+requires the Orchestrator authority/namespace and exactly `RSP-` plus three
+digits, corroborated by the native adapter. This narrower ECO binding does not
+change the native Semantic Continuity contract's acceptance of longer IDs.
+
 Prior context/semantic blockers retain primary precedence. The gate combines all
 three readiness facts and alone derives `PASS` versus `NEED_CONTEXT`. ECO-unready
 runs block judge/final-report completion; earlier stages may generate evidence.
@@ -246,7 +274,7 @@ Activation is explicit and versioned. Run metadata (`run.json`) may carry `seman
 
 `src/instructions/runSemanticContinuity.ts` is the only I/O adapter. It reads the mode-owned strategy artifact from `TEST_STRATEGY_SOURCE_REQUIREMENTS`, the implementation, test-implementation and verification reports located through the workflow definition, and trace declarations (through `parseDeclaredTraceIds()`) from artifacts of stages before the strategy stage. It reuses the readiness results from the same gate invocation and `readRawContextCapsule()` for my-dev-kit evidence, so context readiness is evaluated once. It hands everything to `evaluateSemanticContinuity()` and re-models nothing. If a context is refresh-required, no producer evidence is fabricated, and the existing context blocker stays the primary diagnosis.
 
-The gate adds `semanticContinuityClassification` (`not-required`, `ready`, `warning`, `blocked`) and `runIntegrityReady` (`contextReady` and `semanticContinuityReady`); the expected judge verdict is `PASS` only when `runIntegrityReady` is true, otherwise `NEED_CONTEXT`. `pending` continuity counts as ready. A non-complete critical responsibility blocks (`SEMANTIC_CONTINUITY_CRITICAL_RESPONSIBILITY_UNSATISFIED`), an unclassified one blocks (`SEMANTIC_CONTINUITY_UNCLASSIFIED_RESPONSIBILITY`), and a non-complete noncritical responsibility only warns (`SEMANTIC_CONTINUITY_NONCRITICAL_RESPONSIBILITY_UNSATISFIED`), including noncritical attributable invalidity. Defects that cannot be attributed to a canonical responsibility (unknown stage, empty active strategy, orphan declarations, unattributable structural invalidity) block as `SEMANTIC_CONTINUITY_GLOBAL_INTEGRITY_INVALID`, with the underlying source issue code preserved. Diagnostics such as the verification status/exit-code inconsistency remain warnings. Proof-only and greenfield stay `not-required` even when a version is present, and test mode requires no production implementation continuity.
+The gate adds `semanticContinuityClassification` (`not-required`, `ready`, `warning`, `blocked`). Current `runIntegrityReady` requires `contextReady`, `semanticContinuityReady`, and `ecosystemEvidenceReady`; unactivated ECO evidence is not required and contributes readiness. The expected judge verdict is `PASS` only when `runIntegrityReady` is true, otherwise `NEED_CONTEXT`. `pending` continuity counts as ready. A non-complete critical responsibility blocks (`SEMANTIC_CONTINUITY_CRITICAL_RESPONSIBILITY_UNSATISFIED`), an unclassified one blocks (`SEMANTIC_CONTINUITY_UNCLASSIFIED_RESPONSIBILITY`), and a non-complete noncritical responsibility only warns (`SEMANTIC_CONTINUITY_NONCRITICAL_RESPONSIBILITY_UNSATISFIED`), including noncritical attributable invalidity. Defects that cannot be attributed to a canonical responsibility (unknown stage, empty active strategy, orphan declarations, unattributable structural invalidity) block as `SEMANTIC_CONTINUITY_GLOBAL_INTEGRITY_INVALID`, with the underlying source issue code preserved. Diagnostics such as the verification status/exit-code inconsistency remain warnings. Proof-only and greenfield stay `not-required` even when a version is present, and test mode requires no production implementation continuity.
 
 A repository-context blocker keeps primary precedence for `primaryBlockingCode`, `primaryBlockingReason`, and `recommendedCorrectionStage`; semantic blockers stay visible in the semantic fields. The semantic correction stage comes from the earliest correction-owner stage in workflow order, then canonical strategy declaration order (the strategy leg maps to the mode-owned strategy stage), and is `null` for an unknown stage or unsupported version. Judge routing accepts only stages the correction router treats as correctable for the run's mode: `regression-test-strategy`, `compatibility-test-strategy`, and `resilience-test-strategy` are correctable only for `repair`, `refactor`, and `harden` respectively, while `test-strategy` and `target-architecture` behave as before and route-table defaults are unchanged.
 

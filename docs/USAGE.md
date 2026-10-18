@@ -176,7 +176,7 @@ artifacts/test-context-packet.txt
 reports/test-context-retrieval-report.txt
 ```
 
-When blocked, a direct implementation/test prompt is refresh-only and prohibits normal work. `prompt` display is read-only: it does not create templates/sidecars or change `run.json`, lifecycle state, or supplemental evidence.
+When blocked, a direct implementation/test prompt is refresh-only and prohibits normal work. `prompt` display preserves templates, sidecars, authored stage artifacts, manual artifact-state records, and supplemental evidence. Shared run loading may reconcile and persist the derived `currentStage` and `status` fields in `run.json` from existing artifacts and integrity decisions.
 
 A blocked result identifies a deterministic primary blocker, primary reason, corrective action, evidence target, and ordered issue codes. These same canonical details flow through prompts, status, checks, verification, judge, correction routing, and exports. Regenerate evidence rather than edit a generated result to claim readiness.
 
@@ -322,7 +322,7 @@ A valid recommended-stage override applies under the normal routing contract, bu
 
 ### Correction prompts and trace suggestions
 
-When correction is active, `prompt` selects the bounded correction stage and includes the verdict, stage, judge artifact, relevant predecessors, optional design map, and scope restrictions. The CLI does not edit files, call an LLM, execute an agent, or restart the run automatically.
+When correction is active, `prompt` selects the bounded correction stage and includes the verdict, stage, judge artifact, relevant predecessors, optional design map, and scope restrictions. The CLI does not edit project source, call an LLM, execute an agent, or restart the run automatically.
 
 Since v1.6.2, trace suggestions identify the
 reporting artifact's native owner from the actual run stage list. A
@@ -383,7 +383,7 @@ my-dev-kit-orchestrator check --root /path/to/project
 
 Artifact findings distinguish missing files/sections from warning-level empty sections, placeholders, and status mismatches. Prompt checks inspect required stage content and distinguish missing/empty prompts from optional omissions. Status reports the saved content-check summary or not-run state.
 
-By default warning-only results can exit 0. Failures exit 1. Strict mode also fails on warnings. Check results and generated report writes do not advance stages or mutate lifecycle state. Blocking repository-context issues remain nonzero and duplicate failures for a context kind are suppressed.
+By default warning-only results can exit 0. Failures exit 1. Strict mode also fails on warnings. Check results and generated reports do not author missing stage artifacts or manually mark completion. Shared run loading may reconcile and persist `run.json`'s derived `currentStage` and `status` from existing artifacts and integrity decisions. Blocking repository-context issues remain nonzero and duplicate failures for a context kind are suppressed.
 
 ## Check artifact contracts and stage gates
 

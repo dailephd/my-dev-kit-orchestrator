@@ -119,7 +119,7 @@ docs/ — tracked maintained Markdown documentation; use existing responsibility
   ARCHITECTURE.md: implemented architecture, owner boundaries, extension points.
   CONTRACTS.md: compatibility/public interfaces and maintained native contracts.
   CURRENT_STATE.md: released implementation and known limitations (do not document planned behavior as shipped).
-  ROADMAP.md: individual release milestones, including planned ORC-EVIDENCE-01 v1.7.0 and deferred work; do not reassign scope.
+  ROADMAP.md: individual release milestones, including released ORC-EVIDENCE-01 v1.7.0 and deferred work; do not reassign scope.
   PROJECT_OVERVIEW.md, QUICKSTART.md, USAGE.md, COMMANDS.md, WORKFLOWS.md, ARTIFACTS.md: public overview, getting started, operational command syntax, workflows and native artifacts.
   DEVELOPMENT.md, CI_CD.md, SECURITY.md, RELEASE.md: contributor development, CI, security and release procedures.
   DOCUMENTATION_PRESERVATION_POLICY.md, documentation-preservation-manifest.json: preserved document inventory and exact docs consistency gate; never silently compress or delete historical sections.
@@ -167,7 +167,7 @@ NON-NEGOTIABLE STRUCTURAL INVARIANTS
 - Historical releases, prompt hashes, compatibility fixture identities, document headings and stage order remain preserved.
 - Do not add miscellaneous utils/, common/, shared/, v2/, backup/, old/ or feature-batch folders without a proved distinct owner and explicit approval.
 - Do not conflate an implementation-complete batch with pre-release audit, release preparation or publication. Every task uses its explicitly selected workflow.
-- Future v1.7.0 ECO evidence intake must follow adopted ECO-00 reference contracts; ECO-01 exact tuple certification is separate.
+- Released v1.7.0 ECO evidence intake follows adopted ECO-00 reference contracts and its exact supported native producer versions; ECO-01 exact tuple certification is separate.
 
 STRUCTURE / CLEANUP PROGRAM — NOT AUTOMATICALLY AUTHORIZED
 ---------------------------------------------------------

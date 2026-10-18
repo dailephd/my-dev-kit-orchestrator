@@ -339,7 +339,7 @@ reports missing or empty files, required content, placeholder or blank
 content, missing predecessor artifacts, and unsupported modes or stages.
 Warnings remain warnings in normal mode and cause exit code 1 with `--strict`.
 
-`my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. Contract and stage-gate checks inspect the run but do not change lifecycle state or advance stages.
+`my-dev-kit-orchestrator check --all` combines artifact contracts with critical stage-gate checks, trace checks, the DesignMap trace check when present, and correction-routing status. These checks do not author missing stage artifacts or manually mark them complete. Shared run loading may reconcile and persist the derived `currentStage` and `status` fields in `run.json` from existing artifacts and integrity decisions; generated check reports remain separate from manual artifact-state records.
 
 ## Current format limitations
 
