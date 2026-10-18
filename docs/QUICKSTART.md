@@ -16,7 +16,7 @@ npx @dailephd/my-dev-kit-orchestrator@1.7.0 start "Add audit logging"
 npx @dailephd/my-dev-kit-orchestrator@1.7.0 prompt
 ```
 
-Success means initialization creates `.my-dev-kit-orchestrator/`, `start` creates a discoverable run, and `prompt` prints/writes the first stage prompt. Give that prompt to a coding agent, save the requested artifact at the run path named by the prompt, then run `prompt` again.
+Success means initialization creates `.my-dev-kit-orchestrator/`, `start` creates a discoverable run and its prompt templates, and `prompt` prints the live first-stage instructions. Give those instructions to a coding agent, save the requested artifact at the run path named by the prompt, then run `prompt` again.
 
 Inspect without advancing work:
 
@@ -25,17 +25,17 @@ npx @dailephd/my-dev-kit-orchestrator@1.7.0 status
 npx @dailephd/my-dev-kit-orchestrator@1.7.0 check --all
 ```
 
-These commands are read-only with respect to authored stage artifacts; `check --all` may exit nonzero while expected artifacts are still missing.
+These commands preserve authored stage artifacts. Loading a run may update derived `currentStage` and `status` fields in `run.json` from existing artifact and gate state; checks may also save their result reports. `check --all` may exit nonzero while expected artifacts are still missing.
 
-New runs in every mode except `greenfield` also ask the coding agent to carry stable responsibility IDs through implementation, tests, and verification; nothing extra is required to start, and there is no flag for it. `--mode` selects the workflow as usual.
+New staged runs in every mode except `greenfield` also ask the coding agent to carry stable responsibility IDs through implementation, tests, and verification; proof-only runs are exempt. Nothing extra is required to start, and there is no flag for it. `--mode` selects the workflow as usual.
 
 For a new project, use `start --mode greenfield "<project idea>"`. Greenfield remains prompt-guided and does not scaffold code by itself.
 
-The current release supports the bounded `python-cli` profile. From a local
-build, start it with:
+The current release supports the bounded `python-cli` profile. Start it with
+the installed CLI:
 
 ```bash
-node dist/cli.js start --mode greenfield "Create a small Python CLI that prints a greeting"
+npx @dailephd/my-dev-kit-orchestrator@1.7.0 start --mode greenfield "Create a small Python CLI that prints a greeting"
 ```
 
 The resulting scaffold contract includes the common `agents.txt`,
@@ -44,6 +44,6 @@ targets. A user or coding agent still creates the files and runs Python,
 pytest, and `my-dev-kit`; the orchestrator does not execute them. The published
 `npx` examples above are pinned to `1.7.0`.
 
-Optional, since `v1.7.0`: a run can be explicitly activated for ecosystem evidence with `node dist/cli.js start "<request>" --ecosystem-requirements "<requirements.json>"`, and `status --json` / `check --json` print versioned inspection JSON. Releases before `1.7.0` do not include these options; see [USAGE.md](USAGE.md) and [CONTRACTS.md](CONTRACTS.md).
+Optional, since `v1.7.0`: a run can be explicitly activated for ecosystem evidence with `npx @dailephd/my-dev-kit-orchestrator@1.7.0 start "<request>" --ecosystem-requirements "<requirements.json>"`, and `status --json` / `check --json` print versioned inspection JSON. Releases before `1.7.0` do not include these options; see [USAGE.md](USAGE.md) and [CONTRACTS.md](CONTRACTS.md) for the exact supported producer versions and subject constraints.
 
 Next, read [COMMANDS.md](COMMANDS.md) for every option and side effect, [WORKFLOWS.md](WORKFLOWS.md) for mode/stage selection, and [ARTIFACTS.md](ARTIFACTS.md) for files to save.
