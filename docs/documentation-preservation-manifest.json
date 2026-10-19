@@ -225,7 +225,10 @@
       "v1.6.1",
       "v1.7.0",
       "ORC-EVIDENCE-01",
-      "v1.6.2"
+      "v1.6.2",
+      "Deferred: Rust Producer Compatibility Qualification (ORC-RUST-COMPAT)",
+      "dependency-gated",
+      "QUALIFIED_NO_CHANGE"
     ]
   },
   "roadmapVersions": [
