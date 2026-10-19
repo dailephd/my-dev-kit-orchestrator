@@ -1582,6 +1582,27 @@ ECO-01 certification is separate from implementation of this consumer milestone 
 
 ## Planned milestones
 
+### Deferred: Rust Producer Compatibility Qualification (ORC-RUST-COMPAT)
+
+**Status: deferred, dependency-gated; version TBD; no Orchestrator implementation authorized yet.** This is a consumer qualification task, not a Rust-language-support feature. It must not be assigned a release number or started automatically because a candidate Rust parser or a development branch exists in another repository.
+
+**Activation dependency:** A Rust-capable `@dailephd/my-dev-kit` version has been published with an explicitly frozen and documented producer contract for Rust source indexing and role-specific context evidence, including qualified symbol identity, test evidence, and conservative Cargo/module relationships. Identify its exact published version, supported artifact/schema versions and test fixtures; do not substitute an unreleased checkout or assume `latest` implies compatibility.
+
+**Goal:** Determine whether the existing Orchestrator evidence consumers, responsibility mappings, context-readiness evaluation, `RunIntegrityGate`, judge integrity, and correction routing can faithfully consume Rust-containing Kit evidence through their existing language-neutral contracts.
+
+**Qualification scope:**
+
+- Freeze an exact producer/consumer package-version tuple, relevant context-capsule and retrieval-audit schema versions, manifest/graph reference contracts, and test fixture identities before evaluating compatibility.
+- Exercise architecture, implementation, and test-implementation evidence over a Rust-only Cargo workspace and a mixed Rust/TypeScript project. Require distinguishable same-named methods in different `impl` owners, module/dependency uncertainty, relevant tests, and accurate source/provenance references where supported by the published producer.
+- Check sufficient, partial, stale, truncated, ambiguous, missing, tampered, unsupported-version and contradictory evidence. A malformed producer artifact cannot be silently reinterpreted, promoted to a passing responsibility mapping, or declared fresh by Orchestrator.
+- Verify critical test-responsibility coverage, producer-versus-consumer identity parity, requirement satisfaction, exact native-artifact compatibility, and expected fail-closed outcomes; preserve existing support for previously qualified Kit and Observer producer tuples.
+- If the published Rust producer is compatible without Orchestrator code changes, record **QUALIFIED_NO_CHANGE** with complete test evidence. Otherwise propose only the smallest additive version/adapter/validation correction needed, with backward-compatibility fixtures and independent tests, for a later planner-authorized implementation.
+- Preserve separate authorities: Kit owns Rust syntax, Cargo indexing, qualified symbols, and source retrieval; Orchestrator consumes evidence and owns lifecycle/readiness; Lab owns its Rust audit/security and any independent ecosystem certification. Static Rust evidence does not prove compilation, tests passing, download behavior, or runtime correctness.
+
+**Explicit exclusions:** No Rust parser, Cargo execution, new source index, parallel producer-specific graph, new workflow mode/stage, Rust greenfield profile, change to frozen ECO-00 reference shapes, native artifact rewriting, automatic trust in new versions, or claim of ECO-01 certification. None of those follows merely from qualifying Rust producer compatibility.
+
+**Completion evidence:** Record the exact compatible producer/consumer tuple, schemas and fixture identities; independent passing and negative test results; legacy-compatibility outcomes; residual unsupported semantics; and a clear `QUALIFIED_NO_CHANGE`, `QUALIFIED_WITH_BOUNDED_COMPATIBILITY_CHANGE`, or `BLOCKED_INCOMPATIBLE_PRODUCER` conclusion. The qualification is not complete if context is insufficient or source/test evidence is falsely presented as runtime proof.
+
 ### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
 
 The completed greenfield scaffold-to-feature transition remains a separate
