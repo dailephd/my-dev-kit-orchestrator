@@ -225,7 +225,14 @@
       "v1.6.1",
       "v1.7.0",
       "ORC-EVIDENCE-01",
-      "v1.6.2"
+      "v1.6.2",
+      "v1.7.1",
+      "ORC-KIT-COMPAT",
+      "ORC-RUST-COMPAT",
+      "ECO-SOURCE-01",
+      "KIT-FACTS-01",
+      "LAB-KIT-01",
+      "QUALIFIED_NO_CHANGE"
     ]
   },
   "roadmapVersions": [
@@ -252,7 +259,8 @@
     "v1.6.0",
     "v1.6.1",
     "v1.6.2",
-    "v1.7.0"
+    "v1.7.0",
+    "v1.7.1"
   ],
   "greenfieldStageOrder": [
     "idea-brief",
@@ -302,7 +310,7 @@
     "latestPublishedVersion": "1.7.0",
     "currentReleaseDate": "2026-10-15",
     "implementedUnpublishedVersions": [],
-    "plannedUnpublishedVersions": [],
+    "plannedUnpublishedVersions": ["v1.7.1"],
     "ecosystemEvidenceSidecars": [
       "ecosystem-requirements.json",
       "ecosystem-evidence.json"
