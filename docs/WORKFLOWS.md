@@ -4,6 +4,13 @@ This guide owns Orchestrator's native modes, stage order, lifecycle, and complet
 
 Cross-repository recipes have one home: [Ecosystem development workflows in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md). The [command-surface compatibility map](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#915-command-surface-compatibility-map) adds combinations found by matching the actual four-tool command inputs/outputs rather than only the named workflows. That guide combines my-dev-kit, Orchestrator, Lab, Observer, and project test commands. This repository does not maintain a second copy.
 
+The external large language model (LLM) planner and coding agent choose and
+execute those steps through their workflow templates. Orchestrator supplies
+prompts, artifacts and readiness decisions; it does not launch the other tools
+or edit target source. Use the compatible producer/consumer combinations
+documented in [CONTRACTS.md](CONTRACTS.md). Later qualification belongs to the
+[roadmap](ROADMAP.md#planned-milestones), not the current command contract.
+
 `my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to choose a mode and follow its stages. [Usage](USAGE.md) retains detailed usage compatibility guidance.
 
 Each workflow uses a fixed ordered stage list. Advancement consults effective artifact lifecycle and the applicable readiness/integrity gates, not file presence alone.
