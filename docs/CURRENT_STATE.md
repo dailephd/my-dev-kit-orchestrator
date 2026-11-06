@@ -113,6 +113,13 @@ Current implementation includes exact workflow-instruction packets, supplemental
 - It generates prompts and validates evidence; it does not execute project setup, builds, tests, Gradle, agents, or publishing.
 - Releases up to v1.6.2 print human-readable status only; opt-in JSON inspection (`status --json`, `check --json`) is available since v1.7.0.
 - Workflow Economics describes only Orchestrator-observed interactions: its durations are time inside Orchestrator commands, its observed span is wall-clock and not active work time, prompt sizes are characters (not tokens), and judge and Semantic Continuity figures are snapshot observations, not attempt or execution counts.
+- There is no first-class parent-outcome/work-package plan, split
+  justification, or integrated-journey completion contract. Native stage
+  completion and `RSP` continuity do not by themselves prove that an external
+  end-to-end user outcome is operational. Separately issued ChatGPT/coding-agent
+  tasks and their handoffs are not observed by the native telemetry/economics
+  system. The [unversioned roadmap proposal](ROADMAP.md#planned-milestones)
+  addresses this gap without claiming an implemented feature.
 - Custom `start --output-dir` runs cannot be rediscovered by later CLI commands in the current release.
 - Component documentation remains empty when the brief provides no component/module hints.
 - Checks establish structural/readiness evidence, not runtime correctness.
