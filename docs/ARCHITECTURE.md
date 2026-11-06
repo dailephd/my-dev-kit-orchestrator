@@ -46,6 +46,12 @@ evidence, run a coding agent, edit source code, execute tests, or publish
 packages. The user or agent invokes `my-dev-kit` separately and supplies its
 evidence.
 
+Cross-tool selection and execution belong to the external large language model
+(LLM) planner and coding agent following their workflow templates. Orchestrator
+provides instructions and readiness decisions; it is not an all-tool executor.
+The [roadmap](ROADMAP.md#planned-milestones) owns subsequent Kit consumer
+qualification, including the boundary around Lab's source-analysis migration.
+
 Artifact content validation remains one shared system. Artifact-kind entries in
 the registry select their native format contract: text artifacts use the
 existing section parser, while structured greenfield JSON artifacts use strict

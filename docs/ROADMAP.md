@@ -67,6 +67,9 @@ and the `v0.x.0` releases remain part of the published project history.
 - `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
 - `v1.6.2` is a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
 - `v1.7.0` delivers Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts. Released on 2026-10-15.
+- `v1.7.1` is the earliest planned Kit consumer compatibility maintenance slot,
+  including Rust producer qualification. A compatible existing consumer may
+  complete qualification without a new release.
 
 ## Published releases through v1.0.0
 
@@ -1582,6 +1585,135 @@ ECO-01 certification is separate from implementation of this consumer milestone 
 
 ## Planned milestones
 
+### v1.7.1 - Kit Consumer Compatibility Qualification (ORC-KIT-COMPAT)
+
+Status: planned, dependency-gated compatibility work. The current release stays
+`1.7.0`. This maintenance slot does not require a release when the existing
+consumer qualifies without a product change.
+
+Goal: qualify the existing evidence consumers against the Kit producer selected
+for the Kit `v1.15.0` and Lab `v0.10.0` source-analysis migration. This includes
+the previously deferred Rust Producer Compatibility Qualification
+(`ORC-RUST-COMPAT`); its negative cases and ownership boundaries remain part of
+this scope. The migration work is the first workstream of those versions and
+does not replace their existing static interface/data-relationship and executable
+evidence commitments (`KIT-API-01` and `LAB-EVIDENCE-01`).
+
+The [coordinated source-analysis migration](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_COORDINATED_ROADMAP.md#79-kit-backed-lab-source-audits--2026-10-27)
+is `ECO-SOURCE-01`, with Kit source facts owned by `KIT-FACTS-01` and Lab
+integration owned by `LAB-KIT-01`. This milestone is its downstream Orchestrator
+compatibility work, not another source-analysis implementation.
+
+Published baseline and qualification lanes (2026-11-06 review):
+
+- Kit `v1.14.0` is released and extends the **same** index, graph, context,
+  search, and source-retrieval architecture across Python, JavaScript/TypeScript,
+  selected frameworks and Rust. Qualified `symbolq:` declarations and
+  symbol-index schema 3 belong to Kit; Orchestrator must not rebuild graph
+  identities from simple names or add a language-specific parser.
+- Orchestrator `v1.7.0` has two distinct Kit consumption paths. The manually
+  supplied raw context capsule/retrieval-audit readers accept documented
+  schema-major-1 evidence subject to actual readiness, provenance and identity
+  checks. The explicitly activated generic ecosystem adapter
+  (`readKitEcosystemEvidence` in
+  `src/instructions/myDevKitEvidenceSummary.ts`) currently requires the exact
+  `@dailephd/my-dev-kit@1.12.5` producer in the envelope **and** native
+  evidence body, together with artifact schema `1.0.0`. A raw reader's
+  successful parse cannot be treated as acceptance of that newer producer
+  through the separate activated adapter. Equally, a healthy Kit context
+  capsule does not prove code execution, test success or security.
+- First qualify the actual released Kit `v1.14.0` against both paths and
+  preserve the working Kit `v1.12.5` activated baseline. When a validated
+  Kit `v1.15.0` `KIT-FACTS-01` candidate is available, separately qualify its
+  exact producer/consumer tuple without waiting for unrelated Lab completion.
+  Do not infer a future artifact contract from v1.14.0 or assume newer
+  versions are wire-compatible merely because their package numbers increase.
+- Per-lane reporting is mandatory. `QUALIFIED_NO_CHANGE` applies only where
+  the existing code truly accepts all required evidence; it cannot describe
+  successful activated intake of Kit `v1.14.0` under the unmodified exact
+  `1.12.5` check. If new activated intake is in scope and verified native
+  artifacts are compatible, implement only an exact allowlisted adapter
+  qualification for those verified versions (or a narrower necessary
+  correction), retaining all existing negative checks. Unsupported tuples
+  stay rejected; no unconditional semver-range or `@latest` trust.
+- Rust test discovery and test-command provenance remain Kit source-context
+  responsibilities. Qualify realistic Cargo-only and mixed repositories:
+  capture whether test commands and related test/oracle evidence are grounded,
+  rather than guessing a `cargo test` command in Orchestrator or weakening
+  the existing pre-test/critical-responsibility gates. Any demonstrated
+  producer evidence gap is assigned back to Kit with a reproducer.
+
+Dependencies and sequence:
+
+- Kit owns language parsing, normalized source facts, graph evidence, indexing
+  and retrieval. Lab's selected source audits use Kit through a controlled
+  invocation and retain audit policy, execution evidence and reporting.
+- Freeze the exact Kit producer, Orchestrator consumer, contract/schema versions,
+  fixture identities and package or candidate digests before qualification.
+  Use readiness-verified candidates for coordinated development and distinguish
+  candidate results from release-package compatibility. Never infer support from
+  a package's newest version alone.
+- This downstream qualification is not a prerequisite for the initial Kit-to-Lab
+  migration or Lab analyzer removal unless that migration changes a shared
+  contract consumed here. Any such contract change requires this consumer's
+  qualification before the changed contract is accepted for its workflow.
+- The external large language model (LLM) planner and coding agent select and
+  execute the tool steps through workflow templates. Orchestrator supplies
+  stage instructions, artifact contracts and readiness decisions. Lab's bounded
+  internal Kit invocation does not make Orchestrator an all-tool executor.
+
+Qualification scope:
+
+- Exercise both the existing schema-major-1 context-capsule/retrieval-audit
+  readers and the explicitly activated ecosystem native adapters. Preserve
+  previously qualified Kit and Observer tuples and their negative behavior.
+- Cover TypeScript, JavaScript, Python, Java and Kotlin evidence, plus a
+  Rust-only Cargo workspace and a mixed Rust/TypeScript repository. Verify
+  qualified symbols, distinguishable same-named methods in different `impl`
+  owners, conservative module/dependency relationships, relevant tests and
+  accurate source/provenance references where the producer supports them.
+- Check sufficient, partial, stale, truncated, ambiguous, missing, tampered,
+  unsupported-version and contradictory evidence. Require critical
+  test-responsibility coverage, producer/consumer identity parity and honest
+  unavailable states. Static evidence does not prove compilation, test execution
+  or runtime correctness.
+- Permit only the smallest additive adapter, validation or accepted-version
+  correction demonstrated necessary by these checks. Preserve current schema,
+  identity, freshness, adequacy and required-evidence-loss checks; do not replace
+  exact compatibility with unconditional trust in newer versions.
+- Keep native producer subjects distinct. This qualification does not establish
+  cross-producer project correlation, environment attestation, a Lab native
+  evidence adapter or broader execution assurance.
+
+The final qualification report must explicitly separate the legacy
+schema-major-1 raw-context path from the activated ECO evidence path,
+including observed behavior against published Kit §1.12.5§ and §1.14.0§,
+plus a separately identified §1.15.0§ candidate only when actually available.
+For every case record the exact package or candidate hash, native artifact
+kind/schema, subject/index identity, outcome, and failure code. Verify
+successful old-producer intake, correct new-producer intake only when approved,
+and fail-closed newer-version, stale, tampered, ambiguous, insufficient,
+truncated-required and cross-repository mismatch cases. Do not mark
+§QUALIFIED_NO_CHANGE§ globally when any required consumer lane still rejects
+the selected producer. A compatible legacy lane with unsupported new generic
+intake is a split result, not a universal PASS.
+
+Acceptance: record exact component identities, schemas, fixture identities,
+positive and negative results, legacy compatibility and residual unsupported
+semantics. Return `QUALIFIED_NO_CHANGE` for an unchanged existing consumer,
+`QUALIFIED_WITH_BOUNDED_COMPATIBILITY_CHANGE` when a justified maintenance change
+is needed, or `BLOCKED_INCOMPATIBLE_PRODUCER`. Package publication remains a
+separate release workflow. Ecosystem integration certification (`ECO-01`) and
+activation require their own exact compatible bundle and evidence; this
+qualification alone confers neither.
+
+Exclusions: no source parser, Cargo execution, parallel graph or source index,
+shared analysis library or fifth repository, new mode/stage or Rust greenfield
+profile, automatic Kit/Observer/Lab execution, Lab policy duplication, native
+artifact rewriting, or change to frozen ecosystem reference shapes (`ECO-00`).
+Greenfield-to-Feature Handoff Hardening and optional mobile-profile work remain
+in their existing deferred scopes.
+
 ### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
 
 The completed greenfield scaffold-to-feature transition remains a separate
@@ -1681,6 +1813,17 @@ It should own:
 - pre-release validation support
 
 `my-dev-kit-lab` should not be part of normal greenfield project bootstrap.
+
+The selected Kit `v1.15.0` / Lab `v0.10.0` migration makes Kit the sole source
+analysis and retrieval provider for Lab after gated parity and removal. Lab
+retires its duplicate analyzers at gate 5 only after gates 1–4 establish
+TypeScript, JavaScript, Python, Java and Kotlin parity or approved corrections,
+with no unresolved regression. Gate 6 then proves Rust reuse before the migration
+is complete. Audit policy, external-tool
+execution and validation remain Lab responsibilities. This is a planned
+ownership change, not a claim about the current Lab release; its authoritative
+scope remains in the Kit and Lab roadmaps. Neither this change nor Orchestrator
+qualification introduces a shared analyzer package or a fifth repository.
 
 ## Non-goals
 
