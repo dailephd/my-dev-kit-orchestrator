@@ -290,4 +290,17 @@ A stage the gate blocks on Semantic Continuity renders bounded correction guidan
 
 ## Compatibility expectations
 
+The released `v1.7.0` consumer is language-independent but **not**
+producer-version-independent. Its generic `readKitEcosystemEvidence` adapter
+requires the exact `@dailephd/my-dev-kit@1.12.5` tuple in both the
+`EvidenceEnvelopeV1` native reference and the parsed capsule/audit body.
+The older raw capsule/audit context-reading path is a separate schema-major-1
+reader and its successful parse does not authorize an ECO evidence envelope
+from Kit `v1.14.0`. The proposed `v1.7.1` qualification in
+[ROADMAP.md](ROADMAP.md#planned-milestones) tests these paths separately.
+Any additional accepted Kit producer must be verified against native
+artifact shapes, subject/freshness/adequacy/provenance and required-loss
+semantics before an exact compatible tuple is enabled. Unverified versions
+remain unsupported, not silently accepted.
+
 Schema versions, fixed paths, stage order, command families, issue codes, legacy-run treatment, and documented non-execution boundaries are compatibility-sensitive. Additive evolution must preserve old-run readability or emit explicit legacy/not-evaluated evidence. See [ARCHITECTURE.md](ARCHITECTURE.md) for owners and [DOCUMENTATION_PRESERVATION_POLICY.md](DOCUMENTATION_PRESERVATION_POLICY.md) for anti-drift rules.
