@@ -290,4 +290,13 @@ A stage the gate blocks on Semantic Continuity renders bounded correction guidan
 
 ## Compatibility expectations
 
+There is no versioned parent-outcome/work-package plan, split-justification
+contract, or direct coding-agent event intake in the `v1.7.0` native API.
+`WorkflowInstructionPacket` remains stage-specific and deterministic;
+`StageContextBundle` is an in-memory, run-specific assembly, not a persisted
+delivery plan. `RSP-NNN` responsibility identity does not equate to a verified
+user journey, and Workflow Economics cannot infer external agent sessions.
+[ROADMAP.md](ROADMAP.md) owns the proposed unversioned improvement; no new
+schema, command flag, stage, or gate is represented as shipped by this note.
+
 Schema versions, fixed paths, stage order, command families, issue codes, legacy-run treatment, and documented non-execution boundaries are compatibility-sensitive. Additive evolution must preserve old-run readability or emit explicit legacy/not-evaluated evidence. See [ARCHITECTURE.md](ARCHITECTURE.md) for owners and [DOCUMENTATION_PRESERVATION_POLICY.md](DOCUMENTATION_PRESERVATION_POLICY.md) for anti-drift rules.
