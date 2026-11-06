@@ -225,7 +225,20 @@
       "v1.6.1",
       "v1.7.0",
       "ORC-EVIDENCE-01",
-      "v1.6.2"
+      "v1.6.2",
+      "v1.7.1",
+      "ORC-KIT-COMPAT",
+      "ORC-RUST-COMPAT",
+      "ECO-SOURCE-01",
+      "KIT-FACTS-01",
+      "LAB-KIT-01",
+      "QUALIFIED_NO_CHANGE",
+      "v1.14.0",
+      "1.12.5",
+      "symbolq:",
+      "Per-lane reporting",
+      "Cargo-only",
+      "Outcome-oriented delivery and fragmentation control"
     ]
   },
   "roadmapVersions": [
@@ -252,7 +265,8 @@
     "v1.6.0",
     "v1.6.1",
     "v1.6.2",
-    "v1.7.0"
+    "v1.7.0",
+    "v1.7.1"
   ],
   "greenfieldStageOrder": [
     "idea-brief",
@@ -302,7 +316,9 @@
     "latestPublishedVersion": "1.7.0",
     "currentReleaseDate": "2026-10-15",
     "implementedUnpublishedVersions": [],
-    "plannedUnpublishedVersions": [],
+    "plannedUnpublishedVersions": [
+      "v1.7.1"
+    ],
     "ecosystemEvidenceSidecars": [
       "ecosystem-requirements.json",
       "ecosystem-evidence.json"
@@ -378,7 +394,15 @@
       "stage.greenfield.scaffold-plan",
       "stage.greenfield.scaffold-implementation"
     ],
-    "contextReadinessBlockerFields": ["contextKind", "primaryCode", "primaryReason", "correctiveAction", "evidenceTarget", "blockingIssueCodes", "supportingIssueCodes"]
+    "contextReadinessBlockerFields": [
+      "contextKind",
+      "primaryCode",
+      "primaryReason",
+      "correctiveAction",
+      "evidenceTarget",
+      "blockingIssueCodes",
+      "supportingIssueCodes"
+    ]
   },
   "requiredDocsCheckAssertions": [
     "implementation-derived command, mode, stage, profile, context, path, and schema facts",

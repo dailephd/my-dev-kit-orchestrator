@@ -4,6 +4,13 @@ This guide owns Orchestrator's native modes, stage order, lifecycle, and complet
 
 Cross-repository recipes have one home: [Ecosystem development workflows in my-dev-kit](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md). The [command-surface compatibility map](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md#915-command-surface-compatibility-map) adds combinations found by matching the actual four-tool command inputs/outputs rather than only the named workflows. That guide combines my-dev-kit, Orchestrator, Lab, Observer, and project test commands. This repository does not maintain a second copy.
 
+The external large language model (LLM) planner and coding agent choose and
+execute those steps through their workflow templates. Orchestrator supplies
+prompts, artifacts and readiness decisions; it does not launch the other tools
+or edit target source. Use the compatible producer/consumer combinations
+documented in [CONTRACTS.md](CONTRACTS.md). Later qualification belongs to the
+[roadmap](ROADMAP.md#planned-milestones), not the current command contract.
+
 `my-dev-kit-orchestrator` supports seven workflow modes. Use this guide to choose a mode and follow its stages. [Usage](USAGE.md) retains detailed usage compatibility guidance.
 
 Each workflow uses a fixed ordered stage list. Advancement consults effective artifact lifecycle and the applicable readiness/integrity gates, not file presence alone.
@@ -13,6 +20,19 @@ Choose a mode by the change's primary goal. `feature` changes behavior; `repair`
 Proof-only is not an eighth mode. It is an explicit run capability for a verification task with a declared proof responsibility. Ordinary runs retain changed-surface expectations. Proof-only runs require exact proof evidence and remain subject to lifecycle, readiness, integrity, judge, and final-report gates. Repository evidence becomes blocking only at its owning stage. Future-stage evidence does not block an earlier phase.
 
 A coding agent may continue through authorized native stages within one session. A continuous full-stack task does not authorize skipping `test-implementation`, bypassing readiness, or declaring success after backend-only work. The cross-repository guide defines the outer user-flow acceptance and feedback record without adding native modes or stages here.
+
+For outer task planning, define the parent user-visible result and its
+integration acceptance before dividing a feature into separate coding-agent
+requests. Group work by genuinely shared owners, contracts, fixtures and
+tests, and permit bounded correction inside existing authority rather than
+requiring a new planner handoff at every checkpoint. Split for a real
+dependency, permission, security, ownership, or capacity boundary; retain
+the integration checkpoint when a split is necessary. An actual security or
+authorization blocker still stops dependent unsafe work. This is
+planner/operator guidance from the canonical ecosystem workflow, **not**
+a new native `start` mode, persisted delivery plan, automated split detector,
+or relaxation of the stage gates. The prospective product-level improvement
+is described under [Planned milestones](ROADMAP.md#planned-milestones).
 
 ## Content check layer (v0.4.0)
 

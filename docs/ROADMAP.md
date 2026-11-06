@@ -67,6 +67,9 @@ and the `v0.x.0` releases remain part of the published project history.
 - `v1.6.1` is a patch correction between `v1.6.0` and `v1.7.0`: a phase-aware test-context bootstrap so `test-implementation` can begin before the tests that produce related-test and oracle evidence exist, with strict readiness restored for completion and downstream stages. Released on 2026-10-02.
 - `v1.6.2` is a bounded trace-diagnostic patch: technical tokens mistaken for trace IDs, valid upstream declarations reported missing by run-level checks, and correction suggestions pointing to nonexistent native stages. It preserves the gate and lifecycle authority of v1.6.1.
 - `v1.7.0` delivers Generic Ecosystem Evidence Intake (ORC-EVIDENCE-01) under the adopted ECO-00 contracts. Released on 2026-10-15.
+- `v1.7.1` is the earliest planned Kit consumer compatibility maintenance slot,
+  including Rust producer qualification. A compatible existing consumer may
+  complete qualification without a new release.
 
 ## Published releases through v1.0.0
 
@@ -1582,6 +1585,288 @@ ECO-01 certification is separate from implementation of this consumer milestone 
 
 ## Planned milestones
 
+### v1.7.1 - Kit Consumer Compatibility Qualification (ORC-KIT-COMPAT)
+
+Status: planned, dependency-gated compatibility work. The current release stays
+`1.7.0`. This maintenance slot does not require a release when the existing
+consumer qualifies without a product change.
+
+Goal: qualify the existing evidence consumers against the Kit producer selected
+for the Kit `v1.15.0` and Lab `v0.10.0` source-analysis migration. This includes
+the previously deferred Rust Producer Compatibility Qualification
+(`ORC-RUST-COMPAT`); its negative cases and ownership boundaries remain part of
+this scope. The migration work is the first workstream of those versions and
+does not replace their existing static interface/data-relationship and executable
+evidence commitments (`KIT-API-01` and `LAB-EVIDENCE-01`).
+
+The [coordinated source-analysis migration](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_COORDINATED_ROADMAP.md#79-kit-backed-lab-source-audits--2026-10-27)
+is `ECO-SOURCE-01`, with Kit source facts owned by `KIT-FACTS-01` and Lab
+integration owned by `LAB-KIT-01`. This milestone is its downstream Orchestrator
+compatibility work, not another source-analysis implementation.
+
+Published baseline and qualification lanes (2026-11-06 review):
+
+- Kit `v1.14.0` is released and extends the **same** index, graph, context,
+  search, and source-retrieval architecture across Python, JavaScript/TypeScript,
+  selected frameworks and Rust. Qualified `symbolq:` declarations and
+  symbol-index schema 3 belong to Kit; Orchestrator must not rebuild graph
+  identities from simple names or add a language-specific parser.
+- Orchestrator `v1.7.0` has two distinct Kit consumption paths. The manually
+  supplied raw context capsule/retrieval-audit readers accept documented
+  schema-major-1 evidence subject to actual readiness, provenance and identity
+  checks. The explicitly activated generic ecosystem adapter
+  (`readKitEcosystemEvidence` in
+  `src/instructions/myDevKitEvidenceSummary.ts`) currently requires the exact
+  `@dailephd/my-dev-kit@1.12.5` producer in the envelope **and** native
+  evidence body, together with artifact schema `1.0.0`. A raw reader's
+  successful parse cannot be treated as acceptance of that newer producer
+  through the separate activated adapter. Equally, a healthy Kit context
+  capsule does not prove code execution, test success or security.
+- First qualify the actual released Kit `v1.14.0` against both paths and
+  preserve the working Kit `v1.12.5` activated baseline. When a validated
+  Kit `v1.15.0` `KIT-FACTS-01` candidate is available, separately qualify its
+  exact producer/consumer tuple without waiting for unrelated Lab completion.
+  Do not infer a future artifact contract from v1.14.0 or assume newer
+  versions are wire-compatible merely because their package numbers increase.
+- Per-lane reporting is mandatory. `QUALIFIED_NO_CHANGE` applies only where
+  the existing code truly accepts all required evidence; it cannot describe
+  successful activated intake of Kit `v1.14.0` under the unmodified exact
+  `1.12.5` check. If new activated intake is in scope and verified native
+  artifacts are compatible, implement only an exact allowlisted adapter
+  qualification for those verified versions (or a narrower necessary
+  correction), retaining all existing negative checks. Unsupported tuples
+  stay rejected; no unconditional semver-range or `@latest` trust.
+- Rust test discovery and test-command provenance remain Kit source-context
+  responsibilities. Qualify realistic Cargo-only and mixed repositories:
+  capture whether test commands and related test/oracle evidence are grounded,
+  rather than guessing a `cargo test` command in Orchestrator or weakening
+  the existing pre-test/critical-responsibility gates. Any demonstrated
+  producer evidence gap is assigned back to Kit with a reproducer.
+
+Dependencies and sequence:
+
+- Kit owns language parsing, normalized source facts, graph evidence, indexing
+  and retrieval. Lab's selected source audits use Kit through a controlled
+  invocation and retain audit policy, execution evidence and reporting.
+- Freeze the exact Kit producer, Orchestrator consumer, contract/schema versions,
+  fixture identities and package or candidate digests before qualification.
+  Use readiness-verified candidates for coordinated development and distinguish
+  candidate results from release-package compatibility. Never infer support from
+  a package's newest version alone.
+- This downstream qualification is not a prerequisite for the initial Kit-to-Lab
+  migration or Lab analyzer removal unless that migration changes a shared
+  contract consumed here. Any such contract change requires this consumer's
+  qualification before the changed contract is accepted for its workflow.
+- The external large language model (LLM) planner and coding agent select and
+  execute the tool steps through workflow templates. Orchestrator supplies
+  stage instructions, artifact contracts and readiness decisions. Lab's bounded
+  internal Kit invocation does not make Orchestrator an all-tool executor.
+
+Qualification scope:
+
+- Exercise both the existing schema-major-1 context-capsule/retrieval-audit
+  readers and the explicitly activated ecosystem native adapters. Preserve
+  previously qualified Kit and Observer tuples and their negative behavior.
+- Cover TypeScript, JavaScript, Python, Java and Kotlin evidence, plus a
+  Rust-only Cargo workspace and a mixed Rust/TypeScript repository. Verify
+  qualified symbols, distinguishable same-named methods in different `impl`
+  owners, conservative module/dependency relationships, relevant tests and
+  accurate source/provenance references where the producer supports them.
+- Check sufficient, partial, stale, truncated, ambiguous, missing, tampered,
+  unsupported-version and contradictory evidence. Require critical
+  test-responsibility coverage, producer/consumer identity parity and honest
+  unavailable states. Static evidence does not prove compilation, test execution
+  or runtime correctness.
+- Permit only the smallest additive adapter, validation or accepted-version
+  correction demonstrated necessary by these checks. Preserve current schema,
+  identity, freshness, adequacy and required-evidence-loss checks; do not replace
+  exact compatibility with unconditional trust in newer versions.
+- Keep native producer subjects distinct. This qualification does not establish
+  cross-producer project correlation, environment attestation, a Lab native
+  evidence adapter or broader execution assurance.
+
+The final qualification report must explicitly separate the legacy
+schema-major-1 raw-context path from the activated ECO evidence path,
+including observed behavior against published Kit §1.12.5§ and §1.14.0§,
+plus a separately identified §1.15.0§ candidate only when actually available.
+For every case record the exact package or candidate hash, native artifact
+kind/schema, subject/index identity, outcome, and failure code. Verify
+successful old-producer intake, correct new-producer intake only when approved,
+and fail-closed newer-version, stale, tampered, ambiguous, insufficient,
+truncated-required and cross-repository mismatch cases. Do not mark
+§QUALIFIED_NO_CHANGE§ globally when any required consumer lane still rejects
+the selected producer. A compatible legacy lane with unsupported new generic
+intake is a split result, not a universal PASS.
+
+Acceptance: record exact component identities, schemas, fixture identities,
+positive and negative results, legacy compatibility and residual unsupported
+semantics. Return `QUALIFIED_NO_CHANGE` for an unchanged existing consumer,
+`QUALIFIED_WITH_BOUNDED_COMPATIBILITY_CHANGE` when a justified maintenance change
+is needed, or `BLOCKED_INCOMPATIBLE_PRODUCER`. Package publication remains a
+separate release workflow. Ecosystem integration certification (`ECO-01`) and
+activation require their own exact compatible bundle and evidence; this
+qualification alone confers neither.
+
+Exclusions: no source parser, Cargo execution, parallel graph or source index,
+shared analysis library or fifth repository, new mode/stage or Rust greenfield
+profile, automatic Kit/Observer/Lab execution, Lab policy duplication, native
+artifact rewriting, or change to frozen ecosystem reference shapes (`ECO-00`).
+Greenfield-to-Feature Handoff Hardening and optional mobile-profile work remain
+in their existing deferred scopes.
+
+### Proposed, unversioned: Outcome-oriented delivery and fragmentation control
+
+Status: **Proposed, not implemented.** This is an Orchestrator-owned future
+capability with **no assigned package version or adopted ECO milestone**.
+It neither changes the published `v1.7.0` contract nor moves either deferred
+milestone below. Cross-repository coordination remains governed by the
+[ecosystem development workflows](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
+and the separately adopted coordinated roadmap in `my-dev-kit`.
+
+**Problem and goal.** A series of correct component-level completions can
+leave the parent user-visible outcome untested. Excessive prompt splitting,
+repeated context intake, recurrent ordinary decisions, and redundant validation
+can delay integrated delivery. Conversely, a real security, permission, or
+architecture conflict must still stop dependent unsafe work. Improve the
+quality and efficiency of end-to-end delivery for capable coding models,
+including mid-tier models; minimizing prompt count alone is not the objective.
+The `my-centcom` v0.3.0 B03 / SW-039 through SW-050 history is a motivating
+reported case study, not native Orchestrator telemetry or validated causation.
+
+**Outcome and work-package contract.** Define one planner-authored parent
+outcome and its acceptance oracle before splitting implementation:
+
+- Stable parent outcome identity, observed user journey, required components
+  and integration edges, essential positive and negative scenarios, protection
+  of existing behavior, and required execution/assurance evidence.
+- Repository and candidate identities, inherited architectural decisions,
+  relevant source and test owners, current context provenance and freshness,
+  environment/permission constraints, and authorized Git actions.
+- Cohesive work packages linked to that outcome, each identifying dependencies,
+  owned interfaces, deliverables, verification checkpoints, and which remaining
+  parent criteria it advances. A component completion is **not** an outcome
+  completion; report `unverified`, `partially verified`, and `verified` distinctly.
+- Each split records its exact reason and expected reintegration point. Valid
+  reasons include independent user-visible outcomes, a blocked prerequisite,
+  material security or authorization boundary, conflicting ownership or
+  architecture requiring planner resolution, or a demonstrated context/tool
+  limit. Do not impose a fixed package count or split merely by backend,
+  frontend, tests, or an arbitrary number of steps.
+- Explicit delegation: within previously approved architecture and path
+  boundaries, the coding agent may choose private implementation details,
+  focused tests, bounded diagnosis, and correction of its own defects.
+  Changes to planner-owned structure, public contracts, security posture,
+  permissions, scope, destructive actions, and publication remain separate
+  decisions. A genuine stop blocks the dependent unsafe path, not unrelated
+  independently authorized safe work.
+- One work package may include targeted retrieval, implementation, tests,
+  integration evidence, bounded local correction, final impact review, and a
+  truthful report. Its checkpoints are not compulsory new ChatGPT handoffs,
+  approval requests, branch switches, or commits.
+
+**Architecture and minimum-change direction.**
+
+1. Start with a compact, reusable planner-side work-package specification
+   suitable for `DIRECT_IMPLEMENTATION`. That planner policy is not a CLI
+   workflow mode and does not create native run telemetry. Use the existing
+   my-dev-kit retrieval surface, cached conclusions only with verified source
+   identity/freshness, and bounded refresh of changed neighborhoods. Do not
+   create a second retrieval graph or a new autonomous coding-agent executor.
+2. Reuse the existing `src/instructions/` catalog and static
+   `WorkflowInstructionPacket` for stable stage rules. For an optional staged
+   plan, a versioned, validated, run-specific **outcome-plan reference** should
+   travel through the existing `StageContextBundle` and `src/promptGenerator.ts`
+   rather than contaminating the deterministic catalog packet with run text.
+   Prefer one bounded, opt-in immutable intent document within the existing
+   run folder, with exact identity and provenance, if a persisted plan is
+   necessary after source review. No new mandatory native stage or second
+   lifecycle state machine is justified. Absence must preserve legacy behavior.
+3. Trace outcome criteria to existing `REQ`/`BEH`/`INV` and `RSP-NNN` stage
+   responsibilities without repurposing those identities. Use current
+   `ImplementationReport`, `TestImplementationReport`, `VerificationReport`
+   and supported external evidence for actual completion claims. If an
+   activated plan later makes required evidence blocking, route the decision
+   through the **existing `RunIntegrityGate` and judge-integrity owners**;
+   an advisory diagnostic must not become a second PASS authority. Native
+   structural corroboration alone cannot prove that runtime tests or an
+   integrated journey actually executed.
+4. Extend descriptive Workflow Economics only for genuinely observable native
+   activity. Direct-agent prompts, interruptions, token/cost data, actual
+   coding-agent time, and integration results are **unknown** unless supplied
+   by an explicit, validated external record. Evaluate whether a small typed
+   opt-in import is warranted; do not synthesize external events from `prompt`
+   render counts, branch history, or an `RSP` mapping. Initially surface
+   inspectable warnings about missing split reasons, repeated intake,
+   unresolved integration edges, and outcome evidence gaps, not heuristic
+   blocking or claims of objectively unnecessary splits.
+5. Keep `my-dev-kit` responsible for code retrieval and `my-dev-kit-lab`
+   responsible for independent experiments and benchmark reporting. Any later
+   ecosystem plan change requires separate coordination; no Kit, Lab,
+   Observer, or product-specific sandbox redesign is implied here.
+
+**Dependency-ordered delivery outcomes.**
+
+- **Reusable outcome contract:** produce a compact planner-authored
+  specification, work-package dependency/split rules, decision delegation,
+  required evidence, and safe stop/resume behavior. Prove on an existing
+  vertical feature and a security-sensitive example that unrelated ordinary
+  choices do not trigger new planner approvals.
+- **Opt-in staged continuity:** once the contract is stable, implement bounded
+  stage-context and prompt propagation using current owners. Preserve
+  unactivated prompt bytes and old-run readability; maintain the exact native
+  stage sequence, phase-relative `RSP` enforcement, correction routing, and
+  canonical final-report eligibility. A run may continue through multiple
+  authorized stages in one coding-agent session without bypassing any gate.
+- **Observation and diagnostic feedback:** derive transparent, source-attributed
+  work-package and handoff observations only from accepted events/records.
+  Distinguish `not observed`, `not applicable`, `warning`, and corroborated
+  facts. Native telemetry remains descriptive; report exactly which external
+  steps cannot be seen. No arbitrary numeric fragmentation threshold becomes
+  a quality or release gate.
+- **Model-calibrated evaluation:** compare the existing and proposed approach
+  on frozen repository snapshots, with the same task outcome, evidence,
+  resource limits, and acceptance oracle. Include an ordinary multi-layer
+  feature and a genuine permission/security-stop case; run a representative
+  mid-tier model and a stronger reference model. Record independently accepted
+  end-to-end outcomes, first-pass correctness, preserved boundaries,
+  integration coverage, security/regression failures, planner handoffs,
+  justified splits, correction cycles, elapsed time, and measured context/cost
+  only where available. Keep unavailable measurements explicitly unknown.
+
+**Acceptance and negative cases.**
+
+- A cohesive feature can be investigated, implemented, corrected within its
+  delegated boundaries, and verified as an integrated user outcome without
+  an extra planner round trip for each technical step. An implementation-only
+  PASS cannot be reported as parent-outcome verification.
+- A confirmed trust-boundary, authorization, or architecture conflict stops
+  dependent work and identifies the specific unresolved decision; safe,
+  independently authorized work and earlier valid evidence are preserved.
+  A plan may not grant rights absent from the user, repository manifest,
+  or native workflow.
+- Every work-package split points to its parent outcome, evidence-based
+  justification, prerequisite, and reintegration checkpoint. Duplicate
+  context reads or handoffs are counted only from actual records.
+- A direct coding-agent task is never claimed to have created an Orchestrator
+  run. An activated staged run preserves native integrity, judge, lifecycle,
+  and correction authority; missing or malformed optional plan data cannot
+  silently turn into PASS. Historical runs remain compatible.
+- Tests cover no-split, justified split, unsafe-combination rejection,
+  ordinary local correction, critical security stop, independent-work
+  continuation, stale/contradictory evidence, unknown external activity,
+  missing integration proof, and legacy-run neutrality. Include generated
+  prompt assertions and a real integrated execution, not just schema tests.
+- At least one reproducible matched-model comparison reports whether
+  user-visible completion and engineering quality improved, not merely
+  whether fewer prompts were produced.
+
+**Explicit exclusions.** No autonomous model/CLI execution engine, parallel
+integrity or security gate, new default native stage or mode, compulsory
+proposal-approval ceremony, automatic trust-boundary exception, blind
+reuse of stale context, fabricated external activity/cost, or release
+reservation. Existing release plans, historical records, and separate
+greenfield/mobile deferrals remain intact.
+
 ### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
 
 The completed greenfield scaffold-to-feature transition remains a separate
@@ -1681,6 +1966,17 @@ It should own:
 - pre-release validation support
 
 `my-dev-kit-lab` should not be part of normal greenfield project bootstrap.
+
+The selected Kit `v1.15.0` / Lab `v0.10.0` migration makes Kit the sole source
+analysis and retrieval provider for Lab after gated parity and removal. Lab
+retires its duplicate analyzers at gate 5 only after gates 1–4 establish
+TypeScript, JavaScript, Python, Java and Kotlin parity or approved corrections,
+with no unresolved regression. Gate 6 then proves Rust reuse before the migration
+is complete. Audit policy, external-tool
+execution and validation remain Lab responsibilities. This is a planned
+ownership change, not a claim about the current Lab release; its authoritative
+scope remains in the Kit and Lab roadmaps. Neither this change nor Orchestrator
+qualification introduces a shared analyzer package or a fifth repository.
 
 ## Non-goals
 

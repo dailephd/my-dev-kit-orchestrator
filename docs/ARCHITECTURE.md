@@ -46,6 +46,12 @@ evidence, run a coding agent, edit source code, execute tests, or publish
 packages. The user or agent invokes `my-dev-kit` separately and supplies its
 evidence.
 
+Cross-tool selection and execution belong to the external large language model
+(LLM) planner and coding agent following their workflow templates. Orchestrator
+provides instructions and readiness decisions; it is not an all-tool executor.
+The [roadmap](ROADMAP.md#planned-milestones) owns subsequent Kit consumer
+qualification, including the boundary around Lab's source-analysis migration.
+
 Artifact content validation remains one shared system. Artifact-kind entries in
 the registry select their native format contract: text artifacts use the
 existing section parser, while structured greenfield JSON artifacts use strict
@@ -764,6 +770,16 @@ evidence authority beyond explicit stage requirements.
   request-scoped and does not establish per-responsibility causality.
 - JSON inspection describes current verified state; it does not attest execution or certification.
 - There is no shared cross-repository schema package or Lab runtime integration.
+- There is no native parent-outcome or cohesive work-package contract,
+  split-reason ledger, or integrated user-journey completion evaluator.
+  `WorkflowInstructionPacket` is stage instruction content, while
+  `RSP-NNN` Semantic Continuity tracks native-stage responsibilities; neither
+  independently certifies delivery of a larger external user outcome.
+- Orchestrator-native telemetry sees selected CLI interactions, not separately
+  issued ChatGPT or coding-agent tasks. It cannot measure external work-package
+  fragmentation, agent time, real token/cost use, or actual integration
+  completion without independently supplied evidence.
+
 - Cross-tool recipes are externally executed compositions. Documentation
   consolidation does not add an automatic browser or full-stack executor.
 
