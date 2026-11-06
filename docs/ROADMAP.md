@@ -1582,6 +1582,159 @@ ECO-01 certification is separate from implementation of this consumer milestone 
 
 ## Planned milestones
 
+### Proposed, unversioned: Outcome-oriented delivery and fragmentation control
+
+Status: **Proposed, not implemented.** This is an Orchestrator-owned future
+capability with **no assigned package version or adopted ECO milestone**.
+It neither changes the published `v1.7.0` contract nor moves either deferred
+milestone below. Cross-repository coordination remains governed by the
+[ecosystem development workflows](https://github.com/dailephd/my-dev-kit/blob/main/docs/ECOSYSTEM_DEVELOPMENT_WORKFLOWS.md)
+and the separately adopted coordinated roadmap in `my-dev-kit`.
+
+**Problem and goal.** A series of correct component-level completions can
+leave the parent user-visible outcome untested. Excessive prompt splitting,
+repeated context intake, recurrent ordinary decisions, and redundant validation
+can delay integrated delivery. Conversely, a real security, permission, or
+architecture conflict must still stop dependent unsafe work. Improve the
+quality and efficiency of end-to-end delivery for capable coding models,
+including mid-tier models; minimizing prompt count alone is not the objective.
+The `my-centcom` v0.3.0 B03 / SW-039 through SW-050 history is a motivating
+reported case study, not native Orchestrator telemetry or validated causation.
+
+**Outcome and work-package contract.** Define one planner-authored parent
+outcome and its acceptance oracle before splitting implementation:
+
+- Stable parent outcome identity, observed user journey, required components
+  and integration edges, essential positive and negative scenarios, protection
+  of existing behavior, and required execution/assurance evidence.
+- Repository and candidate identities, inherited architectural decisions,
+  relevant source and test owners, current context provenance and freshness,
+  environment/permission constraints, and authorized Git actions.
+- Cohesive work packages linked to that outcome, each identifying dependencies,
+  owned interfaces, deliverables, verification checkpoints, and which remaining
+  parent criteria it advances. A component completion is **not** an outcome
+  completion; report `unverified`, `partially verified`, and `verified` distinctly.
+- Each split records its exact reason and expected reintegration point. Valid
+  reasons include independent user-visible outcomes, a blocked prerequisite,
+  material security or authorization boundary, conflicting ownership or
+  architecture requiring planner resolution, or a demonstrated context/tool
+  limit. Do not impose a fixed package count or split merely by backend,
+  frontend, tests, or an arbitrary number of steps.
+- Explicit delegation: within previously approved architecture and path
+  boundaries, the coding agent may choose private implementation details,
+  focused tests, bounded diagnosis, and correction of its own defects.
+  Changes to planner-owned structure, public contracts, security posture,
+  permissions, scope, destructive actions, and publication remain separate
+  decisions. A genuine stop blocks the dependent unsafe path, not unrelated
+  independently authorized safe work.
+- One work package may include targeted retrieval, implementation, tests,
+  integration evidence, bounded local correction, final impact review, and a
+  truthful report. Its checkpoints are not compulsory new ChatGPT handoffs,
+  approval requests, branch switches, or commits.
+
+**Architecture and minimum-change direction.**
+
+1. Start with a compact, reusable planner-side work-package specification
+   suitable for `DIRECT_IMPLEMENTATION`. That planner policy is not a CLI
+   workflow mode and does not create native run telemetry. Use the existing
+   my-dev-kit retrieval surface, cached conclusions only with verified source
+   identity/freshness, and bounded refresh of changed neighborhoods. Do not
+   create a second retrieval graph or a new autonomous coding-agent executor.
+2. Reuse the existing `src/instructions/` catalog and static
+   `WorkflowInstructionPacket` for stable stage rules. For an optional staged
+   plan, a versioned, validated, run-specific **outcome-plan reference** should
+   travel through the existing `StageContextBundle` and `src/promptGenerator.ts`
+   rather than contaminating the deterministic catalog packet with run text.
+   Prefer one bounded, opt-in immutable intent document within the existing
+   run folder, with exact identity and provenance, if a persisted plan is
+   necessary after source review. No new mandatory native stage or second
+   lifecycle state machine is justified. Absence must preserve legacy behavior.
+3. Trace outcome criteria to existing `REQ`/`BEH`/`INV` and `RSP-NNN` stage
+   responsibilities without repurposing those identities. Use current
+   `ImplementationReport`, `TestImplementationReport`, `VerificationReport`
+   and supported external evidence for actual completion claims. If an
+   activated plan later makes required evidence blocking, route the decision
+   through the **existing `RunIntegrityGate` and judge-integrity owners**;
+   an advisory diagnostic must not become a second PASS authority. Native
+   structural corroboration alone cannot prove that runtime tests or an
+   integrated journey actually executed.
+4. Extend descriptive Workflow Economics only for genuinely observable native
+   activity. Direct-agent prompts, interruptions, token/cost data, actual
+   coding-agent time, and integration results are **unknown** unless supplied
+   by an explicit, validated external record. Evaluate whether a small typed
+   opt-in import is warranted; do not synthesize external events from `prompt`
+   render counts, branch history, or an `RSP` mapping. Initially surface
+   inspectable warnings about missing split reasons, repeated intake,
+   unresolved integration edges, and outcome evidence gaps, not heuristic
+   blocking or claims of objectively unnecessary splits.
+5. Keep `my-dev-kit` responsible for code retrieval and `my-dev-kit-lab`
+   responsible for independent experiments and benchmark reporting. Any later
+   ecosystem plan change requires separate coordination; no Kit, Lab,
+   Observer, or product-specific sandbox redesign is implied here.
+
+**Dependency-ordered delivery outcomes.**
+
+- **Reusable outcome contract:** produce a compact planner-authored
+  specification, work-package dependency/split rules, decision delegation,
+  required evidence, and safe stop/resume behavior. Prove on an existing
+  vertical feature and a security-sensitive example that unrelated ordinary
+  choices do not trigger new planner approvals.
+- **Opt-in staged continuity:** once the contract is stable, implement bounded
+  stage-context and prompt propagation using current owners. Preserve
+  unactivated prompt bytes and old-run readability; maintain the exact native
+  stage sequence, phase-relative `RSP` enforcement, correction routing, and
+  canonical final-report eligibility. A run may continue through multiple
+  authorized stages in one coding-agent session without bypassing any gate.
+- **Observation and diagnostic feedback:** derive transparent, source-attributed
+  work-package and handoff observations only from accepted events/records.
+  Distinguish `not observed`, `not applicable`, `warning`, and corroborated
+  facts. Native telemetry remains descriptive; report exactly which external
+  steps cannot be seen. No arbitrary numeric fragmentation threshold becomes
+  a quality or release gate.
+- **Model-calibrated evaluation:** compare the existing and proposed approach
+  on frozen repository snapshots, with the same task outcome, evidence,
+  resource limits, and acceptance oracle. Include an ordinary multi-layer
+  feature and a genuine permission/security-stop case; run a representative
+  mid-tier model and a stronger reference model. Record independently accepted
+  end-to-end outcomes, first-pass correctness, preserved boundaries,
+  integration coverage, security/regression failures, planner handoffs,
+  justified splits, correction cycles, elapsed time, and measured context/cost
+  only where available. Keep unavailable measurements explicitly unknown.
+
+**Acceptance and negative cases.**
+
+- A cohesive feature can be investigated, implemented, corrected within its
+  delegated boundaries, and verified as an integrated user outcome without
+  an extra planner round trip for each technical step. An implementation-only
+  PASS cannot be reported as parent-outcome verification.
+- A confirmed trust-boundary, authorization, or architecture conflict stops
+  dependent work and identifies the specific unresolved decision; safe,
+  independently authorized work and earlier valid evidence are preserved.
+  A plan may not grant rights absent from the user, repository manifest,
+  or native workflow.
+- Every work-package split points to its parent outcome, evidence-based
+  justification, prerequisite, and reintegration checkpoint. Duplicate
+  context reads or handoffs are counted only from actual records.
+- A direct coding-agent task is never claimed to have created an Orchestrator
+  run. An activated staged run preserves native integrity, judge, lifecycle,
+  and correction authority; missing or malformed optional plan data cannot
+  silently turn into PASS. Historical runs remain compatible.
+- Tests cover no-split, justified split, unsafe-combination rejection,
+  ordinary local correction, critical security stop, independent-work
+  continuation, stale/contradictory evidence, unknown external activity,
+  missing integration proof, and legacy-run neutrality. Include generated
+  prompt assertions and a real integrated execution, not just schema tests.
+- At least one reproducible matched-model comparison reports whether
+  user-visible completion and engineering quality improved, not merely
+  whether fewer prompts were produced.
+
+**Explicit exclusions.** No autonomous model/CLI execution engine, parallel
+integrity or security gate, new default native stage or mode, compulsory
+proposal-approval ceremony, automatic trust-boundary exception, blind
+reuse of stale context, fabricated external activity/cost, or release
+reservation. Existing release plans, historical records, and separate
+greenfield/mobile deferrals remain intact.
+
 ### Deferred: Greenfield-to-Feature Workflow Handoff Hardening
 
 The completed greenfield scaffold-to-feature transition remains a separate
