@@ -1604,6 +1604,45 @@ is `ECO-SOURCE-01`, with Kit source facts owned by `KIT-FACTS-01` and Lab
 integration owned by `LAB-KIT-01`. This milestone is its downstream Orchestrator
 compatibility work, not another source-analysis implementation.
 
+Published baseline and qualification lanes (2026-11-06 review):
+
+- Kit `v1.14.0` is released and extends the **same** index, graph, context,
+  search, and source-retrieval architecture across Python, JavaScript/TypeScript,
+  selected frameworks and Rust. Qualified `symbolq:` declarations and
+  symbol-index schema 3 belong to Kit; Orchestrator must not rebuild graph
+  identities from simple names or add a language-specific parser.
+- Orchestrator `v1.7.0` has two distinct Kit consumption paths. The manually
+  supplied raw context capsule/retrieval-audit readers accept documented
+  schema-major-1 evidence subject to actual readiness, provenance and identity
+  checks. The explicitly activated generic ecosystem adapter
+  (`readKitEcosystemEvidence` in
+  `src/instructions/myDevKitEvidenceSummary.ts`) currently requires the exact
+  `@dailephd/my-dev-kit@1.12.5` producer in the envelope **and** native
+  evidence body, together with artifact schema `1.0.0`. A raw reader's
+  successful parse cannot be treated as acceptance of that newer producer
+  through the separate activated adapter. Equally, a healthy Kit context
+  capsule does not prove code execution, test success or security.
+- First qualify the actual released Kit `v1.14.0` against both paths and
+  preserve the working Kit `v1.12.5` activated baseline. When a validated
+  Kit `v1.15.0` `KIT-FACTS-01` candidate is available, separately qualify its
+  exact producer/consumer tuple without waiting for unrelated Lab completion.
+  Do not infer a future artifact contract from v1.14.0 or assume newer
+  versions are wire-compatible merely because their package numbers increase.
+- Per-lane reporting is mandatory. `QUALIFIED_NO_CHANGE` applies only where
+  the existing code truly accepts all required evidence; it cannot describe
+  successful activated intake of Kit `v1.14.0` under the unmodified exact
+  `1.12.5` check. If new activated intake is in scope and verified native
+  artifacts are compatible, implement only an exact allowlisted adapter
+  qualification for those verified versions (or a narrower necessary
+  correction), retaining all existing negative checks. Unsupported tuples
+  stay rejected; no unconditional semver-range or `@latest` trust.
+- Rust test discovery and test-command provenance remain Kit source-context
+  responsibilities. Qualify realistic Cargo-only and mixed repositories:
+  capture whether test commands and related test/oracle evidence are grounded,
+  rather than guessing a `cargo test` command in Orchestrator or weakening
+  the existing pre-test/critical-responsibility gates. Any demonstrated
+  producer evidence gap is assigned back to Kit with a reproducer.
+
 Dependencies and sequence:
 
 - Kit owns language parsing, normalized source facts, graph evidence, indexing
@@ -1645,6 +1684,19 @@ Qualification scope:
 - Keep native producer subjects distinct. This qualification does not establish
   cross-producer project correlation, environment attestation, a Lab native
   evidence adapter or broader execution assurance.
+
+The final qualification report must explicitly separate the legacy
+schema-major-1 raw-context path from the activated ECO evidence path,
+including observed behavior against published Kit §1.12.5§ and §1.14.0§,
+plus a separately identified §1.15.0§ candidate only when actually available.
+For every case record the exact package or candidate hash, native artifact
+kind/schema, subject/index identity, outcome, and failure code. Verify
+successful old-producer intake, correct new-producer intake only when approved,
+and fail-closed newer-version, stale, tampered, ambiguous, insufficient,
+truncated-required and cross-repository mismatch cases. Do not mark
+§QUALIFIED_NO_CHANGE§ globally when any required consumer lane still rejects
+the selected producer. A compatible legacy lane with unsupported new generic
+intake is a split result, not a universal PASS.
 
 Acceptance: record exact component identities, schemas, fixture identities,
 positive and negative results, legacy compatibility and residual unsupported
