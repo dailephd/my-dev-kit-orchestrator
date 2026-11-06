@@ -14,6 +14,19 @@ Proof-only is not an eighth mode. It is an explicit run capability for a verific
 
 A coding agent may continue through authorized native stages within one session. A continuous full-stack task does not authorize skipping `test-implementation`, bypassing readiness, or declaring success after backend-only work. The cross-repository guide defines the outer user-flow acceptance and feedback record without adding native modes or stages here.
 
+For outer task planning, define the parent user-visible result and its
+integration acceptance before dividing a feature into separate coding-agent
+requests. Group work by genuinely shared owners, contracts, fixtures and
+tests, and permit bounded correction inside existing authority rather than
+requiring a new planner handoff at every checkpoint. Split for a real
+dependency, permission, security, ownership, or capacity boundary; retain
+the integration checkpoint when a split is necessary. An actual security or
+authorization blocker still stops dependent unsafe work. This is
+planner/operator guidance from the canonical ecosystem workflow, **not**
+a new native `start` mode, persisted delivery plan, automated split detector,
+or relaxation of the stage gates. The prospective product-level improvement
+is described under [Planned milestones](ROADMAP.md#planned-milestones).
+
 ## Content check layer (v0.4.0)
 
 A separate content check layer is available via `my-dev-kit-orchestrator check`. Content checks are deterministic and artifact-format aware. Text artifacts are checked for expected section headers. Registered structured JSON artifacts are parsed and checked against their required structured fields. These checks are distinct from lifecycle advancement.
