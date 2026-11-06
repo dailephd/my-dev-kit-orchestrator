@@ -764,6 +764,16 @@ evidence authority beyond explicit stage requirements.
   request-scoped and does not establish per-responsibility causality.
 - JSON inspection describes current verified state; it does not attest execution or certification.
 - There is no shared cross-repository schema package or Lab runtime integration.
+- There is no native parent-outcome or cohesive work-package contract,
+  split-reason ledger, or integrated user-journey completion evaluator.
+  `WorkflowInstructionPacket` is stage instruction content, while
+  `RSP-NNN` Semantic Continuity tracks native-stage responsibilities; neither
+  independently certifies delivery of a larger external user outcome.
+- Orchestrator-native telemetry sees selected CLI interactions, not separately
+  issued ChatGPT or coding-agent tasks. It cannot measure external work-package
+  fragmentation, agent time, real token/cost use, or actual integration
+  completion without independently supplied evidence.
+
 - Cross-tool recipes are externally executed compositions. Documentation
   consolidation does not add an automatic browser or full-stack executor.
 
